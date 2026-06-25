@@ -28,11 +28,6 @@ Dự án được xây dựng theo mô hình **Dual-Track Agile** và chia thàn
 
 ---
 
-## 📂 Cấu Trúc Thư Mục (Project Structure)
-
-Dự án được cấu trúc theo dạng Monorepo hoặc chia 2 thư mục rõ ràng giữa Frontend và Backend.
-
-```text
 FINAUTO-PROJECT/
 │
 ├── 📱 mobile-app/                 # FRONTEND - FLUTTER APP
