@@ -21,50 +21,59 @@
 
 ## 🏗️ Kiến Trúc Hệ Thống (System Architecture)
 
-Dự án được xây dựng theo mô hình **Dual-Track Agile** và chia thành 3 phân hệ chính:
+Dự án được xây dựng theo mô hình **Dual-Track Agile** và chia thành phân hệ rõ ràng:
 * **Frontend (Mobile App):** Xây dựng bằng Flutter, tập trung vào UX/UI và xử lý ảnh (Crop/Filter) trước khi gửi.
 * **Backend (API Gateway):** Node.js/Express đóng vai trò Proxy an toàn, xử lý logic Lưới lọc chống trùng lặp và đóng gói Payload giao tiếp với Gemini AI.
 * **Automation (Cron-job):** Kiến trúc Serverless với Firebase Cloud Functions và Google Cloud Scheduler giúp tối ưu chi phí vận hành (OpEx = 0đ).
 
 ---
 
-FINAUTO-PROJECT/
+## 📂 Cấu Trúc Thư Mục (Project Structure)
+
+Dự án được cấu trúc theo dạng Monorepo, phân tách rõ ràng giữa máy chủ xử lý (Back-end) và giao diện người dùng (Front-end).
+
+```text
+finauto-Cash-Flow-Assistant-app/
 │
-├── 📱 mobile-app/                 # FRONTEND - FLUTTER APP
-│   ├── android/
-│   ├── ios/
-│   ├── lib/
-│   │   ├── core/                  # Các cấu hình dùng chung (Themes, Constants)
-│   │   ├── models/                # Lớp dữ liệu (ThuChi Model)
-│   │   ├── screens/               # Giao diện chính
-│   │   │   ├── dashboard_screen.dart    # Biểu đồ dòng tiền (fl_chart)
-│   │   │   ├── camera_screen.dart       # Giao diện 1-Chạm & Nút chim mồi
-│   │   │   └── split_screen.dart        # Màn hình đối chiếu (Nửa ảnh, nửa Form)
-│   │   ├── services/              # Kết nối HTTP & API Binding
-│   │   │   └── api_service.dart         # Gọi /upload-receipt và /manual-entry
-│   │   ├── utils/                 # Các tiện ích
-│   │   │   └── image_helper.dart        # Chỉnh Crop, Filter trắng đen
-│   │   └── widgets/               # Thành phần UI tái sử dụng
-│   │       └── traffic_light.dart       # Đổi màu viền UI dựa theo độ tin cậy
-│   ├── pubspec.yaml               # Quản lý thư viện (flutter_secure_storage,...)
-│   └── README.md
-│
-├── ⚙️ backend-api/                # BACKEND - NODE.JS & EXPRESS
+├── Back-end/                      # MÁY CHỦ NODE.JS & TỰ ĐỘNG HÓA NGẦM
 │   ├── package.json
-│   ├── .env.example               # Template biến môi trường
-│   ├── server.js                  # File khởi chạy API Gateway
+│   ├── .env.example               # Mẫu cấu hình biến môi trường (Giấu GEMINI_API_KEY)
+│   ├── server.js                  # Điểm khởi chạy API Gateway
 │   ├── config/
-│   │   └── database.js            # Chuỗi kết nối MongoDB Atlas
+│   │   └── database.js            # Cấu hình kết nối MongoDB Atlas (Whitelist 0.0.0.0/0)
 │   ├── models/
-│   │   └── ThuChi.js              # Mongoose Schema (Shop_ID, PhanLoai, DoanhThu...)
+│   │   └── ThuChi.js              # Định nghĩa Mongoose Schema (Shop_ID, PhanLoai, DoanhThu...)
 │   ├── routes/
-│   │   └── apiRoutes.js           # Khai báo các Endpoint (/manual-entry, /upload-receipt)
+│   │   └── apiRoutes.js           # Khai báo Endpoint (/manual-entry, /upload-receipt)
 │   ├── middlewares/
-│   │   └── upload.js              # Cấu hình Multer hứng file lưu vào RAM
-│   └── controllers/
-│       ├── manualEntryController.js  # Lưới lọc "POS Ket Ca" & Hàm .reduce()
-│       └── aiReceiptController.js    # Đóng gói Payload AI, gọi Gemini API
+│   │   └── upload.js              # Cấu hình Multer hứng file ảnh đưa trực tiếp vào RAM
+│   ├── controllers/
+│   │   ├── manualEntryController.js  # Phễu lưu trữ: Tính tổng .reduce() & Lưới lọc "POS Ket Ca"
+│   │   └── aiReceiptController.js    # Cổng AI: Đóng gói Payload Base64 + Gọi Gemini (thinkingBudget: 0)
+│   └── functions/                 # MÃ NGUỒN AUTOMATION (Kiến trúc Serverless)
+│       ├── index.js               # Firebase Cloud Functions (Cron-job Trigger 22h00)
+│       └── messageService.js      # Truy vấn DB, đóng gói và bắn báo cáo qua Zalo ZNS / Telegram
 │
-└── 🌙 serverless-automation/      # HỆ THỐNG CHẠY NGẦM BAN ĐÊM (Firebase Cloud Functions)
-    ├── package.json
-    └── index.js                   # Trigger 22h00 -> Truy vấn Mongo -> Bắn Telegram/Zalo
+├── Front-end/
+│   ├── Mobile-App/                # ỨNG DỤNG FLUTTER (CORE UX/UI DÀNH CHO KHÁCH HÀNG)
+│   │   ├── android/
+│   │   ├── ios/
+│   │   ├── pubspec.yaml           # Quản lý thư viện (fl_chart, flutter_secure_storage)
+│   │   └── lib/
+│   │       ├── core/              # Cấu hình dùng chung (Themes, Constants)
+│   │       ├── models/            # Lớp cấu trúc dữ liệu (ThuChi Model)
+│   │       ├── screens/           # Tầng Giao diện hiển thị
+│   │       │   ├── dashboard_screen.dart    # Biểu đồ dòng tiền thu/chi
+│   │       │   ├── camera_screen.dart       # Giao diện 1-Chạm & Nút chim mồi (Nhập dự phòng)
+│   │       │   └── split_screen.dart        # Màn hình đối chiếu (Nửa trên ảnh, nửa dưới Form JSON)
+│   │       ├── services/          # Tầng Kết nối mạng (API Binding)
+│   │       │   └── api_service.dart         # Gọi HTTP Request, quản lý State vòng xoay Loading chờ AI
+│   │       ├── utils/             # Các tiện ích bổ trợ
+│   │       │   └── image_helper.dart        # Tiền xử lý ảnh gốc: Crop cắt viền, Filter tăng tương phản
+│   │       └── widgets/           # Tầng Thành phần UI tái sử dụng
+│   │           └── traffic_light.dart       # Đèn giao thông UX (Đổi màu viền Xanh/Vàng/Đỏ theo độ tin cậy)
+│   │
+│   └── Web/                       # ỨNG DỤNG WEB BẢN QUẢN TRỊ 
+│       └── ...                    # (Tạm đóng băng ở CP3 để dồn toàn lực cho Mobile App)
+│
+└── README.md                      # Tài liệu đặc tả kỹ thuật và phân công nhiệm vụ
