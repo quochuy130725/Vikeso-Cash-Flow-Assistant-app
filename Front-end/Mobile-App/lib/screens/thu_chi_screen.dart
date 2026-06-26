@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/transaction_item_card.dart';
 
 class ThuChiScreen extends StatefulWidget {
   const ThuChiScreen({super.key});
@@ -100,13 +101,13 @@ class _ThuChiScreenState extends State<ThuChiScreen> with SingleTickerProviderSt
         if (filter == 'all' || filter == 'thu' || filter == 'chi') ..._buildGroupHeader('HÔM NAY, 12/06/2025'),
         _buildTransactionCard([
           if (filter == 'all' || filter == 'thu')
-            _buildItem(context, 'Bán hàng', '10:30', 1500000, true),
+            const TransactionItemCard(title: 'Bán hàng', time: '10:30', value: 1500000, isThu: true),
           if (filter == 'all' || filter == 'chi')
-            _buildItem(context, 'Tiền điện', '09:15', -500000, false),
+            const TransactionItemCard(title: 'Tiền điện', time: '09:15', value: -500000, isThu: false),
           if (filter == 'all' || filter == 'chi')
-            _buildItem(context, 'Nhập hàng', '08:45', -1200000, false),
+            const TransactionItemCard(title: 'Nhập hàng', time: '08:45', value: -1200000, isThu: false),
           if (filter == 'all' || filter == 'thu')
-            _buildItem(context, 'Bán hàng', '08:20', 800000, true),
+            const TransactionItemCard(title: 'Bán hàng', time: '08:20', value: 800000, isThu: true),
         ]),
 
         const SizedBox(height: 16),
@@ -115,9 +116,9 @@ class _ThuChiScreenState extends State<ThuChiScreen> with SingleTickerProviderSt
         ..._buildGroupHeader('HÔM QUA, 11/06/2025'),
         _buildTransactionCard([
           if (filter == 'all' || filter == 'chi')
-            _buildItem(context, 'Tiền nước', '17:30', -200000, false),
+            const TransactionItemCard(title: 'Tiền nước', time: '17:30', value: -200000, isThu: false),
           if (filter == 'all' || filter == 'thu')
-            _buildItem(context, 'Bán hàng', '16:10', 1100000, true),
+            const TransactionItemCard(title: 'Bán hàng', time: '16:10', value: 1100000, isThu: true),
         ]),
         const SizedBox(height: 80), // Chừa khoảng trống cho Floating Action Button
       ],
@@ -155,55 +156,7 @@ class _ThuChiScreenState extends State<ThuChiScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildItem(BuildContext context, String title, String time, double value, bool isThu) {
-    final valueString = '${isThu ? '+' : ''}${value.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}đ';
 
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey[100]!)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isThu ? Colors.green[100] : Colors.red[100],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isThu ? Icons.arrow_upward : Icons.arrow_downward,
-                  color: isThu ? Colors.green[700] : Colors.red[700],
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const SizedBox(height: 4),
-                  Text(time, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                ],
-              ),
-            ],
-          ),
-          Text(
-            valueString,
-            style: TextStyle(
-              color: isThu ? Colors.green[700] : Colors.red[700],
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          )
-        ],
-      ),
-    );
-  }
 
   // Bottom Sheet thêm giao dịch mới
   void _showAddTransactionBottomSheet(BuildContext context) {
