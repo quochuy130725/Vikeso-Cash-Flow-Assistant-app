@@ -49,7 +49,7 @@ finauto-Cash-Flow-Assistant-app/
 │   │   └── upload.js              # Cấu hình Multer hứng file ảnh đưa trực tiếp vào RAM
 │   ├── controllers/
 │   │   ├── manualEntryController.js  # Phễu lưu trữ: Tính tổng .reduce() & Lưới lọc "POS Ket Ca"
-│   │   └── aiReceiptController.js    # Cổng AI: Đóng gói Payload Base64 + Gọi Gemini (thinkingBudget: 0)
+│   │   └── aiReceiptController.js    # Cổng AI: Đóng gói Payload Base64 + Gọi Gemini
 │   └── functions/                 # MÃ NGUỒN AUTOMATION (Kiến trúc Serverless)
 │       ├── index.js               # Firebase Cloud Functions (Cron-job Trigger 22h00)
 │       └── messageService.js      # Truy vấn DB, đóng gói và bắn báo cáo qua Zalo ZNS / Telegram
@@ -60,18 +60,37 @@ finauto-Cash-Flow-Assistant-app/
 │   │   ├── ios/
 │   │   ├── pubspec.yaml           # Quản lý thư viện (fl_chart, flutter_secure_storage)
 │   │   └── lib/
-│   │       ├── core/              # Cấu hình dùng chung (Themes, Constants)
-│   │       ├── models/            # Lớp cấu trúc dữ liệu (ThuChi Model)
-│   │       ├── screens/           # Tầng Giao diện hiển thị
-│   │       │   ├── dashboard_screen.dart    # Biểu đồ dòng tiền thu/chi
-│   │       │   ├── camera_screen.dart       # Giao diện 1-Chạm & Nút chim mồi (Nhập dự phòng)
-│   │       │   └── split_screen.dart        # Màn hình đối chiếu (Nửa trên ảnh, nửa dưới Form JSON)
-│   │       ├── services/          # Tầng Kết nối mạng (API Binding)
-│   │       │   └── api_service.dart         # Gọi HTTP Request, quản lý State vòng xoay Loading chờ AI
-│   │       ├── utils/             # Các tiện ích bổ trợ
-│   │       │   └── image_helper.dart        # Tiền xử lý ảnh gốc: Crop cắt viền, Filter tăng tương phản
-│   │       └── widgets/           # Tầng Thành phần UI tái sử dụng
-│   │           └── traffic_light.dart       # Đèn giao thông UX (Đổi màu viền Xanh/Vàng/Đỏ theo độ tin cậy)
+│   │       ├── core/              # Nơi chứa tài nguyên dùng chung toàn hệ thống
+│   │       │   ├── themes/        # Cấu hình ThemeData (Màu hồng chủ đạo của FinAuto)
+│   │       │   │   └── app_theme.dart
+│   │       │   └── constants/     # Định nghĩa API Endpoint, Chuỗi text, Kích thước
+│   │       │       └── api_endpoints.dart
+│   │       ├── data/              # TẦNG DỮ LIỆU (Giao tiếp ngoại vi)
+│   │       │   ├── models/
+│   │       │   │   ├── thu_chi_model.dart
+│   │       │   │   └── ai_contract_model.dart
+│   │       │   └── services/
+│   │       │       └── api_service.dart
+│   │       ├── utils/             # Các hàm tiện ích thuần túy (Helper)
+│   │       │   └── image_helper.dart
+│   │       ├── views/             # TẦNG GIAO DIỆN (Layered / Feature-first)
+│   │       │   ├── auth/
+│   │       │   │   └── login_screen.dart
+│   │       │   ├── dashboard/
+│   │       │   │   ├── dashboard_screen.dart
+│   │       │   │   └── widgets/
+│   │       │   │       └── cash_flow_chart.dart
+│   │       │   ├── thu_chi/
+│   │       │   │   ├── thu_chi_screen.dart
+│   │       │   │   └── widgets/
+│   │       │   │       └── thu_chi_list_item.dart
+│   │       │   ├── scan_receipt/
+│   │       │   │   ├── camera_screen.dart
+│   │       │   │   └── split_screen.dart
+│   │       │   └── shared_widgets/
+│   │       │       ├── side_drawer.dart
+│   │       │       └── app_loading_overlay.dart
+│   │       └── main.dart          # Điểm khởi chạy ứng dụng
 │   │
 │   └── Web/                       # ỨNG DỤNG WEB BẢN QUẢN TRỊ 
 │       └── ...                    # (Tạm đóng băng ở CP3 để dồn toàn lực cho Mobile App)
