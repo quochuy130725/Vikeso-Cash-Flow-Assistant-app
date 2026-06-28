@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/transaction_item_card.dart';
+import 'widgets/thu_chi_list_item.dart';
 
 class ThuChiScreen extends StatefulWidget {
   const ThuChiScreen({super.key});

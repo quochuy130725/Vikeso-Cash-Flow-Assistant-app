@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'side_drawer.dart';
-import '../widgets/donut_chart_painter.dart';
+import '../shared_widgets/side_drawer.dart';
+import 'widgets/donut_chart_painter.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -15,23 +15,22 @@ class DashboardScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFFFF5C8D), // Màu hồng Primary Container
         elevation: 0.5,
-        leading: Builder(
-          builder: (context) {
-            return IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          }
-        ),
+        leading: Builder(builder: (context) {
+          return IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          );
+        }),
         title: const Row(
           children: [
             Icon(Icons.rocket_launch, color: Colors.white, size: 20),
             SizedBox(width: 8),
             Text(
-              'AutoHub Dashboard',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              'FinAuto',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -53,7 +52,7 @@ class DashboardScreen extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    'Xin chào, Tiến',
+                    'Xin chào, User',
                     style: theme.textTheme.headlineLarge?.copyWith(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -70,141 +69,96 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               // --- 1. QUICK ACTION BUTTONS (Màu thương hiệu của dự án) ---
-              SizedBox(
-                height: 100,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Nút Quét Tài Liệu Thông Minh (Màu cherry đỏ chói)
-                    Expanded(
-                      flex: 7,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/camera');
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFB31F56), Color(0xFFFF5C8D)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFB31F56).withValues(alpha: 0.25),
-                                blurRadius: 12,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.document_scanner_outlined, color: Colors.white, size: 26),
-                              SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Quét Tài Liệu Thông Minh',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        shadows: [
-                                          Shadow(
-                                            color: Colors.black26,
-                                            offset: Offset(0, 1),
-                                            blurRadius: 2,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      'AI quét tự động hoá đơn & POS bill',
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Nút Quét Tài Liệu Thông Minh (Primary Action)
+                  InkWell(
+                    onTap: () {
+                      Navigator.pushNamed(context, '/camera');
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFB31F56), Color(0xFFFF5C8D)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: 1.5),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                const Color(0xFFB31F56).withValues(alpha: 0.25),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.document_scanner_outlined,
+                              color: Colors.white, size: 32),
+                          SizedBox(width: 12),
+                          Text(
+                            'Quét Tài Liệu Thông Minh',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black26,
+                                  offset: Offset(0, 1),
+                                  blurRadius: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    
-                    // Nút Nhập Thủ Công (Màu xanh đọt chuối / Secondary Container thương hiệu)
-                    Expanded(
-                      flex: 3,
-                      child: InkWell(
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Chức năng này đang được phát triển!'),
-                              duration: Duration(seconds: 2),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF5C6300), Color(0xFFDCE944)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.5),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF5C6300).withValues(alpha: 0.25),
-                                blurRadius: 12,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.keyboard_alt_outlined, color: Colors.white, size: 18),
-                              SizedBox(width: 6),
-                              Flexible(
-                                child: Text(
-                                  'Nhập Thủ Công',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black26,
-                                        offset: Offset(0, 1),
-                                        blurRadius: 2,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Nút Nhập Thủ Công (Secondary Action)
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Chức năng này đang được phát triển!'),
+                          duration: Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
                         ),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(
+                          color: Color(0xFF198754),
+                          width: 1.5), // Màu xanh lá như OutlinedButton
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                  ],
-                ),
+                    icon: const Icon(Icons.keyboard_alt_outlined,
+                        color: Color(0xFF198754), size: 24),
+                    label: const Text(
+                      'Nhập Thủ Công',
+                      style: TextStyle(
+                        color: Color(0xFF198754),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
 
@@ -215,7 +169,8 @@ class DashboardScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colorScheme.surfaceContainerHighest),
+                  border:
+                      Border.all(color: colorScheme.surfaceContainerHighest),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.02),
@@ -246,15 +201,29 @@ class DashboardScreen extends StatelessWidget {
                           children: [
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text('Doanh thu tuần:', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                              child: Text('Doanh thu tuần:',
+                                  style: TextStyle(
+                                      color: Colors.grey, fontSize: 13)),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8.0),
                               child: RichText(
                                 text: const TextSpan(
                                   children: [
-                                    TextSpan(text: '16,850,000đ\n', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF198754), height: 1.2)),
-                                    TextSpan(text: '(193 đơn hàng)', style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.5)),
+                                    TextSpan(
+                                        text: '16,850,000đ\n',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                            color: Color(0xFF198754),
+                                            height: 1.2)),
+                                    TextSpan(
+                                        text: '(193 đơn hàng)',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                            height: 1.5)),
                                   ],
                                 ),
                               ),
@@ -265,15 +234,29 @@ class DashboardScreen extends StatelessWidget {
                           children: [
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text('Tổng chi phí tháng:', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                              child: Text('Tổng chi phí tháng:',
+                                  style: TextStyle(
+                                      color: Colors.grey, fontSize: 13)),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8.0),
                               child: RichText(
                                 text: const TextSpan(
                                   children: [
-                                    TextSpan(text: '10,000,000đ\n', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFFDC3545), height: 1.2)),
-                                    TextSpan(text: '(Nguyên liệu chiếm 40%)', style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.5)),
+                                    TextSpan(
+                                        text: '10,000,000đ\n',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                            color: Color(0xFFDC3545),
+                                            height: 1.2)),
+                                    TextSpan(
+                                        text: '(Nguyên liệu chiếm 40%)',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                            height: 1.5)),
                                   ],
                                 ),
                               ),
@@ -284,15 +267,29 @@ class DashboardScreen extends StatelessWidget {
                           children: [
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text('Doanh thu tạm tính:', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                              child: Text('Doanh thu tạm tính:',
+                                  style: TextStyle(
+                                      color: Colors.grey, fontSize: 13)),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8.0),
                               child: RichText(
                                 text: const TextSpan(
                                   children: [
-                                    TextSpan(text: '3,500,000đ\n', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF0D6EFD), height: 1.2)),
-                                    TextSpan(text: '(Hôm nay)', style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.5)),
+                                    TextSpan(
+                                        text: '3,500,000đ\n',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                            color: Color(0xFF0D6EFD),
+                                            height: 1.2)),
+                                    TextSpan(
+                                        text: '(Hôm nay)',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                            height: 1.5)),
                                   ],
                                 ),
                               ),
@@ -314,7 +311,8 @@ class DashboardScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colorScheme.surfaceContainerHighest),
+                  border:
+                      Border.all(color: colorScheme.surfaceContainerHighest),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.02),
@@ -342,7 +340,8 @@ class DashboardScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.arrow_drop_up, color: colorScheme.primary, size: 18),
+                        Icon(Icons.arrow_drop_up,
+                            color: colorScheme.primary, size: 18),
                         Text(
                           '12% so với hôm qua',
                           style: TextStyle(
@@ -365,7 +364,8 @@ class DashboardScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colorScheme.surfaceContainerHighest),
+                  border:
+                      Border.all(color: colorScheme.surfaceContainerHighest),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.02),
@@ -385,10 +385,11 @@ class DashboardScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Thay bằng fl_chart BarChart
                     SizedBox(
-                      height: 180, // Tăng nhẹ chiều cao để chứa nhãn dữ liệu và trục X/Y
+                      height:
+                          180, // Tăng nhẹ chiều cao để chứa nhãn dữ liệu và trục X/Y
                       child: BarChart(
                         BarChartData(
                           alignment: BarChartAlignment.spaceAround,
@@ -396,11 +397,17 @@ class DashboardScreen extends StatelessWidget {
                           barTouchData: BarTouchData(
                             enabled: true,
                             touchTooltipData: BarTouchTooltipData(
-                              getTooltipColor: (_) => Colors.black87,
-                              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                              getTooltipColor: (_) => Colors.transparent,
+                              tooltipPadding: EdgeInsets.zero,
+                              tooltipMargin: 4,
+                              getTooltipItem:
+                                  (group, groupIndex, rod, rodIndex) {
                                 return BarTooltipItem(
                                   '${rod.toY} Tr',
-                                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                  TextStyle(
+                                      color: Colors.grey[800],
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold),
                                 );
                               },
                             ),
@@ -411,33 +418,34 @@ class DashboardScreen extends StatelessWidget {
                               sideTitles: SideTitles(
                                 showTitles: true,
                                 getTitlesWidget: (value, meta) {
-                                  const titles = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-                                  final title = (value.toInt() >= 0 && value.toInt() < titles.length)
+                                  const titles = [
+                                    'T2',
+                                    'T3',
+                                    'T4',
+                                    'T5',
+                                    'T6',
+                                    'T7',
+                                    'CN'
+                                  ];
+                                  final title = (value.toInt() >= 0 &&
+                                          value.toInt() < titles.length)
                                       ? titles[value.toInt()]
                                       : '';
                                   return SideTitleWidget(
                                     meta: meta,
-                                    child: Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                    child: Text(title,
+                                        style: const TextStyle(
+                                            color: Colors.grey, fontSize: 12)),
                                   );
                                 },
                               ),
                             ),
-                            leftTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                reservedSize: 28,
-                                interval: 5,
-                                getTitlesWidget: (value, meta) {
-                                  if (value == 0) return const SizedBox();
-                                  return Text(
-                                    '${value.toInt()}Tr',
-                                    style: const TextStyle(color: Colors.grey, fontSize: 10),
-                                  );
-                                },
-                              ),
-                            ),
-                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            leftTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false)),
+                            rightTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false)),
+                            topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false)),
                           ),
                           gridData: FlGridData(
                             show: true,
@@ -474,7 +482,8 @@ class DashboardScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colorScheme.surfaceContainerHighest),
+                  border:
+                      Border.all(color: colorScheme.surfaceContainerHighest),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.02),
@@ -507,10 +516,14 @@ class DashboardScreen extends StatelessWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildLegendItem('Nguyên liệu', '40%', const Color(0xFFFF5C8D)),
-                            _buildLegendItem('Nhân công', '35%', const Color(0xFFDCE944)),
-                            _buildLegendItem('Điện nước', '15%', Colors.white, border: true),
-                            _buildLegendItem('Khác', '10%', const Color(0xFFE2E2E2)),
+                            _buildLegendItem(
+                                'Nguyên liệu', '40%', const Color(0xFFFF5C8D)),
+                            _buildLegendItem(
+                                'Nhân công', '35%', const Color(0xFFDCE944)),
+                            _buildLegendItem('Điện nước', '15%', Colors.white,
+                                border: true),
+                            _buildLegendItem(
+                                'Khác', '10%', const Color(0xFFE2E2E2)),
                           ],
                         )
                       ],
@@ -532,7 +545,7 @@ class DashboardScreen extends StatelessWidget {
       barRods: [
         BarChartRodData(
           toY: y,
-          width: 16,
+          width: 14,
           gradient: const LinearGradient(
             colors: [Color(0xFFB31F56), Color(0xFFFF5C8D)],
             begin: Alignment.bottomCenter,
@@ -544,7 +557,8 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLegendItem(String label, String percent, Color color, {bool border = false}) {
+  Widget _buildLegendItem(String label, String percent, Color color,
+      {bool border = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -562,9 +576,12 @@ class DashboardScreen extends StatelessWidget {
           const SizedBox(width: 8),
           SizedBox(
             width: 80,
-            child: Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            child: Text(label,
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ),
-          Text(percent, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          Text(percent,
+              style:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
         ],
       ),
     );

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'core/themes.dart';
+import 'core/themes/app_theme.dart';
 // Import các màn hình của ứng dụng
-import 'screens/splash_screen.dart';
-import 'screens/login_screen.dart';
-import 'screens/dashboard_screen.dart';
-import 'screens/thu_chi_screen.dart';
-import 'screens/profile_screen.dart';
-import 'screens/camera_screen.dart';
-import 'screens/split_screen.dart';
+import 'views/splash/splash_screen.dart';
+import 'views/auth/login_screen.dart';
+import 'views/dashboard/dashboard_screen.dart';
+import 'views/thu_chi/thu_chi_screen.dart';
+import 'views/profile/profile_screen.dart';
+import 'views/scan_receipt/camera_screen.dart';
+import 'views/scan_receipt/split_screen.dart';
 
 void main() {
   runApp(const QuanLyCuaHangApp());

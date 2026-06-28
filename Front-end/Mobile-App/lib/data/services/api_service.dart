@@ -1,5 +1,5 @@
 import 'dart:io';
-import '../models/thu_chi.dart';
+import '../models/thu_chi_model.dart';
 
 class ApiService {
   final String baseUrl;
