@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'side_drawer.dart';
 import '../widgets/donut_chart_painter.dart';
 
-
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
@@ -25,9 +24,15 @@ class DashboardScreen extends StatelessWidget {
             );
           }
         ),
-        title: const Text(
-          'Trang chủ',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: const Row(
+          children: [
+            Icon(Icons.rocket_launch, color: Colors.white, size: 20),
+            SizedBox(width: 8),
+            Text(
+              'AutoHub Dashboard',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
         actions: [
           IconButton(
@@ -63,6 +68,224 @@ class DashboardScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
+              // --- 1. QUICK ACTION BUTTONS (Màu thương hiệu của dự án) ---
+              SizedBox(
+                height: 100,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Nút Quét Tài Liệu Thông Minh (Màu cherry đỏ chói)
+                    Expanded(
+                      flex: 7,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/camera');
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFB31F56), Color(0xFFFF5C8D)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFB31F56).withValues(alpha: 0.25),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.document_scanner_outlined, color: Colors.white, size: 26),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Quét Tài Liệu Thông Minh',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        shadows: [
+                                          Shadow(
+                                            color: Colors.black26,
+                                            offset: Offset(0, 1),
+                                            blurRadius: 2,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'AI quét tự động hoá đơn & POS bill',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    
+                    // Nút Nhập Thủ Công (Màu xanh đọt chuối / Secondary Container thương hiệu)
+                    Expanded(
+                      flex: 3,
+                      child: InkWell(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Chức năng này đang được phát triển!'),
+                              duration: Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF5C6300), Color(0xFFDCE944)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.5),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF5C6300).withValues(alpha: 0.25),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.keyboard_alt_outlined, color: Colors.white, size: 18),
+                              SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  'Nhập Thủ Công',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black26,
+                                        offset: Offset(0, 1),
+                                        blurRadius: 2,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // --- 2. SUMMARY NUMERICAL STATS TABLE (Bảng số liệu tóm gọn biểu đồ) ---
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colorScheme.surfaceContainerHighest),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tóm tắt thống kê số liệu',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontSize: 15,
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Bảng số liệu tóm tắt ngắn gọn
+                    Table(
+                      columnWidths: const {
+                        0: FlexColumnWidth(3),
+                        1: FlexColumnWidth(4),
+                      },
+                      children: const [
+                        TableRow(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 6.0),
+                              child: Text('Doanh thu tuần:', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 6.0),
+                              child: Text('16,850,000đ (193 đơn hàng)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF198754))),
+                            ),
+                          ],
+                        ),
+                        TableRow(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 6.0),
+                              child: Text('Tổng chi phí tháng:', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 6.0),
+                              child: Text('10,000,000đ (Nguyên liệu chiếm 40%)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFFDC3545))),
+                            ),
+                          ],
+                        ),
+                        TableRow(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 6.0),
+                              child: Text('Doanh thu tạm tính:', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 6.0),
+                              child: Text('3.500.000đ (Hôm nay)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0D6EFD))),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // --- 3. CHARTS ---
               // Thẻ hiển thị doanh thu hôm nay
               Container(
                 width: double.infinity,
@@ -78,7 +301,6 @@ class DashboardScreen extends StatelessWidget {
                       offset: const Offset(0, 2),
                     )
                   ],
-
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,7 +387,7 @@ class DashboardScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Thẻ hiển thị cơ cấu chi phí (Pie chart biểu diễn theo conic-gradient)
+              // Thẻ hiển thị cơ cấu chi phí (Pie chart)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -195,7 +417,6 @@ class DashboardScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        // Đồ họa Donut Chart vẽ nhanh bằng CustomPaint
                         SizedBox(
                           width: 100,
                           height: 100,
@@ -203,8 +424,6 @@ class DashboardScreen extends StatelessWidget {
                             painter: DonutChartPainter(),
                           ),
                         ),
-                        
-                        // Chú thích các thành phần chi phí
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -272,5 +491,3 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 }
-
-

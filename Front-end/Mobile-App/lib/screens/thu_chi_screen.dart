@@ -37,7 +37,10 @@ class _ThuChiScreenState extends State<ThuChiScreen> with SingleTickerProviderSt
         backgroundColor: const Color(0xFFB31F56), // Tiêu đề đỏ cherry
         title: const Text('Thu Chi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.add, color: Colors.white)),
+          IconButton(
+            onPressed: () => Navigator.pushNamed(context, '/camera'),
+            icon: const Icon(Icons.document_scanner, color: Colors.white),
+          ),
         ],
       ),
       body: Column(
@@ -83,10 +86,10 @@ class _ThuChiScreenState extends State<ThuChiScreen> with SingleTickerProviderSt
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddTransactionBottomSheet(context),
+        onPressed: () => Navigator.pushNamed(context, '/camera'),
         backgroundColor: colorScheme.primaryContainer,
         shape: const CircleBorder(),
-        child: const Icon(Icons.add, size: 28, color: Colors.white),
+        child: const Icon(Icons.document_scanner, size: 28, color: Colors.white),
       ),
     );
   }
