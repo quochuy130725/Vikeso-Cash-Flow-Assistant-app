@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'side_drawer.dart';
 import '../widgets/donut_chart_painter.dart';
 
@@ -235,46 +236,66 @@ class DashboardScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // Bảng số liệu tóm tắt ngắn gọn
                     Table(
                       columnWidths: const {
                         0: FlexColumnWidth(3),
                         1: FlexColumnWidth(4),
                       },
-                      children: const [
+                      children: [
                         TableRow(
                           children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 6.0),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8.0),
                               child: Text('Doanh thu tuần:', style: TextStyle(color: Colors.grey, fontSize: 13)),
                             ),
                             Padding(
-                              padding: EdgeInsets.symmetric(vertical: 6.0),
-                              child: Text('16,850,000đ (193 đơn hàng)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF198754))),
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: RichText(
+                                text: const TextSpan(
+                                  children: [
+                                    TextSpan(text: '16,850,000đ\n', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF198754), height: 1.2)),
+                                    TextSpan(text: '(193 đơn hàng)', style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.5)),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
                         ),
                         TableRow(
                           children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 6.0),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8.0),
                               child: Text('Tổng chi phí tháng:', style: TextStyle(color: Colors.grey, fontSize: 13)),
                             ),
                             Padding(
-                              padding: EdgeInsets.symmetric(vertical: 6.0),
-                              child: Text('10,000,000đ (Nguyên liệu chiếm 40%)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFFDC3545))),
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: RichText(
+                                text: const TextSpan(
+                                  children: [
+                                    TextSpan(text: '10,000,000đ\n', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFFDC3545), height: 1.2)),
+                                    TextSpan(text: '(Nguyên liệu chiếm 40%)', style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.5)),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
                         ),
                         TableRow(
                           children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 6.0),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8.0),
                               child: Text('Doanh thu tạm tính:', style: TextStyle(color: Colors.grey, fontSize: 13)),
                             ),
                             Padding(
-                              padding: EdgeInsets.symmetric(vertical: 6.0),
-                              child: Text('3.500.000đ (Hôm nay)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0D6EFD))),
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: RichText(
+                                text: const TextSpan(
+                                  children: [
+                                    TextSpan(text: '3,500,000đ\n', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF0D6EFD), height: 1.2)),
+                                    TextSpan(text: '(Hôm nay)', style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.5)),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -365,21 +386,80 @@ class DashboardScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
                     
-                    // Vẽ các thanh biểu đồ custom bằng Widget Flutter
+                    // Thay bằng fl_chart BarChart
                     SizedBox(
-                      height: 120,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          _buildBar('T2', 0.3, colorScheme.primaryContainer),
-                          _buildBar('T3', 0.6, colorScheme.secondaryContainer),
-                          _buildBar('T4', 0.4, colorScheme.primaryContainer),
-                          _buildBar('T5', 0.8, colorScheme.secondaryContainer),
-                          _buildBar('T6', 0.5, colorScheme.primaryContainer),
-                          _buildBar('T7', 0.9, colorScheme.secondaryContainer),
-                          _buildBar('CN', 0.7, colorScheme.primaryContainer),
-                        ],
+                      height: 180, // Tăng nhẹ chiều cao để chứa nhãn dữ liệu và trục X/Y
+                      child: BarChart(
+                        BarChartData(
+                          alignment: BarChartAlignment.spaceAround,
+                          maxY: 10, // Giả sử cao nhất là 10 triệu
+                          barTouchData: BarTouchData(
+                            enabled: true,
+                            touchTooltipData: BarTouchTooltipData(
+                              getTooltipColor: (_) => Colors.black87,
+                              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                                return BarTooltipItem(
+                                  '${rod.toY} Tr',
+                                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                );
+                              },
+                            ),
+                          ),
+                          titlesData: FlTitlesData(
+                            show: true,
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  const titles = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+                                  final title = (value.toInt() >= 0 && value.toInt() < titles.length)
+                                      ? titles[value.toInt()]
+                                      : '';
+                                  return SideTitleWidget(
+                                    meta: meta,
+                                    child: Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                  );
+                                },
+                              ),
+                            ),
+                            leftTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 28,
+                                interval: 5,
+                                getTitlesWidget: (value, meta) {
+                                  if (value == 0) return const SizedBox();
+                                  return Text(
+                                    '${value.toInt()}Tr',
+                                    style: const TextStyle(color: Colors.grey, fontSize: 10),
+                                  );
+                                },
+                              ),
+                            ),
+                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          ),
+                          gridData: FlGridData(
+                            show: true,
+                            drawVerticalLine: false,
+                            horizontalInterval: 5,
+                            getDrawingHorizontalLine: (value) => FlLine(
+                              color: Colors.grey.withValues(alpha: 0.2),
+                              strokeWidth: 1,
+                              dashArray: [5, 5],
+                            ),
+                          ),
+                          borderData: FlBorderData(show: false),
+                          barGroups: [
+                            _buildFlBarGroup(0, 3.0),
+                            _buildFlBarGroup(1, 6.0),
+                            _buildFlBarGroup(2, 4.0),
+                            _buildFlBarGroup(3, 8.0),
+                            _buildFlBarGroup(4, 5.0),
+                            _buildFlBarGroup(5, 9.0),
+                            _buildFlBarGroup(6, 7.0),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -445,23 +525,22 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBar(String label, double fillRate, Color barColor) {
-    return Expanded(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Container(
-            height: 90 * fillRate,
-            margin: const EdgeInsets.symmetric(horizontal: 6),
-            decoration: BoxDecoration(
-              color: barColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-            ),
+  BarChartGroupData _buildFlBarGroup(int x, double y) {
+    return BarChartGroupData(
+      x: x,
+      showingTooltipIndicators: [0], // Show data label on top
+      barRods: [
+        BarChartRodData(
+          toY: y,
+          width: 16,
+          gradient: const LinearGradient(
+            colors: [Color(0xFFB31F56), Color(0xFFFF5C8D)],
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
           ),
-          const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-        ],
-      ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+        ),
+      ],
     );
   }
 
