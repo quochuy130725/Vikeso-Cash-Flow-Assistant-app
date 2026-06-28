@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/traffic_light.dart';
-
 class SplitScreen extends StatefulWidget {
   const SplitScreen({super.key});
 
@@ -17,6 +15,20 @@ class _SplitScreenState extends State<SplitScreen> {
   
   // Default mock confidence level (can be "Cao", "Trung Binh", "Thap")
   String _confidenceLevel = 'Trung Binh';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ AI không chắc chắn lắm, vui lòng kiểm tra lại các ô màu cam/đỏ.'),
+          duration: Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    });
+  }
 
   @override
   void dispose() {
@@ -161,16 +173,14 @@ class _SplitScreenState extends State<SplitScreen> {
                     ),
                   ),
                   
-                  // Form wrapped in TrafficLightWrapper
+                  // Form without whole-wrapper
                   Expanded(
-                    child: TrafficLightWrapper(
-                      mucDoTinCay: _confidenceLevel,
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // 1. Phân loại Dropdown
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // 1. Phân loại Dropdown
                             const Text(
                               'Phân loại nguồn',
                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey),
@@ -210,21 +220,23 @@ class _SplitScreenState extends State<SplitScreen> {
                             const SizedBox(height: 6),
                             SizedBox(
                               width: double.infinity,
+                              height: 36, // Bóp nhỏ chiều cao
                               child: SegmentedButton<String>(
                                 style: SegmentedButton.styleFrom(
+                                  padding: EdgeInsets.zero,
                                   selectedBackgroundColor: colorScheme.primaryContainer,
                                   selectedForegroundColor: Colors.white,
                                 ),
                                 segments: const [
                                   ButtonSegment<String>(
                                     value: 'THU',
-                                    label: Text('THU (Thu nhập)'),
-                                    icon: Icon(Icons.arrow_upward),
+                                    label: Text('THU', style: TextStyle(fontSize: 13)),
+                                    icon: Icon(Icons.arrow_upward, size: 16),
                                   ),
                                   ButtonSegment<String>(
                                     value: 'CHI',
-                                    label: Text('CHI (Chi phí)'),
-                                    icon: Icon(Icons.arrow_downward),
+                                    label: Text('CHI', style: TextStyle(fontSize: 13)),
+                                    icon: Icon(Icons.arrow_downward, size: 16),
                                   ),
                                 ],
                                 selected: {_transactionType},
@@ -246,9 +258,37 @@ class _SplitScreenState extends State<SplitScreen> {
                             TextField(
                               controller: _amountController,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              style: TextStyle(
+                                fontWeight: _confidenceLevel == 'Cao' ? FontWeight.normal : FontWeight.bold,
+                                color: _confidenceLevel == 'Cao'
+                                    ? Colors.black
+                                    : _confidenceLevel == 'Trung Binh'
+                                        ? Colors.orange
+                                        : Colors.red,
+                              ),
+                              decoration: InputDecoration(
+                                border: const OutlineInputBorder(),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: _confidenceLevel == 'Cao'
+                                        ? Colors.grey
+                                        : _confidenceLevel == 'Trung Binh'
+                                            ? Colors.orange
+                                            : Colors.red,
+                                    width: _confidenceLevel == 'Cao' ? 1.0 : 2.0,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: _confidenceLevel == 'Cao'
+                                        ? colorScheme.primary
+                                        : _confidenceLevel == 'Trung Binh'
+                                            ? Colors.orange
+                                            : Colors.red,
+                                    width: 2.0,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -297,8 +337,7 @@ class _SplitScreenState extends State<SplitScreen> {
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
               ),
             ),
           ),
