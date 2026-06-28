@@ -61,7 +61,13 @@ class CameraScreen extends StatelessWidget {
                         alignment: Alignment.centerLeft,
                         child: TextButton(
                           onPressed: () {
-                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Tính năng đang được thi công!'),
+                                duration: Duration(seconds: 2),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
                           },
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.white,
@@ -77,7 +83,7 @@ class CameraScreen extends StatelessWidget {
                       ),
                     ),
                     
-                    // Large Capture FloatingActionButton
+                    // Large Capture FloatingActionButton in the center
                     FloatingActionButton.large(
                       onPressed: () {
                         Navigator.pushNamed(context, '/split');
@@ -88,8 +94,29 @@ class CameraScreen extends StatelessWidget {
                       child: const Icon(Icons.camera, size: 36),
                     ),
                     
-                    // Empty widget or helper text to balance the row layout
-                    const SizedBox(width: 120),
+                    // Gallery button on the bottom right
+                    SizedBox(
+                      width: 120,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/split');
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white,
+                          ),
+                          icon: const Icon(Icons.photo_library, size: 20),
+                          label: const Text(
+                            'Hình ảnh',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
