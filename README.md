@@ -22,9 +22,9 @@
 ## 🏗️ Kiến Trúc Hệ Thống (System Architecture)
 
 Dự án được xây dựng theo mô hình **Dual-Track Agile** và chia thành phân hệ rõ ràng:
-* **Frontend (Mobile App):** Xây dựng bằng Flutter, tập trung vào UX/UI và xử lý ảnh (Crop/Filter) trước khi gửi.
-* **Backend (API Gateway):** Node.js/Express đóng vai trò Proxy an toàn, xử lý logic Lưới lọc chống trùng lặp và đóng gói Payload giao tiếp với Gemini AI.
-* **Automation (Cron-job):** Kiến trúc Serverless với Firebase Cloud Functions và Google Cloud Scheduler giúp tối ưu chi phí vận hành (OpEx = 0đ).
+* **Frontend (Mobile App):** Xây dựng bằng Flutter theo kiến trúc Component-based (tuân thủ KISS & DRY). Tách nhỏ UI để tối ưu hiệu suất và dễ quản lý State.
+* **Backend (API Gateway):** Node.js/Express đóng vai trò Proxy an toàn, xử lý logic Lưới lọc thông minh (Chỉ gộp doanh THU, giữ nguyên các khoản CHI phí ẩn) và đóng gói Payload giao tiếp với Gemini AI.
+* **Automation (Cron-job):** Kiến trúc Serverless với Firebase Cloud Functions và Telegram Bot API giúp tự động bắn báo cáo thụ động mà không cần mở App.
 
 ---
 
@@ -35,62 +35,47 @@ Dự án được cấu trúc theo dạng Monorepo, phân tách rõ ràng giữa
 ```text
 finauto-Cash-Flow-Assistant-app/
 │
-├── Back-end/                      # MÁY CHỦ NODE.JS & TỰ ĐỘNG HÓA NGẦM
+├── Back-end/                      # MÁY CHỦ NODE.JS & DATABASE
 │   ├── package.json
-│   ├── .env.example               # Mẫu cấu hình biến môi trường (Giấu GEMINI_API_KEY)
+│   ├── .env.example               # Mẫu cấu hình (Giấu GEMINI_API_KEY, MONGO_URI, TELEGRAM_BOT_TOKEN)
 │   ├── server.js                  # Điểm khởi chạy API Gateway
+│   ├── test_telegram.js           # [NEW] File chạy độc lập test Bot Telegram bắn báo cáo
 │   ├── config/
 │   │   └── database.js            # Cấu hình kết nối MongoDB Atlas (Whitelist 0.0.0.0/0)
-│   ├── models/
-│   │   └── ThuChi.js              # Định nghĩa Mongoose Schema (Shop_ID, PhanLoai, DoanhThu...)
+│   ├── models/                    # TẦNG DATABASE (Mongoose Schemas)
+│   │   ├── Receipt.js             # [UPDATED] Lưu giao dịch (category, transactionType, status: VALID/MERGED)
+│   │   └── User.js                # [NEW] Phân quyền Freemium (FREE/PRO) và lưu telegramChatId
 │   ├── routes/
 │   │   └── apiRoutes.js           # Khai báo Endpoint (/manual-entry, /upload-receipt)
 │   ├── middlewares/
 │   │   └── upload.js              # Cấu hình Multer hứng file ảnh đưa trực tiếp vào RAM
 │   ├── controllers/
-│   │   ├── manualEntryController.js  # Phễu lưu trữ: Tính tổng .reduce() & Lưới lọc "POS Ket Ca"
-│   │   └── aiReceiptController.js    # Cổng AI: Đóng gói Payload Base64 + Gọi Gemini
+│   │   ├── manualEntryController.js  # Lưới lọc thông minh: Gạch bỏ hóa đơn lẻ THU, giữ nguyên CHI + Mock Telegram
+│   │   └── aiReceiptController.js    # Cổng AI: Gửi ảnh + System Instruction 6 Rule (thinkingBudget: 0)
 │   └── functions/                 # MÃ NGUỒN AUTOMATION (Kiến trúc Serverless)
-│       ├── index.js               # Firebase Cloud Functions (Cron-job Trigger 22h00)
-│       └── messageService.js      # Truy vấn DB, đóng gói và bắn báo cáo qua Zalo ZNS / Telegram
+│       └── index.js               # Firebase Cloud Functions (Cron-job Trigger 22h00 bắn Telegram)
 │
 ├── Front-end/
-│   ├── Mobile-App/                # ỨNG DỤNG FLUTTER (CORE UX/UI DÀNH CHO KHÁCH HÀNG)
-│   │   ├── android/
-│   │   ├── ios/
+│   ├── Mobile-App/                # ỨNG DỤNG FLUTTER (REFACTORED - KISS & DRY)
 │   │   ├── pubspec.yaml           # Quản lý thư viện (fl_chart, flutter_secure_storage)
 │   │   └── lib/
-│   │       ├── core/              # Nơi chứa tài nguyên dùng chung toàn hệ thống
-│   │       │   ├── themes/        # Cấu hình ThemeData (Màu hồng chủ đạo của FinAuto)
-│   │       │   │   └── app_theme.dart
-│   │       │   └── constants/     # Định nghĩa API Endpoint, Chuỗi text, Kích thước
-│   │       │       └── api_endpoints.dart
-│   │       ├── data/              # TẦNG DỮ LIỆU (Giao tiếp ngoại vi)
-│   │       │   ├── models/
-│   │       │   │   ├── thu_chi_model.dart
-│   │       │   │   └── ai_contract_model.dart
-│   │       │   └── services/
-│   │       │       └── api_service.dart
-│   │       ├── utils/             # Các hàm tiện ích thuần túy (Helper)
-│   │       │   └── image_helper.dart
-│   │       ├── views/             # TẦNG GIAO DIỆN (Layered / Feature-first)
-│   │       │   ├── auth/
-│   │       │   │   └── login_screen.dart
-│   │       │   ├── dashboard/
-│   │       │   │   ├── dashboard_screen.dart
-│   │       │   │   └── widgets/
-│   │       │   │       └── cash_flow_chart.dart
-│   │       │   ├── thu_chi/
-│   │       │   │   ├── thu_chi_screen.dart
-│   │       │   │   └── widgets/
-│   │       │   │       └── thu_chi_list_item.dart
-│   │       │   ├── scan_receipt/
-│   │       │   │   ├── camera_screen.dart
-│   │       │   │   └── split_screen.dart
-│   │       │   └── shared_widgets/
-│   │       │       ├── side_drawer.dart
-│   │       │       └── app_loading_overlay.dart
-│   │       └── main.dart          # Điểm khởi chạy ứng dụng
+│   │       ├── core/utils/
+│   │       │   └── ui_helpers.dart         # [NEW] Chuẩn hóa Toast/SnackBar/Dialog (Tái sử dụng code)
+│   │       ├── models/            
+│   │       │   └── thu_chi_model.dart      # Định kiểu JSON Mapping
+│   │       ├── services/          
+│   │       │   └── api_service.dart        # Gọi HTTP Axios, quản lý Data Fetching
+│   │       └── views/                      # Tầng UI (Đã chia nhỏ Widget)
+│   │           ├── dashboard/
+│   │           │   ├── dashboard_screen.dart         # Trang chủ tổng quan (Clean code)
+│   │           │   └── widgets/
+│   │           │       ├── revenue_chart.dart        # [NEW] Biểu đồ fl_chart đã fix lỗi overlap
+│   │           │       └── action_buttons.dart       # [NEW] Cụm nút Quét AI & Nhập thủ công layout dọc
+│   │           └── scan_receipt/
+│   │               ├── camera_screen.dart            # Giao diện 1-Chạm (Chặn luồng nếu AI trả items rỗng)
+│   │               ├── split_screen.dart             # Màn hình đối chiếu Split-Screen
+│   │               └── widgets/
+│   │                   └── editable_transaction_card.dart # [NEW] Card giao dịch tích hợp Đèn giao thông UX
 │   │
 │   └── Web/                       # ỨNG DỤNG WEB BẢN QUẢN TRỊ 
 │       └── ...                    # (Tạm đóng băng ở CP3 để dồn toàn lực cho Mobile App)
