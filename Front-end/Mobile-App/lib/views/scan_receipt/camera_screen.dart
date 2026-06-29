@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
 import '../../core/utils/ui_helpers.dart';
+import '../../data/services/api_service.dart';
+import 'split_screen.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -14,6 +17,11 @@ class _CameraScreenState extends State<CameraScreen> {
   CameraController? _controller;
   List<CameraDescription>? _cameras;
   bool _isCameraInitialized = false;
+  bool _isLoading = false;
+
+  final _apiService = ApiService();
+  // TODO: Sau khi có login, lấy userId từ Session/SecureStorage
+  static const String _userId = '60d5ecb8b392d70015340123';
 
   @override
   void initState() {
@@ -26,11 +34,10 @@ class _CameraScreenState extends State<CameraScreen> {
       _cameras = await availableCameras();
       if (_cameras != null && _cameras!.isNotEmpty) {
         _controller = CameraController(
-          _cameras![0], // Thường là camera sau
+          _cameras![0],
           ResolutionPreset.high,
           enableAudio: false,
         );
-
         await _controller!.initialize();
         if (mounted) {
           setState(() {
@@ -60,7 +67,7 @@ class _CameraScreenState extends State<CameraScreen> {
           children: [
             // Live Camera Preview
             Positioned.fill(
-              bottom: 120, // Chừa chỗ cho các nút điều khiển bên dưới
+              bottom: 120,
               child: Container(
                 margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -78,9 +85,30 @@ class _CameraScreenState extends State<CameraScreen> {
                 ),
               ),
             ),
-            
+
+            // Loading Overlay
+            if (_isLoading)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(color: Color(0xFFFF5C8D)),
+                        SizedBox(height: 16),
+                        Text(
+                          '🤖 AI đang phân tích hóa đơn...',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
             // Hướng dẫn (Text Overlay)
-            if (_isCameraInitialized)
+            if (_isCameraInitialized && !_isLoading)
               Positioned(
                 top: 40,
                 left: 0,
@@ -111,11 +139,9 @@ class _CameraScreenState extends State<CameraScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Gallery Input button on the bottom left
+                    // Gallery Input button
                     TextButton(
-                      onPressed: () {
-                        _processImageFromGallery();
-                      },
+                      onPressed: _isLoading ? null : _processImageFromGallery,
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white54,
                       ),
@@ -132,17 +158,11 @@ class _CameraScreenState extends State<CameraScreen> {
                         ],
                       ),
                     ),
-                    
                     const SizedBox(width: 8),
-
-                    // Large Capture Button in the center (Shutter)
+                    // Capture Button
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          if (_isCameraInitialized) {
-                            _takePicture();
-                          }
-                        },
+                        onPressed: (_isCameraInitialized && !_isLoading) ? _takePicture : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFFF5C8D),
                           foregroundColor: Colors.white,
@@ -172,7 +192,7 @@ class _CameraScreenState extends State<CameraScreen> {
               top: 16,
               left: 16,
               child: IconButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: _isLoading ? null : () => Navigator.pop(context),
                 icon: const Icon(Icons.close, color: Colors.white, size: 28),
                 style: IconButton.styleFrom(
                   backgroundColor: Colors.black54,
@@ -187,9 +207,8 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Future<void> _takePicture() async {
     try {
-      // Chụp ảnh bằng camera live
       final XFile image = await _controller!.takePicture();
-      await _handleScannedImage(image);
+      await _handleScannedImage(File(image.path));
     } catch (e) {
       if (mounted) {
         UIHelpers.showInfoDialog(context, 'Lỗi', 'Lỗi khi chụp ảnh: $e');
@@ -201,9 +220,8 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
-      if (image == null) return; // Người dùng hủy chọn ảnh
-      await _handleScannedImage(image);
+      if (image == null) return;
+      await _handleScannedImage(File(image.path));
     } catch (e) {
       if (mounted) {
         UIHelpers.showInfoDialog(context, 'Lỗi', 'Không thể mở Thư viện: $e');
@@ -211,45 +229,57 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  Future<void> _handleScannedImage(XFile image) async {
+  Future<void> _handleScannedImage(File imageFile) async {
     if (!mounted) return;
 
-    // Mock Loading (Giả lập gọi API AI)
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
+    setState(() => _isLoading = true);
+
+    // 🚀 GỌI API THẬT - Gửi ảnh lên Gemini AI
+    final result = await _apiService.uploadReceipt(
+      imageFile: imageFile,
+      userId: _userId,
     );
 
-    await Future.delayed(const Duration(seconds: 1));
-
     if (!mounted) return;
-    Navigator.pop(context); // Tắt loading
+    setState(() => _isLoading = false);
 
-    // TODO: Gửi file ảnh `image.path` lên Backend Mongoose.
-    
-    // Giả lập dữ liệu trả về từ AI
-    final Map<String, dynamic> aiResponseData = {
-      'items': [], // Mảng rỗng = không tìm thấy giao dịch
-      'error_type': 'JUNK_IMAGE', 
-    };
+    final List items = (result['items'] as List?) ?? [];
+    final String errorType = result['error_type'] as String? ?? '';
 
-    final List items = aiResponseData['items'] as List;
-    final String errorType = aiResponseData['error_type'] as String? ?? '';
-
+    // Xử lý lỗi ảnh (Chặn rác + Ảnh mờ)
     if (items.isEmpty) {
-      String message = 'Không tìm thấy dữ liệu hóa đơn.';
+      String title = 'Không tìm thấy hóa đơn';
+      String message = 'Không nhận diện được dữ liệu tài chính trong ảnh này.';
 
       if (errorType == 'JUNK_IMAGE') {
-        message = 'Ảnh không liên quan đến tài chính. Vui lòng chụp hóa đơn/sổ tay!';
+        title = '📷 Ảnh không hợp lệ';
+        message = 'Ảnh này không liên quan đến tài chính. Vui lòng chụp hóa đơn hoặc sổ tay!';
       } else if (errorType == 'BLURRY_IMAGE') {
-        message = 'Ảnh quá mờ! Vui lòng đặt lại camera và chụp rõ hơn.';
+        title = '🌫️ Ảnh quá mờ';
+        message = 'Ảnh quá mờ hoặc lóa sáng! Vui lòng đặt lại camera và chụp rõ hơn.';
+      } else if (errorType == 'NETWORK_ERROR') {
+        title = '📡 Lỗi kết nối';
+        message = result['message'] ?? 'Không thể kết nối đến máy chủ!';
+      } else if (errorType == 'SERVER_ERROR') {
+        title = '⚠️ Lỗi máy chủ';
+        message = result['message'] ?? 'Máy chủ đang gặp sự cố, vui lòng thử lại.';
       }
 
-      UIHelpers.showInfoDialog(context, 'Thông báo', message);
+      UIHelpers.showInfoDialog(context, title, message);
       return;
     }
 
-    Navigator.pushNamed(context, '/split');
+    // Thành công: Chuyển sang SplitScreen và truyền dữ liệu
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SplitScreen(
+          items: items.cast<Map<String, dynamic>>(),
+          userId: _userId,
+          imageFile: imageFile,
+        ),
+      ),
+    );
   }
 }

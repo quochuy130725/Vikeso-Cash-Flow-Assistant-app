@@ -25,11 +25,11 @@ class DashboardActionButtons extends StatelessWidget {
                 end: Alignment.bottomRight,
               ),
               border: Border.all(
-                  color: Colors.white.withOpacity(0.2), width: 1.5),
+                  color: Colors.white.withValues(alpha: 0.2), width: 1.5),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFB31F56).withOpacity(0.25),
+                  color: const Color(0xFFB31F56).withValues(alpha: 0.25),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),

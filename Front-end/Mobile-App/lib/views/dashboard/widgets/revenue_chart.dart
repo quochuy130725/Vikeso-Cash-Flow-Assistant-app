@@ -18,7 +18,7 @@ class RevenueChart extends StatelessWidget {
         border: Border.all(color: colorScheme.surfaceContainerHighest),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 2),
           )
@@ -90,7 +90,7 @@ class RevenueChart extends StatelessWidget {
                   drawVerticalLine: false,
                   horizontalInterval: 5,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.withOpacity(0.2),
+                    color: Colors.grey.withValues(alpha: 0.2),
                     strokeWidth: 1,
                     dashArray: [5, 5],
                   ),
