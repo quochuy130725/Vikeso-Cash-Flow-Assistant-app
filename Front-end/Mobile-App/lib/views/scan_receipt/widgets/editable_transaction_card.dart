@@ -116,6 +116,53 @@ class EditableTransactionCard extends StatelessWidget {
               ),
               onChanged: onReasonChanged,
             ),
+            
+            // Hàng 4: Xem chi tiết bóc tách (nếu có)
+            if (item['rawData'] != null && 
+                item['rawData']['ChiTietSanPham'] != null && 
+                (item['rawData']['ChiTietSanPham'] as List).isNotEmpty)
+              Theme(
+                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: const EdgeInsets.only(top: 4, bottom: 8),
+                  title: Text(
+                    'Xem chi tiết (${(item['rawData']['ChiTietSanPham'] as List).length} mục)',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  children: (item['rawData']['ChiTietSanPham'] as List).map((chiTiet) {
+                    final ten = chiTiet['Ten'] ?? 'Không tên';
+                    final gia = chiTiet['Gia']?.toString() ?? '0';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 6.0, left: 4.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('📦 ', style: TextStyle(fontSize: 14)),
+                          Expanded(
+                            child: Text(
+                              '$ten',
+                              style: const TextStyle(fontSize: 14, color: Colors.black87),
+                            ),
+                          ),
+                          Text(
+                            '$gia đ',
+                            style: const TextStyle(
+                              fontSize: 14, 
+                              fontWeight: FontWeight.bold, 
+                              color: Colors.black54
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
           ],
         ),
       ),

@@ -7,7 +7,6 @@ import 'views/dashboard/dashboard_screen.dart';
 import 'views/thu_chi/thu_chi_screen.dart';
 import 'views/profile/profile_screen.dart';
 import 'views/scan_receipt/camera_screen.dart';
-import 'views/scan_receipt/split_screen.dart';
 
 void main() {
   runApp(const QuanLyCuaHangApp());
@@ -21,7 +20,7 @@ class QuanLyCuaHangApp extends StatelessWidget {
     return MaterialApp(
       title: 'Quản lý cửa hàng',
       debugShowCheckedModeBanner: false,
-      
+
       // Sử dụng AppTheme từ thư mục core
       theme: AppTheme.getTheme(context),
       initialRoute: '/splash',
@@ -32,7 +31,9 @@ class QuanLyCuaHangApp extends StatelessWidget {
         '/thu_chi': (context) => const MainNavigationShell(initialIndex: 1),
         '/profile': (context) => const MainNavigationShell(initialIndex: 2),
         '/camera': (context) => const CameraScreen(),
-        '/split': (context) => const SplitScreen(),
+        // NOTE: '/split' không còn là route tĩnh nữa.
+        // SplitScreen được mở bằng Navigator.push từ CameraScreen
+        // để truyền dữ liệu động (items, userId, imageFile) từ API.
       },
     );
   }
@@ -73,7 +74,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         decoration: BoxDecoration(
           border: Border(
             top: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+              color: Theme.of(context)
+                  .colorScheme
+                  .outlineVariant
+                  .withValues(alpha: 0.5),
               width: 1,
             ),
           ),
@@ -81,7 +85,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         child: NavigationBar(
           selectedIndex: _currentIndex,
           backgroundColor: Colors.white,
-          indicatorColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.2),
+          indicatorColor: Theme.of(context)
+              .colorScheme
+              .primaryContainer
+              .withValues(alpha: 0.2),
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           height: 64,
           onDestinationSelected: (index) {
@@ -91,27 +98,30 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           },
           destinations: [
             NavigationDestination(
-              icon: Icon(
-                Icons.home_outlined, 
-                color: _currentIndex == 0 ? Theme.of(context).colorScheme.primary : Colors.grey[600]
-              ),
-              selectedIcon: Icon(Icons.home, color: Theme.of(context).colorScheme.primary),
+              icon: Icon(Icons.home_outlined,
+                  color: _currentIndex == 0
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey[600]),
+              selectedIcon: Icon(Icons.home,
+                  color: Theme.of(context).colorScheme.primary),
               label: 'Trang chủ',
             ),
             NavigationDestination(
-              icon: Icon(
-                Icons.add_box_outlined, 
-                color: _currentIndex == 1 ? Theme.of(context).colorScheme.primary : Colors.grey[600]
-              ),
-              selectedIcon: Icon(Icons.add_box, color: Theme.of(context).colorScheme.primary),
+              icon: Icon(Icons.add_box_outlined,
+                  color: _currentIndex == 1
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey[600]),
+              selectedIcon: Icon(Icons.add_box,
+                  color: Theme.of(context).colorScheme.primary),
               label: 'Thu Chi',
             ),
             NavigationDestination(
-              icon: Icon(
-                Icons.person_outline, 
-                color: _currentIndex == 2 ? Theme.of(context).colorScheme.primary : Colors.grey[600]
-              ),
-              selectedIcon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
+              icon: Icon(Icons.person_outline,
+                  color: _currentIndex == 2
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey[600]),
+              selectedIcon: Icon(Icons.person,
+                  color: Theme.of(context).colorScheme.primary),
               label: 'Profile',
             ),
           ],
