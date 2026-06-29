@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../shared_widgets/side_drawer.dart';
+import 'widgets/dashboard_action_buttons.dart';
+import 'widgets/revenue_chart.dart';
 import 'widgets/donut_chart_painter.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -69,98 +70,8 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               // --- 1. QUICK ACTION BUTTONS (Màu thương hiệu của dự án) ---
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Nút Quét Tài Liệu Thông Minh (Primary Action)
-                  InkWell(
-                    onTap: () {
-                      Navigator.pushNamed(context, '/camera');
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFB31F56), Color(0xFFFF5C8D)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            width: 1.5),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                const Color(0xFFB31F56).withValues(alpha: 0.25),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.document_scanner_outlined,
-                              color: Colors.white, size: 32),
-                          SizedBox(width: 12),
-                          Text(
-                            'Quét Tài Liệu Thông Minh',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black26,
-                                  offset: Offset(0, 1),
-                                  blurRadius: 2,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Nút Nhập Thủ Công (Secondary Action)
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Chức năng này đang được phát triển!'),
-                          duration: Duration(seconds: 2),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(
-                          color: Color(0xFF198754),
-                          width: 1.5), // Màu xanh lá như OutlinedButton
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: const Icon(Icons.keyboard_alt_outlined,
-                        color: Color(0xFF198754), size: 24),
-                    label: const Text(
-                      'Nhập Thủ Công',
-                      style: TextStyle(
-                        color: Color(0xFF198754),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
+              const DashboardActionButtons(),
+              const SizedBox(height: 24),
 
               // --- 2. SUMMARY NUMERICAL STATS TABLE (Bảng số liệu tóm gọn biểu đồ) ---
               Container(
@@ -358,121 +269,7 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Biểu đồ doanh thu 7 ngày gần nhất
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: colorScheme.surfaceContainerHighest),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    )
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Doanh thu theo ngày (7 ngày gần nhất)',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontSize: 16,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Thay bằng fl_chart BarChart
-                    SizedBox(
-                      height:
-                          180, // Tăng nhẹ chiều cao để chứa nhãn dữ liệu và trục X/Y
-                      child: BarChart(
-                        BarChartData(
-                          alignment: BarChartAlignment.spaceAround,
-                          maxY: 10, // Giả sử cao nhất là 10 triệu
-                          barTouchData: BarTouchData(
-                            enabled: true,
-                            touchTooltipData: BarTouchTooltipData(
-                              getTooltipColor: (_) => Colors.transparent,
-                              tooltipPadding: EdgeInsets.zero,
-                              tooltipMargin: 4,
-                              getTooltipItem:
-                                  (group, groupIndex, rod, rodIndex) {
-                                return BarTooltipItem(
-                                  '${rod.toY} Tr',
-                                  TextStyle(
-                                      color: Colors.grey[800],
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold),
-                                );
-                              },
-                            ),
-                          ),
-                          titlesData: FlTitlesData(
-                            show: true,
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                getTitlesWidget: (value, meta) {
-                                  const titles = [
-                                    'T2',
-                                    'T3',
-                                    'T4',
-                                    'T5',
-                                    'T6',
-                                    'T7',
-                                    'CN'
-                                  ];
-                                  final title = (value.toInt() >= 0 &&
-                                          value.toInt() < titles.length)
-                                      ? titles[value.toInt()]
-                                      : '';
-                                  return SideTitleWidget(
-                                    meta: meta,
-                                    child: Text(title,
-                                        style: const TextStyle(
-                                            color: Colors.grey, fontSize: 12)),
-                                  );
-                                },
-                              ),
-                            ),
-                            leftTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false)),
-                            rightTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false)),
-                            topTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false)),
-                          ),
-                          gridData: FlGridData(
-                            show: true,
-                            drawVerticalLine: false,
-                            horizontalInterval: 5,
-                            getDrawingHorizontalLine: (value) => FlLine(
-                              color: Colors.grey.withValues(alpha: 0.2),
-                              strokeWidth: 1,
-                              dashArray: [5, 5],
-                            ),
-                          ),
-                          borderData: FlBorderData(show: false),
-                          barGroups: [
-                            _buildFlBarGroup(0, 3.0),
-                            _buildFlBarGroup(1, 6.0),
-                            _buildFlBarGroup(2, 4.0),
-                            _buildFlBarGroup(3, 8.0),
-                            _buildFlBarGroup(4, 5.0),
-                            _buildFlBarGroup(5, 9.0),
-                            _buildFlBarGroup(6, 7.0),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const RevenueChart(),
               const SizedBox(height: 16),
 
               // Thẻ hiển thị cơ cấu chi phí (Pie chart)
@@ -535,25 +332,6 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  BarChartGroupData _buildFlBarGroup(int x, double y) {
-    return BarChartGroupData(
-      x: x,
-      showingTooltipIndicators: [0], // Show data label on top
-      barRods: [
-        BarChartRodData(
-          toY: y,
-          width: 14,
-          gradient: const LinearGradient(
-            colors: [Color(0xFFB31F56), Color(0xFFFF5C8D)],
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-          ),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-        ),
-      ],
     );
   }
 

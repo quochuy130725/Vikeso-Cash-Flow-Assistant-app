@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/utils/ui_helpers.dart';
+import 'widgets/editable_transaction_card.dart';
 
 class SplitScreen extends StatefulWidget {
   const SplitScreen({super.key});
@@ -9,26 +11,26 @@ class SplitScreen extends StatefulWidget {
 
 class _SplitScreenState extends State<SplitScreen> {
   // Mock data for AI response
-  String _selectedCategory = 'So Tay';
+  String _selectedCategory = 'Hoa Don Le';
 
   final List<Map<String, dynamic>> _transactionItems = [
     {
-      'transactionType': 'THU',
-      'amount': '150000',
-      'reason': 'Bán lẻ ca sáng',
+      'transactionType': 'CHI',
+      'amount': '1550000',
+      'reason': 'Nhập Phân lân',
       'confidence': 'Cao',
     },
     {
       'transactionType': 'CHI',
-      'amount': '373000',
-      'reason': 'Mua vít sắt que hàn',
+      'amount': '2300000',
+      'reason': 'Nhập Lân dập',
       'confidence': 'trung binh',
     },
     {
-      'transactionType': 'THU',
-      'amount': '1500000',
-      'reason': 'Anh Hoàng cọc sửa máy',
-      'confidence': 'cao',
+      'transactionType': 'CHI',
+      'amount': '850000',
+      'reason': 'Phân Urê (chữ mờ)',
+      'confidence': 'thap',
     },
   ];
 
@@ -43,61 +45,20 @@ class _SplitScreenState extends State<SplitScreen> {
   void _showTrafficLightAlert() {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
+
+
     bool hasThap = _transactionItems
         .any((item) => item['confidence'].toString().toLowerCase() == 'thap');
     bool hasTrungBinh = _transactionItems.any(
         (item) => item['confidence'].toString().toLowerCase() == 'trung binh');
 
     if (hasThap) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor: Colors.red[50],
-          title: const Row(
-            children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
-              SizedBox(width: 8),
-              Text('Cảnh báo mờ/khó đọc',
-                  style: TextStyle(
-                      color: Colors.red,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
-            ],
-          ),
-          content: const Text(
-            '🚨 Ảnh mờ hoặc chữ khó đọc! Anh/chị vui lòng đối chiếu lại thật kỹ các ô bị viền đỏ.',
-            style: TextStyle(color: Colors.black87),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Đã hiểu',
-                  style: TextStyle(
-                      color: Colors.red, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      );
+      UIHelpers.showInfoDialog(context, 'Cảnh báo mờ/khó đọc',
+          '🚨 Ảnh mờ hoặc chữ khó đọc! Anh/chị vui lòng đối chiếu lại thật kỹ các ô bị viền đỏ.');
     } else if (hasTrungBinh) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              '⚠️ Chữ viết có vẻ hơi dính nét, anh/chị lướt qua xem AI có tính nhầm không nhé.'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 4),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      UIHelpers.showWarningToast(context, '⚠️ Chữ viết có vẻ hơi dính nét, anh/chị lướt qua xem AI có tính nhầm không nhé.');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✨ AI đã quét thành công độ chính xác cao.'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 3),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      UIHelpers.showSuccessToast(context, '✨ AI đã quét thành công độ chính xác cao.');
     }
   }
 
@@ -121,16 +82,37 @@ class _SplitScreenState extends State<SplitScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFB31F56),
+        backgroundColor: theme.colorScheme.primary,
         elevation: 0.5,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Rà soát chứng từ',
+          'Rà soát ảnh',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Thông tin biên lai'),
+                  content:
+                      const Text('Thông tin biên lai được chụp từ camera.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Đóng'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -211,7 +193,7 @@ class _SplitScreenState extends State<SplitScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                     child: DropdownButtonFormField<String>(
-                      value: _selectedCategory,
+                      initialValue: _selectedCategory,
                       decoration: const InputDecoration(
                         labelText: 'Phân loại nguồn',
                         border: OutlineInputBorder(),
@@ -250,128 +232,22 @@ class _SplitScreenState extends State<SplitScreen> {
                             item['confidence'].toString().toLowerCase();
                         final borderColor = _getTrafficColor(confidence);
 
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 6),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(
-                                color: confidence != 'cao'
-                                    ? borderColor
-                                    : Colors.transparent,
-                                width: 1.5),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Hàng 1: Nút Thu/Chi và Nút Xóa
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    SizedBox(
-                                      height: 36, // Compact height
-                                      child: SegmentedButton<String>(
-                                        style: SegmentedButton.styleFrom(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8),
-                                          selectedBackgroundColor:
-                                              colorScheme.primaryContainer,
-                                          selectedForegroundColor: Colors.white,
-                                        ),
-                                        segments: const [
-                                          ButtonSegment<String>(
-                                            value: 'THU',
-                                            label: Text('Tiền vào',
-                                                style: TextStyle(fontSize: 12)),
-                                          ),
-                                          ButtonSegment<String>(
-                                            value: 'CHI',
-                                            label: Text('Tiền ra',
-                                                style: TextStyle(fontSize: 12)),
-                                          ),
-                                        ],
-                                        selected: {item['transactionType']},
-                                        onSelectionChanged:
-                                            (Set<String> newSelection) {
-                                          setState(() {
-                                            item['transactionType'] =
-                                                newSelection.first;
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete_outline,
-                                          color: Colors.red),
-                                      onPressed: () => _removeItem(index),
-                                      tooltip: 'Xóa giao dịch này',
-                                    )
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-
-                                // Hàng 2: Ô nhập số tiền (CÓ VIỀN MÀU THEO ĐỘ TIN CẬY)
-                                TextFormField(
-                                  initialValue: item['amount'],
-                                  keyboardType: TextInputType.number,
-                                  style: TextStyle(
-                                    fontWeight: confidence == 'cao'
-                                        ? FontWeight.normal
-                                        : FontWeight.bold,
-                                    color: confidence == 'cao'
-                                        ? Colors.black
-                                        : borderColor,
-                                  ),
-                                  decoration: InputDecoration(
-                                    labelText: 'Số tiền (đ)',
-                                    labelStyle: TextStyle(
-                                        color: confidence == 'cao'
-                                            ? Colors.grey[700]
-                                            : borderColor),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: confidence == 'cao'
-                                              ? colorScheme.primary
-                                              : borderColor,
-                                          width: 2),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: confidence == 'cao'
-                                              ? Colors.grey
-                                              : borderColor,
-                                          width:
-                                              confidence == 'cao' ? 1.0 : 2.0),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 8),
-                                  ),
-                                  onChanged: (val) {
-                                    item['amount'] = val;
-                                  },
-                                ),
-                                const SizedBox(height: 12),
-
-                                // Hàng 3: Ô nhập lý do
-                                TextFormField(
-                                  initialValue: item['reason'],
-                                  decoration: const InputDecoration(
-                                    labelText: 'Lý do / Nội dung',
-                                    border: OutlineInputBorder(),
-                                    contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 8),
-                                  ),
-                                  onChanged: (val) {
-                                    item['reason'] = val;
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
+                        return EditableTransactionCard(
+                          item: item,
+                          borderColor: borderColor,
+                          confidence: confidence,
+                          onDelete: () => _removeItem(index),
+                          onTypeChanged: (newType) {
+                            setState(() {
+                              item['transactionType'] = newType;
+                            });
+                          },
+                          onAmountChanged: (val) {
+                            item['amount'] = val;
+                          },
+                          onReasonChanged: (val) {
+                            item['reason'] = val;
+                          },
                         );
                       },
                     ),
@@ -395,9 +271,14 @@ class _SplitScreenState extends State<SplitScreen> {
                         ),
                         onPressed: () {
                           // Gom cục transactionItems đẩy qua POST API
-                          Navigator.popUntil(
+                          
+                          UIHelpers.showSuccessToast(context, '🎉 Lưu giao dịch thành công!');
+
+                          // Điều hướng về màn Thu/Chi và xóa sạch các màn hình phụ (camera, split) khỏi stack
+                          Navigator.pushNamedAndRemoveUntil(
                             context,
-                            ModalRoute.withName('/thu_chi'),
+                            '/thu_chi',
+                            (route) => false,
                           );
                         },
                         child: const Text(

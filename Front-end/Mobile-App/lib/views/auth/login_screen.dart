@@ -208,14 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Giao thoa đăng nhập Google
                       Navigator.of(context).pushReplacementNamed('/dashboard');
                     },
-                    icon: Image.asset(
-                      'assets/images/google_logo.png', // Thay bằn icon SVG hoặc ảnh đúng đường dẫn
-                      width: 20,
-                      height: 20,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.account_balance_sharp, size: 20, color: Colors.blue);
-                      },
-                    ),
+                    icon: const Icon(Icons.login, size: 20, color: Colors.blue),
                     label: const Text('Đăng nhập với Google'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: colorScheme.onSurface,

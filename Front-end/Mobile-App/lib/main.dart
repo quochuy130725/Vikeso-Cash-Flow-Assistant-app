@@ -93,25 +93,25 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             NavigationDestination(
               icon: Icon(
                 Icons.home_outlined, 
-                color: _currentIndex == 0 ? const Color(0xFFB31F56) : Colors.grey[600]
+                color: _currentIndex == 0 ? Theme.of(context).colorScheme.primary : Colors.grey[600]
               ),
-              selectedIcon: const Icon(Icons.home, color: Color(0xFFB31F56)),
+              selectedIcon: Icon(Icons.home, color: Theme.of(context).colorScheme.primary),
               label: 'Trang chủ',
             ),
             NavigationDestination(
               icon: Icon(
                 Icons.add_box_outlined, 
-                color: _currentIndex == 1 ? const Color(0xFFB31F56) : Colors.grey[600]
+                color: _currentIndex == 1 ? Theme.of(context).colorScheme.primary : Colors.grey[600]
               ),
-              selectedIcon: const Icon(Icons.add_box, color: Color(0xFFB31F56)),
+              selectedIcon: Icon(Icons.add_box, color: Theme.of(context).colorScheme.primary),
               label: 'Thu Chi',
             ),
             NavigationDestination(
               icon: Icon(
                 Icons.person_outline, 
-                color: _currentIndex == 2 ? const Color(0xFFB31F56) : Colors.grey[600]
+                color: _currentIndex == 2 ? Theme.of(context).colorScheme.primary : Colors.grey[600]
               ),
-              selectedIcon: const Icon(Icons.person, color: Color(0xFFB31F56)),
+              selectedIcon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
               label: 'Profile',
             ),
           ],

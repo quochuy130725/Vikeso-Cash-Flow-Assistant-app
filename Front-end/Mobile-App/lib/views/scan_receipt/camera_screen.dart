@@ -1,7 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
+import '../../core/utils/ui_helpers.dart';
 
-class CameraScreen extends StatelessWidget {
+class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
+
+  @override
+  State<CameraScreen> createState() => _CameraScreenState();
+}
+
+class _CameraScreenState extends State<CameraScreen> {
+  CameraController? _controller;
+  List<CameraDescription>? _cameras;
+  bool _isCameraInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      _cameras = await availableCameras();
+      if (_cameras != null && _cameras!.isNotEmpty) {
+        _controller = CameraController(
+          _cameras![0], // Thường là camera sau
+          ResolutionPreset.high,
+          enableAudio: false,
+        );
+
+        await _controller!.initialize();
+        if (mounted) {
+          setState(() {
+            _isCameraInitialized = true;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        UIHelpers.showInfoDialog(context, 'Lỗi Camera', 'Không thể khởi tạo máy ảnh: $e');
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,10 +58,9 @@ class CameraScreen extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-
-            // Camera viewfinder mockup (Gray/Dark background with camera icon in the center)
+            // Live Camera Preview
             Positioned.fill(
-              bottom: 120, // Leave space for control buttons at the bottom
+              bottom: 120, // Chừa chỗ cho các nút điều khiển bên dưới
               child: Container(
                 margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -21,29 +68,38 @@ class CameraScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(color: Colors.grey[800]!, width: 2),
                 ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.camera_alt_outlined,
-                        size: 80,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Hướng khung hình vào hoá đơn/biên lai',
-                        style: TextStyle(
-                          color: Colors.grey[500],
-                          fontSize: 16,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: _isCameraInitialized
+                      ? CameraPreview(_controller!)
+                      : const Center(
+                          child: CircularProgressIndicator(color: Color(0xFFFF5C8D)),
                         ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ),
             
+            // Hướng dẫn (Text Overlay)
+            if (_isCameraInitialized)
+              Positioned(
+                top: 40,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Hướng khung hình vào hoá đơn/biên lai',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ),
+              ),
+
             // Bottom control bar
             Positioned(
               left: 0,
@@ -55,16 +111,10 @@ class CameraScreen extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Manual Input button on the bottom left (Decoy)
+                    // Gallery Input button on the bottom left
                     TextButton(
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Tính năng đang được hoàn thiện. Tạm thời anh/chị trải nghiệm Quét AI siêu tốc trước nhé! 🚀'),
-                            duration: Duration(seconds: 3),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
+                        _processImageFromGallery();
                       },
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white54,
@@ -72,10 +122,10 @@ class CameraScreen extends StatelessWidget {
                       child: const Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.keyboard_alt_outlined, size: 24),
+                          Icon(Icons.photo_library_outlined, size: 24),
                           SizedBox(height: 4),
                           Text(
-                            'Nhập tay\n(Dự phòng)',
+                            'Thư viện\n(Ảnh có sẵn)',
                             textAlign: TextAlign.center,
                             style: TextStyle(fontSize: 11),
                           ),
@@ -85,11 +135,13 @@ class CameraScreen extends StatelessWidget {
                     
                     const SizedBox(width: 8),
 
-                    // Large Capture Button in the center (Main action)
+                    // Large Capture Button in the center (Shutter)
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/split');
+                          if (_isCameraInitialized) {
+                            _takePicture();
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFFF5C8D),
@@ -100,7 +152,7 @@ class CameraScreen extends StatelessWidget {
                           ),
                           elevation: 8,
                         ),
-                        icon: const Icon(Icons.photo_library_outlined, size: 28),
+                        icon: const Icon(Icons.camera_alt_outlined, size: 28),
                         label: const Text(
                           'Quét tài liệu thông minh',
                           style: TextStyle(
@@ -115,7 +167,7 @@ class CameraScreen extends StatelessWidget {
               ),
             ),
 
-            // Back/Exit Button (Placed last to stay on top)
+            // Back/Exit Button
             Positioned(
               top: 16,
               left: 16,
@@ -131,5 +183,73 @@ class CameraScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _takePicture() async {
+    try {
+      // Chụp ảnh bằng camera live
+      final XFile image = await _controller!.takePicture();
+      await _handleScannedImage(image);
+    } catch (e) {
+      if (mounted) {
+        UIHelpers.showInfoDialog(context, 'Lỗi', 'Lỗi khi chụp ảnh: $e');
+      }
+    }
+  }
+
+  Future<void> _processImageFromGallery() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+      if (image == null) return; // Người dùng hủy chọn ảnh
+      await _handleScannedImage(image);
+    } catch (e) {
+      if (mounted) {
+        UIHelpers.showInfoDialog(context, 'Lỗi', 'Không thể mở Thư viện: $e');
+      }
+    }
+  }
+
+  Future<void> _handleScannedImage(XFile image) async {
+    if (!mounted) return;
+
+    // Mock Loading (Giả lập gọi API AI)
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    await Future.delayed(const Duration(seconds: 1));
+
+    if (!mounted) return;
+    Navigator.pop(context); // Tắt loading
+
+    // TODO: Gửi file ảnh `image.path` lên Backend Mongoose.
+    
+    // Giả lập dữ liệu trả về từ AI
+    final Map<String, dynamic> aiResponseData = {
+      'items': [], // Mảng rỗng = không tìm thấy giao dịch
+      'error_type': 'JUNK_IMAGE', 
+    };
+
+    final List items = aiResponseData['items'] as List;
+    final String errorType = aiResponseData['error_type'] as String? ?? '';
+
+    if (items.isEmpty) {
+      String message = 'Không tìm thấy dữ liệu hóa đơn.';
+
+      if (errorType == 'JUNK_IMAGE') {
+        message = 'Ảnh không liên quan đến tài chính. Vui lòng chụp hóa đơn/sổ tay!';
+      } else if (errorType == 'BLURRY_IMAGE') {
+        message = 'Ảnh quá mờ! Vui lòng đặt lại camera và chụp rõ hơn.';
+      }
+
+      UIHelpers.showInfoDialog(context, 'Thông báo', message);
+      return;
+    }
+
+    Navigator.pushNamed(context, '/split');
   }
 }

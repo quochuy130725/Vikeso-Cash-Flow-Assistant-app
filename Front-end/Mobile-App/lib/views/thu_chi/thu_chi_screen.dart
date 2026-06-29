@@ -8,7 +8,8 @@ class ThuChiScreen extends StatefulWidget {
   State<ThuChiScreen> createState() => _ThuChiScreenState();
 }
 
-class _ThuChiScreenState extends State<ThuChiScreen> with SingleTickerProviderStateMixin {
+class _ThuChiScreenState extends State<ThuChiScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -34,8 +35,9 @@ class _ThuChiScreenState extends State<ThuChiScreen> with SingleTickerProviderSt
           icon: const Icon(Icons.menu, color: Colors.white),
           onPressed: () {},
         ),
-        backgroundColor: const Color(0xFFB31F56), // Tiêu đề đỏ cherry
-        title: const Text('Thu Chi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Theme.of(context).colorScheme.primary, // Tiêu đề đỏ cherry
+        title: const Text('Thu Chi',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             onPressed: () => Navigator.pushNamed(context, '/camera'),
@@ -72,7 +74,7 @@ class _ThuChiScreenState extends State<ThuChiScreen> with SingleTickerProviderSt
               ),
             ),
           ),
-          
+
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -89,7 +91,8 @@ class _ThuChiScreenState extends State<ThuChiScreen> with SingleTickerProviderSt
         onPressed: () => Navigator.pushNamed(context, '/camera'),
         backgroundColor: colorScheme.primaryContainer,
         shape: const CircleBorder(),
-        child: const Icon(Icons.document_scanner, size: 28, color: Colors.white),
+        child:
+            const Icon(Icons.document_scanner, size: 28, color: Colors.white),
       ),
     );
   }
@@ -101,16 +104,27 @@ class _ThuChiScreenState extends State<ThuChiScreen> with SingleTickerProviderSt
       padding: const EdgeInsets.symmetric(horizontal: 16),
       children: [
         // Nhóm: Hôm nay
-        if (filter == 'all' || filter == 'thu' || filter == 'chi') ..._buildGroupHeader('HÔM NAY, 12/06/2025'),
+        if (filter == 'all' || filter == 'thu' || filter == 'chi')
+          ..._buildGroupHeader('HÔM NAY, 12/06/2025'),
         _buildTransactionCard([
           if (filter == 'all' || filter == 'thu')
-            const TransactionItemCard(title: 'Bán hàng', time: '10:30', value: 1500000, isThu: true),
+            const TransactionItemCard(
+                title: 'Bán hàng', time: '10:30', value: 1500000, isThu: true),
           if (filter == 'all' || filter == 'chi')
-            const TransactionItemCard(title: 'Tiền điện', time: '09:15', value: -500000, isThu: false),
+            const TransactionItemCard(
+                title: 'Tiền điện',
+                time: '09:15',
+                value: -500000,
+                isThu: false),
           if (filter == 'all' || filter == 'chi')
-            const TransactionItemCard(title: 'Nhập hàng', time: '08:45', value: -1200000, isThu: false),
+            const TransactionItemCard(
+                title: 'Nhập hàng',
+                time: '08:45',
+                value: -1200000,
+                isThu: false),
           if (filter == 'all' || filter == 'thu')
-            const TransactionItemCard(title: 'Bán hàng', time: '08:20', value: 800000, isThu: true),
+            const TransactionItemCard(
+                title: 'Bán hàng', time: '08:20', value: 800000, isThu: true),
         ]),
 
         const SizedBox(height: 16),
@@ -119,11 +133,17 @@ class _ThuChiScreenState extends State<ThuChiScreen> with SingleTickerProviderSt
         ..._buildGroupHeader('HÔM QUA, 11/06/2025'),
         _buildTransactionCard([
           if (filter == 'all' || filter == 'chi')
-            const TransactionItemCard(title: 'Tiền nước', time: '17:30', value: -200000, isThu: false),
+            const TransactionItemCard(
+                title: 'Tiền nước',
+                time: '17:30',
+                value: -200000,
+                isThu: false),
           if (filter == 'all' || filter == 'thu')
-            const TransactionItemCard(title: 'Bán hàng', time: '16:10', value: 1100000, isThu: true),
+            const TransactionItemCard(
+                title: 'Bán hàng', time: '16:10', value: 1100000, isThu: true),
         ]),
-        const SizedBox(height: 80), // Chừa khoảng trống cho Floating Action Button
+        const SizedBox(
+            height: 80), // Chừa khoảng trống cho Floating Action Button
       ],
     );
   }
@@ -156,112 +176,6 @@ class _ThuChiScreenState extends State<ThuChiScreen> with SingleTickerProviderSt
       child: Column(
         children: items,
       ),
-    );
-  }
-
-
-
-  // Bottom Sheet thêm giao dịch mới
-  void _showAddTransactionBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 16,
-            left: 20,
-            right: 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Center(
-                child: SizedBox(
-                  width: 40,
-                  height: 4,
-                  child: DecoratedBox(decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.all(Radius.circular(2)))),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text('Thêm giao dịch', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context); // Đóng bottom sheet
-                  Navigator.pushNamed(context, '/camera'); // Mở AI camera
-                },
-                icon: const Icon(Icons.document_scanner, color: Colors.white),
-                label: const Text(
-                  'Chụp biên lai (AI quét tự động)',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFB31F56),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Center(
-                child: Text(
-                  'HOẶC NHẬP THỦ CÔNG',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.0,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const TextField(
-                decoration: InputDecoration(
-                  labelText: 'Tên giao dịch (Ví dụ: Bán hàng, Tiền điện...)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              const TextField(
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Số tiền (VNĐ)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                      child: const Text('Khoản Thu (+)', style: TextStyle(color: Colors.white)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      child: const Text('Khoản Chi (-)', style: TextStyle(color: Colors.white)),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
-        );
-      },
     );
   }
 }
