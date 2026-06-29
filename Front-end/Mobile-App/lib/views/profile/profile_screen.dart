@@ -85,11 +85,11 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 32),
 
             // Nhóm menu thông tin & tác vụ
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
+            Material(
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(color: Colors.grey[200]!),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[200]!),
               ),
               child: Column(
                 children: [
