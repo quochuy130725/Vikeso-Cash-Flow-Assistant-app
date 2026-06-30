@@ -8,7 +8,14 @@ import 'views/thu_chi/thu_chi_screen.dart';
 import 'views/profile/profile_screen.dart';
 import 'views/scan_receipt/camera_screen.dart';
 
-void main() {
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+void main() async {
+  // Ensure widgets binding is initialized before async operations
+  WidgetsFlutterBinding.ensureInitialized();
+  // Load .env file
+  await dotenv.load(fileName: ".env");
+  
   runApp(const QuanLyCuaHangApp());
 }
 
@@ -34,7 +41,7 @@ class QuanLyCuaHangApp extends StatelessWidget {
         // NOTE: '/split' không còn là route tĩnh nữa.
         // SplitScreen được mở bằng Navigator.push từ CameraScreen
         // để truyền dữ liệu động (items, userId, imageFile) từ API.
-      },
+      },  
     );
   }
 }
