@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import '../../core/config/env_config.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../data/services/api_service.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -33,7 +33,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     });
 
     try {
-      final data = await _apiService.getTransactions(EnvConfig.userId);
+      final String userId = dotenv.env['USER_ID'] ?? dotenv.env['DEMO_USER_ID'] ?? '60d5ecb8b392d70015340123';
+      final data = await _apiService.getTransactions(userId);
       _transactions = data;
       _processData();
     } catch (e) {

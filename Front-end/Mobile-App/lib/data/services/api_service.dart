@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-
-import '../../core/config/env_config.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiService {
   // ============================================================
-  // 🔧 CẤU HÌNH - ĐỔI IP NÀY THÀNH IP MÁY TÍNH CỦA ÔNG
+  // 🔧 CẤU HÌNH - ĐỌC TỪ FILE .env (Khuyên dùng)
   // ============================================================
-  static const String _baseUrl = EnvConfig.apiBaseUrl;
+  static String get _baseUrl => dotenv.env['API_BASE_URL'] ?? 'http://localhost:5000/api';
   static const String _telegramBotUsername = 'FinautoDemo_bot';
 
   // ============================================================
@@ -31,8 +30,8 @@ class ApiService {
       );
 
       final streamedResponse = await request.send().timeout(
-        const Duration(seconds: 60),
-      );
+            const Duration(seconds: 60),
+          );
       final response = await http.Response.fromStream(streamedResponse);
       final body = jsonDecode(response.body) as Map<String, dynamic>;
 
@@ -79,11 +78,13 @@ class ApiService {
   }) async {
     try {
       final uri = Uri.parse('$_baseUrl/manual-entry');
-      final response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
-        body: jsonEncode({'userId': userId, 'items': items}),
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            body: jsonEncode({'userId': userId, 'items': items}),
+          )
+          .timeout(const Duration(seconds: 30));
 
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {

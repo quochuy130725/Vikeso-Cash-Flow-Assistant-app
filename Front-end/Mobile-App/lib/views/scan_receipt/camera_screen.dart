@@ -2,10 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
-import '../../core/config/env_config.dart';
 import '../../core/utils/ui_helpers.dart';
 import '../../data/services/api_service.dart';
 import 'split_screen.dart';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -22,7 +23,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   final _apiService = ApiService();
   // TODO: Sau khi có login, lấy userId từ Session/SecureStorage
-  static const String _userId = EnvConfig.userId;
+  String get _userId => dotenv.env['USER_ID'] ?? dotenv.env['DEMO_USER_ID'] ?? '60d5ecb8b392d70015340123';
 
   @override
   void initState() {
