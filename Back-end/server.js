@@ -30,6 +30,28 @@ const manualEntryController = require('./controllers/manualEntryController');
 app.post('/api/manual-entry', manualEntryController.saveManualEntry);
 
 // ---------------------------------------------------------
+// ROUTE TEST API 3: GET TRANSACTIONS FOR ANALYTICS
+// ---------------------------------------------------------
+app.get('/api/transactions', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "Thiếu userId" });
+    }
+
+    const receipts = await Receipt.find({ userId, status: "VALID" }).sort({ transactionDate: -1 });
+
+    return res.status(200).json({
+      success: true,
+      data: receipts
+    });
+  } catch (error) {
+    console.error("Lỗi get-transactions:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ---------------------------------------------------------
 // ROUTE TEST API 2: UPLOAD & SCAN HÓA ĐƠN VỚI GEMINI
 // ---------------------------------------------------------
 app.post('/api/scan-receipt', upload.single('image'), async (req, res) => {

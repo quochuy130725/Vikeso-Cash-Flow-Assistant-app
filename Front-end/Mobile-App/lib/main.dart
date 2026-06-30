@@ -7,6 +7,7 @@ import 'views/dashboard/dashboard_screen.dart';
 import 'views/thu_chi/thu_chi_screen.dart';
 import 'views/profile/profile_screen.dart';
 import 'views/scan_receipt/camera_screen.dart';
+import 'views/analytics/analytics_screen.dart';
 
 void main() {
   runApp(const QuanLyCuaHangApp());
@@ -31,6 +32,7 @@ class QuanLyCuaHangApp extends StatelessWidget {
         '/thu_chi': (context) => const MainNavigationShell(initialIndex: 1),
         '/profile': (context) => const MainNavigationShell(initialIndex: 2),
         '/camera': (context) => const CameraScreen(),
+        '/analytics': (context) => const AnalyticsScreen(),
         // NOTE: '/split' không còn là route tĩnh nữa.
         // SplitScreen được mở bằng Navigator.push từ CameraScreen
         // để truyền dữ liệu động (items, userId, imageFile) từ API.

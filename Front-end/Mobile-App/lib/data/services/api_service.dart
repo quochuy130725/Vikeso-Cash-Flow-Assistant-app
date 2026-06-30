@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 
+import '../../core/config/env_config.dart';
+
 class ApiService {
   // ============================================================
   // 🔧 CẤU HÌNH - ĐỔI IP NÀY THÀNH IP MÁY TÍNH CỦA ÔNG
   // ============================================================
-  static const String _baseUrl = 'http://10.44.251.228:5000/api';
+  static const String _baseUrl = EnvConfig.apiBaseUrl;
   static const String _telegramBotUsername = 'FinautoDemo_bot';
 
   // ============================================================
@@ -86,6 +88,29 @@ class ApiService {
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       return false;
+    }
+  }
+
+  // ============================================================
+  // 4. API LẤY DANH SÁCH GIAO DỊCH (GET /api/transactions)
+  // ============================================================
+  Future<List<Map<String, dynamic>>> getTransactions(String userId) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/transactions?userId=$userId');
+      final response = await http.get(uri).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        if (body['success'] == true) {
+          final list = body['data'] as List?;
+          if (list != null) {
+            return list.cast<Map<String, dynamic>>();
+          }
+        }
+      }
+      return [];
+    } catch (e) {
+      return [];
     }
   }
 

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
+import '../../core/config/env_config.dart';
 import '../../core/utils/ui_helpers.dart';
 import '../../data/services/api_service.dart';
 import 'split_screen.dart';
@@ -21,7 +22,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   final _apiService = ApiService();
   // TODO: Sau khi có login, lấy userId từ Session/SecureStorage
-  static const String _userId = '60d5ecb8b392d70015340123';
+  static const String _userId = EnvConfig.userId;
 
   @override
   void initState() {

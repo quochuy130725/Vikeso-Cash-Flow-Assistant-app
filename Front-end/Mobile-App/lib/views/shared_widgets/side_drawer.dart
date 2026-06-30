@@ -79,7 +79,9 @@ class CustomSideDrawer extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                _buildDrawerItem(Icons.analytics_outlined, 'Báo cáo chi tiết', () {}),
+                _buildDrawerItem(Icons.analytics_outlined, 'Báo cáo chi tiết', () {
+                  Navigator.of(context).pushNamed('/analytics');
+                }),
                 _buildDrawerItem(Icons.settings_outlined, 'Cài đặt', () {}),
                 _buildDrawerItem(Icons.help_outline, 'Hướng dẫn', () {}),
                 _buildDrawerItem(Icons.contact_support_outlined, 'Hỗ trợ', () {}),
