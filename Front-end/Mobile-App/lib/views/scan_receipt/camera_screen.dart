@@ -6,6 +6,8 @@ import '../../core/utils/ui_helpers.dart';
 import '../../data/services/api_service.dart';
 import 'split_screen.dart';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
 
@@ -21,7 +23,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   final _apiService = ApiService();
   // TODO: Sau khi có login, lấy userId từ Session/SecureStorage
-  static const String _userId = '60d5ecb8b392d70015340123';
+  String get _userId => dotenv.env['DEMO_USER_ID']!;
 
   @override
   void initState() {

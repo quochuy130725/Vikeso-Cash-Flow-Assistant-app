@@ -64,7 +64,15 @@ class RevenueChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        const titles = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+                        const titles = [
+                          'T2',
+                          'T3',
+                          'T4',
+                          'T5',
+                          'T6',
+                          'T7',
+                          'CN'
+                        ];
                         final title = (value.toInt() >= 0 &&
                                 value.toInt() < titles.length)
                             ? titles[value.toInt()]
