@@ -23,7 +23,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   final _apiService = ApiService();
   // TODO: Sau khi có login, lấy userId từ Session/SecureStorage
-  String get _userId => dotenv.env['DEMO_USER_ID']!;
+  String get _userId => dotenv.env['USER_ID'] ?? dotenv.env['DEMO_USER_ID'] ?? '60d5ecb8b392d70015340123';
 
   @override
   void initState() {
