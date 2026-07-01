@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiService {
@@ -111,7 +112,47 @@ class ApiService {
       }
       return [];
     } catch (e) {
+      debugPrint('getTransactions error: $e');
       return [];
+    }
+  }
+
+  // ============================================================
+  // 5. API ĐĂNG NHẬP (POST /api/login)
+  // ============================================================
+  Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/login');
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 && body['success'] == true) {
+        return {
+          'success': true,
+          'user': body['user'],
+          'message': body['message'] ?? 'Đăng nhập thành công',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': body['message'] ?? 'Đăng nhập thất bại',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Lỗi kết nối máy chủ: $e',
+      };
     }
   }
 

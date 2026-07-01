@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 
 class RevenueChart extends StatelessWidget {
-  const RevenueChart({super.key});
+  final List<double> weeklyRevenue; // Giá trị tính bằng triệu (Tr)
+
+  const RevenueChart({super.key, required this.weeklyRevenue});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    final double maxVal = weeklyRevenue.isEmpty
+        ? 0.0
+        : weeklyRevenue.reduce((a, b) => a > b ? a : b);
+    final double computedMaxY = maxVal > 8.0 ? maxVal * 1.25 : 10.0;
 
     return Container(
       width: double.infinity,
@@ -40,7 +48,7 @@ class RevenueChart extends StatelessWidget {
             child: BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
-                maxY: 10,
+                maxY: computedMaxY,
                 barTouchData: BarTouchData(
                   enabled: true,
                   touchTooltipData: BarTouchTooltipData(
@@ -49,7 +57,7 @@ class RevenueChart extends StatelessWidget {
                     tooltipMargin: 4,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       return BarTooltipItem(
-                        '${rod.toY} Tr',
+                        '${rod.toY.toStringAsFixed(1)} Tr',
                         TextStyle(
                             color: Colors.grey[800],
                             fontSize: 10,
@@ -64,24 +72,19 @@ class RevenueChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        const titles = [
-                          'T2',
-                          'T3',
-                          'T4',
-                          'T5',
-                          'T6',
-                          'T7',
-                          'CN'
-                        ];
-                        final title = (value.toInt() >= 0 &&
-                                value.toInt() < titles.length)
-                            ? titles[value.toInt()]
-                            : '';
+                        final int index = value.toInt();
+                        if (index < 0 || index >= 7) return const SizedBox();
+                        
+                        // Tính toán ngày cách đây (6 - index) ngày
+                        final now = DateTime.now();
+                        final targetDay = now.subtract(Duration(days: 6 - index));
+                        final title = DateFormat('dd/MM').format(targetDay);
+
                         return SideTitleWidget(
                           meta: meta,
                           child: Text(title,
                               style: const TextStyle(
-                                  color: Colors.grey, fontSize: 12)),
+                                  color: Colors.grey, fontSize: 10, fontWeight: FontWeight.w500)),
                         );
                       },
                     ),
@@ -96,7 +99,7 @@ class RevenueChart extends StatelessWidget {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: 5,
+                  horizontalInterval: computedMaxY / 2,
                   getDrawingHorizontalLine: (value) => FlLine(
                     color: Colors.grey.withValues(alpha: 0.2),
                     strokeWidth: 1,
@@ -104,15 +107,10 @@ class RevenueChart extends StatelessWidget {
                   ),
                 ),
                 borderData: FlBorderData(show: false),
-                barGroups: [
-                  _buildFlBarGroup(0, 3.0),
-                  _buildFlBarGroup(1, 6.0),
-                  _buildFlBarGroup(2, 4.0),
-                  _buildFlBarGroup(3, 8.0),
-                  _buildFlBarGroup(4, 5.0),
-                  _buildFlBarGroup(5, 9.0),
-                  _buildFlBarGroup(6, 7.0),
-                ],
+                barGroups: List.generate(7, (index) {
+                  final val = index < weeklyRevenue.length ? weeklyRevenue[index] : 0.0;
+                  return _buildFlBarGroup(index, val);
+                }),
               ),
             ),
           ),
