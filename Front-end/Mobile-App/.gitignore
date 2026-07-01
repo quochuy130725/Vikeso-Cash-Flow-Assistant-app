@@ -23,3 +23,6 @@ build/
 
 # Các file debug/log
 *.log
+
+# Bỏ qua file cấu hình biến môi trường cục bộ (.env)
+.env
