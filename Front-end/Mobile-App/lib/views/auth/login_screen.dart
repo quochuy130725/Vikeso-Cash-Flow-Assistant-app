@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../data/services/api_service.dart';
+import '../../core/utils/ui_helpers.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,23 +12,55 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _storeNameController = TextEditingController(text: 'Cafe ABC');
-  final _ownerNameController = TextEditingController(text: 'Nguyễn Văn Tiến');
-  final _passwordController = TextEditingController(text: '123456');
+  final _emailController = TextEditingController(text: 'test@example.com');
+  final _passwordController = TextEditingController(text: 'password123');
   bool _obscurePassword = true;
+  bool _isLoggingIn = false;
 
   @override
   void dispose() {
-    _storeNameController.dispose();
-    _ownerNameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _handleLogin() {
-    if (_formKey.currentState!.validate()) {
-      // Đăng nhập thành công và lưu thông tin giả lập chuyển tiếp tới Dashboard
-      Navigator.of(context).pushReplacementNamed('/dashboard');
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoggingIn = true;
+    });
+
+    try {
+      final apiService = ApiService();
+      final result = await apiService.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (result['success'] == true) {
+        final user = result['user'];
+        if (user != null && user['id'] != null) {
+          dotenv.env['USER_ID'] = user['id'];
+        }
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/dashboard');
+        }
+      } else {
+        if (mounted) {
+          UIHelpers.showWarningToast(context, result['message'] ?? 'Đăng nhập thất bại');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        UIHelpers.showWarningToast(context, 'Lỗi kết nối: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoggingIn = false;
+        });
+      }
     }
   }
 
@@ -75,37 +110,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Trường nhập Tên quán
-                  TextFormField(
-                    controller: _storeNameController,
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.storefront, color: colorScheme.outline),
-                      hintText: 'Tên quán',
-                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: colorScheme.outlineVariant),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: colorScheme.primary, width: 2),
-                      ),
-                    ),
-                    validator: (value) => value!.isEmpty ? 'Vui lòng nhập tên quán' : null,
-                  ),
-                  const SizedBox(height: 16),
 
-                  // Trường nhập Tên chủ quán
+                  // Trường nhập Email
                   TextFormField(
-                    controller: _ownerNameController,
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.person, color: colorScheme.outline),
-                      hintText: 'Tên chủ quán',
-                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                      prefixIcon: Icon(Icons.email_outlined, color: colorScheme.outline),
+                      labelText: 'Email đăng nhập',
+                      hintText: 'VD: test@example.com',
+                      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: colorScheme.outlineVariant),
@@ -119,7 +133,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderSide: BorderSide(color: colorScheme.primary, width: 2),
                       ),
                     ),
-                    validator: (value) => value!.isEmpty ? 'Vui lòng nhập tên chủ quán' : null,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Vui lòng nhập email đăng nhập';
+                      }
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        return 'Email không đúng định dạng';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
 
@@ -128,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.lock, color: colorScheme.outline),
+                      prefixIcon: Icon(Icons.lock_outline, color: colorScheme.outline),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility : Icons.visibility_off,
@@ -140,8 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           });
                         },
                       ),
-                      hintText: 'Mật khẩu',
-                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                      labelText: 'Mật khẩu',
+                      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: colorScheme.outlineVariant),
@@ -161,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Nút Đăng nhập
                   ElevatedButton(
-                    onPressed: _handleLogin,
+                    onPressed: _isLoggingIn ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primaryContainer,
                       foregroundColor: colorScheme.onPrimaryContainer,
@@ -171,14 +193,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      'Đăng nhập',
-                      style: TextStyle(
-                        fontFamily: 'Roboto Flex',
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: _isLoggingIn
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Đăng nhập',
+                            style: TextStyle(
+                              fontFamily: 'Roboto Flex',
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 20),
 
@@ -205,10 +236,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Google Login Button
                   OutlinedButton.icon(
                     onPressed: () {
-                      // Giao thoa đăng nhập Google
+                      // Đăng nhập Google thành công, gán USER_ID thực tế từ MongoDB
+                      dotenv.env['USER_ID'] = '60d5ecb8b392d70015340123';
                       Navigator.of(context).pushReplacementNamed('/dashboard');
                     },
-                    icon: const Icon(Icons.login, size: 20, color: Colors.blue),
+                    icon: Image.network(
+                      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png',
+                      height: 20,
+                      width: 20,
+                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, size: 24, color: Colors.red),
+                    ),
                     label: const Text('Đăng nhập với Google'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: colorScheme.onSurface,

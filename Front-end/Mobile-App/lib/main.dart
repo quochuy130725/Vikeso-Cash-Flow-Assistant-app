@@ -116,11 +116,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
               label: 'Trang chủ',
             ),
             NavigationDestination(
-              icon: Icon(Icons.add_box_outlined,
+              icon: Icon(Icons.receipt_long_outlined,
                   color: _currentIndex == 1
                       ? Theme.of(context).colorScheme.primary
                       : Colors.grey[600]),
-              selectedIcon: Icon(Icons.add_box,
+              selectedIcon: Icon(Icons.receipt_long,
                   color: Theme.of(context).colorScheme.primary),
               label: 'Thu Chi',
             ),

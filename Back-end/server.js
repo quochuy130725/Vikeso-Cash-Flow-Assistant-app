@@ -30,6 +30,39 @@ const manualEntryController = require('./controllers/manualEntryController');
 app.post('/api/manual-entry', manualEntryController.saveManualEntry);
 
 // ---------------------------------------------------------
+// ROUTE: LOGIN (Xác thực email và mật khẩu thô từ MongoDB)
+// ---------------------------------------------------------
+const User = require('./models/User');
+app.post('/api/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: "Vui lòng nhập email và mật khẩu" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user || user.password !== password) {
+      return res.status(400).json({ success: false, message: "Email hoặc mật khẩu không đúng" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Đăng nhập thành công",
+      user: {
+        id: user._id,
+        email: user.email,
+        shopName: user.shopName,
+        telegramChatId: user.telegramChatId,
+        subscriptionPlan: user.subscriptionPlan
+      }
+    });
+  } catch (error) {
+    console.error("Lỗi đăng nhập:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ---------------------------------------------------------
 // ROUTE TEST API 3: GET TRANSACTIONS FOR ANALYTICS
 // ---------------------------------------------------------
 app.get('/api/transactions', async (req, res) => {
