@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../shared_widgets/side_drawer.dart';
 import 'package:intl/intl.dart';
 import '../../data/services/api_service.dart';
+import '../../data/services/excel_export_service.dart';
 import 'widgets/thu_chi_list_item.dart';
 
 class ThuChiScreen extends StatefulWidget {
@@ -153,31 +154,63 @@ class _ThuChiScreenState extends State<ThuChiScreen>
       ),
       body: Column(
         children: [
-          // Navigation Tab Bar
+          // Navigation Tab Bar + Export button
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Container(
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: TabBar(
-                controller: _tabController,
-                indicator: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(24),
+            padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: TabBar(
+                      controller: _tabController,
+                      indicator: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.grey[600],
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      dividerColor: Colors.transparent,
+                      tabs: const [
+                        Tab(text: 'Tất cả'),
+                        Tab(text: 'Thu'),
+                        Tab(text: 'Chi'),
+                      ],
+                    ),
+                  ),
                 ),
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey[600],
-                indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent,
-                tabs: const [
-                  Tab(text: 'Tất cả'),
-                  Tab(text: 'Thu'),
-                  Tab(text: 'Chi'),
-                ],
-              ),
+                const SizedBox(width: 8),
+                Tooltip(
+                  message: 'Xuất Excel',
+                  child: Material(
+                    color: const Color(0xFFFF5C8D),
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: _filteredTransactions.isEmpty
+                          ? null
+                          : () => ExcelExportService.exportTransactions(
+                                context,
+                                _filteredTransactions,
+                                fileName: 'FinAuto_ThuChi',
+                              ),
+                      child: const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: Icon(
+                          Icons.file_download_outlined,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
