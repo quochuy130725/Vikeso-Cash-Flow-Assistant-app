@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../data/services/api_service.dart';
+import '../../data/services/excel_export_service.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -117,9 +118,20 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: 'Xuất Excel',
+            icon: const Icon(Icons.file_download_outlined, color: Colors.white),
+            onPressed: _transactions.isEmpty
+                ? null
+                : () => ExcelExportService.exportTransactions(
+                      context,
+                      _transactions,
+                      fileName: 'FinAuto_PhanTich',
+                    ),
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _loadData,
-          )
+          ),
         ],
       ),
       body: _isLoading

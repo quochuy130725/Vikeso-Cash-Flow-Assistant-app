@@ -23,3 +23,7 @@ build/
 
 # Các file debug/log
 *.log
+
+# File cấu hình môi trường (TUYỆT ĐỐI KHÔNG COMMIT)
+.env
+*.env
