@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const receiptSchema = new mongoose.Schema({
   userId: { 
-    type: String, // Đổi từ ObjectId thành String để dễ test tay
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
     index: true 
@@ -10,16 +10,24 @@ const receiptSchema = new mongoose.Schema({
   receiptUrl: { type: String, default: "" },  
   category: { 
     type: String, 
-    enum: ["Hoa Don Le", "POS Ket Ca", "So Tay", "Khac"],
+    enum: ["Hoa Don Le", "POS Ket Ca", "So Tay", "Chuyen Khoan", "Khac"],
     default: "Khac" 
   },
   transactionType: { 
     type: String, 
-    enum: ["THU", "CHI"], // ĐÃ BỎ KHONG_XAC_DINH
+    enum: ["THU", "CHI"], 
     required: true  
   },
   totalAmount: { type: Number, required: true, default: 0 },  
-  reason: { type: String, default: "" },  
+  reason: { type: String, default: "" },
+
+  // Mức độ tin cậy của AI khi đọc ảnh (tách ra khỏi aiRawData để dễ query/filter)
+  confidenceLevel: { 
+    type: String, 
+    enum: ["HIGH", "MEDIUM", "LOW"], 
+    default: "HIGH" 
+  },
+
   status: { 
     type: String, 
     enum: ["VALID", "MERGED"], 

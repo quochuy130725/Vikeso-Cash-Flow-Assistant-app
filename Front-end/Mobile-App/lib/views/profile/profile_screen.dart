@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../shared_widgets/side_drawer.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -10,9 +11,15 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.menu, color: Colors.white),
+        leading: Builder(
+          builder: (context) {
+            return IconButton(
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+              icon: const Icon(Icons.menu, color: Colors.white),
+            );
+          },
         ),
         backgroundColor: const Color(0xFFFF5C8D), // Hồng Pinkish-orange của topbar profile
         title: const Text('Profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
@@ -20,6 +27,7 @@ class ProfileScreen extends StatelessWidget {
           IconButton(onPressed: () {}, icon: const Icon(Icons.notifications, color: Colors.white)),
         ],
       ),
+      drawer: const CustomSideDrawer(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
         child: Column(

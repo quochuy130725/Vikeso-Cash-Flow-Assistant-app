@@ -37,9 +37,9 @@ class QuanLyCuaHangApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/dashboard': (context) => const MainNavigationShell(initialIndex: 0),
         '/thu_chi': (context) => const MainNavigationShell(initialIndex: 1),
-        '/profile': (context) => const MainNavigationShell(initialIndex: 2),
+        '/analytics': (context) => const MainNavigationShell(initialIndex: 2),
+        '/profile': (context) => const MainNavigationShell(initialIndex: 3),
         '/camera': (context) => const CameraScreen(),
-        '/analytics': (context) => const AnalyticsScreen(),
         // NOTE: '/split' không còn là route tĩnh nữa.
         // SplitScreen được mở bằng Navigator.push từ CameraScreen
         // để truyền dữ liệu động (items, userId, imageFile) từ API.
@@ -63,6 +63,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   final List<Widget> _screens = [
     const DashboardScreen(),
     const ThuChiScreen(),
+    const AnalyticsScreen(),
     const ProfileScreen(),
   ];
 
@@ -81,6 +82,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
+          color: Colors.white,
           border: Border(
             top: BorderSide(
               color: Theme.of(context)
@@ -91,49 +93,61 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             ),
           ),
         ),
-        child: NavigationBar(
-          selectedIndex: _currentIndex,
-          backgroundColor: Colors.white,
-          indicatorColor: Theme.of(context)
-              .colorScheme
-              .primaryContainer
-              .withValues(alpha: 0.2),
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          height: 64,
-          onDestinationSelected: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          destinations: [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined,
-                  color: _currentIndex == 0
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.grey[600]),
-              selectedIcon: Icon(Icons.home,
-                  color: Theme.of(context).colorScheme.primary),
-              label: 'Trang chủ',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.receipt_long_outlined,
-                  color: _currentIndex == 1
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.grey[600]),
-              selectedIcon: Icon(Icons.receipt_long,
-                  color: Theme.of(context).colorScheme.primary),
-              label: 'Thu Chi',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline,
-                  color: _currentIndex == 2
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.grey[600]),
-              selectedIcon: Icon(Icons.person,
-                  color: Theme.of(context).colorScheme.primary),
-              label: 'Profile',
-            ),
-          ],
+        child: SafeArea(
+          top: false,
+          child: NavigationBar(
+            selectedIndex: _currentIndex,
+            backgroundColor: Colors.white,
+            indicatorColor: Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withValues(alpha: 0.2),
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            height: 64,
+            onDestinationSelected: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            destinations: [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined,
+                    color: _currentIndex == 0
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey[600]),
+                selectedIcon: Icon(Icons.home,
+                    color: Theme.of(context).colorScheme.primary),
+                label: 'Trang chủ',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.receipt_long_outlined,
+                    color: _currentIndex == 1
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey[600]),
+                selectedIcon: Icon(Icons.receipt_long,
+                    color: Theme.of(context).colorScheme.primary),
+                label: 'Thu Chi',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.analytics_outlined,
+                    color: _currentIndex == 2
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey[600]),
+                selectedIcon: Icon(Icons.analytics,
+                    color: Theme.of(context).colorScheme.primary),
+                label: 'Báo cáo',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline,
+                    color: _currentIndex == 3
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey[600]),
+                selectedIcon: Icon(Icons.person,
+                    color: Theme.of(context).colorScheme.primary),
+                label: 'Profile',
+              ),
+            ],
+          ),
         ),
       ),
     );
