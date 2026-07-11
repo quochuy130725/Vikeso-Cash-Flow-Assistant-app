@@ -80,12 +80,5 @@ finauto-Cash-Flow-Assistant-app/
 │   │                   └── editable_transaction_card.dart # Khối thông tin tích hợp sửa đổi nhanh
 │   │
 │   └── Web/                       # HỆ THỐNG TRANG WEB QUẢN TRỊ 
-Tiêu chí,🆓 Gói FREE,💎 Gói PRO/VIP,🏢 Gói ENTERPRISE (B2B)
-Đối tượng,Hộ kinh doanh nhỏ lẻ,"Thương lái, chủ vựa, quán F&B lớn","Chuỗi cửa hàng lớn, đại lý phân phối"
-Giá thành,Miễn phí trọn đời,99.000đ / tháng,Từ 500.000đ - 1.000.000đ / tháng
-Mô hình AI,Gemini 2.5 Flash / Lite,Gemini Pro,Hạ tầng Fine-tuned Model chuyên dụng
-Năng lực cốt lõi,Quét hóa đơn in máy chuẩn(Giới hạn 30-50 hóa đơn/tháng),"Quét sổ tay viết tay, bill in nhiệt mờ(Không giới hạn số lượng quét)","Xử lý đa phân hệ chứng từ, hóa đơn VAT phức tạp"
-Tính năng cao cấp,Ghi chép thu chi cơ bản,Kích hoạt Lưới lọc 2 chiềuTự động chia danh mục chi phí,Quản lý đa chi nhánhPhân quyền nhân viên/kế toán
-Kết nối hệ thống,Không hỗ trợ,Nhận diện ảnh chụp màn hình ngân hàng,Kết nối thẳng Open API hệ thống Ngân hàng
 
 💰 Mô Hình Doanh Thu & Chiến Lược Định Giá (Business Model)FinAuto ứng dụng mô hình kinh doanh Freemium kết hợp Value-based Pricing nhằm tối ưu hóa chi phí tài 
