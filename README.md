@@ -81,4 +81,3 @@ finauto-Cash-Flow-Assistant-app/
 │   │
 │   └── Web/                       # HỆ THỐNG TRANG WEB QUẢN TRỊ 
 
-💰 Mô Hình Doanh Thu & Chiến Lược Định Giá (Business Model)FinAuto ứng dụng mô hình kinh doanh Freemium kết hợp Value-based Pricing nhằm tối ưu hóa chi phí tài 
