@@ -1,5 +1,7 @@
 const sharp = require('sharp');
 const { analyzeReceiptImage } = require('../services/geminiAI');
+const Receipt = require('../models/Receipt');
+const { getIO } = require('../socket');
 
 /**
  * POST /api/scan-receipt
@@ -53,6 +55,64 @@ exports.scanReceipt = async (req, res) => {
 
   } catch (error) {
     console.error('Lỗi scan-receipt:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * POST /api/confirm-receipt
+ * Người dùng xác nhận items trên SplitScreen → lưu vào MongoDB
+ * → emit sự kiện 'new_transaction' qua Socket.IO để cập nhật chart realtime.
+ *
+ * Body: { userId: string, items: Array }
+ */
+exports.confirmReceipt = async (req, res) => {
+  try {
+    const { userId, items } = req.body;
+
+    if (!userId || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Thiếu userId hoặc danh sách items rỗng.',
+      });
+    }
+
+    // Chuẩn bị payload để lưu vào DB
+    const docs = items.map((item) => ({
+      userId,
+      category: item.category || 'Khac',
+      transactionType: item.transactionType || 'CHI',
+      totalAmount:
+        item.totalAmount ||
+        (item.aiRawData?.CacKhoanTien?.reduce((s, v) => s + v, 0) ?? 0),
+      reason: item.reason || '',
+      confidenceLevel: item.confidenceLevel || 'HIGH',
+      status: 'VALID',
+      transactionDate: item.transactionDate ? new Date(item.transactionDate) : new Date(),
+      aiRawData: item.aiRawData ?? {},
+    }));
+
+    // Lưu vào MongoDB Atlas
+    const savedDocs = await Receipt.insertMany(docs);
+    console.log(`✅ Đã lưu ${savedDocs.length} giao dịch vào DB.`);
+
+    // Emit sự kiện 'new_transaction' → tất cả Flutter client tự cập nhật chart
+    try {
+      const io = getIO();
+      io.emit('new_transaction', {
+        userId,
+        transactions: savedDocs,
+      });
+      console.log(`📡 Đã broadcast sự kiện new_transaction tới tất cả clients.`);
+    } catch (_) {}
+
+    return res.status(201).json({
+      success: true,
+      message: `Đã lưu ${savedDocs.length} giao dịch thành công!`,
+      data: savedDocs,
+    });
+  } catch (error) {
+    console.error('Lỗi confirm-receipt:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 };

@@ -10,11 +10,12 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // Giới hạn 10MB
   },
   fileFilter: (req, file, cb) => {
-    // Chỉ chấp nhận file ảnh
-    if (file.mimetype.startsWith('image/')) {
+    // Flutter khi gửi file qua multipart/form-data thường để mimetype là 'application/octet-stream'
+    const allowedMimes = ['application/octet-stream', 'binary/octet-stream'];
+    if (file.mimetype && (file.mimetype.startsWith('image/') || allowedMimes.includes(file.mimetype))) {
       cb(null, true);
     } else {
-      cb(new Error('Chỉ chấp nhận file ảnh (image/*)!'), false);
+      cb(new Error('Chỉ chấp nhận file ảnh (image/* hoặc binary stream)!'), false);
     }
   },
 });
