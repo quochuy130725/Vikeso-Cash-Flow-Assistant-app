@@ -19,19 +19,13 @@ QUY TẮC PHÂN LOẠI CHỨNG TỪ ("category"):
 - "Chuyen Khoan": Nếu là ảnh chụp màn hình chuyển khoản ngân hàng, ví điện tử (VietQR, MoMo, ZaloPay...).
 - "Khac": Nếu là các loại giấy tờ không thuộc 4 loại trên.
 
-QUY TẮC PHÂN LOẠI CHỨNG TỪ ("category"):
-- "POS Ket Ca": Nếu có chữ "Tổng kết", "Ca làm việc", "Z-Report", "Báo cáo cuối ngày".
-- "Hoa Don Le": Nếu là biên lai in sẵn, bill máy POS bán lẻ, hóa đơn siêu thị.
-- "So Tay": Nếu là sổ viết tay, giấy nháp ghi nhiều khoản lặt vặt.
-- "Chuyen Khoan": Nếu là ảnh chụp màn hình chuyển khoản ngân hàng, ví điện tử (VietQR, MoMo, ZaloPay...).
-- "Khac": Nếu là các loại giấy tờ không thuộc 4 loại trên.
-
 
 QUY TẮC TRÍCH XUẤT TIỀN VÀ SẢN PHẨM:
 - Chuẩn hóa tiền tệ: Chuyển đổi tất cả chữ viết tắt về số nguyên VNĐ. VD: "85k" = 85000, "3.2tr" = 3200000, "1.500" hoặc "1,500" = 1500.
 - Lấy số tiền thực tế: CHỈ lấy các khoản ĐÃ PHÁT SINH. Tuyệt đối KHÔNG lấy số tiền "ghi nợ", "chưa trả", "còn lại".
 - "totalAmount": Tính tổng số tiền cuối cùng của giao dịch đó để đưa ra ngoài root object.
-- "aiRawData": Đóng gói chi tiết các mảng dữ liệu thô vào đây.
+- "aiRawData": Đóng gói chi tiết các mảng dữ liệu thô vào đây. 
+  + isPosBill: Gán true nếu đây là bill in nhiệt từ máy POS bán lẻ hoặc POS kết ca. Gán false nếu là hóa đơn lẻ viết tay hoặc các loại chứng từ khác.
   + CacKhoanTien: Nếu là hóa đơn có "Tổng cộng", CHỈ lấy 1 con số tổng. Nếu là sổ tay, lấy mảng các con số tổng của từng dòng tương ứng. (Nếu mờ không đọc được số, để mảng rỗng []).
   + ChiTietSanPham: Bóc tách danh sách mặt hàng kèm giá tương ứng (nếu có).
 

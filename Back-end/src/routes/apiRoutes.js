@@ -20,10 +20,28 @@ router.post('/manual-entry', manualEntryController.saveManualEntry);
 // API 2: SCAN HÓA ĐƠN - Upload ảnh & Gemini OCR
 // POST /api/scan-receipt
 // ---------------------------------------------------------
-router.post('/scan-receipt', upload.single('image'), aiReceiptController.scanReceipt);
+// Dùng callback pattern thay vì middleware trực tiếp
+// để bắt lỗi từ multer/busboy (tương thích Express v5)
+router.post('/scan-receipt', (req, res, next) => {
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({
+        success: false,
+        error: err.message || 'Lỗi xử lý file upload',
+      });
+    }
+    next();
+  });
+}, aiReceiptController.scanReceipt);
 
 // ---------------------------------------------------------
-// API 3: ĐĂNG NHẬP
+// API 3: XÁC NHẬN & LƯU HÓA ĐƠN (Sau khi user review SplitScreen)
+// POST /api/confirm-receipt  →  lưu DB + emit WebSocket 'new_transaction'
+// ---------------------------------------------------------
+router.post('/confirm-receipt', aiReceiptController.confirmReceipt);
+
+// ---------------------------------------------------------
+// API 4: ĐĂNG NHẬP
 // POST /api/login
 // ---------------------------------------------------------
 router.post('/login', async (req, res) => {
