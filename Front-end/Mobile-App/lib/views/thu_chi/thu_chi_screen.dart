@@ -38,7 +38,7 @@ class _ThuChiScreenState extends State<ThuChiScreen>
       _isLoading = true;
     });
 
-    final String userId = dotenv.env['USER_ID'] ?? '60d5ecb8b392d70015340123';
+    final String userId = dotenv.env['USER_ID'] ?? '';
     try {
       final txs = await ApiService().getTransactions(userId);
       setState(() {

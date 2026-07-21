@@ -37,7 +37,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     });
 
     try {
-      final String userId = dotenv.env['USER_ID'] ?? dotenv.env['DEMO_USER_ID'] ?? '60d5ecb8b392d70015340123';
+      final String userId = dotenv.env['USER_ID'] ?? '';
       final data = await _apiService.getTransactions(userId);
       _transactions = data;
       _processData();

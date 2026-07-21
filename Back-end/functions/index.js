@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 const nodemailer = require("nodemailer");
 const path = require("path");
 
-// 1. DÁN Y NGUYÊN SCHEMA CHUẨN CỦA TEAM ÔNG VÀO ĐÂY
+
 const receiptSchema = new mongoose.Schema({
   userId: { 
     type: mongoose.Schema.Types.ObjectId,
