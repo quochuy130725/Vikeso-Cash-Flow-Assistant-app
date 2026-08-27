@@ -26,6 +26,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double _thisWeekThu = 0;
   int _thisWeekOrderCount = 0;
   double _thisMonthChi = 0;
+  double _thisMonthThu = 0;
   Map<String, double> _categoryChiSums = {};
 
   List<double> _weeklyRevenue = List.filled(7, 0.0);
@@ -95,6 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _thisWeekThu = 0;
     _thisWeekOrderCount = 0;
     _thisMonthChi = 0;
+    _thisMonthThu = 0;
     _categoryChiSums = {
       'Nguyên liệu': 0.0,
       'Nhân công': 0.0,
@@ -129,7 +131,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       }
 
-      // Chi phí tháng
+      // Doanh thu & Chi phí tháng
       if (tDate.month == now.month && tDate.year == now.year) {
         if (type == 'CHI') {
           _thisMonthChi += amount;
@@ -139,6 +141,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             category = 'Khác';
           }
           _categoryChiSums[category] = (_categoryChiSums[category] ?? 0.0) + amount;
+        } else if (type == 'THU') {
+          _thisMonthThu += amount;
         }
       }
     }
@@ -160,19 +164,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final growthPercent = _calculateGrowthPercentage();
     final isGrowthPositive = growthPercent >= 0;
 
-    final double totalChiSum = _categoryChiSums.values.fold(0, (sum, val) => sum + val);
-    final List<double> piePercentages = [];
+    final double totalChiSum = _categoryChiSums.values.fold(0.0, (sum, val) => sum + val);
+    final double totalThuChiSum = _thisMonthThu + _thisMonthChi;
+    final List<double> piePercentages = [
+      _thisMonthThu,
+      _thisMonthChi,
+    ];
     final List<Color> pieColors = [
-      const Color(0xFFFF5C8D), // Nguyên liệu
-      const Color(0xFFDCE944), // Nhân công
-      Colors.grey.shade400,    // Điện nước
-      const Color(0xFFE2E2E2), // Khác
+      const Color(0xFF198754), // Thu nhập (Xanh lá)
+      const Color(0xFFDC3545), // Chi phí (Đỏ)
     ];
 
-    final categories = ['Nguyên liệu', 'Nhân công', 'Điện nước', 'Khác'];
-    for (var cat in categories) {
-      piePercentages.add(_categoryChiSums[cat] ?? 0.0);
-    }
+    final categories = ['Doanh thu', 'Chi phí'];
 
     return Scaffold(
       appBar: AppBar(
@@ -342,7 +345,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                     height: 1.2)),
                                             TextSpan(
                                                 text: totalChiSum > 0
-                                                    ? '(${categories[0]} chiếm ${((_categoryChiSums[categories[0]] ?? 0.0) / totalChiSum * 100).toStringAsFixed(0)}%)'
+                                                    ? '(Nguyên liệu chiếm ${((_categoryChiSums['Nguyên liệu'] ?? 0.0) / totalChiSum * 100).toStringAsFixed(0)}%)'
                                                     : '(Chưa chi tiêu)',
                                                 style: const TextStyle(
                                                     fontSize: 12,
@@ -476,7 +479,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Cơ cấu chi phí (tháng này)',
+                              'Cơ cấu thu chi (tháng này)',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontSize: 16,
                                 color: colorScheme.onSurfaceVariant,
@@ -500,8 +503,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: List.generate(categories.length, (index) {
                                     final cat = categories[index];
-                                    final double val = _categoryChiSums[cat] ?? 0.0;
-                                    final double percent = totalChiSum > 0 ? (val / totalChiSum) : 0.0;
+                                    final double val = index == 0 ? _thisMonthThu : _thisMonthChi;
+                                    final double percent = totalThuChiSum > 0 ? (val / totalThuChiSum) : 0.0;
                                     return _buildLegendItem(
                                         cat,
                                         '${(percent * 100).toStringAsFixed(0)}%',
