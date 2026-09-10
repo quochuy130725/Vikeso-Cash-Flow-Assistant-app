@@ -1,4 +1,4 @@
-# 🚀 FinAuto - Hệ Thống Đối Soát Thông Minh Dành Cho SME
+# 🚀 Vikeso - Hệ Thống Đối Soát Thông Minh Dành Cho SME
 
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
