@@ -23,7 +23,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   final _apiService = ApiService();
   // TODO: Sau khi có login, lấy userId từ Session/SecureStorage
-  String get _userId => dotenv.env['USER_ID'] ?? dotenv.env['DEMO_USER_ID'] ?? '60d5ecb8b392d70015340123';
+  String get _userId => dotenv.env['USER_ID']!;
 
   @override
   void initState() {
@@ -49,7 +49,8 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     } catch (e) {
       if (mounted) {
-        UIHelpers.showInfoDialog(context, 'Lỗi Camera', 'Không thể khởi tạo máy ảnh: $e');
+        UIHelpers.showInfoDialog(
+            context, 'Lỗi Camera', 'Không thể khởi tạo máy ảnh: $e');
       }
     }
   }
@@ -82,7 +83,8 @@ class _CameraScreenState extends State<CameraScreen> {
                   child: _isCameraInitialized
                       ? CameraPreview(_controller!)
                       : const Center(
-                          child: CircularProgressIndicator(color: Color(0xFFFF5C8D)),
+                          child: CircularProgressIndicator(
+                              color: Color(0xFFFF5C8D)),
                         ),
                 ),
               ),
@@ -117,7 +119,8 @@ class _CameraScreenState extends State<CameraScreen> {
                 right: 0,
                 child: Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.black54,
                       borderRadius: BorderRadius.circular(20),
@@ -164,7 +167,9 @@ class _CameraScreenState extends State<CameraScreen> {
                     // Capture Button
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: (_isCameraInitialized && !_isLoading) ? _takePicture : null,
+                        onPressed: (_isCameraInitialized && !_isLoading)
+                            ? _takePicture
+                            : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFFF5C8D),
                           foregroundColor: Colors.white,
@@ -255,16 +260,19 @@ class _CameraScreenState extends State<CameraScreen> {
 
       if (errorType == 'JUNK_IMAGE') {
         title = '📷 Ảnh không hợp lệ';
-        message = 'Ảnh này không liên quan đến tài chính. Vui lòng chụp hóa đơn hoặc sổ tay!';
+        message =
+            'Ảnh này không liên quan đến tài chính. Vui lòng chụp hóa đơn hoặc sổ tay!';
       } else if (errorType == 'BLURRY_IMAGE') {
         title = '🌫️ Ảnh quá mờ';
-        message = 'Ảnh quá mờ hoặc lóa sáng! Vui lòng đặt lại camera và chụp rõ hơn.';
+        message =
+            'Ảnh quá mờ hoặc lóa sáng! Vui lòng đặt lại camera và chụp rõ hơn.';
       } else if (errorType == 'NETWORK_ERROR') {
         title = '📡 Lỗi kết nối';
         message = result['message'] ?? 'Không thể kết nối đến máy chủ!';
       } else if (errorType == 'SERVER_ERROR') {
         title = '⚠️ Lỗi máy chủ';
-        message = result['message'] ?? 'Máy chủ đang gặp sự cố, vui lòng thử lại.';
+        message =
+            result['message'] ?? 'Máy chủ đang gặp sự cố, vui lòng thử lại.';
       }
 
       UIHelpers.showInfoDialog(context, title, message);

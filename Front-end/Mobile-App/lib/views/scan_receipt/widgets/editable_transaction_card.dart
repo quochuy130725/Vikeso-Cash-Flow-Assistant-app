@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class EditableTransactionCard extends StatelessWidget {
+class EditableTransactionCard extends StatefulWidget {
   final Map<String, dynamic> item;
   final Color borderColor;
   final String confidence;
@@ -21,6 +21,77 @@ class EditableTransactionCard extends StatelessWidget {
   });
 
   @override
+  State<EditableTransactionCard> createState() => _EditableTransactionCardState();
+}
+
+class _EditableTransactionCardState extends State<EditableTransactionCard> {
+  late TextEditingController _amountController;
+  late TextEditingController _reasonController;
+  final List<TextEditingController> _nameControllers = [];
+  final List<TextEditingController> _priceControllers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController(text: widget.item['amount']);
+    _reasonController = TextEditingController(text: widget.item['reason']);
+    _initProductControllers();
+  }
+
+  void _initProductControllers() {
+    for (var c in _nameControllers) {
+      c.dispose();
+    }
+    for (var c in _priceControllers) {
+      c.dispose();
+    }
+    _nameControllers.clear();
+    _priceControllers.clear();
+
+    final products = widget.item['rawData']?['ChiTietSanPham'] as List? ?? [];
+    for (var prod in products) {
+      _nameControllers.add(TextEditingController(text: prod['Ten'] ?? ''));
+      _priceControllers.add(TextEditingController(text: prod['Gia']?.toString() ?? '0'));
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant EditableTransactionCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.item != widget.item) {
+      _amountController.text = widget.item['amount'] ?? '';
+      _reasonController.text = widget.item['reason'] ?? '';
+      _initProductControllers();
+    }
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _reasonController.dispose();
+    for (var c in _nameControllers) {
+      c.dispose();
+    }
+    for (var c in _priceControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _recalculateTotal() {
+    final products = widget.item['rawData']?['ChiTietSanPham'] as List? ?? [];
+    double total = 0;
+    for (var prod in products) {
+      total += (prod['Gia'] as num? ?? 0).toDouble();
+    }
+    if (total > 0) {
+      final totalStr = total.toInt().toString();
+      _amountController.text = totalStr;
+      widget.onAmountChanged(totalStr);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -31,7 +102,7 @@ class EditableTransactionCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-            color: confidence != 'cao' ? borderColor : Colors.transparent,
+            color: widget.confidence != 'cao' ? widget.borderColor : Colors.transparent,
             width: 1.5),
       ),
       child: Padding(
@@ -44,7 +115,7 @@ class EditableTransactionCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 SizedBox(
-                  height: 36, // Compact height
+                  height: 36,
                   child: SegmentedButton<String>(
                     style: SegmentedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -61,15 +132,15 @@ class EditableTransactionCard extends StatelessWidget {
                         label: Text('Tiền ra', style: TextStyle(fontSize: 12)),
                       ),
                     ],
-                    selected: {item['transactionType']},
+                    selected: {widget.item['transactionType']},
                     onSelectionChanged: (Set<String> newSelection) {
-                      onTypeChanged(newSelection.first);
+                      widget.onTypeChanged(newSelection.first);
                     },
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: onDelete,
+                  onPressed: widget.onDelete,
                   tooltip: 'Xóa giao dịch này',
                 )
               ],
@@ -78,83 +149,119 @@ class EditableTransactionCard extends StatelessWidget {
 
             // Hàng 2: Ô nhập số tiền (CÓ VIỀN MÀU THEO ĐỘ TIN CẬY)
             TextFormField(
-              initialValue: item['amount'],
+              controller: _amountController,
               keyboardType: TextInputType.number,
               style: TextStyle(
-                fontWeight: confidence == 'cao' ? FontWeight.normal : FontWeight.bold,
-                color: confidence == 'cao' ? Colors.black : borderColor,
+                fontWeight: widget.confidence == 'cao' ? FontWeight.normal : FontWeight.bold,
+                color: widget.confidence == 'cao' ? Colors.black : widget.borderColor,
               ),
               decoration: InputDecoration(
                 labelText: 'Số tiền (đ)',
                 labelStyle: TextStyle(
-                    color: confidence == 'cao' ? Colors.grey[700] : borderColor),
+                    color: widget.confidence == 'cao' ? Colors.grey[700] : widget.borderColor),
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                      color: confidence == 'cao' ? colorScheme.primary : borderColor,
+                      color: widget.confidence == 'cao' ? colorScheme.primary : widget.borderColor,
                       width: 2),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                      color: confidence == 'cao' ? Colors.grey : borderColor,
-                      width: confidence == 'cao' ? 1.0 : 2.0),
+                      color: widget.confidence == 'cao' ? Colors.grey : widget.borderColor,
+                      width: widget.confidence == 'cao' ? 1.0 : 2.0),
                 ),
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
-              onChanged: onAmountChanged,
+              onChanged: widget.onAmountChanged,
             ),
             const SizedBox(height: 12),
 
             // Hàng 3: Ô nhập lý do
             TextFormField(
-              initialValue: item['reason'],
+              controller: _reasonController,
               decoration: const InputDecoration(
                 labelText: 'Lý do / Nội dung',
                 border: OutlineInputBorder(),
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
-              onChanged: onReasonChanged,
+              onChanged: widget.onReasonChanged,
             ),
             
             // Hàng 4: Xem chi tiết bóc tách (nếu có)
-            if (item['rawData'] != null && 
-                item['rawData']['ChiTietSanPham'] != null && 
-                (item['rawData']['ChiTietSanPham'] as List).isNotEmpty)
+            if (widget.item['rawData'] != null && 
+                widget.item['rawData']['ChiTietSanPham'] != null && 
+                (widget.item['rawData']['ChiTietSanPham'] as List).isNotEmpty)
               Theme(
                 data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                 child: ExpansionTile(
                   tilePadding: EdgeInsets.zero,
                   childrenPadding: const EdgeInsets.only(top: 4, bottom: 8),
                   title: Text(
-                    'Xem chi tiết (${(item['rawData']['ChiTietSanPham'] as List).length} mục)',
+                    'Xem chi tiết (${(widget.item['rawData']['ChiTietSanPham'] as List).length} mục)',
                     style: TextStyle(
                       fontSize: 14,
                       color: colorScheme.primary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  children: (item['rawData']['ChiTietSanPham'] as List).map((chiTiet) {
-                    final ten = chiTiet['Ten'] ?? 'Không tên';
-                    final gia = chiTiet['Gia']?.toString() ?? '0';
+                  children: (widget.item['rawData']['ChiTietSanPham'] as List).asMap().entries.map((entry) {
+                    final idx = entry.key;
+                    final chiTiet = entry.value;
+
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 6.0, left: 4.0),
+                      padding: const EdgeInsets.only(bottom: 10.0, left: 4.0, right: 4.0),
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           const Text('📦 ', style: TextStyle(fontSize: 14)),
                           Expanded(
-                            child: Text(
-                              '$ten',
+                            flex: 3,
+                            child: TextFormField(
+                              controller: _nameControllers[idx],
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                                border: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.grey, width: 0.5),
+                                ),
+                                focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: Color(0xFFFF5C8D), width: 1.0),
+                                ),
+                                hintText: 'Tên mặt hàng',
+                              ),
                               style: const TextStyle(fontSize: 14, color: Colors.black87),
+                              onChanged: (val) {
+                                chiTiet['Ten'] = val;
+                              },
                             ),
                           ),
-                          Text(
-                            '$gia đ',
-                            style: const TextStyle(
-                              fontSize: 14, 
-                              fontWeight: FontWeight.bold, 
-                              color: Colors.black54
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 2,
+                            child: TextFormField(
+                              controller: _priceControllers[idx],
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                                border: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.grey, width: 0.5),
+                                ),
+                                focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: Color(0xFFFF5C8D), width: 1.0),
+                                ),
+                                suffixText: 'đ',
+                              ),
+                              style: const TextStyle(
+                                fontSize: 14, 
+                                fontWeight: FontWeight.bold, 
+                                color: Colors.black54
+                              ),
+                              onChanged: (val) {
+                                chiTiet['Gia'] = num.tryParse(val) ?? 0;
+                                _recalculateTotal();
+                              },
                             ),
                           ),
                         ],

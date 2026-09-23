@@ -5,15 +5,43 @@ const mongoose = require("mongoose");
 const nodemailer = require("nodemailer");
 const path = require("path");
 
-// 1. DÁN Y NGUYÊN SCHEMA CHUẨN CỦA TEAM ÔNG VÀO ĐÂY
+
 const receiptSchema = new mongoose.Schema({
-  userId: { type: String, required: true, index: true },
-  receiptUrl: { type: String, default: "" },
-  category: { type: String, enum: ["Hoa Don Le", "POS Ket Ca", "So Tay", "Khác"], default: "Khác" },
-  transactionType: { type: String, enum: ["THU", "CHI", "KHONG_XAC_DINH"], required: true },
-  totalAmount: { type: Number, required: true, default: 0 },
+  userId: { 
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true 
+  },  
+  receiptUrl: { type: String, default: "" },  
+  category: { 
+    type: String, 
+    enum: ["Hoa Don Le", "POS Ket Ca", "So Tay", "Chuyen Khoan", "Khac"],
+    default: "Khac" 
+  },
+  transactionType: { 
+    type: String, 
+    enum: ["THU", "CHI"], 
+    required: true  
+  },
+  totalAmount: { type: Number, required: true, default: 0 },  
   reason: { type: String, default: "" },
-  status: { type: String, enum: ["VALID", "MERGED"], default: "VALID", index: true },
+  confidenceLevel: { 
+    type: String, 
+    enum: ["HIGH", "MEDIUM", "LOW"], 
+    default: "HIGH" 
+  },
+  status: { 
+    type: String, 
+    enum: ["VALID", "MERGED"], 
+    default: "VALID",
+    index: true 
+  },
+  transactionDate: { 
+    type: Date,
+    default: Date.now,
+    index: true
+  },
   aiRawData: { type: Object, default: {} }
 }, {
   timestamps: true // ĂN TIỀN LÀ Ở CÁI NÀY ĐỂ FILTER THEO NGÀY
@@ -59,11 +87,17 @@ exports.dailyNightReport = onSchedule(
       const startOfUtc = new Date(startOfDayVN.getTime() - 7 * 60 * 60 * 1000);
       const endOfUtc = new Date(endOfDayVN.getTime() - 7 * 60 * 60 * 1000);
 
-      // Bước 1: Nhặt ra danh sách các User có phát sinh giao dịch VALID hôm nay
-      const activeUsers = await Receipt.distinct("userId", {
+      // Bộ lọc theo ngày (tìm theo transactionDate hoặc createdAt hôm nay)
+      const dateFilter = {
         status: "VALID",
-        createdAt: { $gte: startOfUtc, $lte: endOfUtc }
-      });
+        $or: [
+          { transactionDate: { $gte: startOfUtc, $lte: endOfUtc } },
+          { createdAt: { $gte: startOfUtc, $lte: endOfUtc } }
+        ]
+      };
+
+      // Bước 1: Nhặt ra danh sách các User có phát sinh giao dịch VALID hôm nay
+      const activeUsers = await Receipt.distinct("userId", dateFilter);
 
       console.log(`👥 Phát hiện ${activeUsers.length} người dùng cần gửi báo cáo đêm nay.`);
 
@@ -71,8 +105,7 @@ exports.dailyNightReport = onSchedule(
       for (const uId of activeUsers) {
         const userReceipts = await Receipt.find({
           userId: uId,
-          status: "VALID",
-          createdAt: { $gte: startOfUtc, $lte: endOfUtc }
+          ...dateFilter
         });
 
         let tongThu = 0;

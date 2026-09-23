@@ -24,5 +24,6 @@ build/
 # Các file debug/log
 *.log
 
-# Bỏ qua file cấu hình biến môi trường cục bộ (.env)
+# File cấu hình môi trường (TUYỆT ĐỐI KHÔNG COMMIT)
 .env
+*.env

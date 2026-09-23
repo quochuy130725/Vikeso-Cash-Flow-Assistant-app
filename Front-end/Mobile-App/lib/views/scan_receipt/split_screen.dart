@@ -344,6 +344,7 @@ class _SplitScreenState extends State<SplitScreen> {
                         final borderColor = _getTrafficColor(confidence);
 
                         return EditableTransactionCard(
+                          key: ValueKey(item),
                           item: item,
                           borderColor: borderColor,
                           confidence: confidence,
@@ -352,10 +353,10 @@ class _SplitScreenState extends State<SplitScreen> {
                             setState(() => item['transactionType'] = newType);
                           },
                           onAmountChanged: (val) {
-                            item['amount'] = val;
+                            setState(() => item['amount'] = val);
                           },
                           onReasonChanged: (val) {
-                            item['reason'] = val;
+                            setState(() => item['reason'] = val);
                           },
                         );
                       },

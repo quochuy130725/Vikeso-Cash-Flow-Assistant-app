@@ -43,7 +43,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
 
     try {
-      final String userId = dotenv.env['USER_ID'] ?? dotenv.env['DEMO_USER_ID'] ?? '60d5ecb8b392d70015340123';
+      final String userId = dotenv.env['USER_ID'] ?? '';
       final data = await _apiService.getTransactions(userId);
       _transactions = data;
       _processData();
@@ -137,7 +137,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _thisMonthChi += amount;
           String category = _formatCategory(tx['category'] ?? 'Khac');
           // Ánh xạ về 4 nhóm hiển thị trên biểu đồ tròn của Dashboard
-          if (category != 'Nguyên liệu' && category != 'Nhân công' && category != 'Điện nước') {
+          if (category != 'Nguyên liệu' &&
+              category != 'Nhân công' &&
+              category != 'Điện nước') {
             category = 'Khác';
           }
           _categoryChiSums[category] = (_categoryChiSums[category] ?? 0.0) + amount;
@@ -212,7 +214,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onPressed: () {
           Navigator.pushNamed(context, '/camera');
         },
-        backgroundColor: const Color(0xFFFF5C8D), // Màu hồng trùng với nút 'Xem báo cáo' và thương hiệu
+        backgroundColor: const Color(
+            0xFFFF5C8D), // Màu hồng trùng với nút 'Xem báo cáo' và thương hiệu
         shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 28, color: Colors.white),
       ),
@@ -261,8 +264,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          border:
-                              Border.all(color: colorScheme.surfaceContainerHighest),
+                          border: Border.all(
+                              color: colorScheme.surfaceContainerHighest),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.02),
@@ -292,26 +295,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 TableRow(
                                   children: [
                                     const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 8.0),
                                       child: Text('Doanh thu tuần:',
                                           style: TextStyle(
-                                              color: Colors.grey, fontSize: 13)),
+                                              color: Colors.grey,
+                                              fontSize: 13)),
                                     ),
                                     Padding(
-                                      padding:
-                                          const EdgeInsets.symmetric(vertical: 8.0),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0),
                                       child: RichText(
                                         text: TextSpan(
                                           children: [
                                             TextSpan(
-                                                text: '${currencyFormat.format(_thisWeekThu)}\n',
+                                                text:
+                                                    '${currencyFormat.format(_thisWeekThu)}\n',
                                                 style: const TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 18,
                                                     color: Color(0xFF198754),
                                                     height: 1.2)),
                                             TextSpan(
-                                                text: '($_thisWeekOrderCount đơn hàng)',
+                                                text:
+                                                    '($_thisWeekOrderCount đơn hàng)',
                                                 style: const TextStyle(
                                                     fontSize: 12,
                                                     color: Colors.grey,
@@ -325,19 +332,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 TableRow(
                                   children: [
                                     const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 8.0),
                                       child: Text('Tổng chi phí tháng:',
                                           style: TextStyle(
-                                              color: Colors.grey, fontSize: 13)),
+                                              color: Colors.grey,
+                                              fontSize: 13)),
                                     ),
                                     Padding(
-                                      padding:
-                                          const EdgeInsets.symmetric(vertical: 8.0),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0),
                                       child: RichText(
                                         text: TextSpan(
                                           children: [
                                             TextSpan(
-                                                text: '${currencyFormat.format(_thisMonthChi)}\n',
+                                                text:
+                                                    '${currencyFormat.format(_thisMonthChi)}\n',
                                                 style: const TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 18,
@@ -360,19 +370,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 TableRow(
                                   children: [
                                     const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 8.0),
                                       child: Text('Doanh thu tạm tính:',
                                           style: TextStyle(
-                                              color: Colors.grey, fontSize: 13)),
+                                              color: Colors.grey,
+                                              fontSize: 13)),
                                     ),
                                     Padding(
-                                      padding:
-                                          const EdgeInsets.symmetric(vertical: 8.0),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0),
                                       child: RichText(
                                         text: TextSpan(
                                           children: [
                                             TextSpan(
-                                                text: '${currencyFormat.format(_todayThu)}\n',
+                                                text:
+                                                    '${currencyFormat.format(_todayThu)}\n',
                                                 style: const TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 18,
@@ -405,8 +418,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          border:
-                              Border.all(color: colorScheme.surfaceContainerHighest),
+                          border: Border.all(
+                              color: colorScheme.surfaceContainerHighest),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.02),
@@ -420,7 +433,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             const Text(
                               'Doanh thu hôm nay',
-                              style: TextStyle(color: Colors.grey, fontSize: 14),
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 14),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -435,7 +449,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Row(
                               children: [
                                 Icon(
-                                  isGrowthPositive ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                                  isGrowthPositive
+                                      ? Icons.arrow_drop_up
+                                      : Icons.arrow_drop_down,
                                   color: colorScheme.primary,
                                   size: 18,
                                 ),
@@ -465,8 +481,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          border:
-                              Border.all(color: colorScheme.surfaceContainerHighest),
+                          border: Border.all(
+                              color: colorScheme.surfaceContainerHighest),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.02),
@@ -501,7 +517,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: List.generate(categories.length, (index) {
+                                  children:
+                                      List.generate(categories.length, (index) {
                                     final cat = categories[index];
                                     final double val = index == 0 ? _thisMonthThu : _thisMonthChi;
                                     final double percent = totalThuChiSum > 0 ? (val / totalThuChiSum) : 0.0;
@@ -529,7 +546,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             end: Alignment.bottomRight,
                           ),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: colorScheme.surfaceContainerHighest),
+                          border: Border.all(
+                              color: colorScheme.surfaceContainerHighest),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.02),
@@ -546,7 +564,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   Text(
                                     'Quản lý kho hàng',
-                                    style: theme.textTheme.titleMedium?.copyWith(
+                                    style:
+                                        theme.textTheme.titleMedium?.copyWith(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                       color: colorScheme.onSurface,
@@ -563,8 +582,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   const SizedBox(height: 12),
                                   ElevatedButton(
                                     onPressed: () {
-                                      UIHelpers.showWarningToast(
-                                          context, 'Chức năng này đang được phát triển!');
+                                      UIHelpers.showWarningToast(context,
+                                          'Chức năng này đang được phát triển!');
                                     },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF191C1D),

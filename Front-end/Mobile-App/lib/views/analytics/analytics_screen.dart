@@ -3,6 +3,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../data/services/api_service.dart';
+import '../../data/services/excel_export_service.dart';
+import '../shared_widgets/side_drawer.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -19,7 +21,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   // Stats
   double _totalThu = 0;
   double _totalChi = 0;
+  Map<String, double> _categoryThuSums = {};
   Map<String, double> _categoryChiSums = {};
+  bool _showThuPieChart = true;
 
   @override
   void initState() {
@@ -33,7 +37,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     });
 
     try {
-      final String userId = dotenv.env['USER_ID'] ?? dotenv.env['DEMO_USER_ID'] ?? '60d5ecb8b392d70015340123';
+      final String userId = dotenv.env['USER_ID'] ?? '';
       final data = await _apiService.getTransactions(userId);
       _transactions = data;
       _processData();
@@ -51,6 +55,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   void _processData() {
     _totalThu = 0;
     _totalChi = 0;
+    _categoryThuSums = {};
     _categoryChiSums = {};
 
     for (var tx in _transactions) {
@@ -63,6 +68,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
       if (type == 'THU') {
         _totalThu += amount;
+        _categoryThuSums[category] = (_categoryThuSums[category] ?? 0.0) + amount;
       } else if (type == 'CHI') {
         _totalChi += amount;
         _categoryChiSums[category] = (_categoryChiSums[category] ?? 0.0) + amount;
@@ -78,6 +84,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         return 'POS kết ca';
       case 'So Tay':
         return 'Sổ tay';
+      case 'Chuyen Khoan':
+        return 'Chuyển khoản';
       default:
         return 'Khác';
     }
@@ -91,6 +99,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         return const Color(0xFF4D96FF);
       case 'Sổ tay':
         return const Color(0xFF6BCB77);
+      case 'Chuyển khoản':
+        return const Color(0xFF9B51E0);
       default:
         return const Color(0xFFFFD93D);
     }
@@ -107,9 +117,22 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFFF5C8D), // Màu hồng chủ đạo
         elevation: 0.5,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+        leading: Builder(
+          builder: (context) {
+            return IconButton(
+              icon: Icon(
+                Navigator.canPop(context) ? Icons.arrow_back : Icons.menu,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                } else {
+                  Scaffold.of(context).openDrawer();
+                }
+              },
+            );
+          },
         ),
         title: const Text(
           'Phân tích chi tiết',
@@ -117,11 +140,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: 'Xuất Excel',
+            icon: const Icon(Icons.file_download_outlined, color: Colors.white),
+            onPressed: _transactions.isEmpty
+                ? null
+                : () => ExcelExportService.exportTransactions(
+                      context,
+                      _transactions,
+                      fileName: 'FinAuto_PhanTich',
+                    ),
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _loadData,
-          )
+          ),
         ],
       ),
+      drawer: const CustomSideDrawer(),
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFFFF5C8D)),
@@ -151,16 +186,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     _buildComparisonBarChart(currencyFormat),
                     const SizedBox(height: 24),
 
-                    // Biểu đồ 1: Cơ cấu chi tiêu (Pie Chart)
+                    // Biểu đồ: Phân tích cơ cấu dòng tiền (Unified Toggle Pie Chart)
                     Text(
-                      'Cơ cấu chi phí theo nguồn',
+                      'Phân tích cơ cấu nguồn tiền',
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildPieChartSection(),
+                    _buildUnifiedPieChartSection(),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -369,104 +404,234 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildPieChartSection() {
-    if (_totalChi == 0) {
-      return _buildEmptyState('Chưa phát sinh khoản chi tiêu nào để phân tích.');
-    }
-
-    final double totalChiSum = _categoryChiSums.values.fold(0, (sum, val) => sum + val);
-
-    final List<PieChartSectionData> sections = [];
-    _categoryChiSums.forEach((category, sum) {
-      final double percentage = totalChiSum > 0 ? (sum / totalChiSum) * 100 : 0.0;
-      sections.add(
-        PieChartSectionData(
-          color: _getCategoryColor(category),
-          value: sum,
-          title: '${percentage.toStringAsFixed(1)}%',
-          radius: 50,
-          titleStyle: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      );
-    });
-
+  Widget _buildUnifiedPieChartSection() {
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+    final Map<String, double> targetMap = _showThuPieChart ? _categoryThuSums : _categoryChiSums;
+    final double totalSum = _showThuPieChart ? _totalThu : _totalChi;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.01),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           )
         ],
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                flex: 4,
-                child: SizedBox(
-                  height: 140,
-                  child: PieChart(
-                    PieChartData(
-                      sectionsSpace: 2,
-                      centerSpaceRadius: 35,
-                      sections: sections,
+          // Nút chuyển đổi Tab Thu / Chi (Segmented Pill Toggle)
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _showThuPieChart = true),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _showThuPieChart ? const Color(0xFF198754) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: _showThuPieChart
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFF198754).withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                )
+                              ]
+                            : null,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '🟢 Doanh thu (THU)',
+                        style: TextStyle(
+                          color: _showThuPieChart ? Colors.white : Colors.grey.shade700,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                   ),
                 ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _showThuPieChart = false),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: !_showThuPieChart ? const Color(0xFFDC3545) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: !_showThuPieChart
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFFDC3545).withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                )
+                              ]
+                            : null,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '🔴 Chi phí (CHI)',
+                        style: TextStyle(
+                          color: !_showThuPieChart ? Colors.white : Colors.grey.shade700,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          if (totalSum == 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 30),
+              child: _buildEmptyState('Chưa phát sinh khoản ${_showThuPieChart ? "thu" : "chi"} nào để phân tích.'),
+            )
+          else ...[
+            // Donut Chart lớn, giữa lòng hiển thị Tổng tiền
+            SizedBox(
+              height: 200,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  PieChart(
+                    PieChartData(
+                      sectionsSpace: 3,
+                      centerSpaceRadius: 50,
+                      sections: targetMap.entries.map((entry) {
+                        final double percentage = totalSum > 0 ? (entry.value / totalSum) * 100 : 0.0;
+                        return PieChartSectionData(
+                          color: _getCategoryColor(entry.key),
+                          value: entry.value,
+                          title: percentage >= 5.0 ? '${percentage.toStringAsFixed(1)}%' : '',
+                          radius: percentage >= 15.0 ? 42 : 38,
+                          titleStyle: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _showThuPieChart ? 'TỔNG THU' : 'TỔNG CHI',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        currencyFormat.format(totalSum),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: _showThuPieChart ? const Color(0xFF198754) : const Color(0xFFDC3545),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 6,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: _categoryChiSums.entries.map((entry) {
-                    final percentage = totalChiSum > 0 ? (entry.value / totalChiSum) * 100 : 0.0;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: Row(
+            ),
+            const SizedBox(height: 24),
+
+            // Danh sách Legend cards dưới biểu đồ
+            Column(
+              children: targetMap.entries.map((entry) {
+                final double percentage = totalSum > 0 ? (entry.value / totalSum) * 100 : 0.0;
+                final Color catColor = _getCategoryColor(entry.key);
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: catColor.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: catColor.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: catColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              entry.key,
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 6),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(3),
+                              child: LinearProgressIndicator(
+                                value: percentage / 100,
+                                backgroundColor: Colors.grey.shade200,
+                                valueColor: AlwaysStoppedAnimation<Color>(catColor),
+                                minHeight: 5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: _getCategoryColor(entry.key),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              '${entry.key} (${percentage.toStringAsFixed(1)}%)',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
                           Text(
                             currencyFormat.format(entry.value),
-                            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${percentage.toStringAsFixed(1)}%',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: catColor,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ],
                       ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ],
-          ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
     );
