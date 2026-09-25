@@ -6,16 +6,20 @@
 ![Google Gemini](https://img.shields.io/badge/Google_Gemini_AI-8E75B2?style=for-the-badge&logo=google&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase_Serverless-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
 
-**FinAuto** là giải pháp công nghệ tài chính tinh gọn giúp các Hộ kinh doanh vừa và nhỏ (SME), tạp hóa, cửa hàng bán lẻ tự động hóa hoàn toàn quy trình bóc tách hóa đơn, sổ nợ tay và đối soát dòng tiền hàng ngày mà không cần kiến thức kế toán.
+**FinAuto** là giải pháp công nghệ tài chính tinh gọn đột phá, giúp các Hộ kinh doanh vừa và nhỏ (SME), tạp hóa, cửa hàng bán lẻ và **đặc biệt là các thương lái/chủ vựa nông sản đầu mối** tự động hóa hoàn toàn quy trình bóc tách hóa đơn, sổ nợ tay và đối soát dòng tiền hàng ngày mà không cần kiến thức kế toán.
 
 ---
 
 ## ✨ Tính Năng Cốt Lõi (Core Features)
 
-1. **Giao diện 1-Chạm (Zero-Friction UX):** Loại bỏ thao tác nhập liệu rườm rà. Chụp hóa đơn/sổ tay chỉ với 1 nút bấm duy nhất. AI sẽ tự động phân loại ngầm chứng từ (Hóa đơn lẻ / POS kết ca).
-2. **Bóc tách Dữ liệu Tốc độ cao:** Ứng dụng Google Gemini AI (với cấu hình `thinkingBudget: 0`) để bóc tách chính xác nét chữ viết tay và số liệu in mờ dưới 3 giây.
-3. **Đèn giao thông UX (Traffic Light):** Cơ chế đối chiếu trực quan (Split-Screen). Hệ thống tự động cảnh báo mức độ tin cậy của nét chữ bằng màu sắc (Xanh/Vàng/Đỏ) để người dùng rà soát an toàn.
-4. **Báo cáo Tự động Ngầm (Serverless Nightly Report):** Không cần mở App. Hệ thống tự động thức dậy vào 22h00 hằng ngày để truy xuất CSDL, đóng gói dữ liệu và bắn báo cáo trực tiếp qua Zalo ZNS / Telegram cho chủ cửa hàng.
+1. **Giao diện 1-Chạm (Zero-Friction UX):** Loại bỏ hoàn toàn các thao tác nhập liệu gõ tay rườm rà. Người dùng chỉ cần chụp hóa đơn/sổ tay qua 1 nút bấm duy nhất, hệ thống tự động nhận diện và xử lý ngầm. Chuyển đổi toàn bộ thuật ngữ chuyên ngành thành ngôn ngữ bình dân ("Tiền vào" / "Tiền ra").
+2. **AI OCR Xử Lý Chữ Viết Tay & Lọc Nợ Gối Đầu:** Ứng dụng mô hình ngôn ngữ lớn Google Gemini để bóc tách chính xác nét chữ viết tay lộn xộn của chủ quán hoặc thương lái. AI tự động phân tích ngữ cảnh để **loại bỏ các khoản ghi nợ, nợ gối đầu chưa trả**, chỉ giữ lại dòng tiền thực tế phát sinh nhằm bảo vệ tính chính xác của sổ sách.
+3. **Lưới Lọc Thông Minh 2 Chiều (Bidirectional Smart Filter):** Cơ chế đối soát tự động độc quyền tại tầng Backend:
+   * **Chiều xuôi:** Khi quét báo cáo `POS Kết Ca`, hệ thống tự động tìm và gộp (`MERGED`) toàn bộ hóa đơn bán lẻ của máy POS phát sinh trong ngày để tránh trùng lặp doanh thu.
+   * **Chiều ngược:** Nếu hóa đơn lẻ máy POS được nộp muộn sau khi đã có báo cáo kết ca, hệ thống tự động bắt mạch bối cảnh để chuyển trạng thái sang `MERGED` ngay khi tạo mới.
+   * *Hệ thống giữ nguyên 100% các khoản CHI và hóa đơn viết tay độc lập ngoài hệ thống POS.*
+4. **Đèn Giao Thông UX (Traffic Light Control):** Giao diện đối chiếu trực quan (Split-Screen). Hệ thống tự động bao bọc viền sắc màu dựa trên mức độ tin cậy của dữ liệu AI trích xuất (Đỏ: Thấp, Vàng: Trung bình, Xanh: Cao) giúp người dùng dễ dàng kiểm soát, chỉnh sửa dữ liệu trước khi đồng bộ.
+5. **Báo Cáo Tự Động Serverless (Nightly Auto-Report):** Hệ thống tự động kích hoạt thông qua Cron-job Cloud Functions vào 22h00 hằng ngày, tổng hợp luồng tiền trong ngày và bắn báo cáo trực quan dưới định dạng Markdown trực tiếp qua Telegram Bot cho chủ cửa hàng.
 
 ---
 
@@ -29,8 +33,6 @@ Dự án được xây dựng theo mô hình **Dual-Track Agile** và chia thàn
 ---
 
 ## 📂 Cấu Trúc Thư Mục (Project Structure)
-
-Dự án được cấu trúc theo dạng Monorepo, phân tách rõ ràng giữa máy chủ xử lý (Back-end) và giao diện người dùng (Front-end).
 
 ```text
 finauto-Cash-Flow-Assistant-app/
@@ -46,9 +48,9 @@ finauto-Cash-Flow-Assistant-app/
 │   │   ├── Receipt.js             # [UPDATED] Lưu giao dịch (category, transactionType, status: VALID/MERGED)
 │   │   └── User.js                # [NEW] Phân quyền Freemium (FREE/PRO) và lưu telegramChatId
 │   ├── routes/
-│   │   └── apiRoutes.js           # Khai báo Endpoint (/manual-entry, /upload-receipt)
+│   │   └── apiRoutes.js           # Quản lý các cổng Endpoints (/manual-entry, /upload-receipt)
 │   ├── middlewares/
-│   │   └── upload.js              # Cấu hình Multer hứng file ảnh đưa trực tiếp vào RAM
+│   │   └── upload.js              # Middleware Multer hứng tệp tin hình ảnh trực tiếp vào RAM
 │   ├── controllers/
 │   │   ├── manualEntryController.js  # Lưới lọc thông minh: Gạch bỏ hóa đơn lẻ THU, giữ nguyên CHI + Mock Telegram
 │   │   └── aiReceiptController.js    # Cổng AI: Gửi ảnh + System Instruction 6 Rule (thinkingBudget: 0)

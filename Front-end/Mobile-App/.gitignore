@@ -1,0 +1,29 @@
+# Các file do Flutter tự sinh ra (bắt buộc phải bỏ qua)
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+
+# Các file cấu hình IDE (không cần thiết đẩy lên Git)
+.idea/
+.vscode/
+*.iml
+
+# Các file hệ điều hành
+.DS_Store
+*.swp
+*.swo
+
+# File khóa của Flutter (nên giữ lại)
+# pubspec.lock (Bạn có thể bỏ nếu muốn tạo mới mỗi lần chạy)
+
+# Các file debug/log
+*.log
+
+# File cấu hình môi trường (TUYỆT ĐỐI KHÔNG COMMIT)
+.env
+*.env
