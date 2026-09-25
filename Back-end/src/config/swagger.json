@@ -1,0 +1,135 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FinAuto API Documentation",
+    "version": "1.0.0",
+    "description": "Tài liệu API cho dự án FinAuto - Trợ lý Kế toán AI"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local server"
+    },
+    {
+      "url": "https://your-app-name.onrender.com",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Đăng ký tài khoản mới",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" },
+                  "name": { "type": "string" },
+                  "shopName": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Đăng ký thành công" },
+          "400": { "description": "Lỗi dữ liệu đầu vào" },
+          "409": { "description": "Email đã tồn tại" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Đăng nhập bằng Email/Password",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Đăng nhập thành công" },
+          "401": { "description": "Sai email hoặc mật khẩu" }
+        }
+      }
+    },
+    "/api/auth/google": {
+      "post": {
+        "summary": "Đăng nhập bằng Google",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idToken": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Thành công" }
+        }
+      }
+    },
+    "/api/scan-receipt": {
+      "post": {
+        "summary": "Scan hóa đơn bằng AI (Gemini)",
+        "tags": ["Transactions"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Kết quả bóc tách JSON từ AI" }
+        }
+      }
+    },
+    "/api/transactions": {
+      "get": {
+        "summary": "Lấy danh sách giao dịch của User",
+        "tags": ["Transactions"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Danh sách giao dịch" }
+        }
+      }
+    }
+  }
+}
