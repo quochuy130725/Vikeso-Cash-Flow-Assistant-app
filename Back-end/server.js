@@ -26,6 +26,9 @@ app.use(cors());            // ← Cho phép Flutter Web / Postman gọi API
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Khởi chạy hệ thống Cron-job tự động bắn báo cáo (Chạy ngầm)
+require('./src/services/cronService');
+
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 

@@ -96,4 +96,25 @@ router.get('/transactions', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------
+// API TEST: Trigger báo cáo cuối ngày ngay lập tức (CHỈ DÙNG KHI TEST)
+// POST /api/test-report
+// ---------------------------------------------------------
+router.post('/test-report', async (req, res) => {
+  try {
+    const { runDailyReport } = require('../services/cronService');
+    console.log("🧪 [TEST] Trigger báo cáo thủ công...");
+    const result = await runDailyReport();
+    return res.status(200).json({
+      success: true,
+      message: 'Báo cáo đã được gửi thành công!',
+      result,
+    });
+  } catch (error) {
+    console.error('Lỗi test-report:', error);
+    return res.status(500).json
+      ({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;
