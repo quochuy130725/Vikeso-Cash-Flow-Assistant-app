@@ -63,47 +63,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 prefixIcon: Icon(Icons.storefront_outlined),
               ),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: phoneCtrl,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'So dien thoai',
-                prefixIcon: Icon(Icons.phone_outlined),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huy')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, {
-              'shopName': shopCtrl.text.trim(),
-              'phone'   : phoneCtrl.text.trim(),
-            }),
-            child: const Text('Luu'),
-          ),
-        ],
-      ),
-    );
 
-    if (result == null) return;
-    await _updateProfile(result['shopName']!, result['phone']!);
-  }
-
-  Future<void> _updateProfile(String shopName, String phone) async {
-    setState(() { _isLoading = true; });
-    try {
-      final token   = await _storage.read(key: 'access_token') ?? '';
-      final baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:5000/api';
-      final uri     = Uri.parse('$baseUrl/auth/profile');
-
-      final response = await http.put(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
         body: jsonEncode({'shopName': shopName, 'phone': phone}),
       ).timeout(const Duration(seconds: 30));
 

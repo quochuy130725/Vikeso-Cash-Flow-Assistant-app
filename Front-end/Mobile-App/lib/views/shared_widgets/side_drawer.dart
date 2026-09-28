@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CustomSideDrawer extends StatelessWidget {
@@ -45,7 +45,7 @@ class CustomSideDrawer extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        dotenv.env['USER_SHOP_NAME'] ?? 'Cafe ABC',
+                        dotenv.env['USER_SHOP_NAME'] ?? 'Cửa hàng Vikeso',
                         style: TextStyle(
                           color: colorScheme.primary,
                           fontSize: 18,
@@ -53,7 +53,7 @@ class CustomSideDrawer extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        dotenv.env['USER_EMAIL'] ?? 'Nguyễn Văn Tiến',
+                        dotenv.env['USER_EMAIL'] ?? 'Chủ cửa hàng',
                         style: const TextStyle(
                           fontSize: 14,
                         ),
