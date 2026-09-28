@@ -1,18 +1,18 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "FinAuto API Documentation",
+    "title": "Vikeso API Documentation",
     "version": "1.0.0",
-    "description": "Tài liệu API cho dự án FinAuto - Trợ lý Kế toán AI"
+    "description": "Tài liệu API cho dự án Vikeso - Trợ lý Kế toán AI cho Hộ kinh doanh"
   },
   "servers": [
     {
-      "url": "http://localhost:5000",
-      "description": "Local server"
+      "url": "https://vikeso-cash-flow-assistant-app.onrender.com",
+      "description": "Production server (Render)"
     },
     {
-      "url": "https://your-app-name.onrender.com",
-      "description": "Production server"
+      "url": "http://localhost:5000",
+      "description": "Local development"
     }
   ],
   "paths": {
