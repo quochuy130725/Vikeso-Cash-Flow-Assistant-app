@@ -176,3 +176,68 @@ exports.googleSignIn = async (req, res) => {
     return res.status(500).json({ success: false, error: error.message });
   }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/auth/me  — Lấy thông tin user hiện tại (cần Bearer token)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng.' });
+    }
+    return res.status(200).json({
+      success: true,
+      userInfo: {
+        ...buildUserInfo(user),
+        phone: user.phone,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PUT /api/auth/profile  — Cập nhật thông tin cá nhân
+// Body: { shopName?, phone?, avatar? }
+// Yêu cầu: Bearer token hợp lệ
+// ─────────────────────────────────────────────────────────────────────────────
+exports.updateProfile = async (req, res) => {
+  try {
+    const { shopName, phone, avatar } = req.body;
+    const userId = req.user.userId;
+
+    const updateFields = {};
+    if (shopName !== undefined) updateFields.shopName = shopName.trim();
+    if (phone     !== undefined) updateFields.phone     = phone.trim();
+    if (avatar    !== undefined) updateFields.avatar    = avatar;
+
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({ success: false, message: 'Không có trường nào để cập nhật.' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng.' });
+    }
+
+    console.log(`✅ Cập nhật profile: ${user.email}`);
+    return res.status(200).json({
+      success: true,
+      message: 'Cập nhật thông tin thành công!',
+      userInfo: {
+        ...buildUserInfo(user),
+        phone: user.phone,
+      },
+    });
+  } catch (error) {
+    console.error('Lỗi update-profile:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};

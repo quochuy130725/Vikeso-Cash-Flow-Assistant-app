@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'core/themes/app_theme.dart';
-// Import các màn hình của ứng dụng
+// Import cĂ¡c mĂ n hĂ¬nh cá»§a á»©ng dá»¥ng
 import 'views/splash/splash_screen.dart';
 import 'views/auth/login_screen.dart';
 import 'views/dashboard/dashboard_screen.dart';
@@ -26,10 +26,10 @@ class QuanLyCuaHangApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Quản lý cửa hàng',
+      title: 'Quáº£n lĂ½ cá»­a hĂ ng',
       debugShowCheckedModeBanner: false,
 
-      // Sử dụng AppTheme từ thư mục core
+      // Sá»­ dá»¥ng AppTheme tá»« thÆ° má»¥c core
       theme: AppTheme.getTheme(context),
       initialRoute: '/splash',
       routes: {
@@ -40,15 +40,15 @@ class QuanLyCuaHangApp extends StatelessWidget {
         '/analytics': (context) => const MainNavigationShell(initialIndex: 2),
         '/profile': (context) => const MainNavigationShell(initialIndex: 3),
         '/camera': (context) => const CameraScreen(),
-        // NOTE: '/split' không còn là route tĩnh nữa.
-        // SplitScreen được mở bằng Navigator.push từ CameraScreen
-        // để truyền dữ liệu động (items, userId, imageFile) từ API.
+        // NOTE: '/split' khĂ´ng cĂ²n lĂ  route tÄ©nh ná»¯a.
+        // SplitScreen Ä‘Æ°á»£c má»Ÿ báº±ng Navigator.push tá»« CameraScreen
+        // Ä‘á»ƒ truyá»n dá»¯ liá»‡u Ä‘á»™ng (items, userId, imageFile) tá»« API.
       },  
     );
   }
 }
 
-// Shell điều hướng chính tích hợp Bottom Navigation Bar
+// Shell Ä‘iá»u hÆ°á»›ng chĂ­nh tĂ­ch há»£p Bottom Navigation Bar
 class MainNavigationShell extends StatefulWidget {
   final int initialIndex;
   const MainNavigationShell({super.key, this.initialIndex = 0});
@@ -117,7 +117,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                         : Colors.grey[600]),
                 selectedIcon: Icon(Icons.home,
                     color: Theme.of(context).colorScheme.primary),
-                label: 'Trang chủ',
+                label: 'Trang chá»§',
               ),
               NavigationDestination(
                 icon: Icon(Icons.receipt_long_outlined,
@@ -135,7 +135,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                         : Colors.grey[600]),
                 selectedIcon: Icon(Icons.analytics,
                     color: Theme.of(context).colorScheme.primary),
-                label: 'Báo cáo',
+                label: 'BĂ¡o cĂ¡o',
               ),
               NavigationDestination(
                 icon: Icon(Icons.person_outline,

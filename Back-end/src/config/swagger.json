@@ -130,6 +130,52 @@
           "200": { "description": "Danh sách giao dịch" }
         }
       }
+    },
+    "/api/auth/me": {
+      "get": {
+        "summary": "Lấy thông tin user hiện tại",
+        "tags": ["Auth"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Thành công" },
+          "401": { "description": "Chưa xác thực" }
+        }
+      }
+    },
+    "/api/auth/profile": {
+      "put": {
+        "summary": "Cập nhật thông tin cá nhân",
+        "tags": ["Auth"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "shopName": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "avatar": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Cập nhật thành công" },
+          "401": { "description": "Chưa xác thực" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
     }
   }
 }
