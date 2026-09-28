@@ -17,7 +17,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
-  // Thong tin hien tai (doc tu SecureStorage)
   String _shopName  = '';
   String _email     = '';
   String _phone     = '';
@@ -44,50 +43,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  // Goi API PUT /api/auth/profile
   Future<void> _openEditDialog() async {
     final shopCtrl  = TextEditingController(text: _shopName);
-    final phoneCtrl = TextEditingController(text: _phone);
 
     final result = await showDialog<Map<String, String>>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Sua thong tin', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Sửa thông tin', style: TextStyle(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: shopCtrl,
               decoration: const InputDecoration(
-                labelText: 'Ten cua hang',
+                labelText: 'Tên cửa hàng',
                 prefixIcon: Icon(Icons.storefront_outlined),
               ),
             ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, {
+              'shopName': shopCtrl.text.trim(),
+            }),
+            child: const Text('Lưu'),
+          ),
+        ],
+      ),
+    );
 
-        body: jsonEncode({'shopName': shopName, 'phone': phone}),
+    if (result == null) return;
+    await _updateProfile(result['shopName']!);
+  }
+
+  Future<void> _updateProfile(String shopName) async {
+    setState(() { _isLoading = true; });
+    try {
+      final token   = await _storage.read(key: 'access_token') ?? '';
+      final baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:5000/api';
+      final uri     = Uri.parse('$baseUrl/auth/profile');
+
+      final response = await http.put(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'shopName': shopName}),
       ).timeout(const Duration(seconds: 30));
 
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {
         final info = body['userInfo'] as Map<String, dynamic>;
-        // Cap nhat SecureStorage
-        await Future.wait([
-          _storage.write(key: 'user_shopName', value: info['shopName']?.toString() ?? ''),
-          _storage.write(key: 'user_phone',    value: info['phone']?.toString()    ?? ''),
-        ]);
-        // Cap nhat dotenv runtime
+        
+        await _storage.write(key: 'user_shopName', value: info['shopName']?.toString() ?? '');
+        
         dotenv.env['USER_ID'] = info['id']?.toString() ?? dotenv.env['USER_ID'] ?? '';
+        
         if (!mounted) return;
         setState(() {
           _shopName = info['shopName']?.toString() ?? '';
-          _phone    = info['phone']?.toString()    ?? '';
         });
-        _showSnack('Cap nhat thanh cong!', isSuccess: true);
+        _showSnack('Cập nhật thành công!', isSuccess: true);
       } else {
-        _showSnack(body['message']?.toString() ?? 'Co loi xay ra.');
+        _showSnack(body['message']?.toString() ?? 'Có lỗi xảy ra.');
       }
     } catch (e) {
-      _showSnack('Loi ket noi: $e');
+      _showSnack('Lỗi kết nối: $e');
     } finally {
       if (mounted) setState(() { _isLoading = false; });
     }
@@ -97,14 +121,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Dang xuat'),
-        content: const Text('Ban co chac muon dang xuat khong?'),
+        title: const Text('Đăng xuất'),
+        content: const Text('Bạn có chắc muốn đăng xuất không?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Huy')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Dang xuat', style: TextStyle(color: Colors.white)),
+            child: const Text('Đăng xuất', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -147,7 +171,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
               child: Column(
                 children: [
-                  // --- Avatar + Ten ---
                   Center(
                     child: Column(
                       children: [
@@ -191,29 +214,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          _shopName.isNotEmpty ? _shopName : 'Cua hang Vikeso',
+                          _shopName.isNotEmpty ? _shopName : 'Cửa hàng Vikeso',
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                         ),
                         const SizedBox(height: 4),
                         Text(_email, style: const TextStyle(color: Colors.grey, fontSize: 14)),
-                        if (_phone.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.call, size: 14, color: Colors.grey),
-                              const SizedBox(width: 4),
-                              Text(_phone, style: const TextStyle(color: Colors.grey, fontSize: 14)),
-                            ],
-                          ),
-                        ],
                       ],
                     ),
                   ),
 
                   const SizedBox(height: 32),
 
-                  // --- Menu ---
                   Material(
                     color: Colors.white,
                     shape: RoundedRectangleBorder(
@@ -222,25 +233,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: Column(
                       children: [
-                        _menuItem(context, Icons.storefront, 'Thong tin cua hang', onTap: _openEditDialog),
-                        _menuItem(context, Icons.edit, 'Sua thong tin', onTap: _openEditDialog),
-                        _menuItem(context, Icons.lock_outline, 'Doi mat khau', onTap: () {
-                          // TODO: Doi mat khau
-                        }),
-                        _menuItem(context, Icons.settings_outlined, 'Cai dat', onTap: () {}),
+                        _menuItem(context, Icons.storefront, 'Thông tin cửa hàng', onTap: _openEditDialog),
+                        _menuItem(context, Icons.edit, 'Sửa thông tin', onTap: _openEditDialog),
+                        _menuItem(context, Icons.lock_outline, 'Đổi mật khẩu', onTap: () {}),
+                        _menuItem(context, Icons.settings_outlined, 'Cài đặt', onTap: () {}),
                       ],
                     ),
                   ),
 
                   const SizedBox(height: 24),
 
-                  // --- Nut Dang xuat ---
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: _handleLogout,
                       icon: const Icon(Icons.logout, color: Colors.red),
-                      label: const Text('Dang xuat', style: TextStyle(color: Colors.red, fontSize: 16)),
+                      label: const Text('Đăng xuất', style: TextStyle(color: Colors.red, fontSize: 16)),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
