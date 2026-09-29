@@ -167,6 +167,46 @@
           "401": { "description": "Chưa xác thực" }
         }
       }
+    },
+    "/api/telegram/webhook": {
+      "post": {
+        "summary": "Nhận update từ Telegram Bot (Telegram tự gọi)",
+        "description": "Endpoint này được Telegram gọi tự động khi user gửi tin nhắn /start đến bot. Không cần gọi thủ công.",
+        "tags": ["Telegram"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "object",
+                    "properties": {
+                      "chat": { "type": "object", "properties": { "id": { "type": "integer" } } },
+                      "text": { "type": "string", "example": "/start 64abc123..." }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "OK (luôn trả 200 để Telegram không gửi lại)" }
+        }
+      }
+    },
+    "/api/telegram/set-webhook": {
+      "get": {
+        "summary": "Đăng ký Webhook URL với Telegram Bot (gọi 1 lần)",
+        "description": "Gọi endpoint này 1 lần duy nhất sau khi deploy để Telegram biết gửi update về đâu. Không cần auth.",
+        "tags": ["Telegram"],
+        "responses": {
+          "200": { "description": "Webhook đã được đăng ký thành công" },
+          "500": { "description": "Lỗi đăng ký" }
+        }
+      }
     }
   },
   "components": {
