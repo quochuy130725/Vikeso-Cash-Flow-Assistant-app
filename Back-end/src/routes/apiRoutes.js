@@ -5,9 +5,10 @@ const router = express.Router();
 const upload = require('../middlewares/upload');
 
 // Controllers
-const manualEntryController = require('../controllers/manualEntryController');
-const aiReceiptController = require('../controllers/aiReceiptController');
-const User = require('../models/User');
+const manualEntryController  = require('../controllers/manualEntryController');
+const aiReceiptController    = require('../controllers/aiReceiptController');
+const telegramController     = require('../controllers/telegramController');
+const User    = require('../models/User');
 const Receipt = require('../models/Receipt');
 
 // ---------------------------------------------------------
@@ -116,5 +117,13 @@ router.post('/test-report', async (req, res) => {
       ({ success: false, error: error.message });
   }
 });
+
+// ---------------------------------------------------------
+// TELEGRAM BOT — Webhook nhận update từ Telegram
+// POST /api/telegram/webhook  (Telegram gọi tự động)
+// GET  /api/telegram/set-webhook  (gọi 1 lần để đăng ký)
+// ---------------------------------------------------------
+router.post('/telegram/webhook', telegramController.handleWebhook);
+router.get('/telegram/set-webhook', telegramController.setWebhook);
 
 module.exports = router;
