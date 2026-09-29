@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart' as flutter_secure_storage;
 import '../shared_widgets/side_drawer.dart';
 import 'widgets/dashboard_action_buttons.dart';
 import 'widgets/revenue_chart.dart';
@@ -18,9 +19,10 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final ApiService _apiService = ApiService();
   bool _isLoading = true;
+  String _displayName = 'NgÆ°á»i dĂ¹ng';
   List<Map<String, dynamic>> _transactions = [];
 
-  // Thống kê động
+  // Thá»‘ng kĂª Ä‘á»™ng
   double _todayThu = 0;
   double _yesterdayThu = 0;
   double _thisWeekThu = 0;
@@ -44,6 +46,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     try {
       final String userId = dotenv.env['USER_ID'] ?? '';
+      const storage =  flutter_secure_storage.FlutterSecureStorage();
+      final shopName = await storage.read(key: 'user_shopName');
+      final userName = await storage.read(key: 'user_name');
+      final email = await storage.read(key: 'user_email');
+      if (mounted) {
+        setState(() {
+          if (shopName != null && shopName.trim() != '') _displayName = shopName;
+          else if (userName != null && userName.trim() != '') _displayName = userName;
+          else if (email != null && email.trim() != '') _displayName = email.split('@')[0];
+          else _displayName = 'NgÆ°á»i dĂ¹ng';
+        });
+      }
       final data = await _apiService.getTransactions(userId);
       _transactions = data;
       _processData();
@@ -72,15 +86,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _formatCategory(String rawCategory) {
     switch (rawCategory) {
       case 'Hoa Don Le':
-        return 'Hóa đơn lẻ';
+        return 'HĂ³a Ä‘Æ¡n láº»';
       case 'POS Ket Ca':
-        return 'POS kết ca';
+        return 'POS káº¿t ca';
       case 'So Tay':
-        return 'Sổ tay';
+        return 'Sá»• tay';
       case 'Khac':
-        return 'Khác';
+        return 'KhĂ¡c';
       default:
-        return rawCategory; // Giữ nguyên các category tiếng Việt có sẵn (Nguyên liệu, Nhân công, Điện nước, Bán hàng...)
+        return rawCategory; // Giá»¯ nguyĂªn cĂ¡c category tiáº¿ng Viá»‡t cĂ³ sáºµn (NguyĂªn liá»‡u, NhĂ¢n cĂ´ng, Äiá»‡n nÆ°á»›c, BĂ¡n hĂ ng...)
     }
   }
 
@@ -98,10 +112,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _thisMonthChi = 0;
     _thisMonthThu = 0;
     _categoryChiSums = {
-      'Nguyên liệu': 0.0,
-      'Nhân công': 0.0,
-      'Điện nước': 0.0,
-      'Khác': 0.0,
+      'NguyĂªn liá»‡u': 0.0,
+      'NhĂ¢n cĂ´ng': 0.0,
+      'Äiá»‡n nÆ°á»›c': 0.0,
+      'KhĂ¡c': 0.0,
     };
     _weeklyRevenue = List.filled(7, 0.0);
 
@@ -114,33 +128,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       final tDateStart = DateTime(tDate.year, tDate.month, tDate.day);
 
-      // Doanh thu hôm nay vs Hôm qua
+      // Doanh thu hĂ´m nay vs HĂ´m qua
       if (tDateStart == todayStart) {
         if (type == 'THU') _todayThu += amount;
       } else if (tDateStart == yesterdayStart) {
         if (type == 'THU') _yesterdayThu += amount;
       }
 
-      // Doanh thu 7 ngày gần nhất (từ 6 ngày trước đến hôm nay)
+      // Doanh thu 7 ngĂ y gáº§n nháº¥t (tá»« 6 ngĂ y trÆ°á»›c Ä‘áº¿n hĂ´m nay)
       final diffDays = tDateStart.difference(sixDaysAgo).inDays;
       if (diffDays >= 0 && diffDays < 7) {
         if (type == 'THU') {
           _thisWeekThu += amount;
           _thisWeekOrderCount++;
-          _weeklyRevenue[diffDays] += amount / 1000000.0; // Triệu đồng
+          _weeklyRevenue[diffDays] += amount / 1000000.0; // Triá»‡u Ä‘á»“ng
         }
       }
 
-      // Doanh thu & Chi phí tháng
+      // Doanh thu & Chi phĂ­ thĂ¡ng
       if (tDate.month == now.month && tDate.year == now.year) {
         if (type == 'CHI') {
           _thisMonthChi += amount;
           String category = _formatCategory(tx['category'] ?? 'Khac');
-          // Ánh xạ về 4 nhóm hiển thị trên biểu đồ tròn của Dashboard
-          if (category != 'Nguyên liệu' &&
-              category != 'Nhân công' &&
-              category != 'Điện nước') {
-            category = 'Khác';
+          // Ănh xáº¡ vá» 4 nhĂ³m hiá»ƒn thá»‹ trĂªn biá»ƒu Ä‘á»“ trĂ²n cá»§a Dashboard
+          if (category != 'NguyĂªn liá»‡u' &&
+              category != 'NhĂ¢n cĂ´ng' &&
+              category != 'Äiá»‡n nÆ°á»›c') {
+            category = 'KhĂ¡c';
           }
           _categoryChiSums[category] = (_categoryChiSums[category] ?? 0.0) + amount;
         } else if (type == 'THU') {
@@ -161,7 +175,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'Ä‘');
 
     final growthPercent = _calculateGrowthPercentage();
     final isGrowthPositive = growthPercent >= 0;
@@ -173,15 +187,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _thisMonthChi,
     ];
     final List<Color> pieColors = [
-      const Color(0xFF198754), // Thu nhập (Xanh lá)
-      const Color(0xFFDC3545), // Chi phí (Đỏ)
+      const Color(0xFF198754), // Thu nháº­p (Xanh lĂ¡)
+      const Color(0xFFDC3545), // Chi phĂ­ (Äá»)
     ];
 
-    final categories = ['Doanh thu', 'Chi phí'];
+    final categories = ['Doanh thu', 'Chi phĂ­'];
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFF5C8D), // Màu hồng Primary Container
+        backgroundColor: const Color(0xFFFF5C8D), // MĂ u há»“ng Primary Container
         elevation: 0.5,
         leading: Builder(builder: (context) {
           return IconButton(
@@ -215,7 +229,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Navigator.pushNamed(context, '/camera');
         },
         backgroundColor: const Color(
-            0xFFFF5C8D), // Màu hồng trùng với nút 'Xem báo cáo' và thương hiệu
+            0xFFFF5C8D), // MĂ u há»“ng trĂ¹ng vá»›i nĂºt 'Xem bĂ¡o cĂ¡o' vĂ  thÆ°Æ¡ng hiá»‡u
         shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 28, color: Colors.white),
       ),
@@ -233,11 +247,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Lời chào chủ quán
+                      // Lá»i chĂ o chá»§ quĂ¡n
                       Row(
                         children: [
                           Text(
-                            'Xin chào, ${dotenv.env['USER_SHOP_NAME'] ?? 'Tiến'}',
+                            'Xin chĂ o, $_displayName',
                             style: theme.textTheme.headlineLarge?.copyWith(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
@@ -246,18 +260,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           const SizedBox(width: 8),
                           const Text(
-                            '👋',
+                            'đŸ‘‹',
                             style: TextStyle(fontSize: 28),
                           ),
                         ],
                       ),
                       const SizedBox(height: 20),
 
-                      // --- 1. QUICK ACTION BUTTONS (Màu thương hiệu của dự án) ---
+                      // --- 1. QUICK ACTION BUTTONS (MĂ u thÆ°Æ¡ng hiá»‡u cá»§a dá»± Ă¡n) ---
                       const DashboardActionButtons(),
                       const SizedBox(height: 24),
 
-                      // --- 2. SUMMARY NUMERICAL STATS TABLE (Bảng số liệu tóm gọn biểu đồ) ---
+                      // --- 2. SUMMARY NUMERICAL STATS TABLE (Báº£ng sá»‘ liá»‡u tĂ³m gá»n biá»ƒu Ä‘á»“) ---
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -278,7 +292,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Tóm tắt thống kê số liệu',
+                              'TĂ³m táº¯t thá»‘ng kĂª sá»‘ liá»‡u',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontSize: 15,
                                 color: colorScheme.onSurface,
@@ -297,7 +311,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     const Padding(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 8.0),
-                                      child: Text('Doanh thu tuần:',
+                                      child: Text('Doanh thu tuáº§n:',
                                           style: TextStyle(
                                               color: Colors.grey,
                                               fontSize: 13)),
@@ -318,7 +332,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                     height: 1.2)),
                                             TextSpan(
                                                 text:
-                                                    '($_thisWeekOrderCount đơn hàng)',
+                                                    '($_thisWeekOrderCount Ä‘Æ¡n hĂ ng)',
                                                 style: const TextStyle(
                                                     fontSize: 12,
                                                     color: Colors.grey,
@@ -334,7 +348,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     const Padding(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 8.0),
-                                      child: Text('Tổng chi phí tháng:',
+                                      child: Text('Tá»•ng chi phĂ­ thĂ¡ng:',
                                           style: TextStyle(
                                               color: Colors.grey,
                                               fontSize: 13)),
@@ -355,8 +369,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                     height: 1.2)),
                                             TextSpan(
                                                 text: totalChiSum > 0
-                                                    ? '(Nguyên liệu chiếm ${((_categoryChiSums['Nguyên liệu'] ?? 0.0) / totalChiSum * 100).toStringAsFixed(0)}%)'
-                                                    : '(Chưa chi tiêu)',
+                                                    ? '(NguyĂªn liá»‡u chiáº¿m ${((_categoryChiSums['NguyĂªn liá»‡u'] ?? 0.0) / totalChiSum * 100).toStringAsFixed(0)}%)'
+                                                    : '(ChÆ°a chi tiĂªu)',
                                                 style: const TextStyle(
                                                     fontSize: 12,
                                                     color: Colors.grey,
@@ -372,7 +386,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     const Padding(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 8.0),
-                                      child: Text('Doanh thu tạm tính:',
+                                      child: Text('Doanh thu táº¡m tĂ­nh:',
                                           style: TextStyle(
                                               color: Colors.grey,
                                               fontSize: 13)),
@@ -392,7 +406,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                     color: Color(0xFF0D6EFD),
                                                     height: 1.2)),
                                             const TextSpan(
-                                                text: '(Hôm nay)',
+                                                text: '(HĂ´m nay)',
                                                 style: TextStyle(
                                                     fontSize: 12,
                                                     color: Colors.grey,
@@ -411,7 +425,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: 16),
 
                       // --- 3. CHARTS ---
-                      // Thẻ hiển thị doanh thu hôm nay
+                      // Tháº» hiá»ƒn thá»‹ doanh thu hĂ´m nay
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -432,7 +446,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Doanh thu hôm nay',
+                              'Doanh thu hĂ´m nay',
                               style:
                                   TextStyle(color: Colors.grey, fontSize: 14),
                             ),
@@ -456,7 +470,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   size: 18,
                                 ),
                                 Text(
-                                  '${isGrowthPositive ? '+' : ''}${growthPercent.toStringAsFixed(0)}% so với hôm qua',
+                                  '${isGrowthPositive ? '+' : ''}${growthPercent.toStringAsFixed(0)}% so vá»›i hĂ´m qua',
                                   style: TextStyle(
                                     color: colorScheme.primary,
                                     fontSize: 12,
@@ -470,11 +484,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Biểu đồ doanh thu 7 ngày gần nhất
+                      // Biá»ƒu Ä‘á»“ doanh thu 7 ngĂ y gáº§n nháº¥t
                       RevenueChart(weeklyRevenue: _weeklyRevenue),
                       const SizedBox(height: 16),
 
-                      // Thẻ hiển thị cơ cấu chi phí (Pie chart)
+                      // Tháº» hiá»ƒn thá»‹ cÆ¡ cáº¥u chi phĂ­ (Pie chart)
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -495,7 +509,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Cơ cấu thu chi (tháng này)',
+                              'CÆ¡ cáº¥u thu chi (thĂ¡ng nĂ y)',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontSize: 16,
                                 color: colorScheme.onSurfaceVariant,
@@ -535,7 +549,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // --- 4. WAREHOUSE MANAGEMENT (Quản lý kho hàng) ---
+                      // --- 4. WAREHOUSE MANAGEMENT (Quáº£n lĂ½ kho hĂ ng) ---
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -563,7 +577,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Quản lý kho hàng',
+                                    'Quáº£n lĂ½ kho hĂ ng',
                                     style:
                                         theme.textTheme.titleMedium?.copyWith(
                                       fontSize: 16,
@@ -573,7 +587,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'Bạn có 3 mặt hàng sắp hết. Hãy nhập thêm nguyên liệu để không bị gián đoạn.',
+                                    'Báº¡n cĂ³ 3 máº·t hĂ ng sáº¯p háº¿t. HĂ£y nháº­p thĂªm nguyĂªn liá»‡u Ä‘á»ƒ khĂ´ng bá»‹ giĂ¡n Ä‘oáº¡n.',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 13,
@@ -583,7 +597,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ElevatedButton(
                                     onPressed: () {
                                       UIHelpers.showWarningToast(context,
-                                          'Chức năng này đang được phát triển!');
+                                          'Chá»©c nÄƒng nĂ y Ä‘ang Ä‘Æ°á»£c phĂ¡t triá»ƒn!');
                                     },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF191C1D),
@@ -598,7 +612,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
-                                          'Kiểm kho ngay',
+                                          'Kiá»ƒm kho ngay',
                                           style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.bold),
@@ -666,3 +680,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 }
+

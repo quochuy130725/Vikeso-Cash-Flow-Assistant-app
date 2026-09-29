@@ -295,6 +295,44 @@
           }
         }
       }
+    },
+    "/api/test-report": {
+      "post": {
+        "summary": "Kích hoạt gửi báo cáo cuối ngày ngay lập tức (Test / Thủ công)",
+        "description": "Chạy thủ công luồng tổng hợp doanh thu trong ngày và tự động gửi thông báo qua Email & Telegram cho các shop có phát sinh giao dịch mà không cần chờ đến 22:00.",
+        "tags": [
+          "Reports"
+        ],
+        "responses": {
+          "200": {
+            "description": "Báo cáo đã được gửi thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Báo cáo đã được gửi thành công!" },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "totalUsers": { "type": "integer", "example": 2 },
+                        "emailSent": { "type": "integer", "example": 2 },
+                        "telegramSent": { "type": "integer", "example": 1 },
+                        "skipped": { "type": "integer", "example": 0 },
+                        "errors": { "type": "array", "items": { "type": "object" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi máy chủ khi xử lý báo cáo"
+          }
+        }
+      }
     }
   },
   "components": {
