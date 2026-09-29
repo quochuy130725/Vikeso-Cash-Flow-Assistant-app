@@ -5,11 +5,12 @@ const router = express.Router();
 const upload = require('../middlewares/upload');
 
 // Controllers
-const manualEntryController  = require('../controllers/manualEntryController');
-const aiReceiptController    = require('../controllers/aiReceiptController');
-const telegramController     = require('../controllers/telegramController');
-const User    = require('../models/User');
+const manualEntryController = require('../controllers/manualEntryController');
+const aiReceiptController = require('../controllers/aiReceiptController');
+const telegramController = require('../controllers/telegramController');
+const User = require('../models/User');
 const Receipt = require('../models/Receipt');
+const { runDailyReport } = require('../services/cronService')
 
 // ---------------------------------------------------------
 // API 1: LƯU DỮ LIỆU - Lưới lọc 2 chiều & Telegram Bot
@@ -103,7 +104,6 @@ router.get('/transactions', async (req, res) => {
 // ---------------------------------------------------------
 router.post('/test-report', async (req, res) => {
   try {
-    const { runDailyReport } = require('../services/cronService');
     console.log("🧪 [TEST] Trigger báo cáo thủ công...");
     const result = await runDailyReport();
     return res.status(200).json({
