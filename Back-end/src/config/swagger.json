@@ -19,7 +19,9 @@
     "/api/auth/register": {
       "post": {
         "summary": "Đăng ký tài khoản mới",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -27,26 +29,42 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "email": { "type": "string" },
-                  "password": { "type": "string" },
-                  "name": { "type": "string" },
-                  "shopName": { "type": "string" }
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "shopName": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "Đăng ký thành công" },
-          "400": { "description": "Lỗi dữ liệu đầu vào" },
-          "409": { "description": "Email đã tồn tại" }
+          "201": {
+            "description": "Đăng ký thành công"
+          },
+          "400": {
+            "description": "Lỗi dữ liệu đầu vào"
+          },
+          "409": {
+            "description": "Email đã tồn tại"
+          }
         }
       }
     },
     "/api/auth/login": {
       "post": {
         "summary": "Đăng nhập bằng Email/Password",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -54,23 +72,33 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "email": { "type": "string" },
-                  "password": { "type": "string" }
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Đăng nhập thành công" },
-          "401": { "description": "Sai email hoặc mật khẩu" }
+          "200": {
+            "description": "Đăng nhập thành công"
+          },
+          "401": {
+            "description": "Sai email hoặc mật khẩu"
+          }
         }
       }
     },
     "/api/auth/google": {
       "post": {
         "summary": "Đăng nhập bằng Google",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -78,21 +106,27 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "idToken": { "type": "string" }
+                  "idToken": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Thành công" }
+          "200": {
+            "description": "Thành công"
+          }
         }
       }
     },
     "/api/scan-receipt": {
       "post": {
         "summary": "Scan hóa đơn bằng AI (Gemini)",
-        "tags": ["Transactions"],
+        "tags": [
+          "Transactions"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -110,43 +144,67 @@
           }
         },
         "responses": {
-          "200": { "description": "Kết quả bóc tách JSON từ AI" }
+          "200": {
+            "description": "Kết quả bóc tách JSON từ AI"
+          }
         }
       }
     },
     "/api/transactions": {
       "get": {
         "summary": "Lấy danh sách giao dịch của User",
-        "tags": ["Transactions"],
+        "tags": [
+          "Transactions"
+        ],
         "parameters": [
           {
             "name": "userId",
             "in": "query",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "Danh sách giao dịch" }
+          "200": {
+            "description": "Danh sách giao dịch"
+          }
         }
       }
     },
     "/api/auth/me": {
       "get": {
         "summary": "Lấy thông tin user hiện tại",
-        "tags": ["Auth"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
-          "200": { "description": "Thành công" },
-          "401": { "description": "Chưa xác thực" }
+          "200": {
+            "description": "Thành công"
+          },
+          "401": {
+            "description": "Chưa xác thực"
+          }
         }
       }
     },
     "/api/auth/profile": {
       "put": {
         "summary": "Cập nhật thông tin cá nhân",
-        "tags": ["Auth"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -154,17 +212,27 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "shopName": { "type": "string" },
-                  "phone": { "type": "string" },
-                  "avatar": { "type": "string" }
+                  "shopName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "avatar": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Cập nhật thành công" },
-          "401": { "description": "Chưa xác thực" }
+          "200": {
+            "description": "Cập nhật thành công"
+          },
+          "401": {
+            "description": "Chưa xác thực"
+          }
         }
       }
     },
@@ -172,7 +240,9 @@
       "post": {
         "summary": "Nhận update từ Telegram Bot (Telegram tự gọi)",
         "description": "Endpoint này được Telegram gọi tự động khi user gửi tin nhắn /start đến bot. Không cần gọi thủ công.",
-        "tags": ["Telegram"],
+        "tags": [
+          "Telegram"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -183,8 +253,18 @@
                   "message": {
                     "type": "object",
                     "properties": {
-                      "chat": { "type": "object", "properties": { "id": { "type": "integer" } } },
-                      "text": { "type": "string", "example": "/start 64abc123..." }
+                      "chat": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "text": {
+                        "type": "string",
+                        "example": "/start 64abc123..."
+                      }
                     }
                   }
                 }
@@ -193,7 +273,9 @@
           }
         },
         "responses": {
-          "200": { "description": "OK (luôn trả 200 để Telegram không gửi lại)" }
+          "200": {
+            "description": "OK (luôn trả 200 để Telegram không gửi lại)"
+          }
         }
       }
     },
@@ -201,10 +283,16 @@
       "get": {
         "summary": "Đăng ký Webhook URL với Telegram Bot (gọi 1 lần)",
         "description": "Gọi endpoint này 1 lần duy nhất sau khi deploy để Telegram biết gửi update về đâu. Không cần auth.",
-        "tags": ["Telegram"],
+        "tags": [
+          "Telegram"
+        ],
         "responses": {
-          "200": { "description": "Webhook đã được đăng ký thành công" },
-          "500": { "description": "Lỗi đăng ký" }
+          "200": {
+            "description": "Webhook đã được đăng ký thành công"
+          },
+          "500": {
+            "description": "Lỗi đăng ký"
+          }
         }
       }
     }
