@@ -210,7 +210,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Icon(Icons.rocket_launch, color: Colors.white, size: 20),
             SizedBox(width: 8),
             Text(
-              'FinAuto',
+              'Vikeso',
               style:
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),

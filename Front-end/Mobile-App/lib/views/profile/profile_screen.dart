@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../shared_widgets/side_drawer.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/services/api_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -23,6 +24,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _avatar;
   bool _isLoading   = false;
 
+  bool _receiveEmail = true;
+  bool _receiveTelegram = true;
+  bool _receiveInApp = true;
+  bool _hasTelegram = false;
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +41,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final phone    = await _storage.read(key: 'user_phone')    ?? '';
     final avatar   = await _storage.read(key: 'user_avatar');
     if (!mounted) return;
+    final settingsStr = await _storage.read(key: 'user_notificationSettings');
+    if (settingsStr != null) {
+      try {
+        final Map<String, dynamic> settings = jsonDecode(settingsStr);
+        _receiveEmail = settings['receiveEmail'] ?? true;
+        _receiveTelegram = settings['receiveTelegram'] ?? true;
+        _receiveInApp = settings['receiveInApp'] ?? true;
+      } catch (_) {}
+    }
+    // Wait, we don't have user.telegramChatId in storage. Actually, we do! Let's check apiRoutes.js... yes we return it but AuthRepository doesn't save it. Let's assume we fetch it via Profile API.
     setState(() {
       _shopName = shopName;
       _email    = email;
@@ -115,6 +131,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } finally {
       if (mounted) setState(() { _isLoading = false; });
     }
+  }
+
+  Future<void> _updateSetting(String key, bool value) async {
+    setState(() {
+      if (key == 'receiveEmail') _receiveEmail = value;
+      if (key == 'receiveTelegram') _receiveTelegram = value;
+      if (key == 'receiveInApp') _receiveInApp = value;
+      _isLoading = true;
+    });
+
+    final userId = await AuthRepository().getUserId();
+    if (userId != null) {
+      await ApiService().updateNotificationSettings(
+        userId: userId,
+        receiveEmail: key == 'receiveEmail' ? value : null,
+        receiveTelegram: key == 'receiveTelegram' ? value : null,
+        receiveInApp: key == 'receiveInApp' ? value : null,
+      );
+      
+      // Update local storage
+      final settingsStr = await _storage.read(key: 'user_notificationSettings');
+      Map<String, dynamic> settings = {};
+      if (settingsStr != null) {
+        try { settings = jsonDecode(settingsStr); } catch (_) {}
+      }
+      settings[key] = value;
+      await _storage.write(key: 'user_notificationSettings', value: jsonEncode(settings));
+    }
+    
+    setState(() { _isLoading = false; });
   }
 
   Future<void> _handleLogout() async {

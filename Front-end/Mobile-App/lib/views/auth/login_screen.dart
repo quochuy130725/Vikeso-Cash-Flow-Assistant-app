@@ -122,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Icon(Icons.storefront_rounded, size: 72, color: colorScheme.primary),
                   const SizedBox(height: 12),
                   Text(
-                    'FinAuto',
+                    'Vikeso',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: colorScheme.primary),
                   ),

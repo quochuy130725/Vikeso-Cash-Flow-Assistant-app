@@ -162,4 +162,34 @@ class ApiService {
   static String getTelegramDeepLink(String userId) {
     return 'https://t.me/$_telegramBotUsername?start=$userId';
   }
+
+  // ============================================================
+  // 5. CẬP NHẬT TÙY CHỌN THÔNG BÁO (PUT /api/user/:id/notification-settings)
+  // ============================================================
+  Future<Map<String, dynamic>> updateNotificationSettings({
+    required String userId,
+    bool? receiveEmail,
+    bool? receiveTelegram,
+    bool? receiveInApp,
+  }) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/user/$userId/notification-settings');
+      final body = <String, dynamic>{};
+      if (receiveEmail != null) body['receiveEmail'] = receiveEmail;
+      if (receiveTelegram != null) body['receiveTelegram'] = receiveTelegram;
+      if (receiveInApp != null) body['receiveInApp'] = receiveInApp;
+
+      final response = await http.put(
+        uri,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode(body),
+      ).timeout(const Duration(seconds: 15));
+      
+      final resBody = jsonDecode(response.body) as Map<String, dynamic>;
+      return resBody;
+    } catch (e) {
+      debugPrint('Lỗi updateNotificationSettings: $e');
+      return {'success': false, 'error': e.toString()};
+    }
+  }
 }

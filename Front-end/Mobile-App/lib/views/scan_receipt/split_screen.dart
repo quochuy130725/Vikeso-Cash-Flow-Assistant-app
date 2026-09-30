@@ -174,8 +174,23 @@ class _SplitScreenState extends State<SplitScreen> {
             onPressed: () async {
               final link = ApiService.getTelegramDeepLink(widget.userId);
               final uri = Uri.parse(link);
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              try {
+                final ok = await launchUrl(
+                  uri,
+                  mode: LaunchMode.externalApplication,
+                );
+                if (!ok) {
+                  await launchUrl(uri, mode: LaunchMode.platformDefault);
+                }
+              } catch (_) {
+                try {
+                  await launchUrl(uri, mode: LaunchMode.platformDefault);
+                } catch (e) {
+                  if (context.mounted) {
+                    UIHelpers.showSnackBar(
+                        context, 'Không thể mở Telegram: $e', backgroundColor: Colors.red);
+                  }
+                }
               }
             },
             icon: const Icon(Icons.send, size: 18),

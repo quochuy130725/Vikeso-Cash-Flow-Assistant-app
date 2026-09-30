@@ -34,6 +34,7 @@ class AuthRepository {
   static const _kShopName = 'user_shopName';
   static const _kAvatar = 'user_avatar';
   static const _kProvider = 'user_authProvider';
+  static const _kNotificationSettings = 'user_notificationSettings';
 
   Future<AuthResult> loginWithEmail(
       {required String email, required String password}) async {
@@ -145,6 +146,7 @@ class AuthRepository {
         shopName: await _storage.read(key: _kShopName) ?? '',
         avatar: await _storage.read(key: _kAvatar),
         authProvider: await _storage.read(key: _kProvider) ?? 'local',
+        notificationSettings: await _storage.read(key: _kNotificationSettings),
         accessToken: token,
       );
     } catch (_) {
@@ -186,6 +188,7 @@ class AuthRepository {
         shopName: userInfo['shopName']?.toString() ?? '',
         avatar: userInfo['avatar']?.toString(),
         authProvider: userInfo['authProvider']?.toString() ?? 'local',
+        notificationSettings: userInfo['notificationSettings'] != null ? jsonEncode(userInfo['notificationSettings']) : null,
         accessToken: accessToken,
       ));
     }
@@ -213,11 +216,13 @@ class UserInfo {
   final String? avatar;
   final String authProvider;
   final String accessToken;
+  final String? notificationSettings;
   const UserInfo(
       {required this.id,
       required this.email,
       required this.shopName,
       this.avatar,
       required this.authProvider,
-      required this.accessToken});
+      required this.accessToken,
+      this.notificationSettings});
 }
