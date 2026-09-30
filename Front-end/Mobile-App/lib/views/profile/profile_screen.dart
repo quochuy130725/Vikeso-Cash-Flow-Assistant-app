@@ -289,6 +289,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   const SizedBox(height: 24),
 
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Cài đặt thông báo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(height: 12),
+                  Material(
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(color: Colors.grey[200]!),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        SwitchListTile(
+                          title: const Text('Email', style: TextStyle(fontWeight: FontWeight.w500)),
+                          subtitle: const Text('Nhận báo cáo chốt ca (22:00)'),
+                          value: _receiveEmail,
+                          activeColor: primaryPink,
+                          onChanged: (val) => _updateSetting('receiveEmail', val),
+                        ),
+                        const Divider(height: 1),
+                        SwitchListTile(
+                          title: const Text('Telegram', style: TextStyle(fontWeight: FontWeight.w500)),
+                          subtitle: const Text('Thông báo qua bot Telegram'),
+                          value: _receiveTelegram,
+                          activeColor: primaryPink,
+                          onChanged: (val) => _updateSetting('receiveTelegram', val),
+                        ),
+                        const Divider(height: 1),
+                        SwitchListTile(
+                          title: const Text('Thông báo ứng dụng', style: TextStyle(fontWeight: FontWeight.w500)),
+                          subtitle: const Text('Thông báo đẩy trên thiết bị'),
+                          value: _receiveInApp,
+                          activeColor: primaryPink,
+                          onChanged: (val) => _updateSetting('receiveInApp', val),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
