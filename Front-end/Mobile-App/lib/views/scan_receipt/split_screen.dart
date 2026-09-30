@@ -152,7 +152,7 @@ class _SplitScreenState extends State<SplitScreen> {
     }
   }
 
-  void _showSuccessDialog() {
+  void _showSuccessDialog(bool hasTelegram) {
     showDialog(
       context: context,
       barrierDismissible: false,

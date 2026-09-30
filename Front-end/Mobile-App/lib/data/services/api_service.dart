@@ -73,7 +73,7 @@ class ApiService {
   // 2. API LƯU THỦ CÔNG (POST /api/manual-entry) - Dùng cho nhập tay
   // Chỉ dùng khi người dùng sửa lại dữ liệu sau khi scan
   // ============================================================
-  Future<bool> saveTransactions({
+  Future<Map<String, dynamic>> saveTransactions({
     required String userId,
     required List<Map<String, dynamic>> items,
   }) async {
@@ -87,7 +87,10 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 30));
 
-      return response.statusCode == 200 || response.statusCode == 201;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return {'success': false};
     } catch (e) {
       return false;
     }
