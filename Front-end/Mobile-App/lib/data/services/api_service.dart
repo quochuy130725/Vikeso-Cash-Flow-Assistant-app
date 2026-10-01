@@ -91,9 +91,7 @@ class ApiService {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
       return {'success': false};
-    } catch (e) {
-      return false;
-    }
+    } catch (e) { return {'success': false, 'error': e.toString()}; }
   }
 
   // ============================================================
@@ -192,6 +190,22 @@ class ApiService {
       return resBody;
     } catch (e) {
       debugPrint('Lỗi updateNotificationSettings: $e');
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  // ============================================================
+  // 6. LẤY THÔNG TIN PROFILE (GET /api/user/:id/profile)
+  // ============================================================
+  Future<Map<String, dynamic>> getUserProfile(String userId) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/user/$userId/profile');
+      final response = await http.get(uri).timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return {'success': false};
+    } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
   }

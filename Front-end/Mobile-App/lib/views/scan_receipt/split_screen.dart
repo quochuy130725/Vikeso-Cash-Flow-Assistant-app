@@ -133,16 +133,18 @@ class _SplitScreenState extends State<SplitScreen> {
     }).toList();
 
     // 🚀 GỌI API THẬT - Lưu giao dịch vào MongoDB
-    final success = await _apiService.saveTransactions(
+    final result = await _apiService.saveTransactions(
       userId: widget.userId,
       items: itemsToSave,
     );
+    final success = result['success'] == true;
+    final hasTelegram = result['hasTelegram'] == true;
 
     if (!mounted) return;
     setState(() => _isSaving = false);
 
     if (success) {
-      _showSuccessDialog();
+      _showSuccessDialog(hasTelegram);
     } else {
       UIHelpers.showInfoDialog(
         context,
