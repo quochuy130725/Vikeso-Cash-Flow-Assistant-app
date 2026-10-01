@@ -73,7 +73,7 @@ exports.saveManualEntry = async (req, res) => {
         reason: item.reason,
         confidenceLevel: item.confidenceLevel || "HIGH",
         status: initialStatus, // Sử dụng initialStatus (MERGED hoặc VALID)
-        transactionDate: item.transactionDate || new Date(),
+        transactionDate: recordDate,
         aiRawData: item.aiRawData
       });
     }

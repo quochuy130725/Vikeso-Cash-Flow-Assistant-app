@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../core/utils/ui_helpers.dart';
+import '../../manual_entry/manual_entry_screen.dart';
 
 class DashboardActionButtons extends StatelessWidget {
-  const DashboardActionButtons({super.key});
+  final VoidCallback? onTransactionAdded;
+
+  const DashboardActionButtons({super.key, this.onTransactionAdded});
 
   @override
   Widget build(BuildContext context) {
@@ -64,9 +66,16 @@ class DashboardActionButtons extends StatelessWidget {
 
         // Nút Nhập Thủ Công (Secondary Action)
         OutlinedButton.icon(
-          onPressed: () {
-            UIHelpers.showWarningToast(
-                context, 'Chức năng này đang được phát triển!');
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ManualEntryScreen(),
+              ),
+            );
+            if (result == true && onTransactionAdded != null) {
+              onTransactionAdded!();
+            }
           },
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: Color(0xFF198754), width: 1.5),

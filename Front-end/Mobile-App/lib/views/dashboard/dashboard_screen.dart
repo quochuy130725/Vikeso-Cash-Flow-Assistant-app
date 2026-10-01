@@ -268,7 +268,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: 20),
 
                       // --- 1. QUICK ACTION BUTTONS (Màu thương hiệu của dự án) ---
-                      const DashboardActionButtons(),
+                      DashboardActionButtons(onTransactionAdded: _loadData),
                       const SizedBox(height: 24),
 
                       // --- 2. SUMMARY NUMERICAL STATS TABLE (Bảng số liệu tóm gọn biểu đồ) ---

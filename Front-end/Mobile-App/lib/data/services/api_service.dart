@@ -92,7 +92,7 @@ class ApiService {
       }
       return {'success': false};
     } catch (e) {
-      return false;
+      return {'success': false, 'message': e.toString()};
     }
   }
 
