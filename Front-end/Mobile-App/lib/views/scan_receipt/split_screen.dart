@@ -133,16 +133,27 @@ class _SplitScreenState extends State<SplitScreen> {
     }).toList();
 
     // 🚀 GỌI API THẬT - Lưu giao dịch vào MongoDB
+<<<<<<< HEAD
     final response = await _apiService.saveTransactions(
+=======
+    final result = await _apiService.saveTransactions(
+>>>>>>> main
       userId: widget.userId,
       items: itemsToSave,
     );
+    final success = result['success'] == true;
+    final hasTelegram = result['hasTelegram'] == true;
 
     if (!mounted) return;
     setState(() => _isSaving = false);
 
+<<<<<<< HEAD
     if (response['success'] == true) {
       _showSuccessDialog();
+=======
+    if (success) {
+      _showSuccessDialog(hasTelegram);
+>>>>>>> main
     } else {
       UIHelpers.showInfoDialog(
         context,
@@ -152,7 +163,7 @@ class _SplitScreenState extends State<SplitScreen> {
     }
   }
 
-  void _showSuccessDialog() {
+  void _showSuccessDialog(bool hasTelegram) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -165,7 +176,7 @@ class _SplitScreenState extends State<SplitScreen> {
           ],
         ),
         content: const Text(
-          'Giao dịch đã được AI đối soát và lưu vào hệ thống. Báo cáo tổng kết sẽ được gửi tự động lúc 22:00 tối nay.',
+          'Ứng dụng đã mặc định gửi báo cáo chốt ca hàng ngày vào Email của bạn.\n\nTuy nhiên, nếu bạn muốn nhận thông báo nhanh chóng hơn ngay trên điện thoại, hãy kết nối với Bot Telegram chính thức của ViKeSo.\n\nLưu ý: Mọi thiết lập thông báo đều có thể tùy chỉnh lại trong phần Cài đặt tài khoản.',
           style: TextStyle(height: 1.5),
         ),
         actions: [

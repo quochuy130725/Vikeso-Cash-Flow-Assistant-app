@@ -14,6 +14,13 @@ const userSchema = new mongoose.Schema({
   googleId:     { type: String, default: null, index: true },
   avatar:       { type: String, default: null },            // Google profile picture URL
   authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
+  
+  // ── Cài đặt thông báo (Notification Settings) ─────────
+  notificationSettings: {
+    receiveEmail: { type: Boolean, default: true },
+    receiveTelegram: { type: Boolean, default: true },
+    receiveInApp: { type: Boolean, default: true }
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

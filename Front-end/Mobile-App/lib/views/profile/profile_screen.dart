@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../shared_widgets/side_drawer.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/services/api_service.dart';
@@ -315,7 +316,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           subtitle: const Text('Thông báo qua bot Telegram'),
                           value: _receiveTelegram,
                           activeColor: primaryPink,
-                          onChanged: (val) => _updateSetting('receiveTelegram', val),
+                          onChanged: (val) {
+                            if (val && !_hasTelegram) {
+                              _promptConnectTelegram();
+                              return;
+                            }
+                            _updateSetting('receiveTelegram', val);
+                          },
                         ),
                         const Divider(height: 1),
                         SwitchListTile(
@@ -364,5 +371,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
         onTap: onTap,
       ),
     );
+  }
+
+  Future<void> _promptConnectTelegram() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Liên kết Telegram'),
+        content: const Text('Bạn chưa kết nối với Bot Telegram của ViKeSo. Bạn có muốn chuyển hướng đến Telegram để kết nối ngay bây giờ không?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0088CC)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Kết nối', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      final userId = await AuthRepository().getUserId();
+      if (userId != null) {
+        final link = ApiService.getTelegramDeepLink(userId);
+        final uri = Uri.parse(link);
+        try {
+          final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+          if (!ok) await launchUrl(uri, mode: LaunchMode.platformDefault);
+        } catch (_) {
+          try {
+            await launchUrl(uri, mode: LaunchMode.platformDefault);
+          } catch (e) {
+            _showSnack('Không thể mở Telegram: $e', isSuccess: false);
+          }
+        }
+      }
+    }
   }
 }
