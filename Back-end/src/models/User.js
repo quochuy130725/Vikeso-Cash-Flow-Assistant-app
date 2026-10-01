@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   telegramChatId:   { type: String, default: null },        // VŨ KHÍ DEMO TELEGRAM
   subscriptionPlan: { type: String, enum: ['FREE', 'PRO'], default: 'FREE' },
   phone:            { type: String, default: null },              // So dien thoai chu cua hang
+  role:             { type: String, enum: ['OWNER', 'ADMIN'], default: 'OWNER', index: true },
 
   // ── Google OAuth ──────────────────────────────────────
   googleId:     { type: String, default: null, index: true },

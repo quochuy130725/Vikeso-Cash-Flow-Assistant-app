@@ -10,6 +10,7 @@ interface HeaderProps {
   onOpenScan: () => void;
   onOpenTelegram: () => void;
   onOpenVideo: () => void;
+  onOpenPortal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,6 +19,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   onOpenScan,
   onOpenTelegram,
+  onOpenPortal,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -84,20 +86,33 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2.5 sm:gap-3">
           {currentUser ? (
             /* Logged in user profile chip */
-            <div className="relative">
+            <div className="relative flex items-center gap-2">
+              {onOpenPortal && (
+                <button
+                  onClick={onOpenPortal}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#198754] text-white text-xs font-bold hover:bg-[#146c43] transition-colors shadow-sm cursor-pointer"
+                  title={currentUser.role === 'ADMIN' ? 'Mở Bảng Quản Trị Hệ Thống' : 'Mở Sổ Thu Chi & Dòng Tiền'}
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    {currentUser.role === 'ADMIN' ? 'admin_panel_settings' : 'account_balance_wallet'}
+                  </span>
+                  <span>{currentUser.role === 'ADMIN' ? 'Bảng Quản Trị' : 'Sổ Thu Chi'}</span>
+                </button>
+              )}
+
               <button
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full bg-white border border-[#e1e3e4] hover:border-[#198754] transition-all shadow-xs"
+                className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full bg-white border border-[#e1e3e4] hover:border-[#198754] transition-all shadow-xs cursor-pointer"
               >
                 <div className="w-7 h-7 rounded-full bg-[#198754] text-white flex items-center justify-center font-bold text-xs">
-                  {currentUser.name.charAt(0).toUpperCase()}
+                  {((currentUser?.name || currentUser?.email || 'U').charAt(0)).toUpperCase()}
                 </div>
                 <div className="text-left hidden sm:block">
                   <div className="text-xs font-bold text-[#191c1d] leading-none">
-                    {currentUser.name}
+                    {currentUser?.name || currentUser?.email || 'Chủ Cửa Hàng'}
                   </div>
                   <div className="text-[10px] text-[#584045] leading-none mt-0.5 truncate max-w-[120px]">
-                    {currentUser.storeName}
+                    {currentUser?.storeName || 'Cửa hàng của tôi'}
                   </div>
                 </div>
                 <span className="material-symbols-outlined text-[18px] text-[#584045]">
@@ -106,11 +121,33 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               {userDropdownOpen && (
-                <div className="absolute right-0 top-12 w-56 bg-white rounded-2xl shadow-xl border border-[#e1e3e4] p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute right-0 top-12 w-64 bg-white rounded-2xl shadow-xl border border-[#e1e3e4] p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
                   <div className="px-3 py-2 border-b border-[#f3f4f5]">
-                    <div className="text-xs font-bold text-[#191c1d]">{currentUser.storeName}</div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-bold text-[#191c1d] truncate">{currentUser.storeName}</div>
+                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                        {currentUser.role || 'OWNER'}
+                      </span>
+                    </div>
                     <div className="text-[11px] text-[#584045] truncate">{currentUser.email}</div>
                   </div>
+
+                  {onOpenPortal && (
+                    <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenPortal();
+                      }}
+                      className="w-full px-3 py-2 text-left text-xs font-bold text-[#198754] hover:bg-emerald-50 rounded-xl flex items-center gap-2 mt-1"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">
+                        {currentUser.role === 'ADMIN' ? 'admin_panel_settings' : 'account_balance_wallet'}
+                      </span>
+                      <span>
+                        {currentUser.role === 'ADMIN' ? 'Vào Bảng Quản Trị Hệ Thống' : 'Vào Sổ Thu Chi & Dòng Tiền'}
+                      </span>
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       setUserDropdownOpen(false);

@@ -21,6 +21,8 @@ import { TelegramModal } from './components/TelegramModal';
 import { PlanModal } from './components/PlanModal';
 import { AuthModal, UserAccount } from './components/AuthModal';
 import { BackdateModal } from './components/BackdateModal';
+import { PortalView } from './components/PortalView';
+import { PortalType } from './types';
 import { CheckCircle2 } from 'lucide-react';
 
 export default function App() {
@@ -31,22 +33,97 @@ export default function App() {
   const [selectedPlan, setSelectedPlan] = useState<'starter' | 'pro' | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Authentication states
+  // Authentication & Portal View states
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
-  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
-
-  // Check saved session on mount
-  useEffect(() => {
+  
+  // Read saved session immediately on component initialization
+  const getSavedUser = (): UserAccount | null => {
     try {
       const saved = localStorage.getItem('vikeso_user');
       if (saved) {
-        setCurrentUser(JSON.parse(saved));
+        const u = JSON.parse(saved);
+        if (u) {
+          if (u.shopName && !u.storeName) u.storeName = u.shopName;
+          if (u.storeName && !u.shopName) u.shopName = u.storeName;
+          if (u.role === 'ADMIN' && (u.email === 'test@example.com' || (u.name && u.name.toLowerCase() === 'admin'))) {
+            u.name = u.name || 'Admin';
+            u.shopName = u.shopName || 'Admin Quản Trị';
+            u.storeName = u.storeName || 'Admin Quản Trị';
+            u.role = 'ADMIN';
+            u.subscriptionPlan = u.subscriptionPlan || 'FREE';
+          }
+          return u;
+        }
       }
     } catch {
       // ignore
     }
-  }, []);
+    return null;
+  };
+
+  const initialUser = getSavedUser();
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(initialUser);
+  const [portalType, setPortalType] = useState<PortalType>(() => {
+    return initialUser?.role === 'ADMIN' ? 'admin' : 'owner';
+  });
+  const [viewMode, setViewMode] = useState<'landing' | 'portal'>(() => {
+    // If user is already logged in, enter directly into Owner or Admin portal unless explicitly requested #landing
+    if (initialUser && window.location.hash !== '#landing') {
+      return 'portal';
+    }
+    return 'landing';
+  });
+
+  // Check saved session on mount & hash routing
+  useEffect(() => {
+    const checkHashRoute = () => {
+      const hash = window.location.hash;
+      const path = window.location.pathname;
+      const saved = localStorage.getItem('vikeso_user');
+      const user: UserAccount | null = saved ? JSON.parse(saved) : currentUser;
+
+      // If user explicitly chose to view the landing page from inside the portal
+      if (hash === '#landing') {
+        setViewMode('landing');
+        return;
+      }
+
+      if (user) {
+        // Determine if user is ADMIN strictly based on user.role
+        const isUserAdmin = user.role === 'ADMIN';
+
+        if (hash === '#admin-dashboard' || path === '/admin-dashboard') {
+          if (isUserAdmin) {
+            setPortalType('admin');
+            setViewMode('portal');
+          } else {
+            setPortalType('owner');
+            setViewMode('portal');
+            showToast('❌ 403 Forbidden: Tài khoản Chủ shop không có quyền vào Bảng Quản Trị.');
+          }
+        } else if (hash === '#owner-dashboard' || path === '/owner-dashboard') {
+          setPortalType('owner');
+          setViewMode('portal');
+        } else if (!hash || hash === '#') {
+          // If logged in and at root or no hash, go directly into appropriate portal
+          const target: PortalType = isUserAdmin ? 'admin' : 'owner';
+          setPortalType(target);
+          setViewMode('portal');
+          window.history.replaceState(null, '', target === 'admin' ? '#admin-dashboard' : '#owner-dashboard');
+        }
+      } else {
+        if (hash === '#admin-dashboard' || path === '/admin-dashboard' || hash === '#owner-dashboard' || path === '/owner-dashboard') {
+          setAuthModalMode('login');
+          setAuthModalOpen(true);
+        }
+      }
+    };
+
+    checkHashRoute();
+    window.addEventListener('hashchange', checkHashRoute);
+    return () => window.removeEventListener('hashchange', checkHashRoute);
+  }, [currentUser]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -67,23 +144,43 @@ export default function App() {
     } catch {
       // ignore
     }
+    const targetPortal: PortalType = user.role === 'ADMIN' ? 'admin' : 'owner';
+    setPortalType(targetPortal);
+    setViewMode('portal');
+    window.location.hash = targetPortal === 'admin' ? '#admin-dashboard' : '#owner-dashboard';
     showToast(
       mode === 'login'
-        ? `Chào mừng trở lại, ${user.name}! Đã đăng nhập vào ${user.storeName}.`
+        ? `Chào mừng trở lại, ${user.name}! Đang mở ${user.role === 'ADMIN' ? 'Bảng Quản Trị Hệ Thống' : 'Sổ Thu Chi'}.`
         : `Đăng ký thành công! Chào mừng ${user.name} đến với VikeSo.`
     );
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setViewMode('landing');
     try {
       localStorage.removeItem('vikeso_user');
       localStorage.removeItem('vikeso_token');
     } catch {
       // ignore
     }
+    window.location.hash = '';
     showToast('Đã đăng xuất tài khoản thành công.');
   };
+
+  if (viewMode === 'portal') {
+    return (
+      <PortalView
+        currentUser={currentUser}
+        initialPortal={portalType}
+        onLogout={handleLogout}
+        onBackToLanding={() => {
+          setViewMode('landing');
+          window.location.hash = '#landing';
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-[#191c1d] flex flex-col font-sans selection:bg-[#198754]/20 selection:text-[#198754]">
@@ -95,6 +192,10 @@ export default function App() {
         onOpenScan={() => setScanModalOpen(true)}
         onOpenTelegram={() => setTelegramModalOpen(true)}
         onOpenVideo={() => setVideoModalOpen(true)}
+        onOpenPortal={() => {
+          setPortalType(currentUser?.role === 'ADMIN' ? 'admin' : 'owner');
+          setViewMode('portal');
+        }}
       />
 
       {/* Main Content Sections: Exact 10 Sections from Specification */}

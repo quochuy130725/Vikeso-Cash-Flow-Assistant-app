@@ -6,6 +6,7 @@
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
+    "set:admin": "node src/scripts/setRole.js",
     "emulator": "powershell -Command \"Get-NetTCPConnection -LocalPort 8085 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }\" & firebase emulators:start"
   },
   "keywords": [],
