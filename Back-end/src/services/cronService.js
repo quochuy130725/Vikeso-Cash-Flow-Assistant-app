@@ -137,23 +137,31 @@ const runDailyReport = async () => {
         const fmt = (n) => Number(n).toLocaleString('vi-VN');
         const data = { shopName, tongThu: fmt(tongThu), tongChi: fmt(tongChi), loinhuan: fmt(loinhuan), soHoaDon: userReceipts.length, ngay: ngayFormat };
 
-        // ── Email (BẮT BUỘC) ────────────────────────────────────────────
-        try {
-            await transporter.sendMail({
-                from: `"Vikeso AI" <${process.env.MAIL_USER}>`,
-                to: user.email,
-                subject: `📊 Báo cáo chốt ca ${ngayFormat} - ${shopName}`,
-                html: buildEmailHTML({ ...data, loinhuan }),
-            });
-            console.log(`✉️  Email → ${user.email} ✅`);
-            results.emailSent++;
-        } catch (mailErr) {
-            console.error(`❌ Email lỗi (${user.email}):`, mailErr.message);
-            results.errors.push({ user: user.email, channel: 'email', error: mailErr.message });
+        // ── Kiểm tra Notification Settings ────────────────────────────────
+        const shouldSendEmail = user.notificationSettings?.receiveEmail ?? true;
+        const shouldSendTelegram = user.notificationSettings?.receiveTelegram ?? true;
+
+        // ── Email (BẮT BUỘC nếu bật) ────────────────────────────────────
+        if (shouldSendEmail) {
+            try {
+                await transporter.sendMail({
+                    from: `"Vikeso AI" <${process.env.MAIL_USER}>`,
+                    to: user.email,
+                    subject: `📊 Báo cáo chốt ca ${ngayFormat} - ${shopName}`,
+                    html: buildEmailHTML({ ...data, loinhuan }),
+                });
+                console.log(`✉️  Email → ${user.email} ✅`);
+                results.emailSent++;
+            } catch (mailErr) {
+                console.error(`❌ Email lỗi (${user.email}):`, mailErr.message);
+                results.errors.push({ user: user.email, channel: 'email', error: mailErr.message });
+            }
+        } else {
+            console.log(`⚠️  ${user.email} đã tắt nhận báo cáo qua Email.`);
         }
 
-        // ── Telegram (TÙY CHỌN) ─────────────────────────────────────────
-        if (process.env.TELEGRAM_BOT_TOKEN && user.telegramChatId) {
+        // ── Telegram (TÙY CHỌN nếu đã liên kết và đang bật) ─────────────
+        if (shouldSendTelegram && process.env.TELEGRAM_BOT_TOKEN && user.telegramChatId) {
             try {
                 await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
                     chat_id: user.telegramChatId,
@@ -166,8 +174,10 @@ const runDailyReport = async () => {
                 console.error(`❌ Telegram lỗi (${user.email}):`, teleErr.message);
                 results.errors.push({ user: user.email, channel: 'telegram', error: teleErr.message });
             }
-        } else {
+        } else if (!user.telegramChatId) {
             console.log(`⚠️  ${user.email} chưa kết nối Telegram — bỏ qua.`);
+        } else if (!shouldSendTelegram) {
+            console.log(`⚠️  ${user.email} đã tắt nhận báo cáo qua Telegram.`);
         }
     }
 

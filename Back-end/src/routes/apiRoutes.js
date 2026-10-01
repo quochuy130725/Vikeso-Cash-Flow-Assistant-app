@@ -67,6 +67,7 @@ router.post('/login', async (req, res) => {
         shopName: user.shopName,
         telegramChatId: user.telegramChatId,
         subscriptionPlan: user.subscriptionPlan,
+        notificationSettings: user.notificationSettings || { receiveEmail: true, receiveTelegram: true, receiveInApp: true },
       },
     });
   } catch (error) {
@@ -94,6 +95,62 @@ router.get('/transactions', async (req, res) => {
     });
   } catch (error) {
     console.error('Lỗi get-transactions:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ---------------------------------------------------------
+// API 5: LẤY THÔNG TIN CÁ NHÂN & CÀI ĐẶT
+// GET /api/user/:id/profile
+// ---------------------------------------------------------
+router.get('/user/:id/profile', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ success: false, message: 'Không tìm thấy user' });
+
+    return res.status(200).json({
+      success: true,
+      hasTelegram: !!user.telegramChatId,
+      settings: user.notificationSettings || { receiveEmail: true, receiveTelegram: true, receiveInApp: true }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ---------------------------------------------------------
+// API 6: CẬP NHẬT CÀI ĐẶT THÔNG BÁO
+// PUT /api/user/:id/notification-settings
+// ---------------------------------------------------------
+router.put('/user/:id/notification-settings', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { receiveEmail, receiveTelegram, receiveInApp } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng' });
+    }
+
+    // Khởi tạo nếu chưa có
+    if (!user.notificationSettings) {
+      user.notificationSettings = { receiveEmail: true, receiveTelegram: true, receiveInApp: true };
+    }
+
+    if (receiveEmail !== undefined) user.notificationSettings.receiveEmail = receiveEmail;
+    if (receiveTelegram !== undefined) user.notificationSettings.receiveTelegram = receiveTelegram;
+    if (receiveInApp !== undefined) user.notificationSettings.receiveInApp = receiveInApp;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Cập nhật cài đặt thông báo thành công',
+      settings: user.notificationSettings
+    });
+  } catch (error) {
+    console.error('Lỗi update-notification-settings:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 });

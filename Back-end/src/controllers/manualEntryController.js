@@ -80,13 +80,17 @@ exports.saveManualEntry = async (req, res) => {
 
     // Xóa đoạn setTimeout bắn Telegram giả lập 15s để nhường sân khấu cho Cloud Function thật
     
+    // Check if user has telegram connected
+    const user = await User.findById(userId);
+    const hasTelegram = user && !!user.telegramChatId;
+
     // 📡 Thông báo cho Dashboard tự refresh biểu đồ (không đụng luồng lưu)
     try {
       getIO().emit('new_transaction', { userId });
     } catch (_) {} // Ignore nếu socket chưa init (ví dụ: test Postman không cần realtime)
 
     // Phản hồi thành công
-    return res.status(200).json({ success: true, message: "Đã lưu dữ liệu thành công!" });
+    return res.status(200).json({ success: true, message: "Đã lưu dữ liệu thành công!", hasTelegram });
 
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
