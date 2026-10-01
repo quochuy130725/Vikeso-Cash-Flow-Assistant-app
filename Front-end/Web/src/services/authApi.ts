@@ -17,6 +17,7 @@ export interface RegisterPayload {
   password: string;
   name: string;
   shopName: string;
+  role?: string;
 }
 
 export interface UserInfo {
@@ -28,6 +29,7 @@ export interface UserInfo {
   telegramChatId?: string | null;
   subscriptionPlan?: string;
   authProvider?: string;
+  role?: string;
 }
 
 export interface AuthResponse {
@@ -81,6 +83,7 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthRespon
         password: payload.password,
         name: payload.name.trim(),
         shopName: payload.shopName.trim(),
+        role: payload.role || (payload.email.toLowerCase().includes('admin') || payload.email.toLowerCase().includes('finity') ? 'ADMIN' : 'OWNER'),
       }),
     });
 

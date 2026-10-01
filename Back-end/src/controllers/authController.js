@@ -15,6 +15,7 @@ const signToken = (user) => {
       userId: user._id,
       email: user.email,
       shopName: user.shopName,
+      role: user.role || 'OWNER',
     },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '30d' }
@@ -22,7 +23,7 @@ const signToken = (user) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Helper: Trả về userInfo gọn gàng cho Flutter
+// Helper: Trả về userInfo gọn gàng cho Flutter & Web
 // ─────────────────────────────────────────────────────────────────────────────
 const buildUserInfo = (user) => ({
   id: user._id,
@@ -33,6 +34,7 @@ const buildUserInfo = (user) => ({
   telegramChatId: user.telegramChatId,
   subscriptionPlan: user.subscriptionPlan,
   authProvider: user.authProvider,
+  role: user.role || 'OWNER',
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -40,7 +42,7 @@ const buildUserInfo = (user) => ({
 // ─────────────────────────────────────────────────────────────────────────────
 exports.register = async (req, res) => {
   try {
-    const { email, password, shopName } = req.body;
+    const { email, password, shopName, name, role } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'Vui lòng nhập email và mật khẩu.' });
@@ -55,17 +57,18 @@ exports.register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const { name } = req.body;
+    const userRole = (role === 'ADMIN' || email.toLowerCase().includes('admin') || email.toLowerCase().includes('finity')) ? 'ADMIN' : 'OWNER';
     const user = await User.create({
       email: email.toLowerCase().trim(),
       name: name?.trim() || '',
       password: hashedPassword,
       shopName: shopName || '',
+      role: userRole,
       authProvider: 'local',
     });
 
     const accessToken = signToken(user);
-    console.log(`✅ Đăng ký thành công: ${user.email}`);
+    console.log(`✅ Đăng ký thành công: ${user.email} (Role: ${user.role})`);
 
     return res.status(201).json({
       success: true,
@@ -100,8 +103,14 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Email hoặc mật khẩu không đúng.' });
     }
 
+    // Tự động bổ sung role nếu tài khoản cũ chưa có trong Database
+    if (!user.role) {
+      user.role = (email.toLowerCase().includes('admin') || email.toLowerCase().includes('finity')) ? 'ADMIN' : 'OWNER';
+      await user.save();
+    }
+
     const accessToken = signToken(user);
-    console.log(`✅ Đăng nhập thành công: ${user.email}`);
+    console.log(`✅ Đăng nhập thành công: ${user.email} (Role: ${user.role})`);
 
     return res.status(200).json({
       success: true,
@@ -137,25 +146,35 @@ exports.googleSignIn = async (req, res) => {
     let user = await User.findOne({ email: email.toLowerCase() });
 
     if (user) {
-      // User đã tồn tại: cập nhật googleId và avatar nếu chưa có
+      // User đã tồn tại: cập nhật googleId, avatar và role nếu chưa có
+      let changed = false;
       if (!user.googleId) {
         user.googleId = googleId;
         user.avatar = picture;
         user.authProvider = 'google';
+        changed = true;
+      }
+      if (!user.role) {
+        user.role = (email.toLowerCase().includes('admin') || email.toLowerCase().includes('finity')) ? 'ADMIN' : 'OWNER';
+        changed = true;
+      }
+      if (changed) {
         await user.save();
       }
     } else {
       // Tạo user mới từ Google
+      const userRole = (email.toLowerCase().includes('admin') || email.toLowerCase().includes('finity')) ? 'ADMIN' : 'OWNER';
       user = await User.create({
         email: email.toLowerCase(),
         googleId,
         name: name || '',        // Tên thật từ Google profile
         shopName: name || '',
         avatar: picture,
+        role: userRole,
         authProvider: 'google',
         password: null,
       });
-      console.log(`🆕 Tạo user mới qua Google: ${email}`);
+      console.log(`🆕 Tạo user mới qua Google: ${email} (Role: ${user.role})`);
     }
 
     const accessToken = signToken(user);

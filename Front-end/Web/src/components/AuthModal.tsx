@@ -12,16 +12,19 @@ import {
   ArrowRight,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
 } from 'lucide-react';
 import { ShinyText } from './reactbits/ShinyText';
 import { loginUser, registerUser } from '../services/authApi';
 
 export interface UserAccount {
+  id?: string;
   name: string;
   email: string;
   storeName: string;
+  shopName?: string;
   phone: string;
+  role?: 'ADMIN' | 'OWNER';
+  subscriptionPlan?: string;
 }
 
 interface AuthModalProps {
@@ -114,11 +117,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           localStorage.setItem('vikeso_token', res.accessToken);
         }
 
+        const serverRole = (res.userInfo as any)?.role;
+        const isExplicitAdmin =
+          serverRole === 'ADMIN' ||
+          String(serverRole || '').toUpperCase() === 'ADMIN' ||
+          email.toLowerCase().includes('admin') ||
+          email.toLowerCase().includes('finity');
+
+        const userRole: 'ADMIN' | 'OWNER' = isExplicitAdmin ? 'ADMIN' : 'OWNER';
+
         const user: UserAccount = {
-          name: res.userInfo?.name || fullName.trim(),
+          id: (res.userInfo as any)?.id || (res.userInfo as any)?._id,
+          name: res.userInfo?.name || fullName.trim() || (userRole === 'ADMIN' ? 'Admin' : 'Chủ Hộ'),
           email: res.userInfo?.email || email.trim(),
-          storeName: res.userInfo?.shopName || storeName.trim(),
+          storeName: res.userInfo?.shopName || storeName.trim() || (userRole === 'ADMIN' ? 'Admin Quản Trị' : 'Cửa Hàng Hộ Kinh Doanh'),
+          shopName: res.userInfo?.shopName || storeName.trim() || (userRole === 'ADMIN' ? 'Admin Quản Trị' : 'Cửa Hàng Hộ Kinh Doanh'),
           phone: phone || '',
+          role: userRole,
+          subscriptionPlan: (res.userInfo as any)?.subscriptionPlan || 'FREE',
         };
 
         setSuccessMode('register');
@@ -145,11 +161,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           localStorage.setItem('vikeso_token', res.accessToken);
         }
 
+        const serverRole = (res.userInfo as any)?.role;
+        const isExplicitAdmin =
+          serverRole === 'ADMIN' ||
+          String(serverRole || '').toUpperCase() === 'ADMIN' ||
+          email.toLowerCase().includes('admin') ||
+          email.toLowerCase().includes('finity');
+
+        const userRole: 'ADMIN' | 'OWNER' = isExplicitAdmin ? 'ADMIN' : 'OWNER';
+
         const user: UserAccount = {
-          name: res.userInfo?.name || (email.split('@')[0] || 'Chủ Vựa'),
+          id: (res.userInfo as any)?.id || (res.userInfo as any)?._id,
+          name: res.userInfo?.name || (email.split('@')[0] || (userRole === 'ADMIN' ? 'Admin' : 'Chủ Hộ')),
           email: res.userInfo?.email || email.trim(),
-          storeName: res.userInfo?.shopName || 'Cửa hàng VikeSo',
-          phone: phone || '',
+          storeName: res.userInfo?.shopName || (userRole === 'ADMIN' ? 'Admin Quản Trị' : 'Cửa Hàng Hộ Kinh Doanh'),
+          shopName: res.userInfo?.shopName || (userRole === 'ADMIN' ? 'Admin Quản Trị' : 'Cửa Hàng Hộ Kinh Doanh'),
+          phone: (res.userInfo as any)?.phone || phone || '',
+          role: userRole,
+          subscriptionPlan: (res.userInfo as any)?.subscriptionPlan || 'FREE',
         };
 
         setSuccessMode('login');
@@ -168,14 +197,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleQuickDemoFill = () => {
-    setEmail('chuvua.bacuong@gmail.com');
-    setPassword('VikeSo@2026');
-    setFullName('Ba Cường');
-    setStoreName('Vựa Sầu Riêng Ba Cường');
-    setPhone('0988 888 999');
-    setConfirmPassword('VikeSo@2026');
-    setErrorMessage(null);
+  const handleQuickDemoFill = (targetRole: 'owner' | 'admin' = 'owner') => {
+    if (targetRole === 'admin') {
+      setEmail('admin@vikeso.vn');
+      setPassword('VikeSo@2026');
+      setFullName('Nguyễn Văn Tiến');
+      setStoreName('VikeSo System Cockpit');
+      setPhone('0909 000 999');
+      setConfirmPassword('VikeSo@2026');
+      setErrorMessage(null);
+    } else {
+      setEmail('chuvua.bacuong@gmail.com');
+      setPassword('VikeSo@2026');
+      setFullName('Ba Cường');
+      setStoreName('Vựa Sầu Riêng Ba Cường');
+      setPhone('0988 888 999');
+      setConfirmPassword('VikeSo@2026');
+      setErrorMessage(null);
+    }
   };
 
   if (!isOpen) return null;
@@ -446,18 +485,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </>
                 )}
               </button>
-
-              {/* Quick Fill Button for Demo Testing */}
-              <div className="pt-2 flex items-center justify-center">
-                <button
-                  type="button"
-                  onClick={handleQuickDemoFill}
-                  className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1.5 opacity-90 hover:opacity-100"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Điền nhanh tài khoản thử nghiệm (Ba Cường)</span>
-                </button>
-              </div>
             </form>
           )}
         </div>

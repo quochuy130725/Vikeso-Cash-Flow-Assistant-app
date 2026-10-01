@@ -1,24 +1,120 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Roboto Flex', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body-md: 'Be Vietnam Pro', sans-serif;
+  --font-headline-lg: 'Be Vietnam Pro', sans-serif;
+  --font-headline-md: 'Be Vietnam Pro', sans-serif;
+  --font-headline-sm: 'Be Vietnam Pro', sans-serif;
+  --font-label-lg: 'Be Vietnam Pro', sans-serif;
+  --font-label-md: 'Be Vietnam Pro', sans-serif;
+  --font-label-sm: 'Be Vietnam Pro', sans-serif;
+  --font-display-lg: 'Be Vietnam Pro', sans-serif;
+  --font-metric-display: 'Be Vietnam Pro', sans-serif;
+  --font-metric-unit: 'Be Vietnam Pro', sans-serif;
+
+  --color-primary: #198754;
+  --color-primary-container: #146c43;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #ffffff;
+  --color-primary-fixed: #d1e7dd;
+  --color-primary-fixed-dim: #a3cfbb;
+  --color-on-primary-fixed: #0f5132;
+  --color-on-primary-fixed-variant: #0f5132;
+  --color-inverse-primary: #20c997;
+
+  --color-secondary: #b31f56;
+  --color-secondary-container: #fe5b8d;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #620029;
+  --color-secondary-fixed: #ffd9df;
+  --color-secondary-fixed-dim: #ffb1c2;
+  --color-on-secondary-fixed: #3f0018;
+  --color-on-secondary-fixed-variant: #8f003f;
+
+  --color-tertiary: #dc3545;
+  --color-tertiary-container: #b02a37;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #ffffff;
+  --color-tertiary-fixed: #f8d7da;
+  --color-tertiary-fixed-dim: #f1aeb5;
+  --color-on-tertiary-fixed: #58151c;
+  --color-on-tertiary-fixed-variant: #842029;
+
+  --color-surface: #f8fafc;
+  --color-surface-dim: #f1f5f9;
+  --color-surface-bright: #ffffff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f8fafc;
+  --color-surface-container: #e2e8f0;
+  --color-surface-container-high: #cbd5e1;
+  --color-surface-container-highest: #94a3b8;
+  --color-surface-variant: #f1f5f9;
+  --color-surface-tint: #198754;
+
+  --color-on-surface: #0f172a;
+  --color-on-surface-variant: #475569;
+  --color-outline: #94a3b8;
+  --color-outline-variant: #cbd5e1;
+  --color-background: #f8fafc;
+  --color-on-background: #0f172a;
+  --color-inverse-surface: #1e293b;
+  --color-inverse-on-surface: #f8fafc;
+
+  --color-error: #dc3545;
+  --color-error-container: #f8d7da;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #58151c;
+
   --color-emerald-vikeso: #198754;
   --color-emerald-light: #20c997;
   --color-pink-vikeso: #b31f56;
   --color-pink-bright: #ff5c8d;
   --color-danger-vikeso: #dc3545;
   --color-warning-vikeso: #ffc107;
-  --color-surface-bg: #f8f9fa;
+  --color-surface-bg: #f8fafc;
   --color-dark-surface: #191c1d;
   --color-dark-card: #24282a;
+
+  --spacing-space-xs: 0.375rem;
+  --spacing-space-sm: 0.75rem;
+  --spacing-space-md: 1.25rem;
+  --spacing-space-lg: 1.75rem;
+  --spacing-space-xl: 2.25rem;
+  --spacing-margin: 1.25rem;
+  --spacing-margin-tablet: 1.75rem;
+  --spacing-margin-desktop: 2.5rem;
+  --spacing-gutter: 1.5rem;
+  --spacing-gutter-desktop: 2rem;
 }
 
 @layer base {
-  body {
-    font-family: var(--font-sans);
-    background-color: #f8f9fa;
-    color: #191c1d;
+  html, body, button, input, select, textarea {
+    font-family: 'Be Vietnam Pro', var(--font-sans);
   }
+  body {
+    background-color: #f8fafc;
+    color: #0f172a;
+  }
+}
+
+/* Material Symbols Outlined font-variation settings */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga';
 }
 
 /* Glassmorphism utility */
@@ -59,15 +155,15 @@
 
 @keyframes pulse-subtle {
   0%, 100% {
-    opacity: 0.6;
+    opacity: 1;
     transform: scale(1);
   }
   50% {
-    opacity: 0.9;
-    transform: scale(1.04);
+    opacity: 0.85;
+    transform: scale(0.985);
   }
 }
 
 .animate-pulse-subtle {
-  animation: pulse-subtle 3s ease-in-out infinite;
+  animation: pulse-subtle 4s ease-in-out infinite;
 }
