@@ -87,13 +87,10 @@ exports.dailyNightReport = onSchedule(
       const startOfUtc = new Date(startOfDayVN.getTime() - 7 * 60 * 60 * 1000);
       const endOfUtc = new Date(endOfDayVN.getTime() - 7 * 60 * 60 * 1000);
 
-      // Bộ lọc theo ngày (tìm theo transactionDate hoặc createdAt hôm nay)
+      // Bộ lọc theo ngày (chỉ lọc theo transactionDate)
       const dateFilter = {
         status: "VALID",
-        $or: [
-          { transactionDate: { $gte: startOfUtc, $lte: endOfUtc } },
-          { createdAt: { $gte: startOfUtc, $lte: endOfUtc } }
-        ]
+        transactionDate: { $gte: startOfUtc, $lte: endOfUtc }
       };
 
       // Bước 1: Nhặt ra danh sách các User có phát sinh giao dịch VALID hôm nay

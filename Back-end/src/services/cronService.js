@@ -109,10 +109,7 @@ const runDailyReport = async () => {
 
     const dateFilter = {
         status: "VALID",
-        $or: [
-            { transactionDate: { $gte: startOfUtc, $lte: endOfUtc } },
-            { createdAt: { $gte: startOfUtc, $lte: endOfUtc } }
-        ]
+        transactionDate: { $gte: startOfUtc, $lte: endOfUtc }
     };
 
     const activeUsers = await Receipt.distinct("userId", dateFilter);
