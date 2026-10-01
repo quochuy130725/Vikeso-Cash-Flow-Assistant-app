@@ -1,173 +1,73 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
 
-:root {
-  /* Light mode color palette matched with Mobile-App */
-  --bg-color: #F8F9FA;
-  --text-color: #191C1D;
-  --text-muted: #584045;
-  --primary: #B31F56; /* Burgundy */
-  --primary-container: #FF5C8D; /* Pink */
-  --primary-glow: rgba(255, 92, 141, 0.4);
-  --secondary: #5C6300; /* Olive */
-  --secondary-container: #f1ff58; /* Bright Neon Yellow */
-  --accent: #FF9800; /* For traffic light yellow */
-  --danger: #BA1A1A; /* From App Theme Error */
-  
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.8);
-  --glass-highlight: rgba(255, 255, 255, 0.9);
-  
-  --card-shadow: 0 12px 32px rgba(179, 31, 86, 0.08);
+@theme {
+  --font-sans: 'Roboto Flex', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --color-emerald-vikeso: #198754;
+  --color-emerald-light: #20c997;
+  --color-pink-vikeso: #b31f56;
+  --color-pink-bright: #ff5c8d;
+  --color-danger-vikeso: #dc3545;
+  --color-warning-vikeso: #ffc107;
+  --color-surface-bg: #f8f9fa;
+  --color-dark-surface: #191c1d;
+  --color-dark-card: #24282a;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: #f8f9fa;
+    color: #191c1d;
+  }
 }
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+/* Glassmorphism utility */
+.glass-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(225, 227, 228, 0.8);
 }
 
-/* Glassmorphism Utilities (Light Theme adjusted) */
-.glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  box-shadow: var(--card-shadow);
-  transition: all 0.3s ease;
+.glass-card-dark {
+  background: rgba(36, 40, 42, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.glass-panel:hover {
-  background: var(--glass-highlight);
-  transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(179, 31, 86, 0.12);
+.glass-pill {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(225, 227, 228, 0.6);
 }
 
-/* Vibrant Gradients */
-.text-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--primary-container));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+@keyframes shiny-badge {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
-.text-gradient-secondary {
-  background: linear-gradient(135deg, var(--secondary), #8A9300);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.animate-shiny {
+  background-size: 200% auto;
+  animation: shiny-badge 4s linear infinite;
 }
 
-.text-neon {
-  color: var(--secondary-container);
-  text-shadow: 0 0 10px rgba(241, 255, 88, 0.4);
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.04);
+  }
 }
 
-/* Core Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14px 28px;
-  border-radius: 9999px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-  text-decoration: none;
-  gap: 8px;
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
 }
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--primary-container));
-  color: white;
-  box-shadow: 0 4px 15px var(--primary-glow);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 6px 20px var(--primary-glow);
-}
-
-.btn-outline {
-  background: white;
-  border: 2px solid var(--primary-container);
-  color: var(--primary);
-  font-weight: 600;
-}
-
-.btn-outline:hover {
-  background: var(--primary-container);
-  color: white;
-}
-
-.btn-neon {
-  background: var(--secondary-container);
-  color: var(--text-color);
-  box-shadow: 0 4px 15px rgba(241, 255, 88, 0.4);
-}
-
-.btn-neon:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 6px 20px rgba(241, 255, 88, 0.6);
-}
-
-/* Layout Utilities */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-.section {
-  padding: 100px 0;
-  position: relative;
-}
-
-/* Background Effects */
-.blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(120px);
-  z-index: -1;
-  opacity: 0.6;
-}
-
-.blob-1 {
-  top: -100px;
-  left: -100px;
-  width: 500px;
-  height: 500px;
-  background: rgba(255, 92, 141, 0.2); /* Pink */
-}
-
-.blob-2 {
-  bottom: 20%;
-  right: -100px;
-  width: 600px;
-  height: 600px;
-  background: rgba(241, 255, 88, 0.25); /* #f1ff58 */
-}
-
-/* Traffic Light Specific */
-.traffic-light-indicator {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  box-shadow: 0 0 10px currentColor;
-}
-.indicator-green { color: #10B981; background: #10B981; }
-.indicator-yellow { color: var(--accent); background: var(--accent); }
-.indicator-red { color: var(--danger); background: var(--danger); }
