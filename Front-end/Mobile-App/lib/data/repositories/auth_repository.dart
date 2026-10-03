@@ -188,7 +188,9 @@ class AuthRepository {
         shopName: userInfo['shopName']?.toString() ?? '',
         avatar: userInfo['avatar']?.toString(),
         authProvider: userInfo['authProvider']?.toString() ?? 'local',
-        notificationSettings: userInfo['notificationSettings'] != null ? jsonEncode(userInfo['notificationSettings']) : null,
+        notificationSettings: userInfo['notificationSettings'] != null
+            ? jsonEncode(userInfo['notificationSettings'])
+            : null,
         accessToken: accessToken,
       ));
     }

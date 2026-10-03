@@ -91,13 +91,9 @@ class ApiService {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
       return {'success': false};
-<<<<<<< HEAD
     } catch (e) {
-      return {'success': false, 'message': e.toString()};
+      return {'success': false, 'error': e.toString()};
     }
-=======
-    } catch (e) { return {'success': false, 'error': e.toString()}; }
->>>>>>> main
   }
 
   // ============================================================

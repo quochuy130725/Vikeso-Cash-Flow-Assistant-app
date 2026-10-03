@@ -46,14 +46,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     try {
       final String userId = dotenv.env['USER_ID'] ?? '';
-      final storage = const flutter_secure_storage.FlutterSecureStorage();
+      const storage = flutter_secure_storage.FlutterSecureStorage();
       final shopName = await storage.read(key: 'user_shopName');
       final userName = await storage.read(key: 'user_name');
       final email = await storage.read(key: 'user_email');
       if (mounted) {
         setState(() {
-          if (shopName != null && shopName.trim() != '') _displayName = shopName;
-          else if (userName != null && userName.trim() != '') _displayName = userName;
+          if (shopName != null && shopName.trim() != '') {
+            _displayName = shopName;
+          } else if (userName != null && userName.trim() != '') _displayName = userName;
           else if (email != null && email.trim() != '') _displayName = email.split('@')[0];
           else _displayName = 'Người dùng';
         });
@@ -268,7 +269,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: 20),
 
                       // --- 1. QUICK ACTION BUTTONS (Màu thương hiệu của dự án) ---
-                      DashboardActionButtons(onTransactionAdded: _loadData),
+                      const DashboardActionButtons(),
                       const SizedBox(height: 24),
 
                       // --- 2. SUMMARY NUMERICAL STATS TABLE (Bảng số liệu tóm gọn biểu đồ) ---
