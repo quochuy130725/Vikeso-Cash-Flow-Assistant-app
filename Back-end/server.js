@@ -39,5 +39,5 @@ app.use('/api', apiRoutes);         // ─ Scan receipt, manual-entry, transacti
 // Bật Server lắng nghe — dùng httpServer thay vì app.listen()
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
-  console.log(`🚀 Server + WebSocket đang chạy tại: http://localhost:${PORT}`);
+  console.log(`🚀 Server + WebSocket đang lắng nghe tại cổng: ${PORT}`);
 });
