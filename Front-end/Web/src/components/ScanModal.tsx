@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Camera, Upload, X, CheckCircle2, AlertTriangle, Sparkles, RefreshCw, FileText } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Camera, X, CheckCircle2, Sparkles, RefreshCw } from 'lucide-react';
 
 interface ScanModalProps {
   isOpen: boolean;
@@ -76,32 +76,32 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
   const currentData = presets[selectedPreset];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="w-full max-w-2xl bg-[#191c1d] border border-white/10 rounded-3xl shadow-2xl overflow-hidden text-white flex flex-col max-h-[90vh]"
+        className="w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden text-white flex flex-col max-h-[90vh]"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#24282a]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#198754] flex items-center justify-center text-white shadow-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/90">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md">
               <Camera className="w-4 h-4" />
             </div>
             <div>
               <h3 className="font-bold text-sm text-white flex items-center gap-2">
                 <span>1-Chạm Bóc Tách Chứng Từ Thực Tế</span>
-                <span className="text-[10px] bg-[#198754]/30 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
                   Gemini 2.5 Flash
                 </span>
               </h3>
-              <p className="text-xs text-white/60">Đọc chữ viết tay • Lọc nợ gối đầu • Đối soát 2 chiều</p>
+              <p className="text-xs text-slate-400">Đọc chữ viết tay • Lọc nợ gối đầu • Đối soát 2 chiều</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 transition-colors"
+            className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -110,16 +110,16 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-5">
           {/* Preset Selector */}
-          <div className="flex items-center justify-between gap-2 p-1.5 bg-white/5 rounded-2xl border border-white/10">
+          <div className="flex items-center justify-between gap-2 p-1.5 bg-slate-800/80 rounded-2xl border border-slate-700">
             <button
               onClick={() => {
                 setSelectedPreset('receipt');
                 handleReset();
               }}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedPreset === 'receipt'
-                  ? 'bg-[#198754] text-white shadow-md'
-                  : 'text-white/70 hover:text-white'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-slate-300 hover:text-white'
               }`}
             >
               Hóa Đơn Viết Tay
@@ -129,10 +129,10 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
                 setSelectedPreset('carbon');
                 handleReset();
               }}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedPreset === 'carbon'
-                  ? 'bg-[#198754] text-white shadow-md'
-                  : 'text-white/70 hover:text-white'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-slate-300 hover:text-white'
               }`}
             >
               Giấy Than Mờ
@@ -142,10 +142,10 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
                 setSelectedPreset('pos');
                 handleReset();
               }}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedPreset === 'pos'
-                  ? 'bg-[#198754] text-white shadow-md'
-                  : 'text-white/70 hover:text-white'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-slate-300 hover:text-white'
               }`}
             >
               Phiếu POS Kết Ca
@@ -153,7 +153,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
           </div>
 
           {/* Viewport Frame */}
-          <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-black/60 border border-white/15 flex items-center justify-center group">
+          <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-black/60 border border-slate-700 flex items-center justify-center group">
             <img
               src={currentData.img}
               alt={currentData.title}
@@ -162,10 +162,10 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
             />
 
             {/* Corner Framing Marks */}
-            <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-[#198754]" />
-            <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-[#198754]" />
-            <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-[#198754]" />
-            <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-[#198754]" />
+            <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-emerald-500" />
+            <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-emerald-500" />
+            <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-emerald-500" />
+            <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-emerald-500" />
 
             {/* Scanning Line Animation */}
             {step === 'processing' && (
@@ -173,21 +173,21 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
                 initial={{ top: '0%' }}
                 animate={{ top: ['0%', '100%', '0%'] }}
                 transition={{ repeat: Infinity, duration: 1.4, ease: 'linear' }}
-                className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#198754] to-transparent shadow-[0_0_15px_#198754]"
+                className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent shadow-[0_0_15px_#10b981]"
               />
             )}
 
             {/* Status overlay */}
-            <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-xs flex items-center gap-1.5">
+            <div className="absolute top-3 left-3 bg-slate-900/85 backdrop-blur-md px-3 py-1 rounded-full border border-slate-700 text-xs flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
               <span>{currentData.title}</span>
             </div>
 
             {step === 'camera' && (
-              <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                 <button
                   onClick={handleStartScan}
-                  className="px-6 py-3 rounded-2xl bg-[#198754] hover:bg-[#146c43] text-white font-bold text-xs sm:text-sm shadow-xl shadow-[#198754]/40 hover:scale-105 transition-all flex items-center gap-2 ring-4 ring-[#198754]/20"
+                  className="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-emerald-900/50 hover:scale-105 transition-all flex items-center gap-2 ring-4 ring-emerald-500/20 cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>Bấm Bóc Tách 1-Chạm</span>
@@ -198,17 +198,17 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
 
           {/* Processing Indicator */}
           {step === 'processing' && (
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
+            <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700 space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-emerald-400 font-bold flex items-center gap-1.5">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  Gemini Vision OCR đang quét nhận diện nét chữ & lọc nợ...
+                  Gemini Vision OCR đang quét nhận diện nét chữ &amp; lọc nợ...
                 </span>
-                <span className="font-mono text-white/80">{scanProgress}%</span>
+                <span className="font-tabular font-mono text-slate-300">{scanProgress}%</span>
               </div>
-              <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+              <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-[#198754] to-[#20c997]"
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-400"
                   style={{ width: `${scanProgress}%` }}
                 />
               </div>
@@ -222,7 +222,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
               animate={{ opacity: 1, y: 0 }}
               className="space-y-3"
             >
-              <div className="flex items-center justify-between text-xs font-semibold text-white/70">
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
                 <span>Dòng bóc tách chi tiết</span>
                 <span className="text-emerald-400 flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Xử lý hoàn tất trong 1.8s
@@ -233,7 +233,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
                 {currentData.items.map((item, idx) => (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between"
+                    className="p-3.5 rounded-xl bg-slate-800/70 border border-slate-700 flex items-center justify-between"
                   >
                     <div className="space-y-0.5">
                       <div className="text-sm font-bold text-white flex items-center gap-2">
@@ -248,17 +248,17 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
                           {item.confidence}% tin cậy
                         </span>
                       </div>
-                      <div className="text-xs text-white/50">
+                      <div className="text-xs text-slate-400">
                         Phân loại: {item.type === 'thu' ? 'Tiền Vào (Doanh thu)' : item.type === 'chi' ? 'Tiền Ra (Chi phí)' : 'Đã gộp POS (Không tính 2 lần)'}
                       </div>
                     </div>
                     <div
-                      className={`font-black text-sm ${
+                      className={`font-black text-sm font-tabular ${
                         item.type === 'thu'
                           ? 'text-emerald-400'
                           : item.type === 'chi'
                           ? 'text-rose-400'
-                          : 'text-white/50 line-through'
+                          : 'text-slate-500 line-through'
                       }`}
                     >
                       {item.type === 'thu' ? '+' : item.type === 'chi' ? '-' : ''}
@@ -268,9 +268,9 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
                 ))}
               </div>
 
-              <div className="p-3.5 rounded-xl bg-[#24282a] border border-[#198754]/40 flex items-center justify-between">
-                <span className="text-xs text-white/80 font-medium">Tổng thực thu ghi nhận sổ quỹ:</span>
-                <span className="text-base font-black text-emerald-400">
+              <div className="p-3.5 rounded-xl bg-slate-800 border border-emerald-500/40 flex items-center justify-between">
+                <span className="text-xs text-slate-300 font-medium">Tổng thực thu ghi nhận sổ quỹ:</span>
+                <span className="text-base font-black text-emerald-400 font-tabular">
                   +{currentData.total.toLocaleString('vi-VN')} đ
                 </span>
               </div>
@@ -279,10 +279,10 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 px-6 border-t border-white/10 bg-[#24282a] flex items-center justify-between">
+        <div className="p-4 px-6 border-t border-slate-800 bg-slate-900/90 flex items-center justify-between">
           <button
             onClick={handleReset}
-            className="text-xs text-white/70 hover:text-white flex items-center gap-1.5 transition-colors"
+            className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" /> Chụp lại mẫu khác
           </button>
@@ -291,12 +291,13 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
               if (onSuccessResult) onSuccessResult(currentData);
               onClose();
             }}
-            className="px-5 py-2.5 rounded-xl bg-[#198754] hover:bg-[#146c43] text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5"
+            className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
           >
-            <CheckCircle2 className="w-4 h-4" /> Đồng ý & Lưu Sổ Quỹ
+            <CheckCircle2 className="w-4 h-4" /> Đồng ý &amp; Lưu Sổ Quỹ
           </button>
         </div>
       </motion.div>
     </div>
   );
 };
+

@@ -54,7 +54,7 @@ export const BackdateModal: React.FC<BackdateModalProps> = ({ isOpen, onClose, o
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#24282a]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#198754] text-white flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-xl bg-[#059669] text-white flex items-center justify-center font-bold">
               <Calendar className="w-4 h-4" />
             </div>
             <div>
@@ -81,7 +81,7 @@ export const BackdateModal: React.FC<BackdateModalProps> = ({ isOpen, onClose, o
                   onClick={() => setType('thu')}
                   className={`py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                     type === 'thu'
-                      ? 'bg-[#198754] text-white shadow-md'
+                      ? 'bg-[#059669] text-white shadow-md'
                       : 'text-white/60 hover:text-white'
                   }`}
                 >
@@ -105,7 +105,7 @@ export const BackdateModal: React.FC<BackdateModalProps> = ({ isOpen, onClose, o
               {/* Date Picker with future lock */}
               <div>
                 <label className="text-xs font-semibold text-white/80 block mb-1">
-                  Chọn ngày phát sinh giao dịch <span className="text-[#198754]">* (Khóa ngày mai)</span>
+                  Chọn ngày phát sinh giao dịch <span className="text-[#059669]">* (Khóa ngày mai)</span>
                 </label>
                 <input
                   type="date"
@@ -113,7 +113,7 @@ export const BackdateModal: React.FC<BackdateModalProps> = ({ isOpen, onClose, o
                   max={todayStr}
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs focus:outline-none focus:border-[#198754] transition-colors"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs focus:outline-none focus:border-[#059669] transition-colors"
                 />
               </div>
 
@@ -128,7 +128,7 @@ export const BackdateModal: React.FC<BackdateModalProps> = ({ isOpen, onClose, o
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
                   placeholder="VD: Trả tiền nước đá hôm qua"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#198754] transition-colors"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#059669] transition-colors"
                 />
               </div>
 
@@ -143,13 +143,13 @@ export const BackdateModal: React.FC<BackdateModalProps> = ({ isOpen, onClose, o
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="180000"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs font-bold focus:outline-none focus:border-[#198754] transition-colors"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs font-bold focus:outline-none focus:border-[#059669] transition-colors"
                 />
               </div>
 
               {/* Safety Constraint Note */}
               <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-300 flex items-start gap-2">
-                <ShieldAlert className="w-4 h-4 shrink-0 text-[#198754] mt-0.5" />
+                <ShieldAlert className="w-4 h-4 shrink-0 text-[#059669] mt-0.5" />
                 <span>
                   <strong>Cơ chế chống ô nhiễm dữ liệu:</strong> Khoản tiền lùi ngày này sẽ chỉ cộng vào sổ quỹ ngày <strong>{date}</strong>, tuyệt đối không tính vào ca hôm nay.
                 </span>
@@ -158,7 +158,7 @@ export const BackdateModal: React.FC<BackdateModalProps> = ({ isOpen, onClose, o
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 rounded-xl bg-[#198754] hover:bg-[#146c43] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#198754]/30 transition-all active:scale-95"
+                className="w-full py-3 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#059669]/30 transition-all active:scale-95"
               >
                 {isSubmitting ? (
                   <span>Đang ghi nhận vào sổ cũ...</span>

@@ -184,7 +184,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
 
           <button
             onClick={handleExportFinancialReport}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#198754] hover:bg-[#146c43] text-white text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer"
             type="button"
           >
             <span className="material-symbols-outlined text-[16px]">verified</span>
@@ -201,12 +201,12 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
             <span className="text-[11px] uppercase tracking-wider font-semibold">
               Doanh Thu Thuê Bao Tháng
             </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-[#198754] flex items-center justify-center border border-emerald-100">
+            <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
               <span className="material-symbols-outlined text-[17px]">payments</span>
             </div>
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono">
+            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono font-tabular">
               84.051.000 <span className="text-xs font-semibold text-slate-400">đ</span>
             </div>
             <div className="flex items-center justify-between pt-1 mt-1 border-t border-slate-100">
@@ -230,7 +230,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
             </div>
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono">
+            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono font-tabular">
               849 <span className="text-xs font-semibold text-slate-400">hộ</span>
             </div>
             <div className="flex items-center justify-between pt-1 mt-1 border-t border-slate-100">
@@ -254,7 +254,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
             </div>
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono">
+            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono font-tabular">
               6.820.000 <span className="text-xs font-semibold text-slate-400">đ</span>
             </div>
             <div className="flex items-center justify-between pt-1 mt-1 border-t border-slate-100">
@@ -278,7 +278,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
             </div>
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono">
+            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono font-tabular">
               1.188.000 <span className="text-xs font-semibold text-slate-400">đ</span>
             </div>
             <div className="flex items-center justify-between pt-1 mt-1 border-t border-slate-100">
@@ -313,8 +313,8 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
 
           {/* Legend Badges */}
           <div className="flex items-center gap-2.5 flex-wrap text-xs">
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-50/70 border border-emerald-200 text-emerald-800 font-semibold">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#198754]"></span>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-indigo-50/70 border border-indigo-200 text-indigo-800 font-semibold">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
               <span>Doanh thu MRR</span>
             </div>
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50/70 border border-blue-200 text-blue-800 font-semibold">
@@ -339,7 +339,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
               <span className="text-xs text-slate-400">•</span>
               <div className="flex items-center gap-1 text-xs">
                 <span className="text-slate-500">Doanh thu:</span>
-                <span className="font-bold text-[#198754] font-mono">
+                <span className="font-bold text-indigo-600 font-mono">
                   {monthlyUnitEconomics[activeMonthIdx].mrr.toLocaleString('vi-VN')}M VNĐ
                 </span>
               </div>
@@ -635,7 +635,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
                   </div>
 
                   <div className="flex items-baseline justify-between text-xs font-mono font-bold">
-                    <span className="text-[#198754]">{m.mrr}M</span>
+                    <span className="text-indigo-600">{m.mrr}M</span>
                     <span className="text-blue-600 text-[11px] font-medium">{m.cost}M</span>
                   </div>
 
@@ -706,7 +706,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Tìm kiếm hóa đơn, tên hộ KD..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs text-slate-900 bg-slate-50 rounded-lg font-medium placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 border border-slate-200 transition-all shadow-xs"
+              className="w-full pl-8 pr-3 py-1.5 text-xs text-slate-900 bg-slate-50 rounded-lg font-medium placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 border border-slate-200 transition-all shadow-xs"
             />
           </div>
         </div>
@@ -758,7 +758,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
                     </span>
                   </td>
 
-                  <td className="py-2.5 px-4 sm:px-5 text-right font-mono font-bold text-slate-900 text-xs">
+                  <td className="py-2.5 px-4 sm:px-5 text-right font-mono font-tabular font-bold text-slate-900 text-xs">
                     {p.amount.toLocaleString('vi-VN')} đ
                   </td>
 
@@ -794,8 +794,8 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
               Tổng quan:
             </span>
             <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white shadow-xs font-semibold text-slate-800 border border-slate-200 text-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="font-bold text-[#198754]">849</span> hộ kinh doanh thuê bao đang hoạt động
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+              <span className="font-bold text-indigo-600">849</span> hộ kinh doanh thuê bao đang hoạt động
             </div>
           </div>
 

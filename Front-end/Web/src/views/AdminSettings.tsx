@@ -59,7 +59,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
 
           <button
             onClick={() => showToast('Cấu hình vận hành AI & Telegram đã lưu thành công!')}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#198754] hover:bg-[#146c43] text-white font-bold shadow-xs hover:shadow transition-all text-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-xs hover:shadow transition-all text-xs cursor-pointer"
             type="button"
           >
             <span className="material-symbols-outlined text-[15px]">save</span>
@@ -76,7 +76,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
           <div className="p-4 sm:p-5 rounded-xl bg-white shadow-xs border border-slate-200/80 space-y-4">
             <div className="flex items-start justify-between flex-wrap gap-2 pb-2.5 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#198754] border border-emerald-100">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
                   <span className="material-symbols-outlined text-[18px]">psychology</span>
                 </div>
                 <div>
@@ -88,7 +88,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                   </p>
                 </div>
               </div>
-              <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold tracking-wide uppercase border border-emerald-200">
+              <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold tracking-wide uppercase border border-indigo-200">
                 Model: VK-Vision-Pro
               </span>
             </div>
@@ -97,7 +97,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
             <div className="space-y-2 p-3.5 rounded-lg bg-slate-50 border border-slate-200/60">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#198754]"></span>
+                  <span className="w-2 h-2 rounded-full bg-[#059669]"></span>
                   <span className="text-xs sm:text-sm font-bold text-slate-900">
                     Ngưỡng tin cậy đèn xanh (Auto-Post)
                   </span>
@@ -106,7 +106,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                   <span className="text-xs text-slate-500">
                     Tự động ghi sổ:
                   </span>
-                  <span className="text-sm font-bold text-[#198754] font-mono">
+                  <span className="text-sm font-bold text-[#059669] font-mono">
                     &gt; {sliderVal}%
                   </span>
                 </div>
@@ -124,11 +124,11 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                   value={sliderVal}
                   onChange={(e) => setSliderVal(Number(e.target.value))}
                   aria-label="Ngưỡng tin cậy đèn xanh"
-                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#198754]"
+                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#059669]"
                 />
                 <div className="flex justify-between text-[10px] text-slate-400 pt-1 font-medium">
                   <span>85% (Rộng)</span>
-                  <span className="font-bold text-[#198754]">95% (Chuẩn vận hành)</span>
+                  <span className="font-bold text-[#059669]">95% (Chuẩn vận hành)</span>
                   <span>99% (Khắt khe)</span>
                 </div>
               </div>
@@ -181,7 +181,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
             <div className="p-3.5 rounded-lg bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-slate-200/60">
               <div className="space-y-0.5 max-w-xl">
                 <div className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[#198754] text-[17px]">filter_alt</span>
+                  <span className="material-symbols-outlined text-indigo-600 text-[17px]">filter_alt</span>
                   <span className="text-xs sm:text-sm font-bold text-slate-900">
                     Bộ lọc chống trùng lặp song song (Duplicate Filter)
                   </span>
@@ -198,10 +198,10 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                   onChange={(e) => setDuplicateFilter(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-[#198754]"></div>
+                <div className="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-indigo-600"></div>
                 <span
                   className={`ml-2 text-xs font-bold ${
-                    duplicateFilter ? 'text-[#198754]' : 'text-slate-400'
+                    duplicateFilter ? 'text-indigo-600' : 'text-slate-400'
                   }`}
                 >
                   {duplicateFilter ? 'BẬT' : 'TẮT'}
@@ -243,9 +243,9 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                   type="text"
                   value={cronTime}
                   onChange={(e) => setCronTime(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-white rounded-lg text-xs text-slate-900 font-bold tracking-wide focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 border border-slate-200 shadow-xs"
+                  className="w-full px-2.5 py-1.5 bg-white rounded-lg text-xs text-slate-900 font-bold tracking-wide focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 border border-slate-200 shadow-xs"
                 />
-                <div className="flex items-center gap-1.5 text-[#198754] text-[10px] font-medium">
+                <div className="flex items-center gap-1.5 text-indigo-600 text-[10px] font-medium">
                   <span className="material-symbols-outlined text-[13px]">cloud_sync</span>
                   <span>Cloudflare Worker Edge Network phân luồng</span>
                 </div>
@@ -263,7 +263,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                     type="number"
                     value={rateLimit}
                     onChange={(e) => setRateLimit(Number(e.target.value))}
-                    className="w-20 px-2.5 py-1.5 bg-white rounded-lg text-xs text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 border border-slate-200 shadow-xs"
+                    className="w-20 px-2.5 py-1.5 bg-white rounded-lg text-xs text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 border border-slate-200 shadow-xs"
                   />
                   <span className="text-xs text-slate-500 font-semibold">
                     tin nhắn / giây
@@ -277,7 +277,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
           <div className="p-4 sm:p-5 rounded-xl bg-white shadow-xs border border-slate-200/80 space-y-3.5">
             <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#198754]">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
                   <span className="material-symbols-outlined text-[18px]">monitor_heart</span>
                 </div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
@@ -309,7 +309,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                   </span>
                 </div>
                 <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-[#198754] h-full rounded-full" style={{ width: '24%' }}></div>
+                  <div className="bg-indigo-600 h-full rounded-full" style={{ width: '24%' }}></div>
                 </div>
               </div>
 
@@ -363,7 +363,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
 
       {/* Floating notify */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-slate-900 text-white shadow-xl animate-bounce text-xs font-semibold">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-slate-900 text-white shadow-xl animate-in fade-in slide-in-from-bottom-2 text-xs font-semibold">
           <span className="material-symbols-outlined text-emerald-400 text-[18px]">
             check_circle
           </span>

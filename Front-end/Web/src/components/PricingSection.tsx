@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Rocket, Flame, ArrowRight, ShieldCheck, Coffee } from 'lucide-react';
+import { Check, Flame, ArrowRight, Coffee, Sparkles } from 'lucide-react';
 import { SpotlightCard } from './reactbits/SpotlightCard';
 import { Magnet } from './reactbits/Magnet';
 import { ShinyText } from './reactbits/ShinyText';
@@ -11,68 +11,79 @@ interface PricingSectionProps {
 
 export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter, onSelectPro }) => {
   return (
-    <section id="bang-gia" className="w-full py-20 px-4 md:px-8 max-w-[1280px] mx-auto">
+    <section id="bang-gia" className="w-full py-20 px-4 md:px-8 max-w-7xl mx-auto">
       {/* Section Header */}
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <span className="text-xs font-bold text-[#198754] uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-[#198754]/10 border border-[#198754]/20 inline-block">
-          Chi phí tối ưu cho mọi vựa & tiểu thương
+        <span className="text-xs font-bold text-[#B31F56] uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-rose-50 border border-rose-200/80 inline-flex items-center gap-1.5 shadow-2xs">
+          <Sparkles className="w-3.5 h-3.5 text-[#FF5C8D]" />
+          Chi phí tối ưu cho mọi vựa &amp; tiểu thương
         </span>
-        <h2 className="text-2xl sm:text-4xl font-extrabold text-[#191c1d] mt-3 tracking-tight">
-          Bảng Giá Minh Bạch - Đầu Tư Nhỏ, Lợi Ích Lớn
+        <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-4 tracking-tight max-w-2xl mx-auto">
+          Bảng Giá Minh Bạch — Đầu Tư Nhỏ, Lợi Ích Lớn
         </h2>
-        <p className="text-sm sm:text-base text-[#584045] mt-2.5 leading-relaxed">
+        <p className="text-sm sm:text-base text-slate-600 mt-2.5 leading-relaxed">
           Bắt đầu hoàn toàn miễn phí. Chỉ nâng cấp khi hoạt động buôn bán của bạn mở rộng quy mô.
         </p>
       </div>
 
       {/* Pricing Cards Container */}
-      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
         {/* Package 1: STARTER */}
         <SpotlightCard
-          spotlightColor="rgba(25, 135, 84, 0.1)"
-          className="p-8 rounded-3xl glass-card border border-[#e1e3e4] shadow-sm flex flex-col justify-between hover:shadow-lg transition-all"
+          spotlightColor="rgba(255, 92, 141, 0.08)"
+          className="p-8 sm:p-10 rounded-3xl glass-card border border-slate-200/90 shadow-xs flex flex-col justify-between hover:shadow-lg transition-all"
         >
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex flex-col">
-                <span className="text-xs font-bold text-[#584045] uppercase tracking-wider">
-                  CƠ BẢN
-                </span>
-                <h3 className="text-2xl font-black text-[#191c1d] tracking-tight">STARTER</h3>
-              </div>
-              <span className="px-3 py-1 rounded-full bg-[#e7e8e9] text-xs font-bold text-[#191c1d]">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                CƠ BẢN
+              </span>
+              <span className="px-3 py-1 rounded-full bg-slate-100 text-xs font-bold text-slate-600 border border-slate-200">
                 Miễn Phí Vĩnh Viễn
               </span>
             </div>
 
-            <div className="mb-6 flex items-baseline gap-1.5">
-              <span className="text-4xl sm:text-5xl font-black text-[#191c1d] tracking-tight">
-                0 đ
-              </span>
-              <span className="text-xs text-[#584045]">/ tháng</span>
-            </div>
+            <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
+              STARTER
+            </h3>
 
-            <p className="text-xs sm:text-sm text-[#584045] mb-6 pb-4 border-b border-[#e1e3e4]">
-              Phù hợp tiểu thương mới kinh doanh, sạp rau củ nhỏ bắt đầu số hóa sổ sách bán lẻ.
+            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mb-6">
+              Phù hợp tiểu thương mới kinh doanh, sạp rau củ nhỏ số hóa sổ sách bán lẻ.
             </p>
 
-            <ul className="flex flex-col gap-3.5 text-xs sm:text-sm text-[#191c1d]">
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-[#198754] shrink-0" />
+            <div className="py-5 border-y border-slate-200/80 my-6 flex items-baseline">
+              <span className="text-5xl font-black text-slate-900 tracking-tight font-sans">
+                0
+              </span>
+              <span className="text-2xl font-bold text-slate-600 ml-1.5">đ</span>
+              <span className="text-sm text-slate-500 ml-2 font-medium">/ tháng</span>
+            </div>
+
+            <ul className="flex flex-col gap-4 text-xs sm:text-sm text-slate-700">
+              <li className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-rose-50 text-[#B31F56] flex items-center justify-center shrink-0 border border-rose-200/70">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
                 <span>
-                  <strong>Quét tối đa 50</strong> hóa đơn AI / tháng
+                  <strong>Quét tối đa 30</strong> hóa đơn AI / tháng
                 </span>
               </li>
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-[#198754] shrink-0" />
+              <li className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-rose-50 text-[#B31F56] flex items-center justify-center shrink-0 border border-rose-200/70">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
                 <span>Nhập liệu thủ công lùi ngày <strong>không giới hạn</strong></span>
               </li>
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-[#198754] shrink-0" />
+              <li className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-rose-50 text-[#B31F56] flex items-center justify-center shrink-0 border border-rose-200/70">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
                 <span>Báo cáo dòng tiền cơ bản trên ứng dụng</span>
               </li>
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-[#198754] shrink-0" />
+              <li className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-rose-50 text-[#B31F56] flex items-center justify-center shrink-0 border border-rose-200/70">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
                 <span>Cơ chế Đèn giao thông Xanh/Vàng/Đỏ</span>
               </li>
             </ul>
@@ -81,87 +92,99 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
           <div className="mt-8">
             <button
               onClick={onSelectStarter}
-              className="w-full py-3.5 rounded-xl bg-white hover:bg-[#e7e8e9] text-[#191c1d] text-sm font-bold flex items-center justify-center transition-colors border border-[#e1e3e4]"
+              className="w-full py-3.5 px-6 rounded-2xl bg-slate-100 hover:bg-slate-200/90 text-slate-900 text-sm font-bold flex items-center justify-center transition-colors border border-slate-200 cursor-pointer active:scale-95"
             >
-              Bắt Đầu Miễn Phí Ngay
+              Bắt Đầu Miễn Phí (0đ)
             </button>
           </div>
         </SpotlightCard>
 
         {/* Package 2: PRO Nâng Cấp */}
-        <div className="p-8 rounded-3xl bg-[#24282a] text-[#f0f1f2] border border-white/10 shadow-2xl flex flex-col justify-between relative transform md:-translate-y-2 hover:-translate-y-3 transition-transform">
+        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-100 border border-rose-500/30 shadow-[0_20px_50px_rgba(15,23,42,0.8),0_0_35px_rgba(255,92,141,0.12)] ring-1 ring-rose-500/20 flex flex-col justify-between relative transform md:-translate-y-2 hover:-translate-y-3 transition-transform">
           {/* Top Pill Highlight */}
-          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-[#198754] text-white text-xs font-black tracking-wider uppercase shadow-md flex items-center gap-1.5 whitespace-nowrap">
-            <Flame className="w-4 h-4 text-amber-300 fill-amber-300" />
-            <ShinyText text="HOT / KHUYÊN DÙNG" className="text-white" />
+          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] text-white text-[11px] font-black tracking-wider uppercase shadow-md shadow-rose-500/30 border border-white/20 flex items-center gap-1.5 whitespace-nowrap">
+            <Flame className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+            <ShinyText text="PHỔ BIẾN / KHUYÊN DÙNG" className="text-white" />
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="flex flex-col">
-                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                  CHUYÊN NGHIỆP • CHỈ BẰNG 3 LY CÀ PHÊ <Coffee className="w-3.5 h-3.5" />
-                </span>
-                <h3 className="text-2xl font-black text-white tracking-tight">GÓI PRO</h3>
-              </div>
-              <span className="px-3 py-1 rounded-full bg-[#b31f56] text-white text-xs font-black shadow-sm">
-                TIẾT KIỆM 50%
+            {/* Header with Title and Subtitle */}
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Coffee className="w-3.5 h-3.5 text-rose-400" />
+                <span>Chỉ 3 ly cà phê</span>
+              </span>
+              <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold shrink-0">
+                Tiết kiệm 85% giờ làm
               </span>
             </div>
 
-            <div className="mb-6 flex items-baseline gap-1.5">
-              <span className="text-4xl sm:text-5xl font-black text-emerald-400 tracking-tight">
-                99.000 đ
-              </span>
-              <span className="text-xs text-white/60">/ tháng</span>
-            </div>
+            <h3 className="text-3xl font-black text-white tracking-tight mb-2">
+              GÓI PRO
+            </h3>
 
-            <p className="text-xs sm:text-sm text-white/70 mb-6 pb-4 border-b border-white/10">
-              Tất cả những gì một chủ vựa, F&B & hộ kinh doanh cần để rảnh tay ngủ ngon lúc 22:00.
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-6">
+              Tất cả những gì chủ vựa, F&amp;B &amp; hộ kinh doanh cần để ngủ ngon lúc 22:00.
             </p>
 
-            <ul className="flex flex-col gap-3.5 text-xs sm:text-sm text-white/90">
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <div className="py-5 border-y border-slate-800 my-6 flex items-baseline">
+              <span className="text-5xl font-black text-white tracking-tight font-sans">
+                99.000
+              </span>
+              <span className="text-2xl font-bold text-[#FF5C8D] ml-1.5">đ</span>
+              <span className="text-sm text-slate-400 ml-2 font-medium">/ tháng</span>
+            </div>
+
+            <ul className="flex flex-col gap-4 text-xs sm:text-sm text-slate-200">
+              <li className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-rose-500/20 text-[#FF5C8D] flex items-center justify-center shrink-0 border border-rose-500/30">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
                 <span>
                   <strong>Không giới hạn</strong> số lượng quét hóa đơn AI
                 </span>
               </li>
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <li className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-rose-500/20 text-[#FF5C8D] flex items-center justify-center shrink-0 border border-rose-500/30">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
                 <span>
-                  <strong>Tự động gửi báo cáo Telegram & Email lúc 22h00</strong>
+                  <strong>Tự động gửi báo cáo Telegram</strong> lúc 22h00
                 </span>
               </li>
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <li className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-rose-500/20 text-[#FF5C8D] flex items-center justify-center shrink-0 border border-rose-500/30">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
                 <span>
-                  <strong>Lưới lọc 2 chiều tự động gạch trùng POS</strong>
+                  <strong>Lưới lọc 2 chiều</strong> tự động gạch trùng POS
                 </span>
               </li>
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span>Phân tích biểu đồ dòng tiền chuyên sâu & Cảnh báo chi phí</span>
+              <li className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-rose-500/20 text-[#FF5C8D] flex items-center justify-center shrink-0 border border-rose-500/30">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
+                <span>
+                  <strong>Xuất file Excel &amp; PDF</strong> chuẩn kế toán thuế
+                </span>
               </li>
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span>Xuất file Excel (.xlsx) bảng tính 1-chạm</span>
-              </li>
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span>Hỗ trợ kỹ thuật ưu tiên 24/7 trực tiếp</span>
+              <li className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-rose-500/20 text-[#FF5C8D] flex items-center justify-center shrink-0 border border-rose-500/30">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
+                <span>Ưu tiên đường truyền bóc tách AI siêu tốc (&lt; 1.2s)</span>
               </li>
             </ul>
           </div>
 
           <div className="mt-8">
-            <Magnet padding={20} magnetStrength={0.2} className="w-full">
+            <Magnet padding={20} magnetStrength={0.2}>
               <button
                 onClick={onSelectPro}
-                className="w-full py-4 rounded-xl bg-[#198754] hover:bg-[#146c43] text-white text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg shadow-[#198754]/30"
+                className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#B31F56] via-[#E11D48] to-[#FF5C8D] hover:opacity-95 text-white text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-rose-500/30 hover:shadow-rose-500/50 cursor-pointer active:scale-95 group"
               >
-                <Rocket className="w-4 h-4" />
-                <span>Đăng ký Gói PRO (99.000 đ)</span>
+                <span>Nâng Cấp Pro</span>
+                <ArrowRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" />
               </button>
             </Magnet>
           </div>

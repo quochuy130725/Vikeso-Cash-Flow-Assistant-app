@@ -41,7 +41,7 @@ export const PlanModal: React.FC<PlanModalProps> = ({ plan, onClose, onSuccess }
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#24282a]">
           <div className="flex items-center gap-2">
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold ${
-              plan === 'pro' ? 'bg-[#198754] text-white shadow-md' : 'bg-white/10 text-white'
+              plan === 'pro' ? 'bg-[#059669] text-white shadow-md' : 'bg-white/10 text-white'
             }`}>
               {plan === 'pro' ? <Rocket className="w-4 h-4" /> : <Zap className="w-4 h-4 text-emerald-400" />}
             </div>
@@ -73,7 +73,7 @@ export const PlanModal: React.FC<PlanModalProps> = ({ plan, onClose, onSuccess }
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
                   placeholder="VD: Vựa Sầu Riêng Ba Cường"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#198754] transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#059669] transition-colors"
                 />
               </div>
 
@@ -87,7 +87,7 @@ export const PlanModal: React.FC<PlanModalProps> = ({ plan, onClose, onSuccess }
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="VD: 0988 888 999"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#198754] transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#059669] transition-colors"
                 />
               </div>
 
@@ -107,7 +107,7 @@ export const PlanModal: React.FC<PlanModalProps> = ({ plan, onClose, onSuccess }
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md bg-[#198754] hover:bg-[#146c43] text-white shadow-[#198754]/30 active:scale-95"
+                className="w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md bg-[#059669] hover:bg-[#047857] text-white shadow-[#059669]/30 active:scale-95"
               >
                 {isSubmitting ? (
                   <span>Đang thiết lập hệ thống...</span>

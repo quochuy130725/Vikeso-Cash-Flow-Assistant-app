@@ -61,7 +61,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
       {/* Top Header with Embedded Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80">
         <div>
-          <div className="flex items-center gap-1.5 text-[#198754] font-bold text-xs uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-1.5 text-[#059669] font-bold text-xs uppercase tracking-wider mb-1">
             <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
             <span>Thiết Lập Hệ Thống</span>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-200 ml-2">
@@ -91,7 +91,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-5 py-2 rounded-xl bg-[#198754] hover:bg-[#146c43] text-white shadow-sm hover:shadow transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            className="px-5 py-2 rounded-xl bg-[#059669] hover:bg-[#047857] text-white shadow-sm hover:shadow transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             type="button"
           >
             <span className={`material-symbols-outlined text-[16px] ${saving ? 'animate-spin' : ''}`}>
@@ -112,7 +112,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                 <span className="material-symbols-outlined text-[14px]">verified</span>
                 {currentUser?.subscriptionPlan === 'FREE' ? 'Gói Miễn Phí (FREE)' : (currentUser?.subscriptionPlan || 'Gói Chuyên Nghiệp (PRO)')}
               </span>
-              <span className="text-white text-lg font-bold font-mono">
+              <span className="text-white text-lg font-bold font-mono font-tabular">
                 {currentUser?.subscriptionPlan === 'FREE' ? '0 đ' : '99.000 đ'} <span className="text-xs font-normal text-slate-400">/ tháng</span>
               </span>
               <span className="px-2 py-0.5 rounded bg-white/10 text-slate-300 text-[11px] font-medium border border-white/10">
@@ -174,7 +174,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#198754]">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#059669]">
                   <span className="material-symbols-outlined text-[20px]">badge</span>
                 </div>
                 <div>
@@ -186,7 +186,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                   </p>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 text-[#198754] text-xs bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-bold">
+              <span className="inline-flex items-center gap-1 text-[#059669] text-xs bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-bold">
                 <span className="material-symbols-outlined text-[14px]">check_circle</span>
                 Đã xác thực CCCD
               </span>
@@ -207,7 +207,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                       type="text"
                       value={storeName}
                       onChange={(e) => setStoreName(e.target.value)}
-                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#198754]/20 focus:border-[#198754] border border-slate-200 transition-all font-medium"
+                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#059669]/20 focus:border-[#059669] border border-slate-200 transition-all font-medium"
                     />
                   </div>
                 </div>
@@ -225,7 +225,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                       type="text"
                       value={ownerName}
                       onChange={(e) => setOwnerName(e.target.value)}
-                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#198754]/20 focus:border-[#198754] border border-slate-200 transition-all font-medium"
+                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#059669]/20 focus:border-[#059669] border border-slate-200 transition-all font-medium"
                     />
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#198754]/20 focus:border-[#198754] border border-slate-200 transition-all font-mono"
+                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#059669]/20 focus:border-[#059669] border border-slate-200 transition-all font-mono"
                     />
                   </div>
                 </div>
@@ -263,7 +263,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                       type="text"
                       value={taxCode}
                       onChange={(e) => setTaxCode(e.target.value)}
-                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm font-mono tracking-wider focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#198754]/20 focus:border-[#198754] border border-slate-200 transition-all font-bold"
+                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm font-mono tracking-wider focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#059669]/20 focus:border-[#059669] border border-slate-200 transition-all font-bold"
                     />
                   </div>
                 </div>
@@ -282,7 +282,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                     type="text"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#198754]/20 focus:border-[#198754] border border-slate-200 transition-all font-medium"
+                    className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#059669]/20 focus:border-[#059669] border border-slate-200 transition-all font-medium"
                   />
                 </div>
               </div>
@@ -299,7 +299,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                     id="business_sector"
                     value={sector}
                     onChange={(e) => setSector(e.target.value)}
-                    className="w-full h-10 pl-9 pr-9 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#198754]/20 focus:border-[#198754] border border-slate-200 transition-all appearance-none cursor-pointer font-medium"
+                    className="w-full h-10 pl-9 pr-9 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#059669]/20 focus:border-[#059669] border border-slate-200 transition-all appearance-none cursor-pointer font-medium"
                   >
                     <option value="retail_grocery">Bán lẻ hàng tạp hóa &amp; tiêu dùng gia đình</option>
                     <option value="fb_restaurant">Dịch vụ ăn uống, nhà hàng, giải khát</option>
@@ -318,7 +318,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           {/* Card 2: Cấu Hình Máy Tính Tiền & Thiết Bị Đồng Bộ */}
           <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#198754]">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#059669]">
                 <span className="material-symbols-outlined text-[20px]">hub</span>
               </div>
               <div>
@@ -335,7 +335,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
               {/* Device 1 */}
               <div className="p-3.5 rounded-xl bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-slate-200/70">
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center text-[#198754] shadow-xs shrink-0 border border-slate-200">
+                  <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center text-[#059669] shadow-xs shrink-0 border border-slate-200">
                     <span className="material-symbols-outlined text-[20px]">point_of_sale</span>
                   </div>
                   <div>
@@ -403,7 +403,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                       onChange={(e) => setAutoMerge(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#198754]"></div>
+                    <div className="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#059669]"></div>
                   </label>
                 </div>
               </div>
@@ -423,7 +423,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                     </p>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-[#198754] px-2.5 py-1 rounded bg-emerald-50 border border-emerald-200">
+                <span className="text-xs font-bold text-[#059669] px-2.5 py-1 rounded bg-emerald-50 border border-emerald-200">
                   BẬT
                 </span>
               </div>
@@ -436,7 +436,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           {/* Card 1: Cơ Sở Hoạt Động */}
           <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-4">
             <div className="flex items-center gap-2 text-slate-900 pb-2 border-b border-slate-100">
-              <span className="material-symbols-outlined text-[#198754] text-[20px]">store</span>
+              <span className="material-symbols-outlined text-[#059669] text-[20px]">store</span>
               <h3 className="text-base font-bold">Cơ Sở Hoạt Động</h3>
             </div>
 
@@ -464,7 +464,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
               </div>
               <div className="flex justify-between pt-2">
                 <span className="text-slate-500">Tổng số hóa đơn tháng:</span>
-                <span className="font-bold text-[#198754] font-mono">1.482 đơn</span>
+                <span className="font-bold text-[#059669] font-mono">1.482 đơn</span>
               </div>
               <div className="flex justify-between pt-2">
                 <span className="text-slate-500">Cán bộ phụ trách thuế:</span>
@@ -483,7 +483,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
             <div className="space-y-2.5">
               <div className="p-3 rounded-xl bg-slate-50 flex items-center justify-between border border-slate-200/70">
                 <div className="flex items-center gap-2.5">
-                  <span className="material-symbols-outlined text-[#198754] text-[18px]">
+                  <span className="material-symbols-outlined text-[#059669] text-[18px]">
                     phone_android
                   </span>
                   <div className="flex flex-col">
@@ -495,7 +495,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                     </span>
                   </div>
                 </div>
-                <span className="text-[11px] text-[#198754] font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                <span className="text-[11px] text-[#059669] font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                   Thiết bị chính
                 </span>
               </div>
@@ -520,7 +520,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
 
             <button
               onClick={() => alert('Mở popup đổi mật khẩu quản trị bảo mật 2 lớp...')}
-              className="w-full text-center text-xs font-bold text-[#198754] hover:underline pt-1 cursor-pointer"
+              className="w-full text-center text-xs font-bold text-[#059669] hover:underline pt-1 cursor-pointer"
               type="button"
             >
               Đổi mật khẩu cổng quản trị
@@ -560,7 +560,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2 rounded-xl bg-[#198754] hover:bg-[#146c43] text-white shadow-sm hover:shadow transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            className="px-6 py-2 rounded-xl bg-[#059669] hover:bg-[#047857] text-white shadow-sm hover:shadow transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             type="button"
           >
             <span className={`material-symbols-outlined text-[16px] ${saving ? 'animate-spin' : ''}`}>
@@ -573,7 +573,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
 
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#198754] text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-bounce">
+        <div className="fixed bottom-6 right-6 z-50 bg-[#059669] text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
           <span className="material-symbols-outlined text-[20px]">check_circle</span>
           <span className="text-xs sm:text-sm font-bold">{toastMessage}</span>
         </div>
