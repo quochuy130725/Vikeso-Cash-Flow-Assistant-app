@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   // ── Cài đặt thông báo (Notification Settings) ─────────
   notificationSettings: {
     receiveEmail: { type: Boolean, default: true },
-    receiveTelegram: { type: Boolean, default: true },
+    receiveTelegram: { type: Boolean, default: false }, // Chỉ bật khi đã liên kết Telegram
     receiveInApp: { type: Boolean, default: true }
   }
 }, { timestamps: true });
