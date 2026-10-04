@@ -78,7 +78,7 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               onExportExcel();
               handleDownload('bảng kê Excel thuế đầy đủ');
             }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#198754] hover:bg-[#146c43] text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#059669] hover:bg-[#047857] text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer"
             type="button"
           >
             <span className="material-symbols-outlined text-[18px]">table_view</span>
@@ -154,12 +154,12 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 Tổng Tiền Vào Trong Kỳ
               </span>
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#198754] flex items-center justify-center border border-emerald-100">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#059669] flex items-center justify-center border border-emerald-100">
                 <span className="material-symbols-outlined text-[18px]">arrow_downward</span>
               </div>
             </div>
             <div className="space-y-1">
-              <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono tracking-tight">
+              <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
                 384.500.000 <span className="text-xs font-semibold text-slate-400">đ</span>
               </div>
               <div className="flex items-center gap-2">
@@ -189,7 +189,7 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               </div>
             </div>
             <div className="space-y-1">
-              <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono tracking-tight">
+              <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
                 298.150.000 <span className="text-xs font-semibold text-slate-400">đ</span>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -213,12 +213,12 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 Dòng Tiền Ròng Tích Lũy
               </span>
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#198754] flex items-center justify-center border border-emerald-100">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
                 <span className="material-symbols-outlined text-[18px]">account_balance</span>
               </div>
             </div>
             <div className="space-y-1">
-              <div className="text-2xl sm:text-3xl font-extrabold text-[#198754] font-mono tracking-tight">
+              <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600 font-mono font-tabular tracking-tight">
                 +86.350.000 <span className="text-xs font-semibold text-slate-400">đ</span>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -231,7 +231,7 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
           </div>
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <span>Tỷ lệ tích lũy: Đạt KH</span>
-            <span className="font-bold text-[#198754]">Khả năng tái vốn tốt</span>
+            <span className="font-bold text-emerald-600">Khả năng tái vốn tốt</span>
           </div>
         </div>
       </section>
@@ -256,7 +256,7 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-[#198754]"></span>
+                <span className="w-3 h-3 rounded bg-[#059669]"></span>
                 <span className="text-xs font-semibold text-slate-700">Tiền vào</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -306,10 +306,10 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               <text fill="#94a3b8" fontSize="10" fontWeight="500" textAnchor="end" x="34" y="174">0</text>
 
               {/* Week 1: In 85M (y=63), Out 68M (y=85) */}
-              <rect fill="#198754" height="107" rx="4" width="34" x="90" y="63" className="transition-all hover:opacity-90 cursor-pointer">
+              <rect fill="#059669" height="107" rx="4" width="34" x="90" y="63" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 1 Tiền vào: 85.000.000 đ</title>
               </rect>
-              <text fill="#198754" fontSize="10" fontWeight="700" textAnchor="middle" x="107" y="55">85M</text>
+              <text fill="#059669" fontSize="10" fontWeight="700" textAnchor="middle" x="107" y="55">85M</text>
 
               <rect fill="#ef4444" height="85" rx="4" width="34" x="130" y="85" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 1 Tiền ra: 68.000.000 đ</title>
@@ -318,10 +318,10 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               <text fill="#475569" fontSize="11" fontWeight="600" textAnchor="middle" x="127" y="188">Tuần 1</text>
 
               {/* Week 2: In 92M (y=55), Out 74M (y=77) */}
-              <rect fill="#198754" height="115" rx="4" width="34" x="220" y="55" className="transition-all hover:opacity-90 cursor-pointer">
+              <rect fill="#059669" height="115" rx="4" width="34" x="220" y="55" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 2 Tiền vào: 92.000.000 đ</title>
               </rect>
-              <text fill="#198754" fontSize="10" fontWeight="700" textAnchor="middle" x="237" y="47">92M</text>
+              <text fill="#059669" fontSize="10" fontWeight="700" textAnchor="middle" x="237" y="47">92M</text>
 
               <rect fill="#ef4444" height="93" rx="4" width="34" x="260" y="77" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 2 Tiền ra: 74.000.000 đ</title>
@@ -330,10 +330,10 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               <text fill="#475569" fontSize="11" fontWeight="600" textAnchor="middle" x="257" y="188">Tuần 2</text>
 
               {/* Week 3: In 104M (y=40), Out 81M (y=69) */}
-              <rect fill="#198754" height="130" rx="4" width="34" x="350" y="40" className="transition-all hover:opacity-90 cursor-pointer">
+              <rect fill="#059669" height="130" rx="4" width="34" x="350" y="40" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 3 Tiền vào: 104.000.000 đ</title>
               </rect>
-              <text fill="#198754" fontSize="10" fontWeight="700" textAnchor="middle" x="367" y="32">104M</text>
+              <text fill="#059669" fontSize="10" fontWeight="700" textAnchor="middle" x="367" y="32">104M</text>
 
               <rect fill="#ef4444" height="101" rx="4" width="34" x="390" y="69" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 3 Tiền ra: 81.000.000 đ</title>
@@ -342,10 +342,10 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               <text fill="#475569" fontSize="11" fontWeight="600" textAnchor="middle" x="387" y="188">Tuần 3</text>
 
               {/* Week 4: In 103.5M (y=41), Out 75.15M (y=76) */}
-              <rect fill="#198754" height="129" rx="4" width="34" x="480" y="41" className="transition-all hover:opacity-90 cursor-pointer">
+              <rect fill="#059669" height="129" rx="4" width="34" x="480" y="41" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 4 Tiền vào: 103.500.000 đ</title>
               </rect>
-              <text fill="#198754" fontSize="10" fontWeight="700" textAnchor="middle" x="497" y="33">103.5M</text>
+              <text fill="#059669" fontSize="10" fontWeight="700" textAnchor="middle" x="497" y="33">103.5M</text>
 
               <rect fill="#ef4444" height="94" rx="4" width="34" x="520" y="76" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 4 Tiền ra: 75.150.000 đ</title>
@@ -541,10 +541,10 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
                     1.5% (1.0% GTGT + 0.5% TNCN)
                   </span>
                 </td>
-                <td className="py-4 px-6 text-right font-mono font-bold text-slate-900 text-sm">
+                <td className="py-4 px-6 text-right font-mono font-tabular font-bold text-slate-900 text-sm">
                   269.150.000 đ
                 </td>
-                <td className="py-4 px-6 text-right font-mono font-bold text-rose-600 text-sm">
+                <td className="py-4 px-6 text-right font-mono font-tabular font-bold text-rose-600 text-sm">
                   4.037.250 đ
                 </td>
                 <td className="py-4 px-6 text-center">
@@ -571,10 +571,10 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
                     1.0% (Phân phối sỉ đại lý)
                   </span>
                 </td>
-                <td className="py-4 px-6 text-right font-mono font-bold text-slate-900 text-sm">
+                <td className="py-4 px-6 text-right font-mono font-tabular font-bold text-slate-900 text-sm">
                   115.350.000 đ
                 </td>
-                <td className="py-4 px-6 text-right font-mono font-bold text-rose-600 text-sm">
+                <td className="py-4 px-6 text-right font-mono font-tabular font-bold text-rose-600 text-sm">
                   1.153.500 đ
                 </td>
                 <td className="py-4 px-6 text-center">
@@ -590,10 +590,10 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
                 <td colSpan={3} className="py-4 px-6 text-slate-900 font-bold text-sm">
                   Tổng Cộng Doanh Thu &amp; Thuế Tạm Tính Toàn Cửa Hàng
                 </td>
-                <td className="py-4 px-6 text-right font-mono font-extrabold text-[#198754] text-base">
+                <td className="py-4 px-6 text-right font-mono font-tabular font-extrabold text-emerald-600 text-base">
                   384.500.000 đ
                 </td>
-                <td className="py-4 px-6 text-right font-mono font-extrabold text-rose-600 text-base">
+                <td className="py-4 px-6 text-right font-mono font-tabular font-extrabold text-rose-600 text-base">
                   5.190.750 đ
                 </td>
                 <td className="py-4 px-6 text-center">
@@ -629,11 +629,11 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
             className="p-4 rounded-xl bg-slate-50 hover:bg-slate-100/80 transition-all flex flex-col justify-between space-y-3 group cursor-pointer border border-slate-200/80 shadow-xs hover:shadow-sm"
           >
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#198754] flex items-center justify-center shrink-0 border border-emerald-100 group-hover:bg-[#198754] group-hover:text-white transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#059669] flex items-center justify-center shrink-0 border border-emerald-100 group-hover:bg-[#059669] group-hover:text-white transition-colors">
                 <span className="material-symbols-outlined text-[20px]">description</span>
               </div>
               <div className="space-y-0.5">
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#198754] transition-colors">
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#059669] transition-colors">
                   Bảng Kê Thu Chi Hàng Ngày (Excel)
                 </h3>
                 <p className="text-xs text-slate-500 leading-relaxed">
@@ -643,7 +643,7 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
             </div>
             <div className="flex items-center justify-between pt-2.5 text-xs text-slate-400 border-t border-slate-200/60 font-medium">
               <span>1.2 MB (.xlsx)</span>
-              <span className="inline-flex items-center gap-1 text-[#198754] font-bold group-hover:underline">
+              <span className="inline-flex items-center gap-1 text-[#059669] font-bold group-hover:underline">
                 Tải file <span className="material-symbols-outlined text-[15px]">download</span>
               </span>
             </div>
@@ -705,7 +705,7 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
 
       {/* Floating feedback toast */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl bg-slate-900 text-white shadow-xl flex items-center gap-2 text-xs font-semibold animate-bounce">
+        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl bg-slate-900 text-white shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-bottom-2">
           <span className="material-symbols-outlined text-emerald-400 text-[18px]">check_circle</span>
           <span>{toastMessage}</span>
         </div>

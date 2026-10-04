@@ -75,7 +75,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
 
           <button
             onClick={() => alert('Xuất file nhật ký dòng tiền toàn nền tảng Excel (.xlsx)...')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#198754] hover:bg-[#146c43] text-white text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer shadow-indigo-600/20"
             type="button"
           >
             <span className="material-symbols-outlined text-[16px]">download</span>
@@ -98,7 +98,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono">
+              <span className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono font-tabular">
                 1.248
               </span>
               <span className="text-xs text-slate-500 font-semibold">
@@ -111,7 +111,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             </div>
           </div>
           <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
-            <div className="bg-[#198754] h-full rounded-full" style={{ width: '78%' }}></div>
+            <div className="bg-indigo-600 h-full rounded-full" style={{ width: '78%' }}></div>
           </div>
         </div>
 
@@ -127,7 +127,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono">
+              <span className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono font-tabular">
                 18
               </span>
               <span className="text-xs text-slate-500 font-semibold">
@@ -150,13 +150,13 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold">
               Doanh thu thuê bao (MRR)
             </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-[#198754] border border-emerald-100">
+            <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
               <span className="material-symbols-outlined text-[17px]">payments</span>
             </div>
           </div>
           <div>
             <div className="flex items-baseline gap-1">
-              <span className="text-xl sm:text-2xl font-extrabold text-[#198754] tracking-tight font-mono">
+              <span className="text-xl sm:text-2xl font-extrabold text-indigo-600 tracking-tight font-mono font-tabular">
                 84.051.000
               </span>
               <span className="text-xs text-slate-400 font-semibold">
@@ -168,7 +168,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             </div>
           </div>
           <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
-            <div className="bg-[#198754] h-full rounded-full" style={{ width: '68%' }}></div>
+            <div className="bg-indigo-600 h-full rounded-full" style={{ width: '68%' }}></div>
           </div>
         </div>
 
@@ -184,7 +184,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono">
+              <span className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono font-tabular">
                 68.0%
               </span>
               <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded">
@@ -250,10 +250,10 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50/80 p-2.5 rounded-lg border border-slate-100">
             <div className="flex flex-col">
               <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#198754]"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
                 Hợp lệ tự động
               </span>
-              <span className="text-sm font-extrabold text-[#198754]">4.666 (96.8%)</span>
+              <span className="text-sm font-extrabold text-indigo-600 font-tabular">4.666 (96.8%)</span>
               <span className="text-[9px] text-slate-400">&lt; 1.2s</span>
             </div>
             <div className="flex flex-col">
@@ -261,17 +261,17 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                 Ảnh mờ / Chờ soát
               </span>
-              <span className="text-sm font-extrabold text-amber-600">154 (3.2%)</span>
+              <span className="text-sm font-extrabold text-amber-600 font-tabular">154 (3.2%)</span>
               <span className="text-[9px] text-amber-600 font-medium">⚠️ Ca tối (20h-22h)</span>
             </div>
             <div className="flex flex-col">
               <span className="text-[10px] font-medium text-slate-500">Độ trễ trung bình</span>
-              <span className="text-sm font-extrabold text-slate-800">1.18 giây</span>
-              <span className="text-[9px] text-emerald-600 font-semibold">⚡ Nhanh hơn 14%</span>
+              <span className="text-sm font-extrabold text-slate-800 font-tabular">1.18 giây</span>
+              <span className="text-[9px] text-indigo-600 font-semibold">⚡ Nhanh hơn 14%</span>
             </div>
             <div className="flex flex-col">
               <span className="text-[10px] font-medium text-slate-500">Đỉnh tải GPU</span>
-              <span className="text-sm font-extrabold text-purple-700">84%</span>
+              <span className="text-sm font-extrabold text-purple-700 font-tabular">84%</span>
               <span className="text-[9px] text-slate-500">Khung 11h-13h &amp; 19h-21h</span>
             </div>
           </div>
@@ -285,9 +285,9 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             >
               <defs>
                 <linearGradient id="areaGradientAdmin" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#198754" stopOpacity="0.25"></stop>
-                  <stop offset="85%" stopColor="#198754" stopOpacity="0.04"></stop>
-                  <stop offset="100%" stopColor="#198754" stopOpacity="0.0"></stop>
+                  <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.25"></stop>
+                  <stop offset="85%" stopColor="#4f46e5" stopOpacity="0.04"></stop>
+                  <stop offset="100%" stopColor="#4f46e5" stopOpacity="0.0"></stop>
                 </linearGradient>
                 <linearGradient id="errorGradientAdmin" x1="0" x2="0" y1="0" y2="1">
                   <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.22"></stop>
@@ -315,7 +315,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
               <polyline
                 fill="none"
                 points="0,165 50,150 100,155 150,125 200,135 250,105 300,90 350,110 400,75 450,65 500,80 550,45 600,40 650,25 700,18"
-                stroke="#198754"
+                stroke="#4f46e5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth="3.2"
@@ -332,9 +332,9 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
               ></polyline>
 
               {/* Active Data Points */}
-              <circle cx="300" cy="90" fill="#ffffff" r="4.5" stroke="#198754" strokeWidth="2.5"></circle>
-              <circle cx="550" cy="45" fill="#ffffff" r="4.5" stroke="#198754" strokeWidth="2.5"></circle>
-              <circle cx="700" cy="18" fill="#b31f56" r="5.5" stroke="#ffffff" strokeWidth="2.5"></circle>
+              <circle cx="300" cy="90" fill="#ffffff" r="4.5" stroke="#4f46e5" strokeWidth="2.5"></circle>
+              <circle cx="550" cy="45" fill="#ffffff" r="4.5" stroke="#4f46e5" strokeWidth="2.5"></circle>
+              <circle cx="700" cy="18" fill="#4f46e5" r="5.5" stroke="#ffffff" strokeWidth="2.5"></circle>
 
               {/* Error points */}
               <circle cx="550" cy="170" fill="#ffffff" r="3.5" stroke="#f59e0b" strokeWidth="2"></circle>
@@ -348,7 +348,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             <span>Ngày 14 (3.100 ảnh)</span>
             <span>Ngày 21 (3.920 ảnh)</span>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-[#198754]">Hôm nay: 4.666 thành công</span>
+              <span className="font-bold text-indigo-600">Hôm nay: 4.666 thành công</span>
               <span className="text-slate-300">•</span>
               <span className="font-bold text-amber-600">154 ảnh mờ</span>
             </div>
@@ -478,17 +478,17 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                   <span className="material-symbols-outlined text-[14px] text-emerald-600">trending_up</span>
                   142 hộ Free chạm 25+ bill
                 </div>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded">
+                <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-1.5 py-0.2 rounded">
                   Tiềm năng cao
                 </span>
               </div>
-              <p className="text-[10px] text-emerald-800 leading-tight">
+              <p className="text-[10px] text-indigo-900 leading-tight">
                 Giao dịch đều đặn, sẵn sàng nâng cấp 99k/tháng.
               </p>
               <button
                 type="button"
                 onClick={() => alert('Đã gửi voucher ưu đãi giảm 20% gói Pro tháng đầu tới 142 hộ tiềm năng!')}
-                className="w-full py-1 px-2 rounded-md bg-[#198754] hover:bg-[#146c43] text-white text-[11px] font-bold transition-colors cursor-pointer flex items-center justify-center gap-1 shadow-xs"
+                className="w-full py-1 px-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold transition-colors cursor-pointer flex items-center justify-center gap-1 shadow-xs"
               >
                 <span className="material-symbols-outlined text-[12px]">loyalty</span>
                 Gửi ưu đãi kích hoạt Pro (142 hộ)
@@ -521,7 +521,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Tìm tên chủ, SĐT, cửa hàng..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs text-slate-900 bg-slate-50 rounded-lg font-medium placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-emerald-500/30 focus:border-emerald-500 border border-slate-200 transition-all shadow-xs"
+              className="w-full pl-8 pr-3 py-1.5 text-xs text-slate-900 bg-slate-50 rounded-lg font-medium placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500/30 focus:border-indigo-500 border border-slate-200 transition-all shadow-xs"
             />
           </div>
         </div>

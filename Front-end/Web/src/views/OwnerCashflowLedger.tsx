@@ -133,7 +133,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
 
           <button
             onClick={onDownloadExcel}
-            className="inline-flex items-center gap-2 bg-[#198754] hover:bg-[#146c43] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:shadow transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm shadow-emerald-600/20 hover:shadow transition-all cursor-pointer"
             type="button"
           >
             <span className="material-symbols-outlined text-[18px]">file_download</span>
@@ -182,8 +182,8 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
               </div>
             </div>
             <div>
-              <div className="text-3xl font-extrabold text-[#198754] tracking-tight">
-                +15.450.000 <span className="text-lg font-semibold text-[#198754]">đ</span>
+              <div className="text-3xl font-extrabold text-emerald-600 tracking-tight font-tabular">
+                +15.450.000 <span className="text-lg font-semibold text-emerald-600">đ</span>
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-bold border border-emerald-100">
@@ -195,7 +195,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
               </div>
             </div>
             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-              <div className="bg-[#198754] h-full w-[78%] rounded-full"></div>
+              <div className="bg-emerald-600 h-full w-[78%] rounded-full"></div>
             </div>
           </div>
 
@@ -205,20 +205,20 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
               <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
                 Tiền ra hôm nay
               </span>
-              <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-[#b31f56] border border-rose-100 shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600 border border-rose-100 shadow-xs">
                 <span className="material-symbols-outlined text-[22px]">arrow_downward</span>
               </div>
             </div>
             <div>
-              <div className="text-3xl font-extrabold text-[#b31f56] tracking-tight">
-                -4.200.000 <span className="text-lg font-semibold text-[#b31f56]">đ</span>
+              <div className="text-3xl font-extrabold text-rose-600 tracking-tight font-tabular">
+                -4.200.000 <span className="text-lg font-semibold text-rose-600">đ</span>
               </div>
               <p className="text-xs text-slate-500 mt-2 truncate">
                 Nhập nước giải khát, tiền điện nước, xăng xe giao hàng
               </p>
             </div>
             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-              <div className="bg-[#b31f56] h-full w-[28%] rounded-full"></div>
+              <div className="bg-rose-500 h-full w-[28%] rounded-full"></div>
             </div>
           </div>
 
@@ -233,7 +233,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
               </div>
             </div>
             <div>
-              <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              <div className="text-3xl font-extrabold text-slate-900 tracking-tight font-tabular">
                 +11.250.000 <span className="text-lg font-semibold text-slate-900">đ</span>
               </div>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -274,11 +274,11 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-[#198754]"></span>
+                  <span className="w-3 h-3 rounded-full bg-emerald-600"></span>
                   <span className="text-xs font-semibold text-slate-700">Tiền Vào</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-[#b31f56]"></span>
+                  <span className="w-3 h-3 rounded-full bg-rose-500"></span>
                   <span className="text-xs font-semibold text-slate-700">Tiền Ra</span>
                 </div>
               </div>
@@ -296,7 +296,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                     onClick={() => setSelectedDayIndex(idx)}
                     className={`flex-1 flex flex-col items-center gap-2 h-full justify-end rounded-xl p-1.5 cursor-pointer transition-all ${
                       isSelected
-                        ? 'bg-emerald-50/80 ring-2 ring-[#198754] shadow-sm'
+                        ? 'bg-emerald-50/80 ring-2 ring-emerald-600 shadow-sm'
                         : 'hover:bg-slate-50'
                     }`}
                   >
@@ -305,12 +305,12 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                       {d.alert && (
                         <span
                           title={d.alert}
-                          className="w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center animate-bounce shadow-xs"
+                          className="w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center animate-in fade-in slide-in-from-bottom-2 shadow-xs"
                         >
                           !
                         </span>
                       )}
-                      <span className={`text-[10px] font-bold ${isSelected ? 'text-[#198754]' : 'text-slate-500'}`}>
+                      <span className={`text-[10px] font-bold font-tabular ${isSelected ? 'text-emerald-700' : 'text-slate-500'}`}>
                         {netFormatted}
                       </span>
                     </div>
@@ -318,12 +318,12 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                     {/* Dual Bars */}
                     <div className="w-full max-w-[42px] flex items-end justify-center gap-1.5 h-[65%]">
                       <div
-                        className="w-1/2 bg-[#198754] rounded-t-md transition-all shadow-xs"
+                        className="w-1/2 bg-emerald-600 rounded-t-md transition-all shadow-xs"
                         style={{ height: `${d.inH}%` }}
                         title={`Tiền vào: ${d.inAmount.toLocaleString('vi-VN')} đ`}
                       ></div>
                       <div
-                        className="w-1/2 bg-[#b31f56] rounded-t-md transition-all shadow-xs"
+                        className="w-1/2 bg-rose-500 rounded-t-md transition-all shadow-xs"
                         style={{ height: `${d.outH}%` }}
                         title={`Tiền ra: ${d.outAmount.toLocaleString('vi-VN')} đ`}
                       ></div>
@@ -331,7 +331,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
 
                     {/* Day & Date Labels */}
                     <div className="flex flex-col items-center text-center">
-                      <span className={`text-xs font-bold ${isSelected ? 'text-[#198754]' : 'text-slate-700'}`}>
+                      <span className={`text-xs font-bold ${isSelected ? 'text-emerald-700' : 'text-slate-700'}`}>
                         {d.day}
                       </span>
                       <span className="text-[10px] text-slate-400">
@@ -347,7 +347,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
             <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-2.5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[20px] text-[#198754]">
+                  <span className="material-symbols-outlined text-[20px] text-emerald-600">
                     insights
                   </span>
                   <span className="text-xs font-bold text-slate-900">
@@ -356,15 +356,15 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                 </div>
                 <div className="flex items-center gap-3 text-xs">
                   <span className="text-slate-600">
-                    Vào: <strong className="text-[#198754]">+{activeDay.inAmount.toLocaleString('vi-VN')} đ</strong>
+                    Vào: <strong className="text-emerald-700 font-tabular">+{activeDay.inAmount.toLocaleString('vi-VN')} đ</strong>
                   </span>
                   <span className="text-slate-300">•</span>
                   <span className="text-slate-600">
-                    Ra: <strong className="text-[#b31f56]">-{activeDay.outAmount.toLocaleString('vi-VN')} đ</strong>
+                    Ra: <strong className="text-rose-600 font-tabular">-{activeDay.outAmount.toLocaleString('vi-VN')} đ</strong>
                   </span>
                   <span className="text-slate-300">•</span>
                   <span className="text-slate-600">
-                    Ròng: <strong className="text-slate-900">+{activeDay.net.toLocaleString('vi-VN')} đ</strong>
+                    Ròng: <strong className="text-slate-900 font-tabular">+{activeDay.net.toLocaleString('vi-VN')} đ</strong>
                   </span>
                 </div>
               </div>
@@ -422,7 +422,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                   </div>
                 </div>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                  <div className="bg-[#198754] h-full rounded-full" style={{ width: '48%' }}></div>
+                  <div className="bg-emerald-600 h-full rounded-full" style={{ width: '48%' }}></div>
                 </div>
               </div>
 
@@ -573,7 +573,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                   onClick={() => setTimeChip('today')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     timeChip === 'today'
-                      ? 'bg-[#198754] text-white shadow-xs font-bold'
+                      ? 'bg-emerald-600 text-white shadow-xs font-bold'
                       : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                   }`}
                   type="button"
@@ -584,7 +584,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                   onClick={() => setTimeChip('yesterday')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     timeChip === 'yesterday'
-                      ? 'bg-[#198754] text-white shadow-xs font-bold'
+                      ? 'bg-emerald-600 text-white shadow-xs font-bold'
                       : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                   }`}
                   type="button"
@@ -595,7 +595,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                   onClick={() => setTimeChip('7days')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     timeChip === '7days'
-                      ? 'bg-[#198754] text-white shadow-xs font-bold'
+                      ? 'bg-emerald-600 text-white shadow-xs font-bold'
                       : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                   }`}
                   type="button"
@@ -606,7 +606,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                   onClick={() => setTimeChip('month')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     timeChip === 'month'
-                      ? 'bg-[#198754] text-white shadow-xs font-bold'
+                      ? 'bg-emerald-600 text-white shadow-xs font-bold'
                       : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                   }`}
                   type="button"
@@ -636,7 +636,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                   onClick={() => setTypeFilter('in')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                     typeFilter === 'in'
-                      ? 'bg-[#198754] text-white font-bold shadow-xs'
+                      ? 'bg-emerald-600 text-white font-bold shadow-xs'
                       : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                   }`}
                   type="button"
@@ -649,7 +649,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                   onClick={() => setTypeFilter('out')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                     typeFilter === 'out'
-                      ? 'bg-[#b31f56] text-white font-bold shadow-xs'
+                      ? 'bg-rose-600 text-white font-bold shadow-xs'
                       : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                   }`}
                   type="button"
@@ -809,12 +809,12 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                       {/* Column 4: Amount */}
                       <td className="py-4 px-5 align-top text-right whitespace-nowrap">
                         <span
-                          className={`text-sm font-bold ${
+                          className={`text-sm font-bold font-tabular ${
                             tx.isStrikethrough
                               ? 'text-slate-400 line-through'
                               : isPositive
-                              ? 'text-[#198754]'
-                              : 'text-[#b31f56]'
+                              ? 'text-emerald-600'
+                              : 'text-rose-600'
                           }`}
                         >
                           {tx.isStrikethrough ? `${tx.amount.toLocaleString('vi-VN')} đ` : formattedAmount}
@@ -825,7 +825,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                       <td className="py-4 px-5 align-top text-center">
                         {tx.type === 'merged' && !tx.isStrikethrough ? (
                           <div className="inline-flex flex-col items-center">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-purple-50 text-purple-700 text-xs font-semibold border border-purple-100">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold border border-purple-200">
                               <span className="material-symbols-outlined text-[14px]">call_merge</span>
                               <span>Đã tự động gộp tránh trùng</span>
                             </span>
@@ -835,7 +835,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                           </div>
                         ) : tx.isStrikethrough ? (
                           <div className="inline-flex flex-col items-center">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 text-slate-600 text-xs font-semibold border border-slate-200">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold border border-slate-200">
                               <span className="material-symbols-outlined text-[14px]">link</span>
                               <span>Đã gộp vào kết ca</span>
                             </span>
@@ -844,7 +844,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                             </span>
                           </div>
                         ) : (
-                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
+                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200">
                             <span className="material-symbols-outlined text-[14px]">check_circle</span>
                             <span>Đã đối soát</span>
                           </div>
@@ -881,7 +881,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                 onClick={() => setCurrentPage(1)}
                 className={`w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center shadow-xs cursor-pointer ${
                   currentPage === 1
-                    ? 'bg-[#198754] text-white'
+                    ? 'bg-emerald-600 text-white'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
                 type="button"
@@ -892,7 +892,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                 onClick={() => setCurrentPage(2)}
                 className={`w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center shadow-xs cursor-pointer ${
                   currentPage === 2
-                    ? 'bg-[#198754] text-white'
+                    ? 'bg-emerald-600 text-white'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
                 type="button"
@@ -903,7 +903,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                 onClick={() => setCurrentPage(3)}
                 className={`w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center shadow-xs cursor-pointer ${
                   currentPage === 3
-                    ? 'bg-[#198754] text-white'
+                    ? 'bg-emerald-600 text-white'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
                 type="button"
@@ -915,7 +915,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                 onClick={() => setCurrentPage(7)}
                 className={`w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center shadow-xs cursor-pointer ${
                   currentPage === 7
-                    ? 'bg-[#198754] text-white'
+                    ? 'bg-emerald-600 text-white'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
                 type="button"

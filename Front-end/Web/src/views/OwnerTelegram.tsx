@@ -48,12 +48,12 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
               <span className="text-[11px] text-slate-500 uppercase tracking-wider font-bold">
                 Hệ thống đồng bộ tự động
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#198754] text-xs font-bold border border-emerald-200">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#059669] text-xs font-bold border border-emerald-200">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 Đã kết nối Bot: @VikeSoAccountingBot
               </span>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[11px] font-medium border border-slate-200">
-                <span className="material-symbols-outlined text-[13px] text-[#198754]">bolt</span>
+                <span className="material-symbols-outlined text-[13px] text-[#059669]">bolt</span>
                 WebHook 2.4 Active
               </span>
             </div>
@@ -70,14 +70,14 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
               <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
                 Lần gửi kế tiếp
               </span>
-              <span className="text-sm font-bold text-[#198754] font-mono">
+              <span className="text-sm font-bold text-[#059669] font-mono">
                 Hôm nay 22:00:00
               </span>
             </div>
             <button
               onClick={handleInstantSync}
               disabled={syncing}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#198754] hover:bg-[#146c43] text-white text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer disabled:opacity-50"
               type="button"
             >
               <span className={`material-symbols-outlined text-[16px] ${syncing ? 'animate-spin' : ''}`}>
@@ -99,7 +99,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
           <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#198754]">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#059669]">
                   <span className="material-symbols-outlined text-[20px]">tune</span>
                 </div>
                 <div>
@@ -111,7 +111,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                   </span>
                 </div>
               </div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#198754] text-xs font-bold border border-emerald-200">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#059669] text-xs font-bold border border-emerald-200">
                 Trạng thái: Kích hoạt
               </span>
             </div>
@@ -122,7 +122,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                   <span className="text-[11px] text-slate-500 uppercase font-bold">
                     Khung Giờ Bắn Tin Hàng Ngày
                   </span>
-                  <span className="material-symbols-outlined text-[#198754] text-[16px]">schedule</span>
+                  <span className="material-symbols-outlined text-[#059669] text-[16px]">schedule</span>
                 </div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-2xl font-extrabold text-slate-900 font-mono">
@@ -152,7 +152,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                 </div>
                 <div className="pt-0.5 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span className="text-[11px] text-[#198754] font-semibold">
+                  <span className="text-[11px] text-[#059669] font-semibold">
                     Quyền Bot: Quản Trị Viên (Gửi Tin + File)
                   </span>
                 </div>
@@ -178,7 +178,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                       type="checkbox"
                       checked={fields.summary}
                       onChange={(e) => setFields({ ...fields, summary: e.target.checked })}
-                      className="w-4 h-4 rounded text-[#198754] focus:ring-[#198754] accent-[#198754] cursor-pointer"
+                      className="w-4 h-4 rounded text-[#059669] focus:ring-[#059669] accent-[#059669] cursor-pointer"
                     />
                     <div className="flex flex-col">
                       <span className="text-xs sm:text-sm font-semibold text-slate-900">
@@ -189,7 +189,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                       </span>
                     </div>
                   </div>
-                  <span className="text-[11px] text-[#198754] font-bold shrink-0">Bắt buộc</span>
+                  <span className="text-[11px] text-[#059669] font-bold shrink-0">Bắt buộc</span>
                 </label>
 
                 {/* 2 */}
@@ -199,7 +199,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                       type="checkbox"
                       checked={fields.netCash}
                       onChange={(e) => setFields({ ...fields, netCash: e.target.checked })}
-                      className="w-4 h-4 rounded text-[#198754] focus:ring-[#198754] accent-[#198754] cursor-pointer"
+                      className="w-4 h-4 rounded text-[#059669] focus:ring-[#059669] accent-[#059669] cursor-pointer"
                     />
                     <div className="flex flex-col">
                       <span className="text-xs sm:text-sm font-semibold text-slate-900">
@@ -210,7 +210,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                       </span>
                     </div>
                   </div>
-                  <span className="text-[11px] text-[#198754] font-bold shrink-0">Bắt buộc</span>
+                  <span className="text-[11px] text-[#059669] font-bold shrink-0">Bắt buộc</span>
                 </label>
 
                 {/* 3 */}
@@ -220,7 +220,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                       type="checkbox"
                       checked={fields.topExpenses}
                       onChange={(e) => setFields({ ...fields, topExpenses: e.target.checked })}
-                      className="w-4 h-4 rounded text-[#198754] focus:ring-[#198754] accent-[#198754] cursor-pointer"
+                      className="w-4 h-4 rounded text-[#059669] focus:ring-[#059669] accent-[#059669] cursor-pointer"
                     />
                     <div className="flex flex-col">
                       <span className="text-xs sm:text-sm font-semibold text-slate-900">
@@ -241,7 +241,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                       type="checkbox"
                       checked={fields.cashDiscrepancy}
                       onChange={(e) => setFields({ ...fields, cashDiscrepancy: e.target.checked })}
-                      className="w-4 h-4 rounded text-[#198754] focus:ring-[#198754] accent-[#198754] cursor-pointer"
+                      className="w-4 h-4 rounded text-[#059669] focus:ring-[#059669] accent-[#059669] cursor-pointer"
                     />
                     <div className="flex flex-col">
                       <span className="text-xs sm:text-sm font-semibold text-slate-900">
@@ -262,7 +262,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                       type="checkbox"
                       checked={fields.excelAttachment}
                       onChange={(e) => setFields({ ...fields, excelAttachment: e.target.checked })}
-                      className="w-4 h-4 rounded text-[#198754] focus:ring-[#198754] accent-[#198754] cursor-pointer"
+                      className="w-4 h-4 rounded text-[#059669] focus:ring-[#059669] accent-[#059669] cursor-pointer"
                     />
                     <div className="flex flex-col">
                       <span className="text-xs sm:text-sm font-semibold text-slate-900">
@@ -282,7 +282,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
             <div className="pt-2 flex flex-col sm:flex-row items-center gap-2.5">
               <button
                 onClick={handleTestSend}
-                className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#198754] hover:bg-[#146c43] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
                 type="button"
               >
                 <span className="material-symbols-outlined text-[16px]">send</span>
@@ -303,7 +303,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
 
             {/* Test feedback toast */}
             {toastVisible && (
-              <div className="p-3 rounded-xl bg-emerald-50 text-[#198754] flex items-center justify-between border border-emerald-200 animate-fadeIn">
+              <div className="p-3 rounded-xl bg-emerald-50 text-[#059669] flex items-center justify-between border border-emerald-200 animate-fadeIn">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[18px]">check_circle</span>
                   <span className="text-xs font-semibold">
@@ -321,7 +321,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
           <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#198754]">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#059669]">
                   <span className="material-symbols-outlined text-[20px]">shield</span>
                 </div>
                 <div>
@@ -338,7 +338,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="p-3 rounded-xl bg-slate-50 space-y-1 border border-slate-200/70">
-                <div className="flex items-center gap-1 text-[#198754]">
+                <div className="flex items-center gap-1 text-[#059669]">
                   <span className="material-symbols-outlined text-[15px]">verified_user</span>
                   <span className="text-[10px] font-bold uppercase">Token Độc Quyền</span>
                 </div>
@@ -348,7 +348,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
               </div>
 
               <div className="p-3 rounded-xl bg-slate-50 space-y-1 border border-slate-200/70">
-                <div className="flex items-center gap-1 text-[#198754]">
+                <div className="flex items-center gap-1 text-[#059669]">
                   <span className="material-symbols-outlined text-[15px]">history_toggle_off</span>
                   <span className="text-[10px] font-bold uppercase">Tự Động Thử Lại</span>
                 </div>
@@ -374,7 +374,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
         <div className="xl:col-span-5 flex flex-col space-y-3">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[#198754] text-[18px]">phone_iphone</span>
+              <span className="material-symbols-outlined text-[#059669] text-[18px]">phone_iphone</span>
               <span className="text-xs sm:text-sm text-slate-900 font-bold">
                 Mô Phỏng Trực Quan Tin Nhắn (Live Preview)
               </span>
@@ -399,7 +399,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                   <span className="material-symbols-outlined text-[#7e8e9f] text-[18px] cursor-pointer">
                     arrow_back
                   </span>
-                  <div className="w-7 h-7 rounded-full bg-[#198754] flex items-center justify-center font-bold text-[10px] text-white">
+                  <div className="w-7 h-7 rounded-full bg-[#059669] flex items-center justify-center font-bold text-[10px] text-white">
                     VS
                   </div>
                   <div className="flex flex-col">
@@ -435,7 +435,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                 </div>
 
                 <div className="flex items-start gap-2 max-w-[98%]">
-                  <div className="w-6 h-6 rounded-full bg-[#198754] shrink-0 flex items-center justify-center text-[9px] font-bold text-white shadow mt-0.5">
+                  <div className="w-6 h-6 rounded-full bg-[#059669] shrink-0 flex items-center justify-center text-[9px] font-bold text-white shadow mt-0.5">
                     VK
                   </div>
                   <div className="flex flex-col space-y-1">
@@ -459,20 +459,20 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                       </div>
 
                       {/* Cash overview numbers */}
-                      <div className="py-1 space-y-1 font-mono text-[11px]">
+                      <div className="py-1 space-y-1 font-mono font-tabular text-[11px]">
                         <div className="flex justify-between items-center px-2 py-1 rounded bg-[#101b26]">
                           <span className="text-[#4caf50] font-bold">🟢 TỔNG TIỀN VÀO:</span>
-                          <span className="text-[#4caf50] font-bold">+15.450.000 đ</span>
+                          <span className="text-[#4caf50] font-bold font-tabular">+15.450.000 đ</span>
                         </div>
                         <div className="flex justify-between items-center px-2 py-1 rounded bg-[#101b26]">
                           <span className="text-[#ff5252] font-bold">🔴 TỔNG TIỀN RA:</span>
-                          <span className="text-[#ff5252] font-bold">-4.200.000 đ</span>
+                          <span className="text-[#ff5252] font-bold font-tabular">-4.200.000 đ</span>
                         </div>
                         <div className="flex justify-between items-center px-2 py-1.5 rounded bg-[#1d2d3e]">
                           <span className="text-[#ffd54f] font-bold flex items-center gap-1">
                             ⚡ DÒNG TIỀN RÒNG:
                           </span>
-                          <span className="text-[#ffd54f] font-bold text-xs">+11.250.000 đ</span>
+                          <span className="text-[#ffd54f] font-bold text-xs font-tabular">+11.250.000 đ</span>
                         </div>
                       </div>
 
@@ -484,21 +484,21 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                         <ol className="space-y-1 text-[11px] text-[#c8d6e5]">
                           <li className="flex justify-between items-center pl-1 border-l-2 border-[#ff5252]/60">
                             <span>1. Đại lý nước giải khát</span>
-                            <span className="font-mono font-semibold text-[#ff5252]">3.200.000 đ</span>
+                            <span className="font-mono font-tabular font-semibold text-[#ff5252]">3.200.000 đ</span>
                           </li>
                           <li className="flex justify-between items-center pl-1 border-l-2 border-[#ff5252]/40">
                             <span>2. Nhập bao bì túi xốp</span>
-                            <span className="font-mono font-semibold text-[#ff5252]">600.000 đ</span>
+                            <span className="font-mono font-tabular font-semibold text-[#ff5252]">600.000 đ</span>
                           </li>
                           <li className="flex justify-between items-center pl-1 border-l-2 border-[#ff5252]/20">
                             <span>3. Tiền điện cửa hàng</span>
-                            <span className="font-mono font-semibold text-[#ff5252]">280.000 đ</span>
+                            <span className="font-mono font-tabular font-semibold text-[#ff5252]">280.000 đ</span>
                           </li>
                         </ol>
                       </div>
 
                       {/* POS reconcile check */}
-                      <div className="p-1.5 rounded bg-[#11231f] flex items-center justify-between text-[11px] border border-[#198754]/30">
+                      <div className="p-1.5 rounded bg-[#11231f] flex items-center justify-between text-[11px] border border-[#059669]/30">
                         <span className="text-[#4caf50] font-semibold flex items-center gap-1">
                           <span>✅</span> Đối soát máy tính tiền:
                         </span>
@@ -510,7 +510,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                         onClick={() => alert('Đang mở file sao kê: BangKe_24102024.xlsx')}
                         className="mt-1.5 p-1.5 rounded-lg bg-[#202e3e] flex items-center gap-2 cursor-pointer hover:bg-[#253648] transition-colors border border-[#2b394a]"
                       >
-                        <div className="w-7 h-7 rounded bg-[#198754]/20 flex items-center justify-center text-[#4caf50]">
+                        <div className="w-7 h-7 rounded bg-[#059669]/20 flex items-center justify-center text-[#4caf50]">
                           <span className="material-symbols-outlined text-[16px]">table_chart</span>
                         </div>
                         <div className="flex-1 min-w-0">
@@ -555,7 +555,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
       <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-4 mt-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#198754]">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#059669]">
               <span className="material-symbols-outlined text-[20px]">history</span>
             </div>
             <div>
@@ -569,7 +569,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
           </div>
 
           <div className="flex items-center gap-2.5">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[#198754] text-xs font-bold border border-emerald-200">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[#059669] text-xs font-bold border border-emerald-200">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               Độ trễ TB: 182ms
             </span>
@@ -602,31 +602,31 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
                 <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
                   <td className="py-2.5 px-3 font-mono text-xs">
                     {item.sendTime.split(' ')[0]}{' '}
-                    <span className="text-[#198754] font-bold">{item.sendTime.split(' ')[1]}</span>
+                    <span className="text-[#059669] font-bold">{item.sendTime.split(' ')[1]}</span>
                   </td>
                   <td className="py-2.5 px-3 font-medium text-slate-900">{item.shift}</td>
-                  <td className="py-2.5 px-3 text-right font-mono text-[#198754] font-bold">
+                  <td className="py-2.5 px-3 text-right font-mono font-tabular text-[#059669] font-bold">
                     {item.inflow}
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono text-rose-600 font-semibold">
+                  <td className="py-2.5 px-3 text-right font-mono font-tabular text-rose-600 font-semibold">
                     {item.outflow}
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono text-slate-900 font-bold">
+                  <td className="py-2.5 px-3 text-right font-mono font-tabular text-slate-900 font-bold">
                     {item.net}
                   </td>
                   <td className="py-2.5 px-3">
                     <span
                       onClick={() => alert(`Đang tải tập tin: ${item.file}`)}
-                      className="inline-flex items-center gap-1 text-slate-600 hover:text-[#198754] cursor-pointer font-mono text-xs font-medium"
+                      className="inline-flex items-center gap-1 text-slate-600 hover:text-[#059669] cursor-pointer font-mono text-xs font-medium"
                     >
-                      <span className="material-symbols-outlined text-[15px] text-[#198754]">
+                      <span className="material-symbols-outlined text-[15px] text-[#059669]">
                         description
                       </span>
                       {item.file}
                     </span>
                   </td>
                   <td className="py-2.5 px-3 text-center">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-[#198754] text-[11px] font-bold border border-emerald-200">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-[#059669] text-[11px] font-bold border border-emerald-200">
                       <span className="material-symbols-outlined text-[13px]">done_all</span>
                       {item.status}
                     </span>
@@ -643,7 +643,7 @@ export const OwnerTelegram: React.FC<OwnerTelegramProps> = ({ currentUser }) => 
           </span>
           <button
             onClick={() => alert('Mở đầy đủ nhật ký 30 ngày qua...')}
-            className="text-[#198754] font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
+            className="text-[#059669] font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
             type="button"
           >
             <span>Xem toàn bộ lịch sử 30 ngày</span>

@@ -4,6 +4,7 @@ import { PortalSidebar } from './PortalSidebar';
 import { PortalHeader } from './PortalHeader';
 import { MobileAppModal, NotificationModal } from './PortalModals';
 import { UserAccount } from './AuthModal';
+import { CheckCircle2, AlertTriangle, X } from 'lucide-react';
 
 // Views
 import { OwnerCashflowLedger } from '../views/OwnerCashflowLedger';
@@ -28,16 +29,16 @@ export const PortalView: React.FC<PortalViewProps> = ({
   initialPortal,
 }) => {
   const userRole = currentUser?.role || 'OWNER';
-  const defaultPortal: PortalType = initialPortal || (userRole === 'ADMIN' ? 'admin' : 'owner');
+  // Strict Role Binding: ADMIN is strictly locked to 'admin', OWNER is strictly locked to 'owner'
+  const portal: PortalType = userRole === 'ADMIN' ? 'admin' : 'owner';
 
-  const [portal, setPortalInternal] = useState<PortalType>(defaultPortal);
   const [ownerTab, setOwnerTab] = useState<OwnerTab>('so-thu-chi-dong-tien');
   const [adminTab, setAdminTab] = useState<AdminTab>('tong-quan-van-hanh');
 
   // Modals & Toast
   const [mobileModalOpen, setMobileModalOpen] = useState(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
-  const [globalToast, setGlobalToast] = useState<string | null>(null);
+  const [globalToast, setGlobalToast] = useState<{ message: string; type?: 'success' | 'info' | 'error' } | null>(null);
 
   // Collapsible animated sidebar state
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
@@ -60,54 +61,75 @@ export const PortalView: React.FC<PortalViewProps> = ({
     });
   };
 
-  // Role Guard handler for switching portals
+  // Strict Role Guard handler: No switching allowed
   const handleSetPortal = (target: PortalType) => {
-    if (target === 'admin' && userRole !== 'ADMIN') {
-      showToast('❌ 403 Forbidden: Bạn không có quyền truy cập không gian Quản trị viên (Admin).');
-      return;
+    if (target !== portal) {
+      if (userRole === 'ADMIN') {
+        showToast('🔒 Chính sách Fiduciary: Admin không can thiệp sổ quỹ riêng tư của hộ kinh doanh.', 'error');
+      } else {
+        showToast('❌ 403 Forbidden: Bạn không có quyền truy cập không gian Quản trị viên (Admin).', 'error');
+      }
     }
-    setPortalInternal(target);
   };
 
-  const showToast = (message: string) => {
-    setGlobalToast(message);
+  const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
+    setGlobalToast({ message, type });
     setTimeout(() => {
       setGlobalToast(null);
     }, 3500);
   };
 
   const handleDownloadExcel = () => {
-    showToast('Đang kết xuất bảng kê Excel (.xlsx) theo chuẩn tài chính...');
+    showToast('Đang kết xuất bảng kê Excel (.xlsx) theo chuẩn tài chính...', 'info');
   };
 
   const handlePrintReport = () => {
     window.print();
   };
 
-  // 403 screen if an OWNER somehow loads portal === 'admin'
-  if (portal === 'admin' && userRole !== 'ADMIN') {
+  // Guard 1: 403 screen if an OWNER attempts to access admin
+  if (initialPortal === 'admin' && userRole !== 'ADMIN') {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center p-6 text-center">
-        <div className="max-w-md p-8 bg-white rounded-2xl shadow-xl border border-rose-200 space-y-4">
-          <div className="w-14 h-14 mx-auto rounded-full bg-rose-100 text-rose-600 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
+        <div className="max-w-md p-8 bg-white rounded-3xl shadow-xl border border-rose-200 space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shadow-xs">
             <span className="material-symbols-outlined text-[32px]">gpp_bad</span>
           </div>
-          <h2 className="text-xl font-bold text-gray-900">403 - Quyền Truy Cập Bị Từ Chối</h2>
-          <p className="text-sm text-gray-600">
-            Tài khoản của bạn ({currentUser?.email}) mang quyền <strong>CHỦ CỬA HÀNG (OWNER)</strong>. Bạn không có quyền xem bảng quản trị FINITY System Cockpit.
+          <h2 className="text-xl font-bold text-slate-900">403 - Quyền Truy Cập Bị Từ Chối</h2>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Tài khoản của bạn ({currentUser?.email}) mang quyền <strong>CHỦ HỘ KINH DOANH (OWNER)</strong>. Bạn không có quyền truy cập trung tâm điều hành FINITY System Cockpit của Quản trị viên.
           </p>
           <div className="pt-2 flex gap-3 justify-center">
             <button
-              onClick={() => setPortalInternal('owner')}
-              className="px-4 py-2 bg-[#198754] text-white text-sm font-semibold rounded-xl hover:bg-[#146c43] transition-colors"
+              onClick={onBackToLanding}
+              className="px-5 py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-colors cursor-pointer shadow-sm shadow-emerald-600/20"
             >
-              Về Sổ Thu Chi Của Tôi
+              Về Trang Chủ VikeSo
             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Guard 2: 403 screen if an ADMIN attempts to access owner private ledger
+  if (initialPortal === 'owner' && userRole === 'ADMIN') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-center text-white">
+        <div className="max-w-md p-8 bg-slate-800/90 rounded-3xl shadow-2xl border border-indigo-500/30 space-y-4 backdrop-blur-md">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shadow-xs">
+            <span className="material-symbols-outlined text-[32px]">security</span>
+          </div>
+          <h2 className="text-xl font-bold text-white">403 - Giới Hạn Thẩm Quyền Quản Trị</h2>
+          <p className="text-sm text-slate-300 leading-relaxed">
+            Tài khoản <strong>ADMIN QUẢN TRỊ ({currentUser?.email})</strong> chỉ có thẩm quyền điều phối hạ tầng, thanh toán cước và theo dõi tổng tải. Nhằm tuân thủ chuẩn mực bảo mật Fiduciary, Admin không can thiệp trực tiếp vào sổ quỹ cá nhân của từng hộ kinh doanh.
+          </p>
+          <div className="pt-2 flex gap-3 justify-center">
             <button
               onClick={onBackToLanding}
-              className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+              className="px-5 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-500 transition-colors cursor-pointer shadow-md shadow-indigo-600/30"
             >
-              Về Trang Chủ
+              Về Trang Chủ VikeSo
             </button>
           </div>
         </div>
@@ -141,7 +163,9 @@ export const PortalView: React.FC<PortalViewProps> = ({
   const displayPlan = activeUser.subscriptionPlan || 'FREE';
 
   return (
-    <div className="min-h-screen bg-background text-on-surface antialiased font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed">
+    <div className={`min-h-screen bg-slate-50 text-slate-900 antialiased font-sans ${
+      portal === 'owner' ? 'selection:bg-emerald-100 selection:text-emerald-800' : 'selection:bg-indigo-100 selection:text-indigo-800'
+    }`}>
       {/* Animated Fixed Sidebar */}
       <PortalSidebar
         portal={portal}
@@ -179,7 +203,7 @@ export const PortalView: React.FC<PortalViewProps> = ({
         />
 
         {/* Dynamic Page Router */}
-        <main className="w-full pt-16 bg-background min-h-screen">
+        <main className="w-full pt-16 bg-slate-50 min-h-screen pb-12">
           {portal === 'owner' ? (
             <>
               {/* Synchronized Cashflow & Full Ledger */}
@@ -195,7 +219,7 @@ export const PortalView: React.FC<PortalViewProps> = ({
               {ownerTab === 'bao-cao-xuat-du-lieu' && (
                 <OwnerReports
                   currentUser={activeUser}
-                  onExportPdf={() => showToast('Đang tải file PDF báo cáo tài chính...')}
+                  onExportPdf={() => showToast('Đang tải file PDF báo cáo tài chính...', 'info')}
                   onExportExcel={handleDownloadExcel}
                 />
               )}
@@ -237,13 +261,21 @@ export const PortalView: React.FC<PortalViewProps> = ({
         subscriptionPlan={displayPlan}
       />
 
-      {/* Global Toast */}
+      {/* Modern High-End Floating Toast */}
       {globalToast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-lg bg-surface-container-lowest text-on-surface shadow-2xl border border-surface-container animate-bounce">
-          <span className="material-symbols-outlined text-primary text-[20px]">
-            check_circle
-          </span>
-          <span className="font-semibold text-sm">{globalToast}</span>
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900/95 text-white shadow-2xl border border-slate-700 backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 duration-200">
+          {globalToast.type === 'error' ? (
+            <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+          )}
+          <span className="font-semibold text-xs leading-snug">{globalToast.message}</span>
+          <button
+            onClick={() => setGlobalToast(null)}
+            className="p-1 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
     </div>

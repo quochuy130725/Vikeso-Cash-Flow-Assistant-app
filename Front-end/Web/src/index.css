@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-body-md: 'Be Vietnam Pro', sans-serif;
   --font-headline-lg: 'Be Vietnam Pro', sans-serif;
   --font-headline-md: 'Be Vietnam Pro', sans-serif;
@@ -10,37 +11,41 @@
   --font-label-md: 'Be Vietnam Pro', sans-serif;
   --font-label-sm: 'Be Vietnam Pro', sans-serif;
   --font-display-lg: 'Be Vietnam Pro', sans-serif;
-  --font-metric-display: 'Be Vietnam Pro', sans-serif;
+  --font-metric-display: 'JetBrains Mono', 'Be Vietnam Pro', monospace;
   --font-metric-unit: 'Be Vietnam Pro', sans-serif;
 
-  --color-primary: #198754;
-  --color-primary-container: #146c43;
+  /* Primary Fintech Emerald */
+  --color-primary: #059669;
+  --color-primary-container: #047857;
   --color-on-primary: #ffffff;
-  --color-on-primary-container: #ffffff;
-  --color-primary-fixed: #d1e7dd;
-  --color-primary-fixed-dim: #a3cfbb;
-  --color-on-primary-fixed: #0f5132;
-  --color-on-primary-fixed-variant: #0f5132;
-  --color-inverse-primary: #20c997;
+  --color-on-primary-container: #ecfdf5;
+  --color-primary-fixed: #d1fae5;
+  --color-primary-fixed-dim: #a7f3d0;
+  --color-on-primary-fixed: #064e3b;
+  --color-on-primary-fixed-variant: #065f46;
+  --color-inverse-primary: #34d399;
 
-  --color-secondary: #b31f56;
-  --color-secondary-container: #fe5b8d;
+  /* AI Intelligence & Secondary (Indigo/Violet) */
+  --color-secondary: #4f46e5;
+  --color-secondary-container: #4338ca;
   --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #620029;
-  --color-secondary-fixed: #ffd9df;
-  --color-secondary-fixed-dim: #ffb1c2;
-  --color-on-secondary-fixed: #3f0018;
-  --color-on-secondary-fixed-variant: #8f003f;
+  --color-on-secondary-container: #eef2ff;
+  --color-secondary-fixed: #e0e7ff;
+  --color-secondary-fixed-dim: #c7d2fe;
+  --color-on-secondary-fixed: #312e81;
+  --color-on-secondary-fixed-variant: #3730a3;
 
-  --color-tertiary: #dc3545;
-  --color-tertiary-container: #b02a37;
+  /* Money Out / Alert (Rose/Crimson) */
+  --color-tertiary: #e11d48;
+  --color-tertiary-container: #be123c;
   --color-on-tertiary: #ffffff;
-  --color-on-tertiary-container: #ffffff;
-  --color-tertiary-fixed: #f8d7da;
-  --color-tertiary-fixed-dim: #f1aeb5;
-  --color-on-tertiary-fixed: #58151c;
-  --color-on-tertiary-fixed-variant: #842029;
+  --color-on-tertiary-container: #fff1f2;
+  --color-tertiary-fixed: #ffe4e6;
+  --color-tertiary-fixed-dim: #fecdd3;
+  --color-on-tertiary-fixed: #881337;
+  --color-on-tertiary-fixed-variant: #9f1239;
 
+  /* Neutrals & Surfaces */
   --color-surface: #f8fafc;
   --color-surface-dim: #f1f5f9;
   --color-surface-bright: #ffffff;
@@ -50,51 +55,52 @@
   --color-surface-container-high: #cbd5e1;
   --color-surface-container-highest: #94a3b8;
   --color-surface-variant: #f1f5f9;
-  --color-surface-tint: #198754;
+  --color-surface-tint: #059669;
 
   --color-on-surface: #0f172a;
-  --color-on-surface-variant: #475569;
+  --color-on-surface-variant: #334155;
   --color-outline: #94a3b8;
   --color-outline-variant: #cbd5e1;
   --color-background: #f8fafc;
   --color-on-background: #0f172a;
-  --color-inverse-surface: #1e293b;
+  --color-inverse-surface: #0f172a;
   --color-inverse-on-surface: #f8fafc;
 
-  --color-error: #dc3545;
-  --color-error-container: #f8d7da;
+  --color-error: #e11d48;
+  --color-error-container: #ffe4e6;
   --color-on-error: #ffffff;
-  --color-on-error-container: #58151c;
+  --color-on-error-container: #881337;
 
-  --color-emerald-vikeso: #198754;
-  --color-emerald-light: #20c997;
-  --color-pink-vikeso: #b31f56;
-  --color-pink-bright: #ff5c8d;
-  --color-danger-vikeso: #dc3545;
-  --color-warning-vikeso: #ffc107;
+  /* Semantic Brand Overrides */
+  --color-emerald-vikeso: #059669;
+  --color-emerald-light: #10b981;
+  --color-pink-vikeso: #4f46e5;
+  --color-pink-bright: #6366f1;
+  --color-danger-vikeso: #e11d48;
+  --color-warning-vikeso: #d97706;
   --color-surface-bg: #f8fafc;
-  --color-dark-surface: #191c1d;
-  --color-dark-card: #24282a;
+  --color-dark-surface: #090d16;
+  --color-dark-card: #131926;
 
-  --spacing-space-xs: 0.375rem;
-  --spacing-space-sm: 0.75rem;
-  --spacing-space-md: 1.25rem;
-  --spacing-space-lg: 1.75rem;
-  --spacing-space-xl: 2.25rem;
-  --spacing-margin: 1.25rem;
-  --spacing-margin-tablet: 1.75rem;
-  --spacing-margin-desktop: 2.5rem;
-  --spacing-gutter: 1.5rem;
-  --spacing-gutter-desktop: 2rem;
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 1rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-xl: 2rem;
+  --spacing-space-2xl: 3rem;
+  --spacing-space-3xl: 4rem;
 }
 
 @layer base {
   html, body, button, input, select, textarea {
     font-family: 'Be Vietnam Pro', var(--font-sans);
+    letter-spacing: -0.01em;
   }
   body {
     background-color: #f8fafc;
     color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
@@ -107,7 +113,10 @@
   line-height: 1;
   letter-spacing: normal;
   text-transform: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
   white-space: nowrap;
   word-wrap: normal;
   direction: ltr;
@@ -117,26 +126,51 @@
   font-feature-settings: 'liga';
 }
 
-/* Glassmorphism utility */
+/* Tabular Financial Numbers */
+.font-tabular {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ultra Clean Glassmorphism */
 .glass-card {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(225, 227, 228, 0.8);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
 }
 
 .glass-card-dark {
-  background: rgba(36, 40, 42, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
 }
 
 .glass-pill {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(225, 227, 228, 0.6);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 @keyframes shiny-badge {
@@ -159,11 +193,30 @@
     transform: scale(1);
   }
   50% {
-    opacity: 0.85;
-    transform: scale(0.985);
+    opacity: 0.92;
+    transform: scale(0.99);
   }
 }
 
 .animate-pulse-subtle {
-  animation: pulse-subtle 4s ease-in-out infinite;
+  animation: pulse-subtle 3.5s ease-in-out infinite;
+}
+
+@keyframes laser-scan {
+  0% {
+    top: 0%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 96%;
+    opacity: 1;
+  }
+  100% {
+    top: 0%;
+    opacity: 0.8;
+  }
+}
+
+.animate-laser-scan {
+  animation: laser-scan 1.2s ease-in-out infinite;
 }

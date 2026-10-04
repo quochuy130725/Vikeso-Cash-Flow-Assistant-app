@@ -45,7 +45,7 @@ export const TelegramModal: React.FC<TelegramModalProps> = ({ isOpen, onClose })
               {/* Telegram Preview Message Mockup */}
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-[#198754] flex items-center justify-center text-[10px] font-bold">
+                  <div className="w-6 h-6 rounded-full bg-[#059669] flex items-center justify-center text-[10px] font-bold">
                     V
                   </div>
                   <span className="text-xs font-bold text-white">VikeSo Accountant Bot</span>
@@ -68,13 +68,13 @@ export const TelegramModal: React.FC<TelegramModalProps> = ({ isOpen, onClose })
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     placeholder="VD: 0988 123 456 hoặc @chuvua_bacuong"
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#198754]"
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#059669]"
                   />
                   <button
                     onClick={() => {
                       if (phoneNumber.trim()) setIsLinked(true);
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-[#198754] text-white text-xs font-bold hover:bg-[#146c43] transition-colors shadow-sm"
+                    className="px-4 py-2.5 rounded-xl bg-[#059669] text-white text-xs font-bold hover:bg-[#047857] transition-colors shadow-sm"
                   >
                     Kết Nối
                   </button>

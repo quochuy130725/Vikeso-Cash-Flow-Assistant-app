@@ -93,13 +93,15 @@ class AuthRepository {
   Future<AuthResult> loginWithGoogle() async {
     try {
       final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null)
+      if (googleUser == null) {
         return AuthResult.failure('Nguoi dung huy dang nhap Google.');
+      }
 
       final googleAuth = await googleUser.authentication;
       final idToken = googleAuth.idToken;
-      if (idToken == null)
+      if (idToken == null) {
         return AuthResult.failure('Khong the lay Google ID Token.');
+      }
 
       final uri = Uri.parse('$_authBaseUrl/google');
       final response = await http

@@ -1,5 +1,22 @@
 import React from 'react';
 import { PortalType, OwnerTab, AdminTab } from '../types';
+import {
+  TrendingUp,
+  FileSpreadsheet,
+  Send,
+  Store,
+  LayoutDashboard,
+  CircleDollarSign,
+  Bot,
+  Settings2,
+  Home,
+  LogOut,
+  ArrowRightLeft,
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
+  CheckCircle,
+} from 'lucide-react';
 
 interface SidebarProps {
   portal: PortalType;
@@ -50,38 +67,20 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
           {!isCollapsed ? (
             <>
               <div className="flex items-center gap-2.5 min-w-0">
-                <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors shadow-xs ${
-                    portal === 'owner' ? 'bg-[#198754] text-white' : 'bg-slate-900 text-white'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[18px]">
-                    {portal === 'owner' ? 'account_balance_wallet' : 'admin_panel_settings'}
-                  </span>
+                <div className="w-9 h-9 rounded-xl p-1 bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200/80 shadow-xs">
+                  <img src="/logo.png" alt="VikeSo Logo" className="w-full h-full object-contain" />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-base font-extrabold text-slate-900 leading-none tracking-tight truncate">
-                    VikeSo
+                    Vike<span className={portal === 'owner' ? 'text-emerald-600' : 'text-indigo-600'}>So</span>
                   </span>
-                  <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5 truncate">
-                    {portal === 'owner' ? 'Trợ lý dòng tiền' : 'Hệ thống quản trị'}
+                  <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-1 truncate">
+                    {portal === 'owner' ? 'Trợ lý dòng tiền' : 'FINITY System Cockpit'}
                   </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
-                {/* Switch button for admins */}
-                {userRole === 'ADMIN' && (
-                  <button
-                    onClick={() => setPortal(portal === 'owner' ? 'admin' : 'owner')}
-                    title="Chuyển đổi giao diện Chủ hộ / Admin"
-                    className="text-[11px] font-semibold text-slate-600 hover:text-slate-900 px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200/70 border border-slate-200/80 cursor-pointer flex items-center gap-1 transition-colors"
-                  >
-                    <span>{portal === 'owner' ? 'Admin' : 'Chủ Hộ'}</span>
-                    <span className="material-symbols-outlined text-[13px]">swap_horiz</span>
-                  </button>
-                )}
-
                 {/* Sidebar Collapse Toggle */}
                 {onToggleCollapse && (
                   <button
@@ -90,7 +89,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                     className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
                     type="button"
                   >
-                    <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                    <ChevronLeft className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -100,16 +99,10 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               <button
                 onClick={onToggleCollapse}
                 title="Mở rộng thanh menu bên"
-                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-xs cursor-pointer ${
-                  portal === 'owner'
-                    ? 'bg-[#198754] hover:bg-[#146c43] text-white'
-                    : 'bg-slate-900 hover:bg-slate-800 text-white'
-                }`}
+                className="w-10 h-10 rounded-xl p-1 bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all shadow-xs cursor-pointer border border-slate-200/80"
                 type="button"
               >
-                <span className="material-symbols-outlined text-[20px]">
-                  {portal === 'owner' ? 'account_balance_wallet' : 'admin_panel_settings'}
-                </span>
+                <img src="/logo.png" alt="VikeSo Logo" className="w-full h-full object-contain" />
               </button>
             </div>
           )}
@@ -122,7 +115,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               <div className="flex items-center gap-2">
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    portal === 'owner' ? 'bg-[#198754] animate-pulse' : 'bg-purple-600'
+                    portal === 'owner' ? 'bg-emerald-500 animate-pulse' : 'bg-indigo-600'
                   }`}
                 ></span>
                 <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
@@ -138,7 +131,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             >
               <span
                 className={`w-2.5 h-2.5 rounded-full ${
-                  portal === 'owner' ? 'bg-[#198754] animate-pulse' : 'bg-purple-600'
+                  portal === 'owner' ? 'bg-emerald-500 animate-pulse' : 'bg-indigo-600'
                 }`}
               ></span>
             </div>
@@ -158,14 +151,13 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 ownerTab === 'so-thu-chi-dong-tien'
-                  ? 'bg-[#198754] text-white shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
-              <span className="material-symbols-outlined text-[20px] shrink-0">monitoring</span>
+              <TrendingUp className="w-5 h-5 shrink-0" />
               {!isCollapsed && <span className="truncate">Sổ thu chi &amp; Dòng tiền</span>}
 
-              {/* Hover Tooltip when collapsed */}
               {isCollapsed && (
                 <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                   Sổ thu chi &amp; Dòng tiền
@@ -183,11 +175,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 ownerTab === 'bao-cao-xuat-du-lieu'
-                  ? 'bg-[#198754] text-white shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
-              <span className="material-symbols-outlined text-[20px] shrink-0">analytics</span>
+              <FileSpreadsheet className="w-5 h-5 shrink-0" />
               {!isCollapsed && <span className="truncate">Báo cáo &amp; Xuất dữ liệu</span>}
 
               {isCollapsed && (
@@ -207,11 +199,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 ownerTab === 'bao-cao-tu-dong-telegram'
-                  ? 'bg-[#198754] text-white shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
-              <span className="material-symbols-outlined text-[20px] shrink-0">send</span>
+              <Send className="w-5 h-5 shrink-0" />
               {!isCollapsed && <span className="truncate">Báo cáo tự động Telegram</span>}
 
               {isCollapsed && (
@@ -231,11 +223,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 ownerTab === 'cai-dat-cua-hang'
-                  ? 'bg-[#198754] text-white shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
-              <span className="material-symbols-outlined text-[20px] shrink-0">store</span>
+              <Store className="w-5 h-5 shrink-0" />
               {!isCollapsed && <span className="truncate">Cài đặt cửa hàng &amp; POS</span>}
 
               {isCollapsed && (
@@ -257,11 +249,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 adminTab === 'tong-quan-van-hanh'
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/25'
+                  : 'text-slate-600 hover:bg-indigo-50/70 hover:text-indigo-900'
               }`}
             >
-              <span className="material-symbols-outlined text-[20px] shrink-0">hub</span>
+              <LayoutDashboard className="w-5 h-5 shrink-0" />
               {!isCollapsed && <span className="truncate">Tổng quan vận hành</span>}
 
               {isCollapsed && (
@@ -281,11 +273,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 adminTab === 'bao-cao-tai-chinh-doanh-thu'
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/25'
+                  : 'text-slate-600 hover:bg-indigo-50/70 hover:text-indigo-900'
               }`}
             >
-              <span className="material-symbols-outlined text-[20px] shrink-0">payments</span>
+              <CircleDollarSign className="w-5 h-5 shrink-0" />
               {!isCollapsed && <span className="truncate">Báo cáo tài chính &amp; MRR</span>}
 
               {isCollapsed && (
@@ -305,11 +297,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 adminTab === 'cau-hinh-telegram-bot'
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/25'
+                  : 'text-slate-600 hover:bg-indigo-50/70 hover:text-indigo-900'
               }`}
             >
-              <span className="material-symbols-outlined text-[20px] shrink-0">smart_toy</span>
+              <Bot className="w-5 h-5 shrink-0" />
               {!isCollapsed && <span className="truncate">Cấu hình Telegram Bot</span>}
 
               {isCollapsed && (
@@ -329,11 +321,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 adminTab === 'cai-dat-he-thong'
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/25'
+                  : 'text-slate-600 hover:bg-indigo-50/70 hover:text-indigo-900'
               }`}
             >
-              <span className="material-symbols-outlined text-[20px] shrink-0">tune</span>
+              <Settings2 className="w-5 h-5 shrink-0" />
               {!isCollapsed && <span className="truncate">Cài đặt hệ thống &amp; Máy chủ AI</span>}
 
               {isCollapsed && (
@@ -353,12 +345,12 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             {portal === 'owner' ? (
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-[#198754] flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[16px]">verified</span>
+                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <CheckCircle className="w-4 h-4" />
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs font-bold text-slate-800 truncate">{storeName}</span>
-                    <span className="text-[10px] text-slate-400 truncate">{userEmail}</span>
+                    <span className="text-[10px] text-slate-500 truncate">{userEmail}</span>
                   </div>
                 </div>
                 <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">
@@ -368,15 +360,15 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             ) : (
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[16px]">security</span>
+                  <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-4 h-4" />
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs font-bold text-slate-800 truncate">{storeName || 'Admin Quản Trị'}</span>
-                    <span className="text-[10px] text-slate-400 truncate">{userEmail}</span>
+                    <span className="text-[10px] text-slate-500 truncate">{userEmail}</span>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
                   ADMIN
                 </span>
               </div>
@@ -389,7 +381,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-slate-200/60"
                   title="Về Trang Chủ Giới Thiệu"
                 >
-                  <span className="material-symbols-outlined text-[16px]">home</span>
+                  <Home className="w-3.5 h-3.5" />
                   <span>Trang chủ</span>
                 </button>
               )}
@@ -399,7 +391,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   className="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-rose-100"
                   title="Đăng xuất khỏi phiên làm việc"
                 >
-                  <span className="material-symbols-outlined text-[16px]">logout</span>
+                  <LogOut className="w-3.5 h-3.5" />
                   <span>Thoát</span>
                 </button>
               )}
@@ -411,32 +403,17 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             {portal === 'owner' ? (
               <div
                 title={`${storeName} • Gói ${subscriptionPlan || 'FREE'}`}
-                className="w-10 h-10 rounded-xl bg-emerald-50 text-[#198754] border border-emerald-200 flex items-center justify-center cursor-help"
+                className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center cursor-help"
               >
-                <span className="material-symbols-outlined text-[18px]">storefront</span>
+                <Store className="w-5 h-5" />
               </div>
             ) : (
               <div
                 title="Hệ Thống FINITY • Cụm Máy Chủ Trực Tuyến 99.8%"
-                className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 border border-purple-200 flex items-center justify-center cursor-help"
+                className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center cursor-help"
               >
-                <span className="material-symbols-outlined text-[18px]">security</span>
+                <ShieldCheck className="w-5 h-5" />
               </div>
-            )}
-
-            {/* Quick Portal Switcher for Admin when collapsed */}
-            {userRole === 'ADMIN' && (
-              <button
-                onClick={() => setPortal(portal === 'owner' ? 'admin' : 'owner')}
-                title={portal === 'owner' ? 'Chuyển sang Bảng Quản Trị (Admin)' : 'Chuyển sang Sổ Thu Chi (Chủ Hộ)'}
-                className="w-10 h-10 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 flex items-center justify-center transition-colors cursor-pointer relative group border border-purple-200"
-                type="button"
-              >
-                <span className="material-symbols-outlined text-[18px]">swap_horiz</span>
-                <span className="absolute left-full ml-3 px-2 py-1 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  {portal === 'owner' ? 'Vào Bảng Admin' : 'Vào Sổ Chủ Hộ'}
-                </span>
-              </button>
             )}
 
             {/* Back to landing */}
@@ -446,7 +423,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                 className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer relative group"
                 title="Về Trang Chủ"
               >
-                <span className="material-symbols-outlined text-[18px]">home</span>
+                <Home className="w-4 h-4" />
                 <span className="absolute left-full ml-3 px-2 py-1 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                   Trang chủ
                 </span>
@@ -460,7 +437,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                 className="w-10 h-10 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-colors cursor-pointer relative group"
                 title="Đăng xuất"
               >
-                <span className="material-symbols-outlined text-[18px]">logout</span>
+                <LogOut className="w-4 h-4" />
                 <span className="absolute left-full ml-3 px-2 py-1 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                   Đăng xuất
                 </span>
@@ -475,7 +452,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                 className="w-10 h-10 mt-1 rounded-xl bg-slate-50 hover:bg-slate-200/70 border border-slate-200/80 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
                 type="button"
               >
-                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                <ChevronRight className="w-4 h-4" />
               </button>
             )}
           </div>
