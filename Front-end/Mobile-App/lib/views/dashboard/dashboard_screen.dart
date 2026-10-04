@@ -206,11 +206,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
           );
         }),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.rocket_launch, color: Colors.white, size: 20),
-            SizedBox(width: 8),
-            Text(
+            Container(
+              width: 28,
+              height: 28,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              padding: const EdgeInsets.all(2),
+              child: Image.asset(
+                'assets/images/logo.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
               'Vikeso',
               style:
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
