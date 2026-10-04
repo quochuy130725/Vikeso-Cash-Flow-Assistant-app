@@ -26,7 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading   = false;
 
   bool _receiveEmail = true;
-  bool _receiveTelegram = true;
+  bool _receiveTelegram = false;
   bool _receiveInApp = true;
   bool _hasTelegram = false;
 
@@ -47,7 +47,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       try {
         final Map<String, dynamic> settings = jsonDecode(settingsStr);
         _receiveEmail = settings['receiveEmail'] ?? true;
-        _receiveTelegram = settings['receiveTelegram'] ?? true;
+        final hasTg = await _storage.read(key: 'user_telegramChatId');
+        _hasTelegram = hasTg != null && hasTg.isNotEmpty;
+        _receiveTelegram = _hasTelegram && (settings['receiveTelegram'] == true);
         _receiveInApp = settings['receiveInApp'] ?? true;
       } catch (_) {}
     }
