@@ -1,121 +1,180 @@
-# 🤖 FINAUTO - MASTER PROJECT CONTEXT (AI INSTRUCTIONS)
+# 🤖 VIKESO - MASTER PROJECT CONTEXT (AI & DEVELOPER INSTRUCTIONS)
 
 ## 0. LỜI GỌI HỆ THỐNG (SYSTEM ROLE)
-Khi nhận được tài liệu này, bạn hãy đóng vai trò là Tech Lead và Senior Fullstack Developer (Flutter & Node.js) của dự án FinAuto. Hãy đọc kỹ toàn bộ bối cảnh, kiến trúc hệ thống, cấu trúc Database và luồng nghiệp vụ dưới đây. Chỉ cần trả lời "✅ Tôi đã hiểu toàn bộ bối cảnh dự án FinAuto, bạn cần tôi code hay xử lý phần nào tiếp theo?" và KHÔNG CẦN giải thích gì thêm.
+Khi nhận được tài liệu này, bạn hãy đóng vai trò là **Tech Lead và Senior Fullstack Developer (Flutter & Node.js)** của dự án **Vikeso**. Hãy đọc kỹ toàn bộ bối cảnh, kiến trúc hệ thống, cấu trúc Database và luồng nghiệp vụ dưới đây để tiếp tục phát triển codebase một cách chuẩn xác, nhất quán và tuân thủ các nguyên tắc thiết kế.
 
 ---
 
 ## 1. TỔNG QUAN DỰ ÁN
-*   **Tên dự án:** FinAuto - Trợ lý Kế toán tự động cho SME (Hộ kinh doanh, tạp hóa, thương lái).
-*   **Mục tiêu:** MVP phục vụ báo cáo Checkpoint 3.
-*   **Chiến lược cốt lõi:**
-    *   Trải nghiệm 1-Chạm (Chỉ có 1 nút chụp ảnh, AI tự lo phần còn lại).
-    *   Không thuật ngữ kế toán chuyên ngành (Dùng "Tiền vào / Tiền ra" thay vì Nợ/Có).
-*   **Tech Stack:**
-    *   Frontend: Flutter (KISS & DRY, Component-based).
-    *   Backend: Node.js, Express, Mongoose.
-    *   Database: MongoDB Atlas.
-    *   AI Proxy: Google Gemini Flash lite latest (Xử lý OCR bóc tách dưới 3 giây).
-    *   Automation: Telegram Bot API (Bắn báo cáo tự động).
+* **Tên dự án:** Vikeso (Tiền thân: FinAuto) - Trợ lý Kế toán & Đối soát dòng tiền thông minh cho SME (Hộ kinh doanh cá thể, tạp hóa, tiệm cafe, quán ăn, thương lái nông sản đầu mối).
+* **Mục tiêu:** Tự động hóa toàn bộ việc quản trị dòng tiền, bóc tách hóa đơn viết tay, hóa đơn in nhiệt, chống trùng lặp doanh thu và chốt sổ cuối ngày tự động.
+* **Chiến lược cốt lõi:**
+  * **Trải nghiệm 1-Chạm:** 1 nút bấm chụp ảnh hóa đơn duy nhất, AI tự động xử lý toàn bộ.
+  * **Ngôn ngữ bình dân:** Chuyển hóa toàn bộ thuật ngữ kế toán (Nợ/Có) thành "Tiền vào (THU)" / "Tiền ra (CHI)".
+  * **Chống trùng lặp tuyệt đối:** Lưới lọc thông minh 2 chiều giữa hóa đơn bán lẻ máy POS và báo cáo POS Kết Ca.
+  * **Báo cáo thụ động:** Tự động bắn báo cáo chốt ca lúc 22:00 hàng ngày qua Email HTML và Telegram Bot.
+* **Tech Stack:**
+  * **Frontend Mobile:** Flutter (KISS & DRY, Component-based, `fl_chart`, `flutter_secure_storage`).
+  * **Frontend Web:** React / Vite / TypeScript (Dashboard quản trị nâng cao).
+  * **Backend:** Node.js, Express.js (v5), MongoDB Atlas (Mongoose ODM).
+  * **Realtime:** Socket.IO WebSocket Server (tự động cập nhật chart khi có giao dịch mới).
+  * **AI OCR Engine:** Google Gemini 1.5 Flash (`@google/genai`, xử lý dưới 3 giây).
+  * **Thông báo & Tự động hóa:** `nodemailer` (Gmail SMTP), `node-cron`, Telegram Bot API Webhook.
+  * **Tài liệu API:** Swagger UI / OpenAPI 3.0 (`/api-docs`).
 
 ---
 
 ## 2. KIẾN TRÚC DATABASE (MONGODB SCHEMAS)
-Dự án có 2 Schema cốt lõi. Lưu ý KHÔNG thêm các trường thừa thãi. `transactionType` chỉ có 2 trạng thái là "THU" và "CHI".
 
-### 2.1. Receipt Schema (models/Receipt.js)
+### 2.1. Receipt Schema (`Back-end/src/models/Receipt.js`)
 ```javascript
 const mongoose = require('mongoose');
 
 const receiptSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  userId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: true, 
+    index: true 
+  },
   receiptUrl: { type: String, default: "" },
-  category: { type: String, enum: ["Hoa Don Le", "POS Ket Ca", "So Tay", "Khac"], default: "Khac" },
-  transactionType: { type: String, enum: ["THU", "CHI"], required: true },
+  category: { 
+    type: String, 
+    enum: ["Hoa Don Le", "POS Ket Ca", "So Tay", "Chuyen Khoan", "Khac"], 
+    default: "Khac" 
+  },
+  transactionType: { 
+    type: String, 
+    enum: ["THU", "CHI"], 
+    required: true  
+  },
   totalAmount: { type: Number, required: true, default: 0 },
   reason: { type: String, default: "" },
-  status: { type: String, enum: ["VALID", "MERGED"], default: "VALID", index: true },
-  transactionDate: { type: Date, default: Date.now, index: true },
+  confidenceLevel: { 
+    type: String, 
+    enum: ["HIGH", "MEDIUM", "LOW"], 
+    default: "HIGH" 
+  },
+  status: { 
+    type: String, 
+    enum: ["VALID", "MERGED"], 
+    default: "VALID", 
+    index: true 
+  },
+  transactionDate: { 
+    type: Date, 
+    default: Date.now, 
+    index: true 
+  },
   aiRawData: { type: Object, default: {} }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Receipt', receiptSchema);
-2.2. User Schema (models/User.js)
-JavaScript
+```
+
+### 2.2. User Schema (`Back-end/src/models/User.js`)
+```javascript
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  shopName: { type: String, required: true },
-  telegramChatId: { type: String, default: null }, // Lưu ID để Bot bắn tin nhắn
-  subscriptionPlan: { type: String, enum: ['FREE', 'PRO'], default: 'FREE' }
+  email: { type: String, required: true, unique: true, trim: true, lowercase: true },
+  name: { type: String, default: '', trim: true },
+  password: { type: String, default: null }, // null đối với user đăng nhập bằng Google
+  shopName: { type: String, default: '', trim: true },
+  telegramChatId: { type: String, default: null },
+  subscriptionPlan: { type: String, enum: ['FREE', 'PRO'], default: 'FREE' },
+  phone: { type: String, default: null },
+  role: { type: String, enum: ['OWNER', 'ADMIN'], default: 'OWNER', index: true },
+  
+  // Google OAuth
+  googleId: { type: String, default: null, index: true },
+  avatar: { type: String, default: null },
+  authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
+
+  // Cài đặt nhận thông báo
+  notificationSettings: {
+    receiveEmail: { type: Boolean, default: true },
+    receiveTelegram: { type: Boolean, default: false }, // Chỉ bật khi đã kết nối Telegram
+    receiveInApp: { type: Boolean, default: true }
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
-3. LUỒNG NGHIỆP VỤ BACKEND CỐT LÕI (API GATEWAY)
-3.1. API 2: Upload Ảnh & Bóc tách (Gemini OCR)
-Nhận file từ Flutter qua Multer (MemoryStorage).
+```
 
-Chạy cấu hình AI: thinkingBudget: 0, response format: application/json.
+---
 
-Quy tắc chặn rác (Cực kỳ quan trọng):
+## 3. LUỒNG NGHIỆP VỤ BACKEND CỐT LÕI (CORE BACKEND SERVICES)
 
-Nếu ảnh không liên quan tài chính trả về: { "items": [], "error_type": "JUNK_IMAGE" }.
+### 3.1. API Scan Receipt & Gemini OCR (`POST /api/scan-receipt`)
+* Nhận file ảnh từ client qua `multer` lưu trực tiếp trong RAM (memoryStorage).
+* Gửi ảnh tới Google Gemini AI với System Instructions nghiêm ngặt (trích xuất `totalAmount`, `category`, `transactionType`, `confidenceLevel`, `isPosBill`).
+* **Lưới chặn rác:**
+  * Nếu ảnh không liên quan tài chính: trả về `{ "items": [], "error_type": "JUNK_IMAGE" }`.
+  * Nếu ảnh hóa đơn quá mờ: trả về `{ "items": [], "error_type": "BLURRY_IMAGE" }`.
 
-Nếu ảnh hóa đơn quá mờ trả về: { "items": [], "error_type": "BLURRY_IMAGE" }.
+### 3.2. API Xác Nhận Giao Dịch & Realtime WebSocket (`POST /api/confirm-receipt`)
+* Lưu danh sách giao dịch hợp lệ sau khi người dùng review từ Split-Screen.
+* Kích hoạt broadcast WebSocket:
+  ```javascript
+  const io = getIO();
+  io.emit('new_transaction', { userId, transactions: savedDocs });
+  ```
+  Giúp Mobile App và Web Admin tự động cập nhật số dư và biểu đồ mà không cần polling.
 
-3.2. API 1: Lưu dữ liệu (Lưới Lọc 2 Chiều & Telegram Bot)
-Nhận mảng items từ App.
+### 3.3. Lưới Lọc Thông Minh 2 Chiều (`POST /api/manual-entry`)
+* **Chiều xuôi (Quét POS Kết Ca):** Khi nhận được chứng từ `category: "POS Ket Ca"`, hệ thống tự động `updateMany` đổi `status: "MERGED"` cho toàn bộ hóa đơn `Hoa Don Le`, `THU`, `aiRawData.isPosBill: true` trong cùng ngày.
+* **Chiều ngược (Hóa đơn lẻ nộp sau):** Khi nộp hóa đơn lẻ POS mà trong ngày đã tồn tại `POS Kết Ca` (`VALID`), hệ thống tự động gán `status: "MERGED"` ngay khi khởi tạo.
+* *Tuyệt đối giữ nguyên 100% các khoản CHI và hóa đơn viết tay độc lập.*
 
-Cơ chế Lưới Lọc Thông Minh 2 Chiều (Bidirectional Smart Filter):
+### 3.4. Báo Cáo Chốt Ca Tự Động 22:00 (`cronService.js`)
+* Lên lịch tự động lúc 22:00 hàng ngày (giờ Việt Nam, UTC+7).
+* Gửi đồng thời qua:
+  * **Email:** Nodemailer gửi email HTML chuyên nghiệp báo cáo Doanh thu, Chi phí, Lợi nhuận gộp.
+  * **Telegram Bot:** Gửi tin nhắn Markdown định dạng rõ ràng qua Bot `@FinautoDemo_bot`.
+* **Cơ chế báo cáo thông minh:**
+  * Có giao dịch: Gửi thống kê chi tiết theo số hóa đơn.
+  * Chưa có giao dịch: Gửi thông báo nhẹ nhàng *"Hôm nay cửa hàng chưa phát sinh giao dịch nào"*.
+  * Hỗ trợ test thủ công qua `POST /api/test-report` với cờ `sendZeroReports: true`.
 
-Chiều 1 (Quét xuôi): Nếu item có category === "POS Ket Ca", tự động chạy updateMany để đổi status: "MERGED" cho tất cả các bản ghi có category === "Hoa Don Le", transactionType === "THU" VÀ "aiRawData.isPosBill" === true trong ngày lịch hiện tại của user đó. TUYỆT ĐỐI KHÔNG GẠCH BỎ KHOẢN CHI VÀ HOÁ ĐƠN VIẾT TAY.
+### 3.5. Webhook Telegram Bot Đa Năng (`POST /api/telegram/webhook`)
+* Xử lý webhook từ Telegram Bot `@FinautoDemo_bot`.
+* **3 Cách liên kết tài khoản:**
+  1. Lệnh deep link: `/start <userId>`
+  2. Lệnh qua email: `/start <email>`
+  3. **Nhắn tin email trực tiếp:** Người dùng chỉ cần gửi email tài khoản vào tin nhắn chat, bot tự tra cứu DB và liên kết ngay lập tức.
 
-Chiều 2 (Quét ngược): Nếu item nộp vào là "Hoa Don Le" có transactionType === "THU" VÀ "aiRawData.isPosBill" === true, tiến hành findOne kiểm tra xem trong ngày kinh doanh đã có bản ghi "POS Ket Ca" nào ở trạng thái "VALID" chưa. Nếu ĐÃ CÓ, tự động gán status của item lẻ này thành "MERGED" ngay khi tạo mới.
+---
 
-Demo Hack: Dùng setTimeout(..., 15000) để delay 15 giây, sau đó gọi axios gửi báo cáo chốt ca (Markdown text) qua Telegram Bot đến telegramChatId của user.
+## 4. QUY TẮC PHÁT TRIỂN FRONTEND (FLUTTER)
+* **KISS & DRY:** Component hóa giao diện (`RevenueChart`, `EditableTransactionCard`, `UiHelpers`).
+* **Đèn Giao Thông UX:** Trên màn hình `SplitScreen`:
+  * Xanh lá (`HIGH`): Dữ liệu rõ ràng, tin cậy.
+  * Vàng (`MEDIUM`): Dữ liệu cần kiểm tra lại số tiền.
+  * Đỏ (`LOW`): Dữ liệu mờ hoặc nghi vấn, yêu cầu người dùng xác nhận thủ công.
+* **Xử lý lỗi AI:** Bắt `error_type` (`JUNK_IMAGE`, `BLURRY_IMAGE`) để hiển thị thông báo thân thiện bằng tiếng Việt.
+* **Toggles Thông Báo:**
+  * Email và In-App mặc định BẬT khi tạo tài khoản.
+  * Telegram mặc định TẮT, chỉ mở khi người dùng đã liên kết thành công với Bot Telegram.
 
-4. QUY TẮC PHÁT TRIỂN FRONTEND (FLUTTER)
-Nguyên tắc: KISS (Keep It Simple, Stupid) và DRY (Don't Repeat Yourself).
+---
 
-Cấu trúc: Tách nhỏ Component (RevenueChart, EditableTransactionCard).
-
-State Management: Dùng setState cơ bản. API gọi qua Dio hoặc http.
-
-Error Handling: Phải bắt biến error_type từ Backend để show Dialog thông báo bằng tiếng Việt (Ví dụ: "Ảnh quá mờ! Vui lòng chụp lại").
-
-Đèn Giao Thông UX: Trên màn SplitScreen, bôi viền ĐỎ nếu MucDoTinCay là "Thap", bôi VÀNG nếu là "Trung Binh". Luôn cho phép người dùng sửa chữ số thành Tiền vào (THU) / Tiền ra (CHI) trước khi bấm Lưu.
-
-5. SYSTEM INSTRUCTION (PROMPT AI V1.1 FINAL)
-Bạn là chuyên gia OCR và trợ lý kế toán AI cho ứng dụng FinAuto.
-
-QUY TẮC PHÂN LOẠI GIAO DỊCH ("transactionType"): Gán "THU" (nhận, khách trả, doanh thu, cọc...) hoặc "CHI" (mua, trả tiền, nhập hàng, ship...). Chỉ dùng 2 loại này. Nếu hóa đơn mờ số tiền, mặc định gán "CHI" và để mảng tiền rỗng.
-
-QUY TẮC PHÂN LOẠI CHỨNG TỪ ("category"): "POS Ket Ca" (Tổng kết ca, Z-Report), "Hoa Don Le" (bill in nhiệt sẵn từ máy POS lẻ), "So Tay" (viết tay trên giấy sổ), "Khac" (còn lại).
-
-QUY TẮC TRÍCH XUẤT TIỀN: Chuyển tắt về VNĐ (150k = 150000, 1.2tr = 1200000). Chỉ lấy số đã thanh toán phát sinh thực tế, BỎ QUA các khoản ghi nợ, gối đầu chưa trả. CacKhoanTien lấy mảng số tổng. Trong aiRawData, bắt buộc trích xuất thêm trường isPosBill: Gán true nếu đây là bill in nhiệt từ máy POS bán lẻ hoặc POS kết ca; gán false nếu là hóa đơn lẻ viết tay hoặc sổ tay.
-
-QUY TẮC TÓM TẮT: "reason" ngắn gọn dưới 10 từ. "MucDoTinCay": Cao/Trung Binh/Thap.
-
-STRICT JSON: Trả 1 JSON object duy nhất, KHÔNG markdown.
-
-CẤU TRÚC BẮT BUỘC:
-
-JSON
-{
-  "items": [
-    {
-      "category": "Hoa Don Le",
-      "transactionType": "THU",
-      "reason": "Bán lẻ ca sáng",
-      "aiRawData": {
-        "MucDoTinCay": "Cao",
-        "CacKhoanTien": [150000],
-        "isPosBill": true,
-        "ChiTietSanPham": []
-      }
-    }
-  ]
-}
-QUY TẮC XỬ LÝ ẢNH LỖI (BẮT BUỘC): Nếu ảnh KHÔNG liên quan tài chính, trả về: { "items": [], "error_type": "JUNK_IMAGE" }. Nếu ảnh là hóa đơn nhưng mờ không đọc được, trả về: { "items": [], "error_type": "BLURRY_IMAGE" }.
+## 5. DANH SÁCH 14 API ENDPOINTS (SWAGGER)
+* **Auth:**
+  * `POST /api/auth/register`
+  * `POST /api/auth/login`
+  * `POST /api/auth/google`
+  * `GET /api/auth/me`
+  * `PUT /api/auth/profile`
+* **Transactions:**
+  * `POST /api/scan-receipt`
+  * `POST /api/confirm-receipt`
+  * `POST /api/manual-entry`
+  * `GET /api/transactions`
+* **User:**
+  * `GET /api/user/:id/profile`
+  * `PUT /api/user/:id/notification-settings`
+* **Telegram & Reports:**
+  * `POST /api/telegram/webhook`
+  * `GET /api/telegram/set-webhook`
+  * `POST /api/test-report`
