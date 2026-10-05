@@ -38,7 +38,9 @@ const buildEmailHTML = ({ shopName, tongThu, tongChi, loinhuan, soHoaDon, ngay }
             <td style="padding:30px 40px 10px;">
               <p style="font-size:16px;color:#334155;line-height:1.6;margin:0;">
                 Xin chào <strong>${shopName}</strong>,<br>
-                Dưới đây là tóm tắt tài chính hôm nay được ghi nhận từ <strong>${soHoaDon} hóa đơn/giao dịch</strong> hợp lệ.
+                ${soHoaDon > 0 
+                  ? `Dưới đây là tóm tắt tài chính hôm nay được ghi nhận từ <strong>${soHoaDon} hóa đơn/giao dịch</strong> hợp lệ.`
+                  : `Hôm nay cửa hàng <strong>chưa phát sinh giao dịch nào</strong> được ghi nhận vào hệ thống.`}
               </p>
             </td>
           </tr>
@@ -91,34 +93,56 @@ const buildTelegramMessage = ({ shopName, tongThu, tongChi, loinhuan, soHoaDon, 
     `🟢 Tổng Thu: ${tongThu} đ\n` +
     `🔴 Tổng Chi: ${tongChi} đ\n` +
     `💰 *Lợi Nhuận: ${loinhuan >= 0 ? '+' : ''}${loinhuan} đ*\n\n` +
-    `📝 Ghi nhận từ ${soHoaDon} hóa đơn hợp lệ.\n` +
+    (soHoaDon > 0 ? `📝 Ghi nhận từ ${soHoaDon} hóa đơn hợp lệ.\n` : `📝 Hôm nay chưa phát sinh giao dịch nào.\n`) +
     `Chúc chủ quán ngủ ngon! 🌙`;
 
 // =========================================================================
 // HÀM CORE: Chạy toàn bộ luồng báo cáo (dùng chung cho Cron và Test API)
 // =========================================================================
-const runDailyReport = async () => {
+const runDailyReport = async ({ sendZeroReports = false } = {}) => {
     const results = { emailSent: 0, telegramSent: 0, skipped: 0, errors: [] };
 
-    const nowInVN = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
-    const startOfDayVN = new Date(nowInVN); startOfDayVN.setHours(0, 0, 0, 0);
-    const endOfDayVN = new Date(nowInVN); endOfDayVN.setHours(23, 59, 59, 999);
-    const startOfUtc = new Date(startOfDayVN.getTime() - 7 * 60 * 60 * 1000);
-    const endOfUtc = new Date(endOfDayVN.getTime() - 7 * 60 * 60 * 1000);
-    const ngayFormat = startOfDayVN.toLocaleDateString("vi-VN");
+    // Tính chính xác 00:00:00 -> 23:59:59.999 theo giờ Việt Nam (UTC+7)
+    const now = new Date();
+    const vnOffset = 7 * 60 * 60 * 1000;
+    const vnNow = new Date(now.getTime() + vnOffset);
+    const y = vnNow.getUTCFullYear();
+    const m = vnNow.getUTCMonth();
+    const d = vnNow.getUTCDate();
+
+    const startOfUtc = new Date(Date.UTC(y, m, d, 0, 0, 0, 0) - vnOffset);
+    const endOfUtc = new Date(Date.UTC(y, m, d, 23, 59, 59, 999) - vnOffset);
+    const ngayFormat = `${String(d).padStart(2, '0')}/${String(m + 1).padStart(2, '0')}/${y}`;
 
     const dateFilter = {
         status: "VALID",
         transactionDate: { $gte: startOfUtc, $lte: endOfUtc }
     };
 
-    const activeUsers = await Receipt.distinct("userId", dateFilter);
-    console.log(`👥 Phát hiện ${activeUsers.length} người dùng cần gửi báo cáo.`);
+    let usersToProcess = [];
+
+    if (sendZeroReports) {
+        // Gửi cho tất cả users có bật nhận thông báo (email hoặc telegram)
+        usersToProcess = await User.find({
+            $or: [
+                { 'notificationSettings.receiveEmail': { $ne: false } },
+                { 'notificationSettings.receiveTelegram': true, telegramChatId: { $ne: null } }
+            ]
+        });
+        console.log(`👥 [Chế độ gửi tất cả] Tìm thấy ${usersToProcess.length} người dùng.`);
+    } else {
+        // Mặc định: Chỉ gửi cho những người có phát sinh giao dịch trong ngày
+        const activeUserIds = await Receipt.distinct("userId", dateFilter);
+        console.log(`👥 Phát hiện ${activeUserIds.length} người dùng có giao dịch cần gửi báo cáo.`);
+        if (activeUserIds.length > 0) {
+            usersToProcess = await User.find({ _id: { $in: activeUserIds } });
+        }
+    }
 
     const transporter = createMailTransporter();
 
-    for (const uId of activeUsers) {
-        const userReceipts = await Receipt.find({ userId: uId, ...dateFilter });
+    for (const user of usersToProcess) {
+        const userReceipts = await Receipt.find({ userId: user._id, ...dateFilter });
 
         let tongThu = 0, tongChi = 0;
         userReceipts.forEach(doc => {
@@ -127,19 +151,23 @@ const runDailyReport = async () => {
         });
         const loinhuan = tongThu - tongChi;
 
-        const user = await User.findById(uId);
-        if (!user) { results.skipped++; continue; }
-
         const shopName = user.shopName || user.name || "Cửa hàng Vikeso";
         const fmt = (n) => Number(n).toLocaleString('vi-VN');
-        const data = { shopName, tongThu: fmt(tongThu), tongChi: fmt(tongChi), loinhuan: fmt(loinhuan), soHoaDon: userReceipts.length, ngay: ngayFormat };
+        const data = { 
+            shopName, 
+            tongThu: fmt(tongThu), 
+            tongChi: fmt(tongChi), 
+            loinhuan: fmt(loinhuan), 
+            soHoaDon: userReceipts.length, 
+            ngay: ngayFormat 
+        };
 
         // ── Kiểm tra Notification Settings ────────────────────────────────
         const shouldSendEmail = user.notificationSettings?.receiveEmail ?? true;
         const shouldSendTelegram = user.notificationSettings?.receiveTelegram ?? true;
 
-        // ── Email (BẮT BUỘC nếu bật) ────────────────────────────────────
-        if (shouldSendEmail) {
+        // ── Email (nếu bật) ─────────────────────────────────────────────
+        if (shouldSendEmail && user.email) {
             try {
                 await transporter.sendMail({
                     from: `"Vikeso AI" <${process.env.MAIL_USER}>`,
@@ -153,11 +181,11 @@ const runDailyReport = async () => {
                 console.error(`❌ Email lỗi (${user.email}):`, mailErr.message);
                 results.errors.push({ user: user.email, channel: 'email', error: mailErr.message });
             }
-        } else {
+        } else if (!shouldSendEmail) {
             console.log(`⚠️  ${user.email} đã tắt nhận báo cáo qua Email.`);
         }
 
-        // ── Telegram (TÙY CHỌN nếu đã liên kết và đang bật) ─────────────
+        // ── Telegram (nếu đã liên kết và đang bật) ──────────────────────
         if (shouldSendTelegram && process.env.TELEGRAM_BOT_TOKEN && user.telegramChatId) {
             try {
                 await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -178,7 +206,7 @@ const runDailyReport = async () => {
         }
     }
 
-    return { totalUsers: activeUsers.length, ...results };
+    return { totalUsers: usersToProcess.length, ...results };
 };
 
 // =========================================================================

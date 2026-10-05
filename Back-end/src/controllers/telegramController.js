@@ -19,43 +19,69 @@ exports.handleWebhook = async (req, res) => {
   const chatId = message.chat.id;
   const text   = (message.text || '').trim();
 
-  // Chỉ xử lý lệnh /start
-  if (!text.startsWith('/start')) return;
+  // Kiểm tra nếu tin nhắn là lệnh /start hoặc chứa email
+  const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
+  const emailMatch = text.match(emailRegex);
 
-  // /start <userId>  —  userId là MongoDB _id của user trong app Vikeso
-  const parts  = text.split(' ');
-  const userId = parts[1] ? parts[1].trim() : null;
+  let targetUser = null;
 
-  if (!userId) {
-    // Gõ /start không kèm userId → hướng dẫn
+  if (text.startsWith('/start')) {
+    const parts  = text.split(' ');
+    const param  = parts[1] ? parts[1].trim() : null;
+
+    if (param) {
+      // 1. Kiểm tra nếu param là email
+      if (emailRegex.test(param)) {
+        targetUser = await User.findOne({ email: param.toLowerCase() });
+      }
+      // 2. Kiểm tra nếu param là MongoDB ObjectId hợp lệ
+      else if (/^[0-9a-fA-F]{24}$/.test(param)) {
+        targetUser = await User.findById(param);
+      }
+    }
+  } else if (emailMatch) {
+    // Người dùng nhắn trực tiếp email vào bot chat
+    const email = emailMatch[1].toLowerCase();
+    targetUser = await User.findOne({ email });
+  }
+
+  // Nếu tìm thấy user cần liên kết
+  if (targetUser) {
+    targetUser.telegramChatId = String(chatId);
+    if (!targetUser.notificationSettings) {
+      targetUser.notificationSettings = { receiveEmail: true, receiveTelegram: true, receiveInApp: true };
+    } else {
+      targetUser.notificationSettings.receiveTelegram = true;
+    }
+    await targetUser.save();
+
     await sendMessage(chatId,
-      '👋 Chào bạn! Để kết nối tài khoản Vikeso, hãy bấm nút *"Kết nối Telegram"* trong ứng dụng.',
+      `✅ *Kết nối thành công!*\n\nTài khoản *${targetUser.shopName || targetUser.email}* đã được liên kết với Telegram.\n\nBạn sẽ nhận báo cáo tài chính hàng ngày lúc *22:00 🕙* tại đây.`,
+      'Markdown'
+    );
+    console.log(`✅ Telegram linked: ${targetUser.email} → chatId ${chatId}`);
+    return;
+  }
+
+  // Nếu là lệnh /start mà không có param hợp lệ
+  if (text.startsWith('/start')) {
+    await sendMessage(chatId,
+      '👋 Chào bạn! Để kết nối tài khoản Vikeso:\n\n' +
+      '1️⃣ Bấm nút *"Kết nối Telegram"* trong ứng dụng Vikeso.\n' +
+      '2️⃣ Hoặc *gửi trực tiếp Email đăng ký* của bạn vào tin nhắn này để bot tự động liên kết!',
       'Markdown'
     );
     return;
   }
 
-  try {
-    // Tìm user theo _id và lưu chatId
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { telegramChatId: String(chatId) },
-      { new: true }
-    );
-
-    if (!user) {
-      await sendMessage(chatId, '❌ Không tìm thấy tài khoản. Vui lòng thử lại từ ứng dụng.');
-      return;
-    }
-
+  // Nếu là tin nhắn thông thường nhưng không nhận diện được email
+  if (emailMatch) {
+    await sendMessage(chatId, `❌ Không tìm thấy tài khoản Vikeso nào với email *${emailMatch[1]}*. Vui lòng kiểm tra lại.`, 'Markdown');
+  } else {
     await sendMessage(chatId,
-      `✅ *Kết nối thành công!*\n\nTài khoản *${user.shopName || user.email}* đã được liên kết với Telegram.\n\nBạn sẽ nhận báo cáo tài chính hàng ngày lúc *22:00 🕙* tại đây.`,
+      '👋 Để liên kết tài khoản Vikeso, bạn chỉ cần *gửi địa chỉ Email đăng ký của bạn* vào đây nhé!',
       'Markdown'
     );
-    console.log(`✅ Telegram linked: ${user.email} → chatId ${chatId}`);
-  } catch (err) {
-    console.error('❌ Telegram webhook error:', err.message);
-    await sendMessage(chatId, '⚠️ Có lỗi xảy ra. Vui lòng thử lại.');
   }
 };
 

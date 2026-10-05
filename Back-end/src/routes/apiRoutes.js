@@ -161,8 +161,9 @@ router.put('/user/:id/notification-settings', async (req, res) => {
 // ---------------------------------------------------------
 router.post('/test-report', async (req, res) => {
   try {
-    console.log("🧪 [TEST] Trigger báo cáo thủ công...");
-    const result = await runDailyReport();
+    const sendZeroReports = req.body?.sendZeroReports !== undefined ? req.body.sendZeroReports : true;
+    console.log(`🧪 [TEST] Trigger báo cáo thủ công... (sendZeroReports: ${sendZeroReports})`);
+    const result = await runDailyReport({ sendZeroReports });
     return res.status(200).json({
       success: true,
       message: 'Báo cáo đã được gửi thành công!',
@@ -170,8 +171,7 @@ router.post('/test-report', async (req, res) => {
     });
   } catch (error) {
     console.error('Lỗi test-report:', error);
-    return res.status(500).json
-      ({ success: false, error: error.message });
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
 
