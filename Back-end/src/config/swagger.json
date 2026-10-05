@@ -28,18 +28,23 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": ["email", "password"],
                 "properties": {
                   "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "user@example.com"
                   },
                   "password": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "123456"
                   },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Nguyễn Văn A"
                   },
                   "shopName": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Tiệm Cà Phê Vikeso"
                   }
                 }
               }
@@ -71,12 +76,15 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": ["email", "password"],
                 "properties": {
                   "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "user@example.com"
                   },
                   "password": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "123456"
                   }
                 }
               }
@@ -105,9 +113,11 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": ["idToken"],
                 "properties": {
                   "idToken": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Google ID Token lấy từ Google Sign-In SDK"
                   }
                 }
               }
@@ -117,58 +127,9 @@
         "responses": {
           "200": {
             "description": "Thành công"
-          }
-        }
-      }
-    },
-    "/api/scan-receipt": {
-      "post": {
-        "summary": "Scan hóa đơn bằng AI (Gemini)",
-        "tags": [
-          "Transactions"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "image": {
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Kết quả bóc tách JSON từ AI"
-          }
-        }
-      }
-    },
-    "/api/transactions": {
-      "get": {
-        "summary": "Lấy danh sách giao dịch của User",
-        "tags": [
-          "Transactions"
-        ],
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Danh sách giao dịch"
+          },
+          "401": {
+            "description": "Token không hợp lệ"
           }
         }
       }
@@ -213,13 +174,16 @@
                 "type": "object",
                 "properties": {
                   "shopName": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Cửa Hàng Mới"
                   },
                   "phone": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "0987654321"
                   },
                   "avatar": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "https://example.com/avatar.jpg"
                   }
                 }
               }
@@ -236,10 +200,273 @@
         }
       }
     },
+    "/api/scan-receipt": {
+      "post": {
+        "summary": "Scan hóa đơn bằng AI (Gemini OCR)",
+        "description": "Upload ảnh hóa đơn/chứng từ để Gemini AI nhận diện loại giao dịch (THU/CHI), số tiền, ngày và danh mục.",
+        "tags": [
+          "Transactions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["image"],
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File ảnh chụp hóa đơn (JPG, PNG, WebP)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Kết quả bóc tách JSON từ AI"
+          },
+          "400": {
+            "description": "Lỗi file upload hoặc định dạng không hợp lệ"
+          }
+        }
+      }
+    },
+    "/api/confirm-receipt": {
+      "post": {
+        "summary": "Xác nhận & Lưu hóa đơn (Sau khi AI Scan & SplitScreen)",
+        "description": "Lưu các giao dịch vào MongoDB sau khi người dùng review trên màn hình SplitScreen. Tự động broadcast WebSocket `new_transaction` để cập nhật realtime.",
+        "tags": [
+          "Transactions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["userId", "items"],
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "example": "6ac3f34375392ac160b8c0d9"
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "category": { "type": "string", "example": "Hoa Don Le" },
+                        "transactionType": { "type": "string", "enum": ["THU", "CHI"], "example": "THU" },
+                        "totalAmount": { "type": "number", "example": 150000 },
+                        "reason": { "type": "string", "example": "Bán 3 ly cà phê muối" },
+                        "confidenceLevel": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"], "example": "HIGH" },
+                        "transactionDate": { "type": "string", "format": "date-time" },
+                        "aiRawData": { "type": "object" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Đã lưu hóa đơn thành công và phát WebSocket"
+          },
+          "400": {
+            "description": "Thiếu dữ liệu bắt buộc"
+          }
+        }
+      }
+    },
+    "/api/manual-entry": {
+      "post": {
+        "summary": "Nhập giao dịch thủ công (Lưới lọc thông minh 2 chiều)",
+        "description": "Lưu giao dịch nhập tay. Tự động áp dụng lưới lọc 2 chiều (Bidirectional Smart Filter) để tự động MERGE khi xuất hiện POS Kết Ca.",
+        "tags": [
+          "Transactions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "example": "6ac3f34375392ac160b8c0d9"
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": ["Hoa Don Le", "POS Ket Ca", "So Tay", "Chuyen Khoan", "Khac"],
+                    "example": "So Tay"
+                  },
+                  "transactionType": {
+                    "type": "string",
+                    "enum": ["THU", "CHI"],
+                    "example": "CHI"
+                  },
+                  "totalAmount": {
+                    "type": "number",
+                    "example": 50000
+                  },
+                  "reason": {
+                    "type": "string",
+                    "example": "Mua đá lạnh"
+                  },
+                  "transactionDate": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "items": {
+                    "type": "array",
+                    "description": "Có thể truyền mảng items thay vì 1 object đơn lẻ",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Lưu giao dịch thành công"
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ"
+          }
+        }
+      }
+    },
+    "/api/transactions": {
+      "get": {
+        "summary": "Lấy danh sách giao dịch của User",
+        "tags": [
+          "Transactions"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB _id của người dùng"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh sách giao dịch hợp lệ"
+          },
+          "400": {
+            "description": "Thiếu userId"
+          }
+        }
+      }
+    },
+    "/api/user/{id}/profile": {
+      "get": {
+        "summary": "Lấy thông tin profile & trạng thái cài đặt thông báo",
+        "description": "Kiểm tra xem user đã liên kết Telegram chưa (`hasTelegram`) và cài đặt nhận thông báo hiện tại.",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB _id của người dùng"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "hasTelegram": { "type": "boolean", "example": true },
+                    "settings": {
+                      "type": "object",
+                      "properties": {
+                        "receiveEmail": { "type": "boolean", "example": true },
+                        "receiveTelegram": { "type": "boolean", "example": true },
+                        "receiveInApp": { "type": "boolean", "example": true }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy user"
+          }
+        }
+      }
+    },
+    "/api/user/{id}/notification-settings": {
+      "put": {
+        "summary": "Cập nhật cài đặt nhận thông báo",
+        "description": "Bật/tắt nhận báo cáo qua Email, Telegram Bot, hoặc In-App notification.",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB _id của người dùng"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "receiveEmail": { "type": "boolean", "example": true },
+                  "receiveTelegram": { "type": "boolean", "example": true },
+                  "receiveInApp": { "type": "boolean", "example": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cập nhật thành công"
+          },
+          "404": {
+            "description": "Không tìm thấy user"
+          }
+        }
+      }
+    },
     "/api/telegram/webhook": {
       "post": {
-        "summary": "Nhận update từ Telegram Bot (Telegram tự gọi)",
-        "description": "Endpoint này được Telegram gọi tự động khi user gửi tin nhắn /start đến bot. Không cần gọi thủ công.",
+        "summary": "Nhận update từ Telegram Bot (Telegram Webhook)",
+        "description": "Endpoint này được máy chủ Telegram gọi tự động khi người dùng nhắn tin hoặc bấm Start. Hỗ trợ liên kết tài khoản qua: (1) `/start <userId>`, (2) `/start <email>`, hoặc (3) Người dùng nhắn trực tiếp Email tài khoản vào bot.",
         "tags": [
           "Telegram"
         ],
@@ -256,14 +483,12 @@
                       "chat": {
                         "type": "object",
                         "properties": {
-                          "id": {
-                            "type": "integer"
-                          }
+                          "id": { "type": "integer", "example": 123456789 }
                         }
                       },
                       "text": {
                         "type": "string",
-                        "example": "/start 64abc123..."
+                        "example": "qhuy8452@gmail.com"
                       }
                     }
                   }
@@ -274,15 +499,15 @@
         },
         "responses": {
           "200": {
-            "description": "OK (luôn trả 200 để Telegram không gửi lại)"
+            "description": "OK (luôn trả 200 để Telegram xác nhận đã nhận tin)"
           }
         }
       }
     },
     "/api/telegram/set-webhook": {
       "get": {
-        "summary": "Đăng ký Webhook URL với Telegram Bot (gọi 1 lần)",
-        "description": "Gọi endpoint này 1 lần duy nhất sau khi deploy để Telegram biết gửi update về đâu. Không cần auth.",
+        "summary": "Đăng ký Webhook URL với Telegram Bot",
+        "description": "Gọi endpoint này 1 lần duy nhất sau khi deploy để Telegram biết URL webhook gửi update về.",
         "tags": [
           "Telegram"
         ],
@@ -299,10 +524,27 @@
     "/api/test-report": {
       "post": {
         "summary": "Kích hoạt gửi báo cáo cuối ngày ngay lập tức (Test / Thủ công)",
-        "description": "Chạy thủ công luồng tổng hợp doanh thu trong ngày và tự động gửi thông báo qua Email & Telegram cho các shop có phát sinh giao dịch mà không cần chờ đến 22:00.",
+        "description": "Chạy thủ công luồng tổng hợp tài chính trong ngày và gửi Email & Telegram. Hỗ trợ cờ `sendZeroReports` để gửi báo cáo kiểm tra ngay cả khi chưa phát sinh hóa đơn nào trong ngày.",
         "tags": [
           "Reports"
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sendZeroReports": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Nếu true: Gửi cho tất cả tài khoản đã bật thông báo kể cả khi hôm nay có 0 giao dịch. Nếu false: Chỉ gửi cho tài khoản có giao dịch."
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Báo cáo đã được gửi thành công",
@@ -316,8 +558,8 @@
                     "result": {
                       "type": "object",
                       "properties": {
-                        "totalUsers": { "type": "integer", "example": 2 },
-                        "emailSent": { "type": "integer", "example": 2 },
+                        "totalUsers": { "type": "integer", "example": 5 },
+                        "emailSent": { "type": "integer", "example": 5 },
                         "telegramSent": { "type": "integer", "example": 1 },
                         "skipped": { "type": "integer", "example": 0 },
                         "errors": { "type": "array", "items": { "type": "object" } }
