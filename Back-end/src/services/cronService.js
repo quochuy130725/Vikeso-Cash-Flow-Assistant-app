@@ -215,7 +215,7 @@ const runDailyReport = async ({ sendZeroReports = false } = {}) => {
 cron.schedule('0 22 * * *', async () => {
     console.log("⏰ [22:00] Bắt đầu gửi báo cáo cuối ngày...");
     try {
-        const result = await runDailyReport();
+        const result = await runDailyReport({ sendZeroReports: true });
         console.log("😴 Báo cáo hoàn tất:", result);
     } catch (err) {
         console.error("❌ Lỗi cron-job:", err);
