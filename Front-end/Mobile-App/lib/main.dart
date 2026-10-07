@@ -7,6 +7,7 @@ import 'views/dashboard/dashboard_screen.dart';
 import 'views/thu_chi/thu_chi_screen.dart';
 import 'views/profile/profile_screen.dart';
 import 'views/billing/upgrade_pro_screen.dart';
+import 'views/admin/admin_dashboard_screen.dart';
 import 'views/scan_receipt/camera_screen.dart';
 import 'views/analytics/analytics_screen.dart';
 
@@ -42,6 +43,7 @@ class QuanLyCuaHangApp extends StatelessWidget {
         '/profile': (context) => const MainNavigationShell(initialIndex: 3),
         '/camera': (context) => const CameraScreen(),
         '/upgrade-pro': (context) => const UpgradeProScreen(),
+        '/admin': (context) => const AdminDashboardScreen(),
       },  
     );
   }
