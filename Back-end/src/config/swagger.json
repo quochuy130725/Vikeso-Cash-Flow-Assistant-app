@@ -527,8 +527,7 @@
         "description": "Chạy thủ công luồng tổng hợp tài chính trong ngày và gửi Email & Telegram. Hỗ trợ cờ `sendZeroReports` để gửi báo cáo kiểm tra ngay cả khi chưa phát sinh hóa đơn nào trong ngày.",
         "tags": [
           "Reports"
-        ],
-        "requestBody": {
+        ],        "requestBody": {
           "required": false,
           "content": {
             "application/json": {
@@ -574,6 +573,71 @@
             "description": "Lỗi máy chủ khi xử lý báo cáo"
           }
         }
+      }
+    },
+    "/api/billing/create-order": {
+      "post": {
+        "summary": "Tạo đơn nâng cấp PRO + VietQR SePay",
+        "tags": ["Billing"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["userId"],
+                "properties": { "userId": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Tạo order thành công" } }
+      }
+    },
+    "/api/billing/status/{orderCode}": {
+      "get": {
+        "summary": "Poll trạng thái đơn PRO",
+        "tags": ["Billing"],
+        "parameters": [
+          { "name": "orderCode", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "PENDING | SUCCESS | FAILED | EXPIRED" } }
+      }
+    },
+    "/api/billing/history": {
+      "get": {
+        "summary": "Lịch sử đơn PRO của user",
+        "tags": ["Billing"],
+        "parameters": [
+          { "name": "userId", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Danh sách orders" } }
+      }
+    },
+    "/api/billing/sepay/webhook": {
+      "post": {
+        "summary": "SePay webhook (SePay gọi)",
+        "description": "Header x-api-key phải trùng SEPAY_WEBHOOK_API_KEY. Luôn trả 200 {success:true}.",
+        "tags": ["Billing"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "integer", "example": 92704 },
+                  "gateway": { "type": "string", "example": "Vietcombank" },
+                  "transferType": { "type": "string", "example": "in" },
+                  "transferAmount": { "type": "integer", "example": 99000 },
+                  "content": { "type": "string", "example": "VIKESO ABC123 chuyen tien" },
+                  "code": { "type": "string", "example": null }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "{success:true}" } }
       }
     }
   },

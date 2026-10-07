@@ -227,5 +227,20 @@ cron.schedule('0 22 * * *', async () => {
 
 console.log("✅ Hệ thống báo cáo tự động (Cron-job) đã được kích hoạt.");
 
+// =========================================================================
+// CRON BILLING: hết hạn order QR + downgrade PRO hết hạn (01:00 hằng ngày)
+// Logic nằm trong billingService, cron chỉ gọi.
+// =========================================================================
+cron.schedule('0 1 * * *', async () => {
+    try {
+        const billingService = require('./billingService');
+        await billingService.expireOverdueOrders();
+        await billingService.downgradeExpiredPro();
+        console.log("🧾 [Billing] Quét hết hạn order/PRO xong.");
+    } catch (err) {
+        console.error("❌ Lỗi cron billing:", err.message);
+    }
+}, { scheduled: true, timezone: "Asia/Ho_Chi_Minh" });
+
 // Export hàm core để Test API dùng chung
 module.exports = { runDailyReport };
