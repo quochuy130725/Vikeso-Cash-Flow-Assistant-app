@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../shared_widgets/side_drawer.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/services/api_service.dart';
+import '../billing/upgrade_pro_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,13 +17,14 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(),
   );
 
   String _shopName  = '';
   String _email     = '';
   String _phone     = '';
   String? _avatar;
+  String _subscriptionPlan = 'FREE';
   bool _isLoading   = false;
 
   bool _receiveEmail = true;
@@ -37,11 +39,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadProfile() async {
-    final shopName = await _storage.read(key: 'user_shopName') ?? '';
-    final email    = await _storage.read(key: 'user_email')    ?? '';
-    final phone    = await _storage.read(key: 'user_phone')    ?? '';
-    final avatar   = await _storage.read(key: 'user_avatar');
-    if (!mounted) return;
+    // Tự động đồng bộ thông tin mới nhất từ server
+    final profile = await AuthRepository().fetchUserProfile();
+    if (profile != null && mounted) {
+      setState(() {
+        _shopName = profile.shopName;
+        _email = profile.email;
+        _phone = profile.phone ?? '';
+        _avatar = profile.avatar;
+        _subscriptionPlan = profile.subscriptionPlan;
+      });
+    } else {
+      final shopName = await _storage.read(key: 'user_shopName') ?? '';
+      final email    = await _storage.read(key: 'user_email')    ?? '';
+      final phone    = await _storage.read(key: 'user_phone')    ?? '';
+      final avatar   = await _storage.read(key: 'user_avatar');
+      final plan     = await _storage.read(key: 'user_subscriptionPlan') ?? 'FREE';
+      if (!mounted) return;
+      setState(() {
+        _shopName = shopName;
+        _email    = email;
+        _phone    = phone;
+        _avatar   = avatar;
+        _subscriptionPlan = plan;
+      });
+    }
+
     final settingsStr = await _storage.read(key: 'user_notificationSettings');
     if (settingsStr != null) {
       try {
@@ -53,17 +76,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _receiveInApp = settings['receiveInApp'] ?? true;
       } catch (_) {}
     }
-    // Wait, we don't have user.telegramChatId in storage. Actually, we do! Let's check apiRoutes.js... yes we return it but AuthRepository doesn't save it. Let's assume we fetch it via Profile API.
-    setState(() {
-      _shopName = shopName;
-      _email    = email;
-      _phone    = phone;
-      _avatar   = avatar;
-    });
   }
 
   Future<void> _openEditDialog() async {
     final shopCtrl  = TextEditingController(text: _shopName);
+    final phoneCtrl = TextEditingController(text: _phone);
 
     final result = await showDialog<Map<String, String>>(
       context: context,
@@ -79,6 +96,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 prefixIcon: Icon(Icons.storefront_outlined),
               ),
             ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: phoneCtrl,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: 'Số điện thoại',
+                prefixIcon: Icon(Icons.phone_outlined),
+              ),
+            ),
           ],
         ),
         actions: [
@@ -86,6 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, {
               'shopName': shopCtrl.text.trim(),
+              'phone': phoneCtrl.text.trim(),
             }),
             child: const Text('Lưu'),
           ),
@@ -94,10 +121,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (result == null) return;
-    await _updateProfile(result['shopName']!);
+    await _updateProfile(result['shopName']!, result['phone']!);
   }
 
-  Future<void> _updateProfile(String shopName) async {
+  Future<void> _updateProfile(String shopName, String phone) async {
     setState(() { _isLoading = true; });
     try {
       final token   = await _storage.read(key: 'access_token') ?? '';
@@ -110,7 +137,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({'shopName': shopName}),
+        body: jsonEncode({
+          'shopName': shopName,
+          'phone': phone,
+        }),
       ).timeout(const Duration(seconds: 30));
 
       final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -118,12 +148,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final info = body['userInfo'] as Map<String, dynamic>;
         
         await _storage.write(key: 'user_shopName', value: info['shopName']?.toString() ?? '');
-        
-        dotenv.env['USER_ID'] = info['id']?.toString() ?? dotenv.env['USER_ID'] ?? '';
+        await _storage.write(key: 'user_phone', value: info['phone']?.toString() ?? '');
         
         if (!mounted) return;
         setState(() {
           _shopName = info['shopName']?.toString() ?? '';
+          _phone    = info['phone']?.toString() ?? '';
         });
         _showSnack('Cập nhật thành công!', isSuccess: true);
       } else {
@@ -196,10 +226,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ));
   }
 
+  Future<void> _navigateToUpgradePro() async {
+    final upgraded = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (context) => const UpgradeProScreen()),
+    );
+    if (upgraded == true) {
+      _loadProfile();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final primaryPink = const Color(0xFFFF5C8D);
+    const primaryPink = Color(0xFFFF5C8D);
+    final isPro = _subscriptionPlan.toUpperCase() == 'PRO';
 
     return Scaffold(
       appBar: AppBar(
@@ -208,9 +249,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: const Icon(Icons.menu, color: Colors.white),
         )),
         backgroundColor: primaryPink,
-        title: const Text('Profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Cá nhân & Cửa hàng', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.notifications, color: Colors.white)),
+          IconButton(
+            onPressed: () => _showSnack('Bạn không có thông báo mới', isSuccess: true),
+            icon: const Icon(Icons.notifications_none, color: Colors.white),
+          ),
         ],
       ),
       drawer: const CustomSideDrawer(),
@@ -239,7 +283,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 child: _avatar == null || !_avatar!.startsWith('http')
                                     ? Text(
                                         _shopName.isNotEmpty ? _shopName[0].toUpperCase() : 'V',
-                                        style: TextStyle(fontSize: 32, color: primaryPink, fontWeight: FontWeight.bold),
+                                        style: const TextStyle(fontSize: 32, color: primaryPink, fontWeight: FontWeight.bold),
                                       )
                                     : null,
                               ),
@@ -268,11 +312,118 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(_email, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                        if (_phone.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.phone_outlined, size: 14, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Text(_phone, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
+
+                  // Card Gói Tài Khoản (Subscription Plan)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: isPro
+                          ? const LinearGradient(
+                              colors: [Color(0xFF2C1654), Color(0xFFFF5C8D)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : LinearGradient(
+                              colors: [Colors.grey[100]!, Colors.white],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isPro ? const Color(0xFFFFD700) : Colors.grey[300]!,
+                        width: isPro ? 1.5 : 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (isPro ? primaryPink : Colors.black).withValues(alpha: 0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isPro
+                                ? const Color(0xFFFFD700).withValues(alpha: 0.2)
+                                : Colors.grey[200],
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isPro ? Icons.workspace_premium : Icons.person_outline,
+                            color: isPro ? const Color(0xFFFFD700) : Colors.grey[700],
+                            size: 26,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isPro ? 'Gói VikeSo PRO' : 'Gói Miễn Phí (FREE)',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: isPro ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                isPro ? 'Đang mở khóa toàn bộ tính năng cao cấp' : 'Nâng cấp để quét hóa đơn không giới hạn',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isPro ? Colors.white70 : Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (!isPro)
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryPink,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            onPressed: _navigateToUpgradePro,
+                            child: const Text('Nâng cấp', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFD700),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'ACTIVE',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.black87),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
 
                   Material(
                     color: Colors.white,
@@ -284,8 +435,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         _menuItem(context, Icons.storefront, 'Thông tin cửa hàng', onTap: _openEditDialog),
                         _menuItem(context, Icons.edit, 'Sửa thông tin', onTap: _openEditDialog),
-                        _menuItem(context, Icons.lock_outline, 'Đổi mật khẩu', onTap: () {}),
-                        _menuItem(context, Icons.settings_outlined, 'Cài đặt', onTap: () {}),
+                        _menuItem(context, Icons.workspace_premium, 'Gói dịch vụ PRO & Thanh toán', onTap: _navigateToUpgradePro),
+                        _menuItem(context, Icons.lock_outline, 'Đổi mật khẩu', onTap: () => _showSnack('Tính năng đổi mật khẩu đang cập nhật!')),
+                        _menuItem(context, Icons.settings_outlined, 'Cài đặt hệ thống', onTap: () => _showSnack('Cài đặt hệ thống đang cập nhật!')),
                       ],
                     ),
                   ),
@@ -309,7 +461,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           title: const Text('Email', style: TextStyle(fontWeight: FontWeight.w500)),
                           subtitle: const Text('Nhận báo cáo chốt ca (22:00)'),
                           value: _receiveEmail,
-                          activeColor: primaryPink,
+                          activeThumbColor: primaryPink,
                           onChanged: (val) => _updateSetting('receiveEmail', val),
                         ),
                         const Divider(height: 1),
@@ -317,7 +469,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           title: const Text('Telegram', style: TextStyle(fontWeight: FontWeight.w500)),
                           subtitle: const Text('Thông báo qua bot Telegram'),
                           value: _receiveTelegram,
-                          activeColor: primaryPink,
+                          activeThumbColor: primaryPink,
                           onChanged: (val) {
                             if (val && !_hasTelegram) {
                               _promptConnectTelegram();
@@ -331,7 +483,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           title: const Text('Thông báo ứng dụng', style: TextStyle(fontWeight: FontWeight.w500)),
                           subtitle: const Text('Thông báo đẩy trên thiết bị'),
                           value: _receiveInApp,
-                          activeColor: primaryPink,
+                          activeThumbColor: primaryPink,
                           onChanged: (val) => _updateSetting('receiveInApp', val),
                         ),
                       ],

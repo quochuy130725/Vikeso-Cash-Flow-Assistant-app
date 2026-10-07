@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'core/themes/app_theme.dart';
 // Import các màn hình của ứng dụng
 import 'views/splash/splash_screen.dart';
@@ -6,6 +6,7 @@ import 'views/auth/login_screen.dart';
 import 'views/dashboard/dashboard_screen.dart';
 import 'views/thu_chi/thu_chi_screen.dart';
 import 'views/profile/profile_screen.dart';
+import 'views/billing/upgrade_pro_screen.dart';
 import 'views/scan_receipt/camera_screen.dart';
 import 'views/analytics/analytics_screen.dart';
 
@@ -40,9 +41,7 @@ class QuanLyCuaHangApp extends StatelessWidget {
         '/analytics': (context) => const MainNavigationShell(initialIndex: 2),
         '/profile': (context) => const MainNavigationShell(initialIndex: 3),
         '/camera': (context) => const CameraScreen(),
-        // NOTE: '/split' không còn là route tĩnh nữa.
-        // SplitScreen được mở bằng Navigator.push từ CameraScreen
-        // để truyền dữ liệu động (items, userId, imageFile) từ API.
+        '/upgrade-pro': (context) => const UpgradeProScreen(),
       },  
     );
   }

@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
 
-/// AuthRepository - Quan ly toan bo luong xac thuc FinAuto.
+/// AuthRepository - Quản lý toàn bộ luồng xác thực FinAuto.
 class AuthRepository {
   static final AuthRepository _instance = AuthRepository._internal();
   factory AuthRepository() => _instance;
@@ -20,7 +20,7 @@ class AuthRepository {
   static const _timeout = Duration(seconds: 50);
 
   static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(),
   );
 
   static final _googleSignIn = GoogleSignIn(
@@ -35,6 +35,9 @@ class AuthRepository {
   static const _kAvatar = 'user_avatar';
   static const _kProvider = 'user_authProvider';
   static const _kNotificationSettings = 'user_notificationSettings';
+  static const _kRole = 'user_role';
+  static const _kSubscriptionPlan = 'user_subscriptionPlan';
+  static const _kPhone = 'user_phone';
 
   Future<AuthResult> loginWithEmail(
       {required String email, required String password}) async {
@@ -50,20 +53,22 @@ class AuthRepository {
       return _handleAuthResponse(response);
     } on SocketException {
       return AuthResult.failure(
-          'Khong the ket noi may chu. Kiem tra Wifi va IP!');
+          'Không thể kết nối máy chủ. Kiểm tra Wifi và IP!');
     } on Exception catch (e) {
       if (e.toString().contains('TimeoutException')) {
         return AuthResult.failure(
-            'May chu phan hoi qua cham (cold start). Thu lai sau 30 giay.');
+            'Máy chủ phản hồi quá chậm (cold start). Thử lại sau 30 giây.');
       }
-      return AuthResult.failure('Loi khong xac dinh: $e');
+      return AuthResult.failure('Lỗi không xác định: $e');
     }
   }
 
-  Future<AuthResult> register(
-      {required String email,
-      required String password,
-      String shopName = ''}) async {
+  Future<AuthResult> register({
+    required String email,
+    required String password,
+    required String shopName,
+    String? phone,
+  }) async {
     try {
       final uri = Uri.parse('$_authBaseUrl/register');
       final response = await http
@@ -73,20 +78,21 @@ class AuthRepository {
             body: jsonEncode({
               'email': email.trim(),
               'password': password,
-              'shopName': shopName.trim()
+              'shopName': shopName.trim(),
+              if (phone != null && phone.isNotEmpty) 'phone': phone.trim(),
             }),
           )
           .timeout(_timeout);
       return _handleAuthResponse(response);
     } on SocketException {
       return AuthResult.failure(
-          'Khong the ket noi may chu. Kiem tra Wifi va IP!');
+          'Không thể kết nối máy chủ. Kiểm tra Wifi và IP!');
     } on Exception catch (e) {
       if (e.toString().contains('TimeoutException')) {
         return AuthResult.failure(
-            'May chu phan hoi qua cham. Thu lai sau 30 giay.');
+            'Máy chủ phản hồi quá chậm. Thử lại sau 30 giây.');
       }
-      return AuthResult.failure('Loi khong xac dinh: $e');
+      return AuthResult.failure('Lỗi không xác định: $e');
     }
   }
 
@@ -94,13 +100,13 @@ class AuthRepository {
     try {
       final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        return AuthResult.failure('Nguoi dung huy dang nhap Google.');
+        return AuthResult.failure('Người dùng hủy đăng nhập Google.');
       }
 
       final googleAuth = await googleUser.authentication;
       final idToken = googleAuth.idToken;
       if (idToken == null) {
-        return AuthResult.failure('Khong the lay Google ID Token.');
+        return AuthResult.failure('Không thể lấy Google ID Token.');
       }
 
       final uri = Uri.parse('$_authBaseUrl/google');
@@ -114,14 +120,14 @@ class AuthRepository {
       return _handleAuthResponse(response);
     } on SocketException {
       return AuthResult.failure(
-          'Khong the ket noi may chu. Kiem tra Wifi va IP!');
+          'Không thể kết nối máy chủ. Kiểm tra Wifi và IP!');
     } on Exception catch (e) {
       debugPrint('Google Sign-In error: $e');
       if (e.toString().contains('TimeoutException')) {
         return AuthResult.failure(
-            'May chu phan hoi qua cham. Thu lai sau 30 giay.');
+            'Máy chủ phản hồi quá chậm. Thử lại sau 30 giây.');
       }
-      return AuthResult.failure('Loi dang nhap Google: $e');
+      return AuthResult.failure('Lỗi đăng nhập Google: $e');
     }
   }
 
@@ -150,8 +156,64 @@ class AuthRepository {
         authProvider: await _storage.read(key: _kProvider) ?? 'local',
         notificationSettings: await _storage.read(key: _kNotificationSettings),
         accessToken: token,
+        role: await _storage.read(key: _kRole) ?? 'OWNER',
+        subscriptionPlan: await _storage.read(key: _kSubscriptionPlan) ?? 'FREE',
+        phone: await _storage.read(key: _kPhone),
       );
     } catch (_) {
+      return null;
+    }
+  }
+
+  /// Làm mới thông tin user từ server (role, plan, phone, ...)
+  Future<UserInfo?> fetchUserProfile() async {
+    try {
+      final token = await getAccessToken();
+      if (token == null) return null;
+
+      final uri = Uri.parse('$_authBaseUrl/me');
+      final response = await http.get(
+        uri,
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 15));
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 && body['success'] == true) {
+        final info = body['userInfo'] as Map<String, dynamic>;
+        final role = info['role']?.toString() ?? 'OWNER';
+        final plan = info['subscriptionPlan']?.toString() ?? 'FREE';
+        final phone = info['phone']?.toString();
+        final shopName = info['shopName']?.toString() ?? '';
+        final email = info['email']?.toString() ?? '';
+        final avatar = info['avatar']?.toString();
+
+        await Future.wait([
+          _storage.write(key: _kRole, value: role),
+          _storage.write(key: _kSubscriptionPlan, value: plan),
+          if (phone != null) _storage.write(key: _kPhone, value: phone),
+          _storage.write(key: _kShopName, value: shopName),
+          _storage.write(key: _kEmail, value: email),
+          if (avatar != null) _storage.write(key: _kAvatar, value: avatar),
+        ]);
+
+        return UserInfo(
+          id: info['id']?.toString() ?? (await getUserId()) ?? '',
+          email: email,
+          shopName: shopName,
+          avatar: avatar,
+          authProvider: info['authProvider']?.toString() ?? 'local',
+          notificationSettings: info['notificationSettings'] != null
+              ? jsonEncode(info['notificationSettings'])
+              : null,
+          accessToken: token,
+          role: role,
+          subscriptionPlan: plan,
+          phone: phone,
+        );
+      }
+      return null;
+    } catch (e) {
+      debugPrint('fetchUserProfile error: $e');
       return null;
     }
   }
@@ -165,6 +227,8 @@ class AuthRepository {
 
   Future<String?> getAccessToken() => _storage.read(key: _kAccessToken);
   Future<String?> getUserId() => _storage.read(key: _kUserId);
+  Future<String> getRole() async => (await _storage.read(key: _kRole)) ?? 'OWNER';
+  Future<String> getSubscriptionPlan() async => (await _storage.read(key: _kSubscriptionPlan)) ?? 'FREE';
 
   Future<AuthResult> _handleAuthResponse(http.Response response) async {
     final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -172,6 +236,10 @@ class AuthRepository {
         body['success'] == true) {
       final accessToken = body['accessToken'] as String;
       final userInfo = body['userInfo'] as Map<String, dynamic>;
+      final role = userInfo['role']?.toString() ?? 'OWNER';
+      final plan = userInfo['subscriptionPlan']?.toString() ?? 'FREE';
+      final phone = userInfo['phone']?.toString() ?? '';
+
       await Future.wait([
         _storage.write(key: _kAccessToken, value: accessToken),
         _storage.write(key: _kUserId, value: userInfo['id']?.toString() ?? ''),
@@ -183,7 +251,11 @@ class AuthRepository {
         _storage.write(
             key: _kProvider,
             value: userInfo['authProvider']?.toString() ?? 'local'),
+        _storage.write(key: _kRole, value: role),
+        _storage.write(key: _kSubscriptionPlan, value: plan),
+        if (phone.isNotEmpty) _storage.write(key: _kPhone, value: phone),
       ]);
+
       return AuthResult.success(UserInfo(
         id: userInfo['id']?.toString() ?? '',
         email: userInfo['email']?.toString() ?? '',
@@ -194,10 +266,13 @@ class AuthRepository {
             ? jsonEncode(userInfo['notificationSettings'])
             : null,
         accessToken: accessToken,
+        role: role,
+        subscriptionPlan: plan,
+        phone: phone.isNotEmpty ? phone : null,
       ));
     }
     return AuthResult.failure(
-        body['message']?.toString() ?? 'Da co loi xay ra.');
+        body['message']?.toString() ?? 'Đã có lỗi xảy ra.');
   }
 }
 
@@ -221,12 +296,20 @@ class UserInfo {
   final String authProvider;
   final String accessToken;
   final String? notificationSettings;
-  const UserInfo(
-      {required this.id,
-      required this.email,
-      required this.shopName,
-      this.avatar,
-      required this.authProvider,
-      required this.accessToken,
-      this.notificationSettings});
+  final String role;
+  final String subscriptionPlan;
+  final String? phone;
+
+  const UserInfo({
+    required this.id,
+    required this.email,
+    required this.shopName,
+    this.avatar,
+    required this.authProvider,
+    required this.accessToken,
+    this.notificationSettings,
+    this.role = 'OWNER',
+    this.subscriptionPlan = 'FREE',
+    this.phone,
+  });
 }
