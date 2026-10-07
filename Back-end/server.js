@@ -9,6 +9,7 @@ const connectDB = require('./src/config/database');
 const apiRoutes = require('./src/routes/apiRoutes');
 const authRoutes = require('./src/routes/authRoutes');
 const billingRoutes = require('./src/routes/billingRoutes');
+const adminRoutes = require('./src/routes/adminRoutes');
 const { initSocket } = require('./src/socket');
 
 const app = express();
@@ -37,6 +38,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api/auth', authRoutes);   // ─ Đăng nhập/Đăng ký/Google Sign-In
 app.use('/api', apiRoutes);         // ─ Scan receipt, manual-entry, transactions...
 app.use('/api/billing', billingRoutes); // ─ SePay VietQR: create-order, status, history, sepay/webhook
+app.use('/api/admin', adminRoutes); // ─ Admin: users, overview, transactions, payments
 
 // Bật Server lắng nghe — dùng httpServer thay vì app.listen()
 const PORT = process.env.PORT || 5000;
