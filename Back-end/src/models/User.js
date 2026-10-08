@@ -7,6 +7,8 @@ const userSchema = new mongoose.Schema({
   shopName: { type: String, default: '', trim: true },
   telegramChatId: { type: String, default: null },        // VŨ KHÍ DEMO TELEGRAM
   subscriptionPlan: { type: String, enum: ['FREE', 'PRO'], default: 'FREE' },
+  proStartedAt: { type: Date, default: null },
+  proExpiresAt: { type: Date, default: null, index: true },
   phone: { type: String, default: null },              // So dien thoai chu cua hang
   role: { type: String, enum: ['OWNER', 'ADMIN'], default: 'OWNER', index: true },
 
