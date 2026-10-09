@@ -14,8 +14,8 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
     <section id="bang-gia" className="w-full py-20 px-4 md:px-8 max-w-7xl mx-auto">
       {/* Section Header */}
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <span className="text-xs font-bold text-[#B31F56] uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-rose-50 border border-rose-200/80 inline-flex items-center gap-1.5 shadow-2xs">
-          <Sparkles className="w-3.5 h-3.5 text-[#FF5C8D]" />
+        <span className="text-xs font-bold text-slate-950 uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-[#d0f81b]/25 border border-[#d0f81b]/50 inline-flex items-center gap-1.5 shadow-2xs">
+          <Sparkles className="w-3.5 h-3.5 text-slate-950" />
           Chi phí tối ưu cho mọi vựa &amp; tiểu thương
         </span>
         <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-4 tracking-tight max-w-2xl mx-auto">
@@ -30,7 +30,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
         {/* Package 1: STARTER */}
         <SpotlightCard
-          spotlightColor="rgba(255, 92, 141, 0.08)"
+          spotlightColor="rgba(208, 248, 27, 0.12)"
           className="p-8 sm:p-10 rounded-3xl glass-card border border-slate-200/90 shadow-xs flex flex-col justify-between hover:shadow-lg transition-all"
         >
           <div>
@@ -38,7 +38,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 CƠ BẢN
               </span>
-              <span className="px-3 py-1 rounded-full bg-slate-100 text-xs font-bold text-slate-600 border border-slate-200">
+              <span className="px-3 py-1 rounded-full bg-slate-100 text-xs font-bold text-slate-700 border border-slate-200">
                 Miễn Phí Vĩnh Viễn
               </span>
             </div>
@@ -61,7 +61,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
 
             <ul className="flex flex-col gap-4 text-xs sm:text-sm text-slate-700">
               <li className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-rose-50 text-[#B31F56] flex items-center justify-center shrink-0 border border-rose-200/70">
+                <div className="w-5 h-5 rounded-full bg-[#d0f81b]/25 text-slate-950 flex items-center justify-center shrink-0 border border-[#d0f81b]/60">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
                 <span>
@@ -69,19 +69,19 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-rose-50 text-[#B31F56] flex items-center justify-center shrink-0 border border-rose-200/70">
+                <div className="w-5 h-5 rounded-full bg-[#d0f81b]/25 text-slate-950 flex items-center justify-center shrink-0 border border-[#d0f81b]/60">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
                 <span>Nhập liệu thủ công lùi ngày <strong>không giới hạn</strong></span>
               </li>
               <li className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-rose-50 text-[#B31F56] flex items-center justify-center shrink-0 border border-rose-200/70">
+                <div className="w-5 h-5 rounded-full bg-[#d0f81b]/25 text-slate-950 flex items-center justify-center shrink-0 border border-[#d0f81b]/60">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
                 <span>Báo cáo dòng tiền cơ bản trên ứng dụng</span>
               </li>
               <li className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-rose-50 text-[#B31F56] flex items-center justify-center shrink-0 border border-rose-200/70">
+                <div className="w-5 h-5 rounded-full bg-[#d0f81b]/25 text-slate-950 flex items-center justify-center shrink-0 border border-[#d0f81b]/60">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
                 <span>Cơ chế Đèn giao thông Xanh/Vàng/Đỏ</span>
@@ -100,21 +100,21 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
         </SpotlightCard>
 
         {/* Package 2: PRO Nâng Cấp */}
-        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-100 border border-rose-500/30 shadow-[0_20px_50px_rgba(15,23,42,0.8),0_0_35px_rgba(255,92,141,0.12)] ring-1 ring-rose-500/20 flex flex-col justify-between relative transform md:-translate-y-2 hover:-translate-y-3 transition-transform">
+        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-100 border border-[#d0f81b]/40 shadow-[0_20px_50px_rgba(15,23,42,0.8),0_0_35px_rgba(208,248,27,0.15)] ring-1 ring-[#d0f81b]/25 flex flex-col justify-between relative transform md:-translate-y-2 hover:-translate-y-3 transition-transform">
           {/* Top Pill Highlight */}
-          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] text-white text-[11px] font-black tracking-wider uppercase shadow-md shadow-rose-500/30 border border-white/20 flex items-center gap-1.5 whitespace-nowrap">
-            <Flame className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-            <ShinyText text="PHỔ BIẾN / KHUYÊN DÙNG" className="text-white" />
+          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-[#d0f81b] text-slate-950 text-[11px] font-black tracking-wider uppercase shadow-md shadow-[#d0f81b]/30 border border-[#bde412] flex items-center gap-1.5 whitespace-nowrap">
+            <Flame className="w-3.5 h-3.5 text-slate-950 fill-slate-950" />
+            <ShinyText text="PHỔ BIẾN / KHUYÊN DÙNG" className="text-slate-950 font-black" />
           </div>
 
           <div>
             {/* Header with Title and Subtitle */}
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Coffee className="w-3.5 h-3.5 text-rose-400" />
+              <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Coffee className="w-3.5 h-3.5 text-[#d0f81b]" />
                 <span>Chỉ 3 ly cà phê</span>
               </span>
-              <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold shrink-0">
+              <span className="px-3 py-1 rounded-full bg-[#d0f81b]/20 text-[#d0f81b] border border-[#d0f81b]/30 text-xs font-bold shrink-0">
                 Tiết kiệm 85% giờ làm
               </span>
             </div>
@@ -131,13 +131,13 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
               <span className="text-5xl font-black text-white tracking-tight font-sans">
                 99.000
               </span>
-              <span className="text-2xl font-bold text-[#FF5C8D] ml-1.5">đ</span>
+              <span className="text-2xl font-bold text-[#d0f81b] ml-1.5">đ</span>
               <span className="text-sm text-slate-400 ml-2 font-medium">/ tháng</span>
             </div>
 
             <ul className="flex flex-col gap-4 text-xs sm:text-sm text-slate-200">
               <li className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-rose-500/20 text-[#FF5C8D] flex items-center justify-center shrink-0 border border-rose-500/30">
+                <div className="w-5 h-5 rounded-full bg-[#d0f81b]/20 text-[#d0f81b] flex items-center justify-center shrink-0 border border-[#d0f81b]/30">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
                 <span>
@@ -145,7 +145,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-rose-500/20 text-[#FF5C8D] flex items-center justify-center shrink-0 border border-rose-500/30">
+                <div className="w-5 h-5 rounded-full bg-[#d0f81b]/20 text-[#d0f81b] flex items-center justify-center shrink-0 border border-[#d0f81b]/30">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
                 <span>
@@ -153,7 +153,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-rose-500/20 text-[#FF5C8D] flex items-center justify-center shrink-0 border border-rose-500/30">
+                <div className="w-5 h-5 rounded-full bg-[#d0f81b]/20 text-[#d0f81b] flex items-center justify-center shrink-0 border border-[#d0f81b]/30">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
                 <span>
@@ -161,7 +161,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-rose-500/20 text-[#FF5C8D] flex items-center justify-center shrink-0 border border-rose-500/30">
+                <div className="w-5 h-5 rounded-full bg-[#d0f81b]/20 text-[#d0f81b] flex items-center justify-center shrink-0 border border-[#d0f81b]/30">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
                 <span>
@@ -169,7 +169,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-rose-500/20 text-[#FF5C8D] flex items-center justify-center shrink-0 border border-rose-500/30">
+                <div className="w-5 h-5 rounded-full bg-[#d0f81b]/20 text-[#d0f81b] flex items-center justify-center shrink-0 border border-[#d0f81b]/30">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
                 <span>Ưu tiên đường truyền bóc tách AI siêu tốc (&lt; 1.2s)</span>
@@ -181,9 +181,9 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
             <Magnet padding={20} magnetStrength={0.2}>
               <button
                 onClick={onSelectPro}
-                className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#B31F56] via-[#E11D48] to-[#FF5C8D] hover:opacity-95 text-white text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-rose-500/30 hover:shadow-rose-500/50 cursor-pointer active:scale-95 group"
+                className="w-full py-3.5 px-6 rounded-2xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 text-sm font-black flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#d0f81b]/25 hover:shadow-[#d0f81b]/40 cursor-pointer active:scale-95 group"
               >
-                <span>Nâng Cấp Pro</span>
+                <span>Nâng Cấp Pro Ngay</span>
                 <ArrowRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" />
               </button>
             </Magnet>

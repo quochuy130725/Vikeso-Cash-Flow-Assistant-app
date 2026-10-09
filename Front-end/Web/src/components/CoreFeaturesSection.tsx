@@ -24,13 +24,13 @@ export const CoreFeaturesSection: React.FC<CoreFeaturesSectionProps> = ({
 }) => {
   const features = [
     {
-      icon: <Camera className="w-6 h-6 text-[#B31F56]" />,
-      iconBg: 'bg-rose-50 border border-rose-200/80',
+      icon: <Camera className="w-6 h-6 text-slate-950" />,
+      iconBg: 'bg-[#d0f81b] border border-[#bde412] shadow-xs',
       badge: 'ZERO-FRICTION UX',
       title: '1. Giao Diện 1-Chạm Không Cần Gõ Phím',
       desc: 'Loại bỏ hoàn toàn các form biểu nhập liệu rườm rà. Nút bấm to tròn dễ thao tác ngay cả khi tay đang ướt hoặc đeo găng tay buôn bán. Thuật ngữ kế toán được bình dân hóa thành "Tiền Vào" (Thu) và "Tiền Ra" (Chi). Hoàn tất dưới 5 giây.',
       highlight: 'Chỉ 1 nút bấm duy nhất',
-      actionColor: 'text-[#B31F56]',
+      actionColor: 'text-slate-950 font-black',
       onClick: onOpenScan,
     },
     {
@@ -91,8 +91,8 @@ export const CoreFeaturesSection: React.FC<CoreFeaturesSectionProps> = ({
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-5">
           <div className="max-w-2xl">
-            <span className="text-xs font-bold text-[#B31F56] uppercase tracking-widest flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-200/70 inline-flex w-fit shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#FF5C8D]" />
+            <span className="text-xs font-bold text-slate-950 uppercase tracking-widest flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#d0f81b]/25 border border-[#d0f81b]/50 inline-flex w-fit shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 text-slate-950" />
               Nền Tảng Công Nghệ Đột Phá
             </span>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-3 tracking-tight leading-tight">
@@ -109,7 +109,7 @@ export const CoreFeaturesSection: React.FC<CoreFeaturesSectionProps> = ({
           {features.map((feat, index) => (
             <SpotlightCard
               key={index}
-              spotlightColor="rgba(255, 92, 141, 0.12)"
+              spotlightColor="rgba(208, 248, 27, 0.14)"
               className="p-7 rounded-3xl glass-card border border-slate-200/90 flex flex-col justify-between shadow-xs hover:shadow-xl transition-all group cursor-pointer"
               onClick={feat.onClick}
             >
@@ -123,7 +123,7 @@ export const CoreFeaturesSection: React.FC<CoreFeaturesSectionProps> = ({
                   </span>
                 </div>
 
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-2.5 group-hover:text-[#B31F56] transition-colors">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-2.5 group-hover:text-slate-950 transition-colors">
                   {feat.title}
                 </h3>
 

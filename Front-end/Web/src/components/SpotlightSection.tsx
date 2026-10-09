@@ -39,8 +39,8 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
     <section id="vu-khi-bi-mat" className="w-full bg-slate-50/80 py-20 px-4 md:px-8 max-w-7xl mx-auto">
       {/* Section Header */}
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <span className="px-3.5 py-1.5 rounded-full bg-rose-50 text-[#B31F56] text-xs uppercase font-extrabold tracking-wider inline-flex items-center gap-1.5 border border-rose-200 shadow-2xs">
-          <Sparkles className="w-3.5 h-3.5 text-[#FF5C8D]" />
+        <span className="px-3.5 py-1.5 rounded-full bg-[#d0f81b]/25 text-slate-950 text-xs uppercase font-black tracking-wider inline-flex items-center gap-1.5 border border-[#d0f81b]/60 shadow-2xs">
+          <Sparkles className="w-3.5 h-3.5 text-slate-950" />
           Vũ Khí Bí Mật Độc Quyền
         </span>
         <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-3 tracking-tight">
@@ -55,7 +55,7 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
       <div className="mb-14 glass-card rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
           <div>
-            <span className="text-xs font-bold text-[#B31F56] uppercase tracking-wider flex items-center gap-1">
+            <span className="text-xs font-black text-slate-950 uppercase tracking-wider flex items-center gap-1">
               TIÊU ĐIỂM 1
             </span>
             <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">
@@ -282,7 +282,7 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
               onClick={() => setPosShiftReportScanned(false)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 !posShiftReportScanned
-                  ? 'bg-rose-100 text-rose-800 shadow-2xs border border-rose-200'
+                  ? 'bg-slate-200 text-slate-900 font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -290,9 +290,9 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
             </button>
             <button
               onClick={() => setPosShiftReportScanned(true)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                 posShiftReportScanned
-                  ? 'bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] text-white shadow-2xs'
+                  ? 'bg-[#d0f81b] text-slate-950 shadow-2xs border border-[#bde412]'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -417,7 +417,7 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
       <div className="mb-14 glass-card rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
           <div>
-            <span className="text-xs font-bold text-[#B31F56] uppercase tracking-wider flex items-center gap-1">
+            <span className="text-xs font-black text-slate-950 uppercase tracking-wider flex items-center gap-1">
               TIÊU ĐIỂM 3 • TÍNH TOÁN HIỆU QUẢ ĐẦU TƯ
             </span>
             <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">
@@ -435,7 +435,7 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
           <div className="lg:col-span-6 space-y-5">
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold text-slate-800">Số hóa đơn phát sinh trung bình mỗi ngày:</span>
-              <span className="text-xl font-extrabold text-[#B31F56] font-mono bg-rose-50 px-3 py-1 rounded-xl border border-rose-200">
+              <span className="text-xl font-extrabold text-slate-950 font-mono bg-[#d0f81b] px-3 py-1 rounded-xl border border-[#bde412] shadow-2xs">
                 {dailyBills} hóa đơn / ngày
               </span>
             </div>
@@ -447,7 +447,7 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
               step="5"
               value={dailyBills}
               onChange={(e) => setDailyBills(Number(e.target.value))}
-              className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#B31F56]"
+              className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#d0f81b]"
             />
 
             <div className="flex justify-between text-[11px] text-slate-400 font-medium">
@@ -463,31 +463,31 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
 
           {/* Real-time calculated benefits */}
           <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-5 rounded-2xl bg-rose-50/70 border border-rose-200 flex flex-col justify-between">
-              <span className="text-xs font-bold text-[#B31F56] uppercase tracking-wider">
+            <div className="p-5 rounded-2xl bg-slate-950 text-white border border-slate-800 flex flex-col justify-between shadow-md">
+              <span className="text-xs font-bold text-[#d0f81b] uppercase tracking-wider">
                 Thời gian tiết kiệm mỗi tháng
               </span>
               <div className="my-2">
-                <span className="text-3xl sm:text-4xl font-black text-[#B31F56] font-mono">
+                <span className="text-3xl sm:text-4xl font-black text-[#d0f81b] font-mono">
                   ~{savedHoursMonth} Giờ
                 </span>
               </div>
-              <span className="text-xs text-[#B31F56]">
-                Tương đương hơn <strong>{Math.round(savedHoursMonth / 8)} ngày làm việc</strong> để nghỉ ngơi cùng gia đình.
+              <span className="text-xs text-slate-300">
+                Tương đương hơn <strong className="text-white">{Math.round(savedHoursMonth / 8)} ngày làm việc</strong> để nghỉ ngơi cùng gia đình.
               </span>
             </div>
 
-            <div className="p-5 rounded-2xl bg-indigo-50/70 border border-indigo-200 flex flex-col justify-between">
-              <span className="text-xs font-bold text-indigo-800 uppercase tracking-wider">
+            <div className="p-5 rounded-2xl bg-slate-100 border border-slate-200 flex flex-col justify-between">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                 Tránh thất thoát sai lệch sổ
               </span>
               <div className="my-2">
-                <span className="text-2xl sm:text-3xl font-black text-indigo-700 font-mono">
+                <span className="text-2xl sm:text-3xl font-black text-slate-950 font-mono">
                   ~{savedMoneyMonth} đ
                 </span>
-                <span className="text-xs text-indigo-600 block mt-0.5">/ tháng</span>
+                <span className="text-xs text-slate-500 block mt-0.5">/ tháng</span>
               </div>
-              <span className="text-xs text-indigo-700">
+              <span className="text-xs text-slate-600">
                 Đầu tư gói Pro 99k/tháng mang lại giá trị hoàn vốn gấp <strong>hàng chục lần</strong>.
               </span>
             </div>
@@ -498,8 +498,8 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
       {/* FEATURE SPOTLIGHT 4: REALISTIC USE CASES */}
       <div className="glass-card rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-sm">
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <span className="text-xs font-bold text-[#B31F56] uppercase tracking-wider px-3.5 py-1 rounded-full bg-rose-50 border border-rose-200/80 inline-flex items-center gap-1.5 shadow-2xs">
-            <Sparkles className="w-3.5 h-3.5 text-[#FF5C8D]" />
+          <span className="text-xs font-bold text-slate-950 uppercase tracking-wider px-3.5 py-1.5 rounded-full bg-[#d0f81b]/25 border border-[#d0f81b]/50 inline-flex items-center gap-1.5 shadow-2xs">
+            <Sparkles className="w-3.5 h-3.5 text-slate-950" />
             Kịch Bản Thực Tế
           </span>
           <h3 className="text-xl sm:text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">
@@ -512,9 +512,9 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Use Case 1: Vựa nông sản */}
-          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between hover:border-rose-300 transition-colors">
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between hover:border-slate-400 transition-colors">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 text-[#B31F56] flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-xl bg-[#d0f81b]/25 text-slate-950 flex items-center justify-center font-bold border border-[#bde412]">
                 <span className="material-symbols-outlined text-[22px]">agriculture</span>
               </div>
               <h4 className="font-bold text-base text-slate-900">Vựa Nông Sản &amp; Chợ Đầu Mối</h4>
@@ -523,7 +523,7 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
                 <p><strong>VikeSo giải quyết:</strong> Chụp ảnh phiếu cân hoặc sổ nợ, AI tự bóc tách số tiền khách trả trước vào "Tiền Vào", ghi chú phần nợ riêng để không ghi nhận lãi ảo.</p>
               </div>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] font-bold text-[#B31F56]">
+            <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] font-black text-slate-950">
               ✓ Tiết kiệm 45 phút cộng sổ đêm
             </div>
           </div>
