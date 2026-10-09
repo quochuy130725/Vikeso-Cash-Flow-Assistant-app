@@ -246,7 +246,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               }}
               className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 mode === 'login'
-                  ? 'bg-emerald-600 text-white shadow-md'
+                  ? 'bg-[#d0f81b] text-slate-950 font-black shadow-md border border-[#bde412]'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -260,7 +260,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               }}
               className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 mode === 'register'
-                  ? 'bg-emerald-600 text-white shadow-md'
+                  ? 'bg-[#d0f81b] text-slate-950 font-black shadow-md border border-[#bde412]'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -453,14 +453,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 active:scale-98 transition-all disabled:opacity-50 cursor-pointer"
+                className="w-full py-3.5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#d0f81b]/25 active:scale-98 transition-all disabled:opacity-50 cursor-pointer border border-[#bde412]"
               >
                 {isLoading ? (
                   <span>Đang xử lý dữ liệu...</span>
                 ) : (
                   <>
                     <span>{mode === 'login' ? 'Đăng Nhập Ngay' : 'Hoàn Tất Đăng Ký (1-Chạm)'}</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-4 h-4 text-slate-950" />
                   </>
                 )}
               </button>
@@ -477,7 +477,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               setMode(mode === 'login' ? 'register' : 'login');
               setErrorMessage(null);
             }}
-            className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors underline cursor-pointer"
+            className="text-[#d0f81b] hover:underline font-semibold transition-colors cursor-pointer"
           >
             {mode === 'login' ? 'Chưa có tài khoản? Đăng ký ngay' : 'Đã có tài khoản? Đăng nhập'}
           </button>

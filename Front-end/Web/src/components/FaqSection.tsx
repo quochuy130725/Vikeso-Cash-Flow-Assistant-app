@@ -36,8 +36,8 @@ export const FaqSection: React.FC = () => {
     <section id="faq" className="w-full py-20 px-4 md:px-8 max-w-4xl mx-auto">
       {/* Header */}
       <div className="text-center mb-14">
-        <span className="text-xs font-bold text-[#B31F56] uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-rose-50 border border-rose-200/80 inline-flex items-center gap-1.5 shadow-2xs">
-          <HelpCircle className="w-3.5 h-3.5 text-[#FF5C8D]" />
+        <span className="text-xs font-bold text-slate-950 uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-[#d0f81b]/25 border border-[#d0f81b]/50 inline-flex items-center gap-1.5 shadow-2xs">
+          <HelpCircle className="w-3.5 h-3.5 text-slate-950" />
           Giải Đáp Thắc Mắc (FAQ)
         </span>
         <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-3 tracking-tight">
@@ -57,7 +57,7 @@ export const FaqSection: React.FC = () => {
               key={idx}
               className={`rounded-2xl transition-all border overflow-hidden ${
                 isOpen
-                  ? 'glass-card border-rose-400/50 shadow-sm'
+                  ? 'glass-card border-[#d0f81b] ring-1 ring-[#d0f81b]/40 shadow-sm'
                   : 'bg-white border-slate-200 hover:border-slate-300'
               }`}
             >
@@ -71,7 +71,7 @@ export const FaqSection: React.FC = () => {
                 </span>
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 ${
-                    isOpen ? 'bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] text-white rotate-180' : 'bg-slate-100 text-slate-600'
+                    isOpen ? 'bg-[#d0f81b] text-slate-950 border border-[#bde412] rotate-180' : 'bg-slate-100 text-slate-600'
                   }`}
                 >
                   <ChevronDown className="w-4 h-4" />

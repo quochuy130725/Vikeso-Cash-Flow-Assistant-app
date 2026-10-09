@@ -48,7 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
             }}
             className="flex items-center gap-3 group cursor-pointer"
           >
-            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-50 to-pink-100/80 p-1 flex items-center justify-center border border-rose-200/70 shadow-md shadow-rose-500/10 group-hover:scale-105 group-hover:shadow-rose-500/25 transition-all duration-300">
+            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-[#f8fee0] to-[#ecfcc2] p-1 flex items-center justify-center border border-[#d0f81b]/80 shadow-md shadow-[#d0f81b]/15 group-hover:scale-105 group-hover:shadow-[#d0f81b]/35 transition-all duration-300">
               <img
                 src="/logo.png"
                 alt="VikeSo Logo"
@@ -58,10 +58,10 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-2xl tracking-tight text-slate-900">
-                  Vike<span className="text-[#FF5C8D]">So</span>
+                  Vike<span className="text-[#84a900]">So</span>
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-rose-50 text-[#B31F56] border border-rose-200/70 inline-flex items-center gap-1 shadow-2xs">
-                  <Sparkles className="w-2.5 h-2.5 text-[#FF5C8D]" />
+                <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-[#d0f81b]/25 text-[#243505] border border-[#d0f81b] inline-flex items-center gap-1 shadow-2xs">
+                  <Sparkles className="w-2.5 h-2.5 text-[#557800]" />
                   <span>AI Cashflow</span>
                 </span>
               </div>
@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => setActiveNav(item.id)}
                 className={`text-xs font-semibold transition-all py-1.5 px-3 rounded-xl cursor-pointer ${
                   activeNav === item.id
-                    ? 'text-[#B31F56] bg-white shadow-xs font-bold'
+                    ? 'text-slate-950 bg-white shadow-xs font-bold ring-1 ring-[#d0f81b]'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
                 }`}
               >
@@ -184,7 +184,7 @@ export const Header: React.FC<HeaderProps> = ({
                     }}
                     className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 rounded-xl flex items-center gap-2 mt-0.5 cursor-pointer transition-colors"
                   >
-                    <Scan className="w-4 h-4 text-[#B31F56]" />
+                    <Scan className="w-4 h-4 text-slate-950" />
                     <span>Quét chứng từ 1-chạm</span>
                   </button>
                   <button
@@ -216,7 +216,7 @@ export const Header: React.FC<HeaderProps> = ({
             <>
               <button
                 onClick={() => onOpenAuth('login')}
-                className="inline-flex items-center px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-[#B31F56] hover:bg-rose-50/60 transition-all cursor-pointer"
+                className="inline-flex items-center px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-[#d0f81b]/15 transition-all cursor-pointer"
               >
                 Đăng nhập
               </button>
@@ -224,10 +224,10 @@ export const Header: React.FC<HeaderProps> = ({
               <Magnet padding={20} magnetStrength={0.25}>
                 <button
                   onClick={() => onOpenAuth('register')}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] text-xs font-bold text-white hover:opacity-95 active:scale-95 transition-all shadow-md shadow-rose-500/25 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-xs font-black text-[#0a0f06] border border-[#bde412] active:scale-95 transition-all shadow-md shadow-[#d0f81b]/35 hover:shadow-lg hover:shadow-[#d0f81b]/50 cursor-pointer"
                 >
                   <span>Dùng thử miễn phí</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
                 </button>
               </Magnet>
             </>
@@ -255,7 +255,7 @@ export const Header: React.FC<HeaderProps> = ({
                 setMobileMenuOpen(false);
                 setActiveNav(item.id);
               }}
-              className="block py-2 text-sm font-semibold text-slate-700 hover:text-[#B31F56] transition-colors"
+              className="block py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 transition-colors"
             >
               {item.label}
             </a>
@@ -287,7 +287,7 @@ export const Header: React.FC<HeaderProps> = ({
                     setMobileMenuOpen(false);
                     onOpenAuth('register');
                   }}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] text-xs font-bold text-white shadow-sm cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-xs font-black text-slate-950 shadow-sm border border-[#bde412] cursor-pointer"
                 >
                   Đăng ký tài khoản mới (Miễn phí)
                 </button>
