@@ -538,6 +538,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Nếu true: Gửi cho tất cả tài khoản đã bật thông báo kể cả khi hôm nay có 0 giao dịch. Nếu false: Chỉ gửi cho tài khoản có giao dịch."
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "chuvua.bacuong@gmail.com",
+                    "description": "Chỉ định gửi test cho 1 email cụ thể. Nếu để trống sẽ gửi cho tất cả người dùng hợp lệ."
                   }
                 }
               }
