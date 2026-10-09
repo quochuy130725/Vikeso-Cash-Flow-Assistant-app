@@ -41,21 +41,25 @@ class DashboardActionButtons extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.document_scanner_outlined,
-                    color: Colors.white, size: 32),
-                SizedBox(width: 12),
-                Text(
-                  'Quét Tài Liệu Thông Minh',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black26,
-                        offset: Offset(0, 1),
-                        blurRadius: 2,
-                      ),
-                    ],
+                    color: Colors.white, size: 30),
+                SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    'Quét Tài Liệu Thông Minh',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black26,
+                          offset: Offset(0, 1),
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

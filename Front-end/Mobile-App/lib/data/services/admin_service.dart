@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../repositories/auth_repository.dart';
+import '../mock/mock_data.dart';
 
 class AdminService {
   static final AdminService _instance = AdminService._internal();
@@ -26,6 +27,11 @@ class AdminService {
 
   /// Lấy thống kê tổng quan hệ thống
   Future<Map<String, dynamic>?> getOverview() async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return MockData.getAdminOverview();
+    }
+
     try {
       final headers = await _getHeaders();
       final uri = Uri.parse('$_baseUrl/overview');
@@ -43,6 +49,11 @@ class AdminService {
 
   /// Lấy danh sách người dùng
   Future<Map<String, dynamic>?> getUsers({int page = 1, int limit = 20, String? search}) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return MockData.getAdminUsers(search: search);
+    }
+
     try {
       final headers = await _getHeaders();
       final queryParams = {
@@ -65,6 +76,11 @@ class AdminService {
 
   /// Cập nhật gói dịch vụ cho user
   Future<bool> updatePlan(String userId, String plan, {int days = 30}) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      return true;
+    }
+
     try {
       final headers = await _getHeaders();
       final uri = Uri.parse('$_baseUrl/users/$userId/plan');
@@ -85,6 +101,11 @@ class AdminService {
 
   /// Cập nhật vai trò (Role: ADMIN / OWNER)
   Future<bool> updateRole(String userId, String role) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      return true;
+    }
+
     try {
       final headers = await _getHeaders();
       final uri = Uri.parse('$_baseUrl/users/$userId/role');
@@ -105,6 +126,11 @@ class AdminService {
 
   /// Xóa người dùng
   Future<bool> deleteUser(String userId) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      return true;
+    }
+
     try {
       final headers = await _getHeaders();
       final uri = Uri.parse('$_baseUrl/users/$userId');

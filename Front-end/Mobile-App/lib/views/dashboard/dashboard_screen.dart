@@ -238,6 +238,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       drawer: const CustomSideDrawer(),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_dashboard',
         onPressed: () {
           Navigator.pushNamed(context, '/camera');
         },
@@ -262,19 +263,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       // Lời chào chủ quán
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            'Xin chào, $_displayName',
-                            style: theme.textTheme.headlineLarge?.copyWith(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
+                          Expanded(
+                            child: Text(
+                              'Xin chào, $_displayName',
+                              style: theme.textTheme.headlineLarge?.copyWith(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),
                           const Text(
                             '👋',
-                            style: TextStyle(fontSize: 28),
+                            style: TextStyle(fontSize: 26),
                           ),
                         ],
                       ),
@@ -542,18 +548,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ),
                                   ),
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children:
-                                      List.generate(categories.length, (index) {
-                                    final cat = categories[index];
-                                    final double val = index == 0 ? _thisMonthThu : _thisMonthChi;
-                                    final double percent = totalThuChiSum > 0 ? (val / totalThuChiSum) : 0.0;
-                                    return _buildLegendItem(
-                                        cat,
-                                        '${(percent * 100).toStringAsFixed(0)}%',
-                                        pieColors[index]);
-                                  }),
+                                Flexible(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children:
+                                          List.generate(categories.length, (index) {
+                                        final cat = categories[index];
+                                        final double val = index == 0 ? _thisMonthThu : _thisMonthChi;
+                                        final double percent = totalThuChiSum > 0 ? (val / totalThuChiSum) : 0.0;
+                                        return _buildLegendItem(
+                                            cat,
+                                            '${(percent * 100).toStringAsFixed(0)}%',
+                                            pieColors[index]);
+                                      }),
+                                    ),
+                                  ),
                                 )
                               ],
                             ),

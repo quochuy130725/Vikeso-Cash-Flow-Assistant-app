@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../repositories/auth_repository.dart';
+import '../mock/mock_data.dart';
 
 class BillingOrder {
   final String orderCode;
@@ -54,6 +55,11 @@ class BillingService {
 
   /// Tạo đơn hàng nâng cấp PRO (VietQR)
   Future<BillingOrder?> createOrder({required String userId}) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      return MockData.getMockBillingOrder();
+    }
+
     try {
       final token = await AuthRepository().getAccessToken();
       final uri = Uri.parse('$_baseUrl/create-order');
@@ -87,6 +93,10 @@ class BillingService {
 
   /// Kiểm tra trạng thái đơn hàng (polling)
   Future<BillingOrder?> getOrderStatus(String orderCode) async {
+    if (MockData.useMockDemo) {
+      return MockData.getMockBillingOrder();
+    }
+
     try {
       final token = await AuthRepository().getAccessToken();
       final uri = Uri.parse('$_baseUrl/status/$orderCode');
@@ -108,6 +118,12 @@ class BillingService {
 
   /// Lấy lịch sử giao dịch nạp tiền / nâng cấp của user
   Future<List<BillingOrder>> getHistory(String userId) async {
+    if (MockData.useMockDemo) {
+      return [
+        MockData.getMockBillingOrder(),
+      ];
+    }
+
     try {
       final token = await AuthRepository().getAccessToken();
       final uri = Uri.parse('$_baseUrl/history?userId=$userId');

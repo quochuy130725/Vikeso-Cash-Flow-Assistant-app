@@ -227,6 +227,7 @@ class _ThuChiScreenState extends State<ThuChiScreen>
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_thuchi',
         onPressed: () => Navigator.pushNamed(context, '/camera'),
         backgroundColor: colorScheme.primaryContainer,
         shape: const CircleBorder(),
