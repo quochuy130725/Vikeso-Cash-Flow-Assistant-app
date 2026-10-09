@@ -14,26 +14,27 @@
   --font-metric-display: 'JetBrains Mono', 'Be Vietnam Pro', monospace;
   --font-metric-unit: 'Be Vietnam Pro', sans-serif;
 
-  /* Primary Fintech Emerald */
-  --color-primary: #059669;
-  --color-primary-container: #047857;
-  --color-on-primary: #ffffff;
-  --color-on-primary-container: #ecfdf5;
-  --color-primary-fixed: #d1fae5;
-  --color-primary-fixed-dim: #a7f3d0;
-  --color-on-primary-fixed: #064e3b;
-  --color-on-primary-fixed-variant: #065f46;
-  --color-inverse-primary: #34d399;
+  /* Primary Brand Lime Cyber (#d0f81b) - Tông màu chủ đạo */
+  --color-primary: #d0f81b;
+  --color-primary-hover: #bde412;
+  --color-primary-container: #1b2608;
+  --color-on-primary: #090d05;
+  --color-on-primary-container: #d0f81b;
+  --color-primary-fixed: #f4fee0;
+  --color-primary-fixed-dim: #e4fca0;
+  --color-on-primary-fixed: #182205;
+  --color-on-primary-fixed-variant: #283909;
+  --color-inverse-primary: #a3e635;
 
-  /* AI Intelligence & Secondary (Indigo/Violet) */
-  --color-secondary: #4f46e5;
-  --color-secondary-container: #4338ca;
+  /* AI Intelligence & Secondary */
+  --color-secondary: #0f172a;
+  --color-secondary-container: #1e293b;
   --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #eef2ff;
-  --color-secondary-fixed: #e0e7ff;
-  --color-secondary-fixed-dim: #c7d2fe;
-  --color-on-secondary-fixed: #312e81;
-  --color-on-secondary-fixed-variant: #3730a3;
+  --color-on-secondary-container: #f1f5f9;
+  --color-secondary-fixed: #e2e8f0;
+  --color-secondary-fixed-dim: #cbd5e1;
+  --color-on-secondary-fixed: #0f172a;
+  --color-on-secondary-fixed-variant: #334155;
 
   /* Money Out / Alert (Rose/Crimson) */
   --color-tertiary: #e11d48;
@@ -45,26 +46,26 @@
   --color-on-tertiary-fixed: #881337;
   --color-on-tertiary-fixed-variant: #9f1239;
 
-  /* Neutrals & Surfaces */
-  --color-surface: #f8fafc;
-  --color-surface-dim: #f1f5f9;
+  /* Neutrals & Surfaces - Nền Trắng Tinh Tế Chuẩn UI */
+  --color-surface: #ffffff;
+  --color-surface-dim: #f8faf6;
   --color-surface-bright: #ffffff;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f8fafc;
-  --color-surface-container: #e2e8f0;
-  --color-surface-container-high: #cbd5e1;
+  --color-surface-container-low: #f8faf6;
+  --color-surface-container: #f1f5ee;
+  --color-surface-container-high: #e2e8df;
   --color-surface-container-highest: #94a3b8;
-  --color-surface-variant: #f1f5f9;
-  --color-surface-tint: #059669;
+  --color-surface-variant: #f4f7f0;
+  --color-surface-tint: #d0f81b;
 
   --color-on-surface: #0f172a;
   --color-on-surface-variant: #334155;
-  --color-outline: #94a3b8;
-  --color-outline-variant: #cbd5e1;
-  --color-background: #f8fafc;
+  --color-outline: #cbd5e1;
+  --color-outline-variant: #e2e8f0;
+  --color-background: #ffffff;
   --color-on-background: #0f172a;
-  --color-inverse-surface: #0f172a;
-  --color-inverse-on-surface: #f8fafc;
+  --color-inverse-surface: #090d05;
+  --color-inverse-on-surface: #f8faf6;
 
   --color-error: #e11d48;
   --color-error-container: #ffe4e6;
@@ -72,15 +73,18 @@
   --color-on-error-container: #881337;
 
   /* Semantic Brand Overrides */
-  --color-emerald-vikeso: #059669;
-  --color-emerald-light: #10b981;
-  --color-pink-vikeso: #4f46e5;
-  --color-pink-bright: #6366f1;
+  --color-brand-lime: #d0f81b;
+  --color-brand-lime-hover: #bde412;
+  --color-brand-lime-dark: #273805;
+  --color-emerald-vikeso: #d0f81b;
+  --color-emerald-light: #e4fca0;
+  --color-pink-vikeso: #d0f81b;
+  --color-pink-bright: #e4fca0;
   --color-danger-vikeso: #e11d48;
   --color-warning-vikeso: #d97706;
-  --color-surface-bg: #f8fafc;
-  --color-dark-surface: #090d16;
-  --color-dark-card: #131926;
+  --color-surface-bg: #ffffff;
+  --color-dark-surface: #090d05;
+  --color-dark-card: #12180c;
 
   --spacing-space-xs: 0.25rem;
   --spacing-space-sm: 0.5rem;
@@ -91,13 +95,40 @@
   --spacing-space-3xl: 4rem;
 }
 
+@layer components {
+  /* Nút bấm chủ đạo Lime Cyber trên nền trắng */
+  .btn-lime-primary {
+    background-color: #d0f81b;
+    color: #090d05;
+    font-weight: 800;
+    border: 1px solid #bde412;
+    box-shadow: 0 4px 20px -2px rgba(208, 248, 27, 0.45);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-lime-primary:hover {
+    background-color: #c2ea14;
+    box-shadow: 0 6px 28px -2px rgba(208, 248, 27, 0.6);
+    transform: translateY(-1px);
+  }
+  .btn-lime-primary:active {
+    transform: scale(0.97);
+  }
+
+  /* Huy hiệu Lime tinh tế */
+  .badge-lime {
+    background-color: rgba(208, 248, 27, 0.18);
+    color: #273805;
+    border: 1px solid rgba(208, 248, 27, 0.65);
+  }
+}
+
 @layer base {
   html, body, button, input, select, textarea {
     font-family: 'Be Vietnam Pro', var(--font-sans);
     letter-spacing: -0.01em;
   }
   body {
-    background-color: #f8fafc;
+    background-color: #ffffff;
     color: #0f172a;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

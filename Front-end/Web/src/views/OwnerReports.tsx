@@ -78,7 +78,7 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               onExportExcel();
               handleDownload('bảng kê Excel thuế đầy đủ');
             }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#059669] hover:bg-[#047857] text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 border border-[#bde412] text-xs sm:text-sm font-black shadow-sm hover:shadow transition-all cursor-pointer"
             type="button"
           >
             <span className="material-symbols-outlined text-[18px]">table_view</span>

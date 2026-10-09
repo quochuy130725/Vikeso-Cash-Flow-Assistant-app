@@ -91,7 +91,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-5 py-2 rounded-xl bg-[#059669] hover:bg-[#047857] text-white shadow-sm hover:shadow transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            className="px-5 py-2 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 font-black border border-[#bde412] shadow-sm hover:shadow transition-all text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             type="button"
           >
             <span className={`material-symbols-outlined text-[16px] ${saving ? 'animate-spin' : ''}`}>
@@ -560,7 +560,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2 rounded-xl bg-[#059669] hover:bg-[#047857] text-white shadow-sm hover:shadow transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            className="px-6 py-2 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 font-black border border-[#bde412] shadow-sm hover:shadow transition-all text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             type="button"
           >
             <span className={`material-symbols-outlined text-[16px] ${saving ? 'animate-spin' : ''}`}>
@@ -573,9 +573,9 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
 
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#059669] text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
-          <span className="material-symbols-outlined text-[20px]">check_circle</span>
-          <span className="text-xs sm:text-sm font-bold">{toastMessage}</span>
+        <div className="fixed bottom-6 right-6 z-50 bg-[#d0f81b] text-slate-950 px-5 py-3 rounded-xl shadow-xl border border-[#bde412] flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
+          <span className="material-symbols-outlined text-[20px] text-slate-950">check_circle</span>
+          <span className="text-xs sm:text-sm font-black">{toastMessage}</span>
         </div>
       )}
     </div>

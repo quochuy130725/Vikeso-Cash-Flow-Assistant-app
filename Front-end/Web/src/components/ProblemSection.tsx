@@ -82,16 +82,16 @@ export const ProblemSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSca
       </div>
 
       {/* Before vs After comparison banner */}
-      <div className="mt-12 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-rose-50/80 via-white to-pink-50/60 border border-rose-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="mt-12 p-6 sm:p-8 rounded-3xl bg-slate-950 border border-slate-800 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 text-white">
         <div className="flex items-center gap-4 text-left">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] text-white flex items-center justify-center font-black text-xl shrink-0 shadow-md shadow-rose-500/25">
+          <div className="w-12 h-12 rounded-2xl bg-[#d0f81b] text-slate-950 flex items-center justify-center font-black text-xl shrink-0 shadow-md shadow-[#d0f81b]/30 border border-[#bde412]">
             ✓
           </div>
           <div>
-            <h4 className="text-base sm:text-lg font-extrabold text-slate-900">
+            <h4 className="text-base sm:text-lg font-extrabold text-white">
               VikeSo sinh ra để giải phóng 100% cực hình sổ sách cho bạn
             </h4>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1">
+            <p className="text-xs sm:text-sm text-slate-300 mt-1">
               Chỉ 1 giây chụp ảnh, AI tự nhận diện và tự lọc sạch nợ gối đầu, không cần gõ phím.
             </p>
           </div>
@@ -99,10 +99,10 @@ export const ProblemSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSca
 
         <button
           onClick={onOpenScan}
-          className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] hover:opacity-95 text-white text-xs font-bold transition-all shadow-md shadow-rose-500/20 flex items-center gap-2 shrink-0 active:scale-95 cursor-pointer"
+          className="px-6 py-3.5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 text-xs font-black transition-all shadow-md shadow-[#d0f81b]/25 border border-[#bde412] flex items-center gap-2 shrink-0 active:scale-95 cursor-pointer"
         >
           <span>Xem Giải Pháp Tức Thì</span>
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight className="w-4 h-4 text-slate-950" />
         </button>
       </div>
     </section>
