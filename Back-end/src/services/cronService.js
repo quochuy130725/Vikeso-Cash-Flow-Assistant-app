@@ -5,7 +5,10 @@ const User = require('../models/User');
 const Receipt = require('../models/Receipt');
 
 const createMailTransporter = () => nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    family: 4, // Bắt buộc IPv4 để tránh lỗi ENETUNREACH trên Render
     pool: true,
     maxConnections: 5,
     connectionTimeout: 10000,
