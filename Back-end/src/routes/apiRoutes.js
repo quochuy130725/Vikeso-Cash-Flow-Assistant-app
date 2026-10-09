@@ -162,8 +162,9 @@ router.put('/user/:id/notification-settings', async (req, res) => {
 router.post('/test-report', async (req, res) => {
   try {
     const sendZeroReports = req.body?.sendZeroReports !== undefined ? req.body.sendZeroReports : true;
-    console.log(`🧪 [TEST] Trigger báo cáo thủ công... (sendZeroReports: ${sendZeroReports})`);
-    const result = await runDailyReport({ sendZeroReports });
+    const targetEmail = req.body?.email || req.body?.targetEmail || null;
+    console.log(`🧪 [TEST] Trigger báo cáo thủ công... (sendZeroReports: ${sendZeroReports}, targetEmail: ${targetEmail || 'all'})`);
+    const result = await runDailyReport({ sendZeroReports, targetEmail });
     return res.status(200).json({
       success: true,
       message: 'Báo cáo đã được gửi thành công!',

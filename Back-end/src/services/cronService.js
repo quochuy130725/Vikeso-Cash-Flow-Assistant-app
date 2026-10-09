@@ -4,11 +4,13 @@ const nodemailer = require('nodemailer');
 const User = require('../models/User');
 const Receipt = require('../models/Receipt');
 
-// ─── Khởi tạo bộ gửi email (Connection Pooling) ───────────────────────────
 const createMailTransporter = () => nodemailer.createTransport({
     service: 'gmail',
     pool: true,
     maxConnections: 5,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
     auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
@@ -101,7 +103,7 @@ const buildTelegramMessage = ({ shopName, tongThu, tongChi, loinhuan, soHoaDon, 
 // =========================================================================
 // HÀM CORE: Chạy toàn bộ luồng báo cáo (dùng chung cho Cron và Test API)
 // =========================================================================
-const runDailyReport = async ({ sendZeroReports = false } = {}) => {
+const runDailyReport = async ({ sendZeroReports = false, targetEmail = null } = {}) => {
     const results = { emailSent: 0, telegramSent: 0, skipped: 0, errors: [] };
 
     // Tính chính xác 00:00:00 -> 23:59:59.999 theo giờ Việt Nam (UTC+7)
@@ -123,7 +125,11 @@ const runDailyReport = async ({ sendZeroReports = false } = {}) => {
 
     let usersToProcess = [];
 
-    if (sendZeroReports) {
+    if (targetEmail) {
+        // Chế độ test chỉ định 1 email cụ thể
+        usersToProcess = await User.find({ email: targetEmail.trim().toLowerCase() });
+        console.log(`🎯 [Chế độ chỉ định email: ${targetEmail}] Tìm thấy ${usersToProcess.length} người dùng.`);
+    } else if (sendZeroReports) {
         // Gửi cho tất cả users có bật nhận thông báo (email hoặc telegram)
         usersToProcess = await User.find({
             $or: [
