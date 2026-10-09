@@ -41,9 +41,9 @@ export const PlanModal: React.FC<PlanModalProps> = ({ plan, onClose, onSuccess }
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#24282a]">
           <div className="flex items-center gap-2">
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold ${
-              plan === 'pro' ? 'bg-[#059669] text-white shadow-md' : 'bg-white/10 text-white'
+              plan === 'pro' ? 'bg-[#d0f81b] text-slate-950 shadow-md' : 'bg-white/10 text-white'
             }`}>
-              {plan === 'pro' ? <Rocket className="w-4 h-4" /> : <Zap className="w-4 h-4 text-emerald-400" />}
+              {plan === 'pro' ? <Rocket className="w-4 h-4 text-slate-950" /> : <Zap className="w-4 h-4 text-[#d0f81b]" />}
             </div>
             <div>
               <h3 className="font-bold text-sm text-white">
@@ -73,7 +73,7 @@ export const PlanModal: React.FC<PlanModalProps> = ({ plan, onClose, onSuccess }
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
                   placeholder="VD: Vựa Sầu Riêng Ba Cường"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#059669] transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#d0f81b] transition-colors"
                 />
               </div>
 
@@ -87,46 +87,46 @@ export const PlanModal: React.FC<PlanModalProps> = ({ plan, onClose, onSuccess }
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="VD: 0988 888 999"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#059669] transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#d0f81b] transition-colors"
                 />
               </div>
 
               <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1 text-white/80">
                 <div className="flex justify-between font-semibold">
                   <span>Gói lựa chọn:</span>
-                  <span className={plan === 'pro' ? 'text-emerald-400 font-bold' : 'text-white'}>
+                  <span className={plan === 'pro' ? 'text-[#d0f81b] font-black' : 'text-white'}>
                     {plan === 'pro' ? 'Gói PRO (99.000 đ/tháng)' : 'Gói STARTER (0 đ vĩnh viễn)'}
                   </span>
                 </div>
                 <div className="flex justify-between text-white/60">
                   <span>Thời gian kích hoạt:</span>
-                  <span className="text-emerald-300">Ngay tức thì</span>
+                  <span className="text-[#d0f81b]/90 font-medium">Ngay tức thì</span>
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md bg-[#059669] hover:bg-[#047857] text-white shadow-[#059669]/30 active:scale-95"
+                className="w-full py-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition-all shadow-md bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 border border-[#bde412] shadow-[#d0f81b]/20 active:scale-95 cursor-pointer"
               >
                 {isSubmitting ? (
                   <span>Đang thiết lập hệ thống...</span>
                 ) : (
                   <>
-                    <CheckCircle2 className="w-4 h-4" />
+                    <CheckCircle2 className="w-4 h-4 text-slate-950" />
                     <span>Xác Nhận Kích Hoạt 1-Chạm</span>
                   </>
                 )}
               </button>
 
               <div className="flex items-center justify-center gap-2 text-[11px] text-white/50">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <ShieldCheck className="w-3.5 h-3.5 text-[#d0f81b]" />
                 <span>Không cần thẻ tín dụng • Hủy bất kỳ lúc nào</span>
               </div>
             </form>
           ) : (
             <div className="py-8 text-center space-y-3">
-              <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-[#d0f81b]/20 text-[#d0f81b] mx-auto flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <h4 className="text-base font-bold text-white">Đã Kích Hoạt Thành Công!</h4>

@@ -133,7 +133,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
 
           <button
             onClick={onDownloadExcel}
-            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm shadow-emerald-600/20 hover:shadow transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 px-4 py-2 rounded-xl text-xs font-black border border-[#bde412] shadow-sm shadow-[#d0f81b]/20 hover:shadow transition-all cursor-pointer"
             type="button"
           >
             <span className="material-symbols-outlined text-[18px]">file_download</span>

@@ -6,16 +6,16 @@ export const WorkflowSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSc
   const steps = [
     {
       num: '01',
-      badgeBg: 'bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] text-white',
-      icon: <Camera className="w-6 h-6 text-[#B31F56]" />,
+      badgeBg: 'bg-[#d0f81b] text-slate-950 font-black border border-[#bde412]',
+      icon: <Camera className="w-6 h-6 text-slate-950" />,
       title: 'Bước 1: Chụp Hóa Đơn 1-Chạm',
       desc: 'Mở app VikeSo, bấm nút chụp tròn chính giữa màn hình. Chụp bất kỳ hóa đơn mua lẻ, sổ nợ chép tay hay phiếu POS kết ca. Không cần căn lề, không lo mực nhòe hay giấy quăn.',
       proof: 'Tự cân bằng sáng & cắt góc phẳng',
     },
     {
       num: '02',
-      badgeBg: 'bg-indigo-600 text-white',
-      icon: <Cpu className="w-6 h-6 text-indigo-600" />,
+      badgeBg: 'bg-slate-900 text-white',
+      icon: <Cpu className="w-6 h-6 text-[#d0f81b]" />,
       title: 'Bước 2: AI Bóc Tách & Đối Soát 2 Chiều',
       desc: 'Gemini Vision xử lý dưới 3 giây: tự bóc tách mặt hàng, phân tách Tiền Vào / Tiền Ra, lọc sạch nợ gối đầu và tự động gộp bill lẻ vào POS để chống trùng tiền kép.',
       proof: 'Đèn giao thông Xanh/Vàng/Đỏ minh bạch',
@@ -23,7 +23,7 @@ export const WorkflowSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSc
     {
       num: '03',
       badgeBg: 'bg-slate-900 text-white',
-      icon: <Send className="w-6 h-6 text-[#FF5C8D]" />,
+      icon: <Send className="w-6 h-6 text-[#d0f81b]" />,
       title: 'Bước 3: Ngủ Ngon & Nhận Báo Cáo 22h00',
       desc: 'Sổ quỹ tự động khóa sổ. Đúng 22:00 đêm, tin nhắn tổng kết tiền mặt, chuyển khoản và công nợ tồn đọng được gửi thẳng vào Telegram và Email của bạn.',
       proof: 'Không cần bấm máy tính nửa đêm',
@@ -73,8 +73,8 @@ export const WorkflowSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSc
     <section id="cach-hoat-dong" className="w-full py-20 px-4 md:px-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto mb-16">
-        <span className="text-xs font-bold text-[#B31F56] uppercase tracking-wider px-3.5 py-1.5 rounded-full bg-rose-50 border border-rose-200/80 inline-flex items-center gap-1.5 shadow-2xs">
-          <Sparkles className="w-3.5 h-3.5 text-[#FF5C8D]" />
+        <span className="text-xs font-bold text-slate-950 uppercase tracking-wider px-3.5 py-1.5 rounded-full bg-[#d0f81b]/25 border border-[#d0f81b]/50 inline-flex items-center gap-1.5 shadow-2xs">
+          <Sparkles className="w-3.5 h-3.5 text-slate-950" />
           Đơn giản như dùng máy ảnh
         </span>
         <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-3 tracking-tight">
@@ -90,7 +90,7 @@ export const WorkflowSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSc
         {steps.map((step, idx) => (
           <SpotlightCard
             key={idx}
-            spotlightColor="rgba(255, 92, 141, 0.12)"
+            spotlightColor="rgba(208, 248, 27, 0.12)"
             className="p-8 rounded-3xl glass-card border border-slate-200/90 flex flex-col justify-between shadow-xs hover:-translate-y-1.5 hover:shadow-xl transition-all group"
           >
             <div>
@@ -103,7 +103,7 @@ export const WorkflowSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSc
                 </div>
               </div>
 
-              <h3 className="text-lg font-bold text-slate-900 mb-2.5 group-hover:text-[#B31F56] transition-colors">
+              <h3 className="text-lg font-bold text-slate-900 mb-2.5 group-hover:text-slate-950 transition-colors">
                 {step.title}
               </h3>
 
@@ -112,9 +112,9 @@ export const WorkflowSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSc
               </p>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-100 text-xs font-semibold text-[#B31F56] flex items-center gap-1.5">
-              <div className="w-4 h-4 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
-                <Check className="w-3 h-3 text-[#B31F56] stroke-[3]" />
+            <div className="mt-6 pt-4 border-t border-slate-100 text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded-full bg-[#d0f81b] flex items-center justify-center shrink-0">
+                <Check className="w-3 h-3 text-slate-950 stroke-[3]" />
               </div>
               <span>{step.proof}</span>
             </div>
@@ -125,7 +125,7 @@ export const WorkflowSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSc
       {/* Value Comparison Table: VikeSo vs Traditional */}
       <div className="glass-card rounded-3xl p-6 sm:p-10 border border-slate-200/90 shadow-md overflow-hidden">
         <div className="text-center max-w-2xl mx-auto mb-8">
-          <span className="text-xs font-extrabold text-indigo-700 uppercase tracking-widest px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/80 inline-block shadow-2xs">
+          <span className="text-xs font-black text-slate-950 uppercase tracking-widest px-3 py-1 rounded-full bg-[#d0f81b]/30 border border-[#d0f81b]/60 inline-block shadow-2xs">
             Bảng So Sánh Giá Trị
           </span>
           <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2">
@@ -142,7 +142,7 @@ export const WorkflowSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSc
               <tr className="border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider bg-slate-50/60">
                 <th className="py-3 px-4 font-bold">Tiêu chí so sánh</th>
                 <th className="py-3 px-4 font-bold text-slate-600">Cách làm sổ tay cũ</th>
-                <th className="py-3 px-4 font-bold text-[#B31F56] bg-rose-50/80 rounded-t-xl">
+                <th className="py-3 px-4 font-black text-slate-950 bg-[#d0f81b]/35 rounded-t-xl border-t border-x border-[#bde412]">
                   Trợ lý AI VikeSo
                 </th>
               </tr>
@@ -152,7 +152,7 @@ export const WorkflowSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSc
                 <tr
                   key={index}
                   className={`hover:bg-slate-50/80 transition-colors ${
-                    row.isHighlight ? 'bg-rose-50/30' : ''
+                    row.isHighlight ? 'bg-lime-50/40' : ''
                   }`}
                 >
                   <td className="py-4 px-4 font-semibold text-slate-900">
@@ -162,9 +162,9 @@ export const WorkflowSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSc
                     <X className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                     <span>{row.traditional}</span>
                   </td>
-                  <td className="py-4 px-4 text-rose-950 font-semibold bg-rose-50/40">
+                  <td className="py-4 px-4 text-slate-950 font-bold bg-[#d0f81b]/10 border-x border-[#d0f81b]/20">
                     <div className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#B31F56] shrink-0 mt-0.5 stroke-[3]" />
+                      <Check className="w-4 h-4 text-slate-950 shrink-0 mt-0.5 stroke-[3]" />
                       <span>{row.vikeso}</span>
                     </div>
                   </td>
@@ -175,16 +175,16 @@ export const WorkflowSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSc
         </div>
 
         <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-xs text-slate-500 flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-[#B31F56]" />
+          <span className="text-xs text-slate-600 flex items-center gap-1.5 font-medium">
+            <ShieldCheck className="w-4 h-4 text-slate-950" />
             <span>Tiết kiệm trung bình 45 phút mỗi tối và giảm 99% thất thoát tiền hàng</span>
           </span>
           <button
             onClick={onOpenScan}
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] hover:opacity-95 text-white text-xs font-bold transition-all shadow-sm shadow-rose-500/20 flex items-center gap-1.5 cursor-pointer active:scale-95"
+            className="px-5 py-2.5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 text-xs font-black transition-all shadow-sm shadow-[#d0f81b]/20 border border-[#bde412] flex items-center gap-1.5 cursor-pointer active:scale-95"
           >
             <span>Thử Nghiệm Miễn Phí</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-3.5 h-3.5 text-slate-950" />
           </button>
         </div>
       </div>

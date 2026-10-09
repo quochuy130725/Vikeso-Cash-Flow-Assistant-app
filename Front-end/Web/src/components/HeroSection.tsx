@@ -48,28 +48,25 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   return (
     <section id="hero" className="relative w-full pt-8 pb-16 md:pb-24 overflow-hidden">
       {/* Dynamic ambient fintech glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[520px] bg-gradient-to-b from-rose-500/15 via-[#B31F56]/10 to-transparent blur-3xl pointer-events-none -z-10" />
-      <div className="absolute top-40 -left-40 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute top-28 -right-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[520px] bg-gradient-to-b from-[#d0f81b]/20 via-lime-300/10 to-transparent blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-40 -left-40 w-96 h-96 bg-[#d0f81b]/15 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-28 -right-40 w-96 h-96 bg-slate-200/50 rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         {/* Hero Top Content */}
-        <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
+        <div className="flex flex-col items-center text-center max-w-5xl mx-auto">
           {/* Emotional Tagline Badge */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass-card shadow-xs mb-6 border border-rose-200/80 group"
+            className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white shadow-2xs mb-6 border border-slate-200 hover:border-slate-300 transition-all"
           >
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF5C8D]"></span>
+            <span className="px-2.5 py-0.5 rounded-full bg-[#d0f81b] text-slate-950 font-black text-[11px] border border-[#bde412] tracking-wide uppercase">
+              v1.0 MỚI
             </span>
-            <span className="text-xs font-bold text-slate-800 tracking-wide flex items-center gap-2">
-              <span className="text-[#B31F56] font-extrabold text-xs sm:text-sm">
-                Phiên Bản 1.0 Mới Ra Mắt • Bắt Đầu Miễn Phí 0đ
-              </span>
+            <span className="text-xs sm:text-sm font-bold text-slate-700">
+              Bắt Đầu Miễn Phí 0đ • Trợ Lý AI Chốt Sổ 22:00
             </span>
           </motion.div>
 
@@ -78,13 +75,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="text-3xl sm:text-5xl lg:text-[56px] font-extrabold text-slate-900 tracking-tight leading-[1.16] max-w-3xl mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-[48px] font-black tracking-tight leading-[1.25] mb-6"
           >
-            VikeSo -{' '}
-            <span className="bg-gradient-to-r from-[#B31F56] via-[#FF5C8D] to-indigo-900 bg-clip-text text-transparent inline-block">
-              Trợ lý AI Quản Lý Dòng Tiền
-            </span>{' '}
-            &amp; Đối Soát Hóa Đơn Cho Hộ Kinh Doanh
+            <span className="text-[#ff4583]">Trợ Lý AI Quản Lý Dòng Tiền</span>{' '}
+            <br className="hidden md:inline" />
+            <span className="text-slate-950">&amp; Đối Soát Hóa Đơn Cho Hộ Kinh Doanh</span>
           </motion.h1>
 
           {/* Sub-headline */}
@@ -107,9 +102,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <Magnet padding={25} magnetStrength={0.3}>
               <button
                 onClick={onOpenScan}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] text-white text-base font-bold shadow-xl shadow-rose-500/25 hover:opacity-95 active:scale-95 transition-all ring-4 ring-rose-500/15 cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 text-base font-black shadow-xl shadow-[#d0f81b]/35 active:scale-95 transition-all ring-4 ring-[#d0f81b]/25 border border-[#bde412] cursor-pointer"
               >
-                <Camera className="w-5 h-5 text-rose-100" />
+                <Camera className="w-5 h-5 text-slate-950" />
                 <span>Trải Nghiệm Miễn Phí Ngay (0đ)</span>
               </button>
             </Magnet>
@@ -117,9 +112,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <button
               onClick={onOpenVideo}
               type="button"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-white text-slate-800 text-base font-bold hover:bg-slate-50 border border-slate-200 transition-all shadow-xs group hover:border-slate-300 cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-white text-slate-900 text-base font-bold hover:bg-slate-50 border border-slate-200 transition-all shadow-xs group hover:border-slate-300 cursor-pointer"
             >
-              <PlayCircle className="w-5 h-5 text-[#B31F56] group-hover:scale-110 transition-transform" />
+              <PlayCircle className="w-5 h-5 text-slate-900 group-hover:scale-110 transition-transform" />
               <span>Xem Video Hoạt Động (2 phút)</span>
             </button>
           </motion.div>
@@ -132,7 +127,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-4 px-6 glass-card rounded-2xl w-full max-w-2xl text-center shadow-xs border border-slate-200/90"
           >
             <div className="flex flex-col items-center justify-center p-2">
-              <div className="text-xl sm:text-2xl font-black text-[#B31F56] font-mono">
+              <div className="text-xl sm:text-2xl font-black text-slate-950 font-mono flex items-center justify-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-[#d0f81b]" />
                 &lt; 1.2 Giây
               </div>
               <div className="text-xs font-semibold text-slate-600 mt-0.5">
@@ -193,13 +189,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           {/* Interactive Cockpit Card with Tab Switcher */}
           <SpotlightCard
-            spotlightColor="rgba(255, 92, 141, 0.2)"
-            className="relative bg-slate-900 rounded-3xl p-5 sm:p-8 shadow-2xl text-slate-100 border border-slate-800"
+            spotlightColor="rgba(208, 248, 27, 0.18)"
+            className="relative bg-slate-950 rounded-3xl p-5 sm:p-8 shadow-2xl text-slate-100 border border-slate-800"
           >
             {/* Top Bar with Mode Tabs */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-5 border-b border-slate-800 gap-4">
               <div className="flex items-center gap-3.5">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#B31F56] to-[#FF5C8D] flex items-center justify-center font-black text-white text-base shadow-md shadow-rose-500/20">
+                <div className="w-11 h-11 rounded-2xl bg-[#d0f81b] flex items-center justify-center font-black text-slate-950 text-base shadow-md shadow-[#d0f81b]/25">
                   VK
                 </div>
                 <div className="text-left">
@@ -207,7 +203,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <span className="font-extrabold text-lg text-white">
                       Cửa Hàng Mẫu VikeSo
                     </span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-[#FF5C8D] border border-rose-500/30 text-[11px] font-black uppercase tracking-wider">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#d0f81b]/20 text-[#d0f81b] border border-[#d0f81b]/40 text-[11px] font-black uppercase tracking-wider">
                       LIVE DEMO
                     </span>
                   </div>
@@ -218,13 +214,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </div>
 
               {/* Tab Selector: Cockpit vs Live Scan Demo */}
-              <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-slate-800">
+              <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
                 <button
                   type="button"
                   onClick={() => setActiveHeroTab('cockpit')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     activeHeroTab === 'cockpit'
-                      ? 'bg-[#B31F56] text-white shadow-xs'
+                      ? 'bg-[#d0f81b] text-slate-950 font-black shadow-xs'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
@@ -236,11 +232,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   onClick={() => setActiveHeroTab('scan-demo')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     activeHeroTab === 'scan-demo'
-                      ? 'bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] text-white shadow-xs'
+                      ? 'bg-[#d0f81b] text-slate-950 font-black shadow-xs'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <Sparkles className="w-3.5 h-3.5 text-slate-950" />
                   <span>Thử Quét Hóa Đơn Mẫu</span>
                 </button>
               </div>
@@ -315,14 +311,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 {/* Split Screen Traffic Light Preview Inside Mockup */}
                 <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 border border-slate-800 flex flex-col lg:flex-row items-center justify-between gap-5">
                   <div className="flex items-center gap-3.5 text-left w-full lg:w-auto">
-                    <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-[#B31F56] to-[#FF5C8D] flex items-center justify-center shrink-0 shadow-md shadow-rose-500/20">
-                      <Camera className="w-6 h-6 text-white" />
-                      <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-400 rounded-full animate-ping" />
+                    <div className="relative w-12 h-12 rounded-2xl bg-[#d0f81b] flex items-center justify-center shrink-0 shadow-md shadow-[#d0f81b]/20">
+                      <Camera className="w-6 h-6 text-slate-950" />
+                      <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#d0f81b] rounded-full animate-ping" />
                     </div>
                     <div>
                       <div className="text-sm font-bold text-white flex items-center gap-2">
                         <span>Màn hình đối chiếu Đèn Giao Thông (Split-Screen)</span>
-                        <span className="bg-rose-500/20 text-[#FF5C8D] text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-500/30">
+                        <span className="bg-[#d0f81b]/20 text-[#d0f81b] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#d0f81b]/30">
                           AI Gemini Vision
                         </span>
                       </div>
@@ -335,9 +331,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   <div className="flex items-center gap-2 w-full lg:w-auto justify-end">
                     <button
                       onClick={() => setActiveHeroTab('scan-demo')}
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] hover:opacity-95 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                      className="px-4 py-2 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 text-xs font-black flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                     >
-                      <Zap className="w-3.5 h-3.5 text-amber-200" />
+                      <Zap className="w-3.5 h-3.5 text-slate-950" />
                       <span>Xem AI Quét Thử Ngay</span>
                     </button>
                   </div>
@@ -359,7 +355,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   <div className="md:col-span-6 bg-slate-950 rounded-2xl p-4 border border-slate-800 relative overflow-hidden flex flex-col justify-between">
                     <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-xs">
                       <div className="flex items-center gap-1.5 text-slate-300 font-bold">
-                        <Receipt className="w-4 h-4 text-[#FF5C8D]" />
+                        <Receipt className="w-4 h-4 text-[#d0f81b]" />
                         <span>Hóa Đơn Mẫu (In Nhiệt Quầy Sạp)</span>
                       </div>
                       <span className="text-[10px] text-slate-500 font-mono">BILL#2026-889</span>
@@ -369,7 +365,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <div className="my-3 p-4 bg-white text-slate-900 rounded-xl font-mono text-[11px] leading-relaxed shadow-inner relative overflow-hidden select-none">
                       {/* Laser Bar Animation */}
                       {isScanning && (
-                        <div className="absolute left-0 w-full h-1 bg-[#FF5C8D] shadow-[0_0_15px_#FF5C8D] animate-laser-scan z-10 pointer-events-none" />
+                        <div className="absolute left-0 w-full h-1 bg-[#d0f81b] shadow-[0_0_15px_#d0f81b] animate-laser-scan z-10 pointer-events-none" />
                       )}
 
                       <div className="text-center font-bold pb-2 border-b border-dashed border-slate-300">
@@ -393,7 +389,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                       <div className="pt-2 border-t border-dashed border-slate-400 flex justify-between font-extrabold text-xs">
                         <span>TỔNG THANH TOÁN:</span>
-                        <span className="text-[#B31F56]">2.850.000 đ</span>
+                        <span className="text-slate-950 font-black">2.850.000 đ</span>
                       </div>
                     </div>
 
@@ -403,15 +399,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         type="button"
                         onClick={handleTriggerDemoScan}
                         disabled={isScanning}
-                        className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md ${
+                        className={`w-full py-2.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md ${
                           isScanning
                             ? 'bg-slate-700 text-slate-300 cursor-wait'
-                            : 'bg-gradient-to-r from-[#B31F56] to-[#FF5C8D] hover:opacity-95 text-white shadow-rose-500/30'
+                            : 'bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 shadow-[#d0f81b]/25'
                         }`}
                       >
                         {isScanning ? (
                           <>
-                            <Cpu className="w-4 h-4 animate-spin text-rose-300" />
+                            <Cpu className="w-4 h-4 animate-spin text-slate-950" />
                             <span>Đang bóc tách qua AI Vision...</span>
                           </>
                         ) : hasScanned ? (
@@ -421,7 +417,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           </>
                         ) : (
                           <>
-                            <Zap className="w-4 h-4 text-amber-200" />
+                            <Zap className="w-4 h-4 text-slate-950" />
                             <span>Bấm Vào Đây Để AI Quét Thử (1.2s)</span>
                           </>
                         )}
@@ -482,7 +478,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <button
                         type="button"
                         onClick={onOpenScan}
-                        className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors cursor-pointer"
+                        className="text-[#d0f81b] hover:underline font-bold transition-colors cursor-pointer"
                       >
                         Thử tải ảnh của bạn &rarr;
                       </button>

@@ -41,7 +41,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
           <div className="absolute inset-0 bg-gradient-to-tr from-[#191c1d] via-[#2e3132] to-[#191c1d] flex flex-col p-6 justify-between">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs">
-                <span className="font-bold text-[#ff5c8d]">VikeSo App</span>
+                <span className="font-bold text-[#d0f81b]">VikeSo App</span>
                 <span className="text-white/40">|</span>
                 <span className="text-white/80">Quy trình thực tế tại Vựa Sầu Riêng Ba Cường</span>
               </div>
@@ -62,7 +62,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
               >
                 {activeStep === 1 && (
                   <div className="space-y-2">
-                    <span className="text-[#ff5c8d] text-xs font-bold uppercase tracking-wider">
+                    <span className="text-[#d0f81b] text-xs font-bold uppercase tracking-wider">
                       Bước 1: Chụp 1-Chạm
                     </span>
                     <h4 className="text-lg font-bold text-white">Bấm nút tròn giữa màn hình</h4>
@@ -73,7 +73,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
                 )}
                 {activeStep === 2 && (
                   <div className="space-y-2">
-                    <span className="text-[#dce944] text-xs font-bold uppercase tracking-wider">
+                    <span className="text-[#d0f81b] text-xs font-bold uppercase tracking-wider">
                       Bước 2: AI Bóc Tách & Lọc Trùng
                     </span>
                     <h4 className="text-lg font-bold text-white">Gemini OCR bóc tách dưới 2 giây</h4>
@@ -84,7 +84,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
                 )}
                 {activeStep === 3 && (
                   <div className="space-y-2">
-                    <span className="text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                    <span className="text-[#d0f81b] text-xs font-bold uppercase tracking-wider">
                       Bước 3: Báo Cáo Telegram 22h00
                     </span>
                     <h4 className="text-lg font-bold text-white">Gửi tổng kết tức thì vào Telegram</h4>
@@ -102,7 +102,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
                     key={s}
                     onClick={() => setActiveStep(s)}
                     className={`h-2 rounded-full transition-all ${
-                      activeStep === s ? 'w-8 bg-[#ff5c8d]' : 'w-2 bg-white/30 hover:bg-white/50'
+                      activeStep === s ? 'w-8 bg-[#d0f81b]' : 'w-2 bg-white/30 hover:bg-white/50'
                     }`}
                   />
                 ))}
@@ -114,7 +114,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className="w-8 h-8 rounded-full bg-[#ff5c8d] text-white flex items-center justify-center hover:scale-105 transition-transform"
+                  className="w-8 h-8 rounded-full bg-[#d0f81b] text-slate-950 flex items-center justify-center hover:scale-105 transition-transform"
                 >
                   {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                 </button>
@@ -126,7 +126,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
               {/* Progress bar */}
               <div className="flex-1 mx-4 h-1.5 bg-white/20 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[#ff5c8d] to-[#dce944] transition-all duration-300"
+                  className="h-full bg-[#d0f81b] transition-all duration-300"
                   style={{ width: `${(activeStep / 3) * 100}%` }}
                 />
               </div>

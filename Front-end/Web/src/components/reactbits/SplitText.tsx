@@ -14,7 +14,7 @@ export const SplitText: React.FC<SplitTextProps> = ({
   className = '',
   delay = 50,
   highlightText,
-  highlightClassName = 'bg-gradient-to-r from-[#b31f56] via-[#ff5c8d] to-[#dce944] bg-clip-text text-transparent',
+  highlightClassName = 'bg-gradient-to-r from-slate-950 via-slate-800 to-slate-950 bg-clip-text text-transparent underline decoration-[#d0f81b] decoration-4 underline-offset-4',
 }) => {
   if (highlightText && text.includes(highlightText)) {
     const parts = text.split(highlightText);

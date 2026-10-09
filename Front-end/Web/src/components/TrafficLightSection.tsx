@@ -21,13 +21,13 @@ export const TrafficLightSection: React.FC<TrafficLightSectionProps> = ({ onOpen
     <section id="giai-phap-1-cham" className="w-full py-20 px-4 md:px-8 max-w-[1280px] mx-auto">
       {/* Section Header */}
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <span className="px-3.5 py-1 rounded-full bg-[#dce944] text-[#191c1d] text-xs uppercase font-bold tracking-wider inline-block">
+        <span className="px-3.5 py-1.5 rounded-full bg-[#d0f81b] text-slate-950 text-xs uppercase font-black tracking-wider inline-block shadow-xs border border-[#bde412]">
           Kiểm soát minh bạch
         </span>
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#191c1d] mt-3 tracking-tight">
           Cơ Chế Đèn Giao Thông - Minh Bạch & Tin Cậy Tuyệt Đối
         </h2>
-        <p className="text-sm sm:text-base text-[#584045] mt-2 leading-relaxed">
+        <p className="text-sm sm:text-base text-slate-600 mt-2 leading-relaxed">
           Hệ thống phân cấp độ tin cậy trực quan bằng màu sắc: Bạn luôn biết chắc chắn con số nào chuẩn xác và con số nào cần lướt qua xem lại.
         </p>
       </div>
@@ -35,15 +35,15 @@ export const TrafficLightSection: React.FC<TrafficLightSectionProps> = ({ onOpen
       {/* Split Screen Showcase */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Scanned Document with React Bits TiltedCard */}
-        <div className="lg:col-span-5 bg-[#e7e8e9] rounded-3xl p-6 shadow-sm border border-[#e1e3e4]">
+        <div className="lg:col-span-5 bg-slate-100 rounded-3xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-[#b31f56]" />
-              <span className="font-bold text-base text-[#191c1d]">Ảnh Chứng Từ Chụp Thực Tế</span>
+              <Receipt className="w-5 h-5 text-slate-950" />
+              <span className="font-bold text-base text-slate-950">Ảnh Chứng Từ Chụp Thực Tế</span>
             </div>
             <button
               onClick={toggleZoom}
-              className="text-xs bg-white px-3 py-1 rounded-md text-[#584045] hover:text-[#191c1d] border border-[#e1e3e4] font-medium flex items-center gap-1 shadow-2xs transition-colors"
+              className="text-xs bg-white px-3 py-1 rounded-md text-slate-700 hover:text-slate-950 border border-slate-200 font-medium flex items-center gap-1 shadow-2xs transition-colors"
             >
               <ZoomIn className="w-3.5 h-3.5" />
               <span>{zoomLevel === 1 ? 'Pinch to zoom' : 'Thu nhỏ 1x'}</span>
@@ -61,12 +61,12 @@ export const TrafficLightSection: React.FC<TrafficLightSectionProps> = ({ onOpen
               />
 
               {/* Bottom Scrim Bar */}
-              <div className="absolute bottom-3 left-3 right-3 p-3 rounded-xl bg-[#2e3132]/85 backdrop-blur-md text-white flex items-center justify-between border border-white/10 shadow-lg">
+              <div className="absolute bottom-3 left-3 right-3 p-3 rounded-xl bg-slate-950/85 backdrop-blur-md text-white flex items-center justify-between border border-white/10 shadow-lg">
                 <span className="text-xs flex items-center gap-1.5 font-medium">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>Đã bóc tách 3 dòng thu chi</span>
                 </span>
-                <span className="text-xs font-bold text-[#dce944] bg-white/10 px-2 py-0.5 rounded">
+                <span className="text-xs font-black text-slate-950 bg-[#d0f81b] px-2 py-0.5 rounded border border-[#bde412]">
                   1.8 giây
                 </span>
               </div>
@@ -131,7 +131,7 @@ export const TrafficLightSection: React.FC<TrafficLightSectionProps> = ({ onOpen
                 )}
                 <button
                   onClick={() => setIsEditingGreen(!isEditingGreen)}
-                  className="text-xs text-[#584045] hover:text-[#b31f56] font-medium mt-1 underline decoration-dotted"
+                  className="text-xs text-slate-500 hover:text-slate-950 font-medium mt-1 underline decoration-dotted"
                 >
                   {isEditingGreen ? 'Hoàn tất' : 'Chỉnh sửa 1-chạm'}
                 </button>
@@ -171,7 +171,7 @@ export const TrafficLightSection: React.FC<TrafficLightSectionProps> = ({ onOpen
                 <div className="text-base font-bold text-[#191c1d] mt-1.5">
                   Nhập 50 Thùng Xốp Đóng Hàng
                 </div>
-                <div className="text-xs text-[#584045] mt-0.5">Loại: Giấy than ghi tay • 07:15</div>
+                <div className="text-xs text-slate-500 mt-0.5">Loại: Giấy than ghi tay • 07:15</div>
               </div>
 
               <div className="text-right sm:self-center pl-2 flex flex-col items-end">
@@ -197,48 +197,48 @@ export const TrafficLightSection: React.FC<TrafficLightSectionProps> = ({ onOpen
           </div>
 
           {/* MERGED Card (Slate Gray with Badge & Strikethrough) */}
-          <div className="p-5 rounded-2xl bg-[#e7e8e9] opacity-85 border border-[#e1e3e4] relative overflow-hidden transition-all">
-            <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#979797]" />
+          <div className="p-5 rounded-2xl bg-slate-100 opacity-90 border border-slate-200 relative overflow-hidden transition-all">
+            <div className="absolute left-0 top-0 bottom-0 w-2 bg-slate-400" />
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pl-2">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded bg-[#2e3132] text-white text-xs font-bold flex items-center gap-1">
-                    <Link2 className="w-3 h-3 text-[#dce944]" />
+                  <span className="px-2.5 py-0.5 rounded bg-slate-900 text-white text-xs font-bold flex items-center gap-1">
+                    <Link2 className="w-3 h-3 text-[#d0f81b]" />
                     ĐÃ GỘP VÀO POS KẾT CA
                   </span>
-                  <span className="text-xs text-[#584045] font-mono">status: MERGED</span>
+                  <span className="text-xs text-slate-500 font-mono">status: MERGED</span>
                 </div>
-                <div className="text-base font-medium text-[#584045] line-through mt-1.5">
+                <div className="text-base font-medium text-slate-500 line-through mt-1.5">
                   Hóa đơn POS Khách quẹt thẻ
                 </div>
-                <p className="text-xs text-[#584045] mt-0.5 max-w-md">
+                <p className="text-xs text-slate-500 mt-0.5 max-w-md">
                   Đã được cộng tự động trong Báo cáo POS cuối ngày, hệ thống gạch bỏ chống tính 2 lần doanh thu.
                 </p>
               </div>
 
               <div className="text-right sm:self-center pl-2 flex flex-col items-end">
-                <div className="text-xl font-bold text-[#584045] line-through">250.000 đ</div>
-                <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded mt-1">
+                <div className="text-xl font-bold text-slate-500 line-through">250.000 đ</div>
+                <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded mt-1">
                   Đã bảo vệ 0đ lệch
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Alert / Low Confidence Card (Red #F44336 indicator) */}
-          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          {/* Alert / Low Confidence Card */}
+          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <Info className="w-5 h-5 text-rose-600 shrink-0" />
+              <Info className="w-5 h-5 text-slate-600 shrink-0" />
               <div>
-                <div className="text-xs font-bold">Chế độ cảnh báo ảnh mờ/rách (Low Confidence)</div>
-                <div className="text-xs text-rose-700 mt-0.5">
+                <div className="text-xs font-bold text-slate-900">Chế độ cảnh báo ảnh mờ/rách (Low Confidence)</div>
+                <div className="text-xs text-slate-600 mt-0.5">
                   AI tự động gợi ý chụp lại nếu ảnh chụp thiếu sáng hoặc lệch khung hình.
                 </div>
               </div>
             </div>
             <button
               onClick={onOpenScan}
-              className="px-4 py-1.5 rounded-lg bg-white border border-rose-300 text-rose-800 text-xs font-bold hover:bg-rose-100 transition-colors shrink-0"
+              className="px-4 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors shrink-0"
             >
               Chụp Lại
             </button>

@@ -72,7 +72,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-base font-extrabold text-slate-900 leading-none tracking-tight truncate">
-                    Vike<span className={portal === 'owner' ? 'text-emerald-600' : 'text-indigo-600'}>So</span>
+                    Vike<span className={portal === 'owner' ? 'text-slate-950 bg-[#d0f81b] px-1 py-0.5 rounded font-black' : 'text-indigo-600'}>So</span>
                   </span>
                   <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-1 truncate">
                     {portal === 'owner' ? 'Trợ lý dòng tiền' : 'FINITY System Cockpit'}
@@ -114,8 +114,8 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/60">
               <div className="flex items-center gap-2">
                 <span
-                  className={`w-2 h-2 rounded-full ${
-                    portal === 'owner' ? 'bg-emerald-500 animate-pulse' : 'bg-indigo-600'
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    portal === 'owner' ? 'bg-[#d0f81b] border border-slate-900/20 animate-pulse' : 'bg-indigo-600'
                   }`}
                 ></span>
                 <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
@@ -131,7 +131,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             >
               <span
                 className={`w-2.5 h-2.5 rounded-full ${
-                  portal === 'owner' ? 'bg-emerald-500 animate-pulse' : 'bg-indigo-600'
+                  portal === 'owner' ? 'bg-[#d0f81b] animate-pulse' : 'bg-indigo-600'
                 }`}
               ></span>
             </div>
@@ -151,7 +151,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 ownerTab === 'so-thu-chi-dong-tien'
-                  ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25'
+                  ? 'bg-[#d0f81b] text-slate-950 font-black shadow-sm border border-[#bde412]'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -175,7 +175,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 ownerTab === 'bao-cao-xuat-du-lieu'
-                  ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25'
+                  ? 'bg-[#d0f81b] text-slate-950 font-black shadow-sm border border-[#bde412]'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -199,7 +199,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 ownerTab === 'bao-cao-tu-dong-telegram'
-                  ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25'
+                  ? 'bg-[#d0f81b] text-slate-950 font-black shadow-sm border border-[#bde412]'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -223,7 +223,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 ownerTab === 'cai-dat-cua-hang'
-                  ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25'
+                  ? 'bg-[#d0f81b] text-slate-950 font-black shadow-sm border border-[#bde412]'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -353,7 +353,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                     <span className="text-[10px] text-slate-500 truncate">{userEmail}</span>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">
+                <span className="text-[10px] font-black text-slate-950 bg-[#d0f81b] px-2 py-0.5 rounded border border-[#bde412] uppercase">
                   {subscriptionPlan || 'FREE'}
                 </span>
               </div>

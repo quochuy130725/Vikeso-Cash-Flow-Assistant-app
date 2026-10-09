@@ -70,9 +70,9 @@ export const PortalHeader: React.FC<HeaderProps> = ({
             <div className="flex items-center gap-2.5">
               {/* Store / Branch Selector */}
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 hover:bg-slate-200/70 cursor-pointer transition-colors border border-slate-200/70 text-slate-800 text-xs font-semibold">
-                <Store className="w-4 h-4 text-emerald-600" />
+                <Store className="w-4 h-4 text-slate-950" />
                 <span className="truncate max-w-[150px] sm:max-w-none">{storeName}</span>
-                <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-md font-bold uppercase">
+                <span className="text-[10px] bg-[#d0f81b] text-slate-950 px-1.5 py-0.5 rounded-md font-black uppercase border border-[#bde412]">
                   {subscriptionPlan}
                 </span>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
@@ -96,8 +96,8 @@ export const PortalHeader: React.FC<HeaderProps> = ({
               </div>
 
               {/* Realtime Bank Sync Badge */}
-              <div className="hidden xl:flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/80 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <div className="hidden xl:flex items-center gap-1.5 text-[11px] text-slate-800 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200 font-medium">
+                <span className="w-2 h-2 rounded-full bg-[#d0f81b] border border-slate-900/30 animate-pulse"></span>
                 <span>Đồng bộ tự động</span>
               </div>
             </div>
@@ -132,7 +132,7 @@ export const PortalHeader: React.FC<HeaderProps> = ({
               onClick={onOpenMobileAppModal}
               className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/70 text-slate-700 transition-colors border border-slate-200/70 text-xs font-medium cursor-pointer"
             >
-              <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+              <Smartphone className="w-3.5 h-3.5 text-slate-900" />
               <span>App Di Động</span>
             </button>
           )}
@@ -145,7 +145,7 @@ export const PortalHeader: React.FC<HeaderProps> = ({
           >
             <Bell className="w-4 h-4" />
             <span className={`absolute top-2 right-2 w-2 h-2 rounded-full ring-2 ring-white ${
-              portal === 'owner' ? 'bg-emerald-500' : 'bg-indigo-500'
+              portal === 'owner' ? 'bg-[#d0f81b] border border-slate-900/40' : 'bg-indigo-500'
             }`}></span>
           </button>
 
@@ -156,16 +156,16 @@ export const PortalHeader: React.FC<HeaderProps> = ({
                 {userName || (userRole === 'ADMIN' ? 'Admin' : 'Chủ Hộ')}
               </span>
               <span className={`text-[10px] font-semibold truncate max-w-[150px] ${
-                portal === 'owner' ? 'text-emerald-700' : 'text-indigo-700'
+                portal === 'owner' ? 'text-slate-600' : 'text-indigo-700'
               }`}>
                 {userRole === 'ADMIN' ? 'Quản Trị Viên (Admin)' : 'Chủ Hộ Kinh Doanh'}
               </span>
             </div>
 
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-xs ${
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shadow-xs ${
               portal === 'owner'
-                ? 'bg-gradient-to-br from-emerald-600 to-teal-700 shadow-emerald-600/20'
-                : 'bg-gradient-to-br from-indigo-600 to-purple-700 shadow-indigo-600/20'
+                ? 'bg-[#d0f81b] text-slate-950 border border-[#bde412] shadow-sm'
+                : 'bg-gradient-to-br from-indigo-600 to-purple-700 text-white shadow-indigo-600/20'
             }`}>
               {(userName || (userRole === 'ADMIN' ? 'A' : 'C')).charAt(0).toUpperCase()}
             </div>

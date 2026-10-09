@@ -86,13 +86,13 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/90">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md">
+            <div className="w-9 h-9 rounded-xl bg-[#d0f81b] flex items-center justify-center text-slate-950 shadow-md">
               <Camera className="w-4 h-4" />
             </div>
             <div>
               <h3 className="font-bold text-sm text-white flex items-center gap-2">
                 <span>1-Chạm Bóc Tách Chứng Từ Thực Tế</span>
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                <span className="text-[10px] bg-[#d0f81b]/20 text-[#d0f81b] font-bold px-2 py-0.5 rounded-full border border-[#d0f81b]/30">
                   Gemini 2.5 Flash
                 </span>
               </h3>
@@ -118,7 +118,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
               }}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedPreset === 'receipt'
-                  ? 'bg-emerald-600 text-white shadow-md'
+                  ? 'bg-[#d0f81b] text-slate-950 font-black shadow-md'
                   : 'text-slate-300 hover:text-white'
               }`}
             >
@@ -131,7 +131,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
               }}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedPreset === 'carbon'
-                  ? 'bg-emerald-600 text-white shadow-md'
+                  ? 'bg-[#d0f81b] text-slate-950 font-black shadow-md'
                   : 'text-slate-300 hover:text-white'
               }`}
             >
@@ -144,7 +144,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
               }}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedPreset === 'pos'
-                  ? 'bg-emerald-600 text-white shadow-md'
+                  ? 'bg-[#d0f81b] text-slate-950 font-black shadow-md'
                   : 'text-slate-300 hover:text-white'
               }`}
             >
@@ -162,10 +162,10 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
             />
 
             {/* Corner Framing Marks */}
-            <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-emerald-500" />
-            <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-emerald-500" />
-            <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-emerald-500" />
-            <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-emerald-500" />
+            <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-[#d0f81b]" />
+            <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-[#d0f81b]" />
+            <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-[#d0f81b]" />
+            <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-[#d0f81b]" />
 
             {/* Scanning Line Animation */}
             {step === 'processing' && (
@@ -173,13 +173,13 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
                 initial={{ top: '0%' }}
                 animate={{ top: ['0%', '100%', '0%'] }}
                 transition={{ repeat: Infinity, duration: 1.4, ease: 'linear' }}
-                className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent shadow-[0_0_15px_#10b981]"
+                className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#d0f81b] to-transparent shadow-[0_0_15px_#d0f81b]"
               />
             )}
 
             {/* Status overlay */}
             <div className="absolute top-3 left-3 bg-slate-900/85 backdrop-blur-md px-3 py-1 rounded-full border border-slate-700 text-xs flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="w-2 h-2 rounded-full bg-[#d0f81b] animate-ping" />
               <span>{currentData.title}</span>
             </div>
 
@@ -187,9 +187,9 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                 <button
                   onClick={handleStartScan}
-                  className="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-emerald-900/50 hover:scale-105 transition-all flex items-center gap-2 ring-4 ring-emerald-500/20 cursor-pointer"
+                  className="px-6 py-3 rounded-2xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-[#d0f81b]/30 hover:scale-105 transition-all flex items-center gap-2 ring-4 ring-[#d0f81b]/20 cursor-pointer border border-[#bde412]"
                 >
-                  <Sparkles className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4 text-slate-950" />
                   <span>Bấm Bóc Tách 1-Chạm</span>
                 </button>
               </div>
@@ -200,7 +200,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
           {step === 'processing' && (
             <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700 space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                <span className="text-[#d0f81b] font-bold flex items-center gap-1.5">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   Gemini Vision OCR đang quét nhận diện nét chữ &amp; lọc nợ...
                 </span>
@@ -208,7 +208,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
               </div>
               <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-400"
+                  className="h-full bg-[#d0f81b]"
                   style={{ width: `${scanProgress}%` }}
                 />
               </div>
@@ -291,9 +291,9 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
               if (onSuccessResult) onSuccessResult(currentData);
               onClose();
             }}
-            className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+            className="px-5 py-2.5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 text-xs font-black transition-all shadow-md flex items-center gap-1.5 cursor-pointer border border-[#bde412]"
           >
-            <CheckCircle2 className="w-4 h-4" /> Đồng ý &amp; Lưu Sổ Quỹ
+            <CheckCircle2 className="w-4 h-4 text-slate-950" /> Đồng ý &amp; Lưu Sổ Quỹ
           </button>
         </div>
       </motion.div>
