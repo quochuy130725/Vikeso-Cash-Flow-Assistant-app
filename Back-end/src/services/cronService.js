@@ -1,3 +1,7 @@
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
 const cron = require('node-cron');
 const axios = require('axios');
 const nodemailer = require('nodemailer');
