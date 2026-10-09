@@ -4,9 +4,11 @@ const nodemailer = require('nodemailer');
 const User = require('../models/User');
 const Receipt = require('../models/Receipt');
 
-// ─── Khởi tạo bộ gửi email ────────────────────────────────────────────────
+// ─── Khởi tạo bộ gửi email (Connection Pooling) ───────────────────────────
 const createMailTransporter = () => nodemailer.createTransport({
     service: 'gmail',
+    pool: true,
+    maxConnections: 5,
     auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
@@ -141,7 +143,7 @@ const runDailyReport = async ({ sendZeroReports = false } = {}) => {
 
     const transporter = createMailTransporter();
 
-    for (const user of usersToProcess) {
+    await Promise.all(usersToProcess.map(async (user) => {
         const userReceipts = await Receipt.find({ userId: user._id, ...dateFilter });
 
         let tongThu = 0, tongChi = 0;
@@ -204,7 +206,9 @@ const runDailyReport = async ({ sendZeroReports = false } = {}) => {
         } else if (!shouldSendTelegram) {
             console.log(`⚠️  ${user.email} đã tắt nhận báo cáo qua Telegram.`);
         }
-    }
+    }));
+
+    try { transporter.close(); } catch (_) {}
 
     return { totalUsers: usersToProcess.length, ...results };
 };
