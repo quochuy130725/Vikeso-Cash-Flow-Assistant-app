@@ -12,12 +12,12 @@ const createMailTransporter = () => nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
-    family: 4, // Bắt buộc IPv4 để tránh lỗi ENETUNREACH trên Render
     pool: true,
     maxConnections: 5,
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
+    lookup: (hostname, options, callback) => dns.lookup(hostname, { family: 4 }, callback),
     auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
@@ -180,6 +180,13 @@ const runDailyReport = async ({ sendZeroReports = false, targetEmail = null } = 
         // ── Kiểm tra Notification Settings ────────────────────────────────
         const shouldSendEmail = user.notificationSettings?.receiveEmail ?? true;
         const shouldSendTelegram = user.notificationSettings?.receiveTelegram ?? true;
+
+        // Bỏ qua tài khoản test mẫu (@example.com)
+        if (user.email && user.email.toLowerCase().endsWith('@example.com')) {
+            console.log(`⚠️  ${user.email} là tài khoản mẫu (@example.com) — bỏ qua.`);
+            results.skipped++;
+            return;
+        }
 
         // ── Email (nếu bật) ─────────────────────────────────────────────
         if (shouldSendEmail && user.email) {
