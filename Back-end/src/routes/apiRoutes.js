@@ -48,14 +48,20 @@ router.post('/confirm-receipt', aiReceiptController.confirmReceipt);
 // ---------------------------------------------------------
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Vui lòng nhập email và mật khẩu' });
+    const identifier = (req.body.email || req.body.phone || req.body.identifier || '').trim();
+    const { password } = req.body;
+    if (!identifier || !password) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập email/số điện thoại và mật khẩu' });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      $or: [
+        { email: identifier.toLowerCase() },
+        { phone: identifier }
+      ]
+    });
     if (!user || user.password !== password) {
-      return res.status(400).json({ success: false, message: 'Email hoặc mật khẩu không đúng' });
+      return res.status(400).json({ success: false, message: 'Email/Số điện thoại hoặc mật khẩu không đúng' });
     }
 
     return res.status(200).json({

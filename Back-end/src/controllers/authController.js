@@ -31,6 +31,7 @@ const buildUserInfo = (user) => ({
   name: user.name || '',
   shopName: user.shopName,
   avatar: user.avatar,
+  phone: user.phone || '',
   telegramChatId: user.telegramChatId,
   subscriptionPlan: user.subscriptionPlan,
   authProvider: user.authProvider,
@@ -83,24 +84,31 @@ exports.register = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// POST /api/auth/login  — Đăng nhập Email/Password
+// POST /api/auth/login  — Đăng nhập Email/SĐT + Password
 // ─────────────────────────────────────────────────────────────────────────────
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const identifier = (req.body.email || req.body.phone || req.body.identifier || '').trim();
+    const { password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Vui lòng nhập email và mật khẩu.' });
+    if (!identifier || !password) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập email hoặc số điện thoại và mật khẩu.' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    // Cho phép tìm bằng email HOẶC số điện thoại
+    const user = await User.findOne({
+      $or: [
+        { email: identifier.toLowerCase() },
+        { phone: identifier },
+      ],
+    });
     if (!user || !user.password) {
-      return res.status(401).json({ success: false, message: 'Email hoặc mật khẩu không đúng.' });
+      return res.status(401).json({ success: false, message: 'Email/Số điện thoại hoặc mật khẩu không đúng.' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Email hoặc mật khẩu không đúng.' });
+      return res.status(401).json({ success: false, message: 'Email/Số điện thoại hoặc mật khẩu không đúng.' });
     }
 
     // Tự động bổ sung role nếu tài khoản cũ chưa có trong Database
@@ -219,16 +227,17 @@ exports.getMe = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUT /api/auth/profile  — Cập nhật thông tin cá nhân
-// Body: { shopName?, phone?, avatar? }
+// Body: { name?, shopName?, phone?, avatar? }
 // Yêu cầu: Bearer token hợp lệ
 // ─────────────────────────────────────────────────────────────────────────────
 exports.updateProfile = async (req, res) => {
   try {
-    const { shopName, phone, avatar } = req.body;
+    const { name, shopName, phone, avatar } = req.body;
     const userId = req.user.userId;
 
     const updateFields = {};
-    if (shopName !== undefined) updateFields.shopName = shopName.trim();
+    if (name      !== undefined) updateFields.name      = name.trim();
+    if (shopName  !== undefined) updateFields.shopName  = shopName.trim();
     if (phone     !== undefined) updateFields.phone     = phone.trim();
     if (avatar    !== undefined) updateFields.avatar    = avatar;
 
@@ -250,13 +259,51 @@ exports.updateProfile = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Cập nhật thông tin thành công!',
-      userInfo: {
-        ...buildUserInfo(user),
-        phone: user.phone,
-      },
+      userInfo: buildUserInfo(user),
     });
   } catch (error) {
     console.error('Lỗi update-profile:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PUT /api/auth/change-password  — Đổi mật khẩu
+// Body: { currentPassword, newPassword }
+// Yêu cầu: Bearer token hợp lệ
+// ─────────────────────────────────────────────────────────────────────────────
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.userId;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập mật khẩu hiện tại và mật khẩu mới.' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Mật khẩu mới phải có ít nhất 6 ký tự.' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng.' });
+    }
+
+    if (user.password) {
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ success: false, message: 'Mật khẩu hiện tại không chính xác.' });
+      }
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    console.log(`🔑 Đổi mật khẩu thành công cho: ${user.email}`);
+    return res.status(200).json({ success: true, message: 'Đổi mật khẩu thành công!' });
+  } catch (error) {
+    console.error('Lỗi change-password:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 };

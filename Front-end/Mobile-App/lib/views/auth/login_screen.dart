@@ -192,20 +192,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                   ],
 
-                  // Email
+                  // Email hoặc SĐT
                   TextFormField(
                     controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
+                    keyboardType: _isRegisterMode ? TextInputType.emailAddress : TextInputType.text,
                     decoration: _inputDecoration(
-                      label: 'Email đăng nhập',
-                      hint: 'VD: test@example.com',
-                      icon: Icons.email_outlined,
+                      label: _isRegisterMode ? 'Email đăng nhập' : 'Email hoặc Số điện thoại',
+                      hint: _isRegisterMode ? 'VD: test@example.com' : 'VD: email@example.com hoặc 0987654321',
+                      icon: _isRegisterMode ? Icons.email_outlined : Icons.person_outline,
                       colorScheme: colorScheme,
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Vui lòng nhập email';
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                        return 'Email không đúng định dạng';
+                      if (value == null || value.trim().isEmpty) {
+                        return _isRegisterMode ? 'Vui lòng nhập email' : 'Vui lòng nhập email hoặc số điện thoại';
+                      }
+                      if (_isRegisterMode) {
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+                          return 'Email không đúng định dạng';
+                        }
                       }
                       return null;
                     },

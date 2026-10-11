@@ -31,6 +31,7 @@ class AuthRepository {
   static const _kAccessToken = 'access_token';
   static const _kUserId = 'user_id';
   static const _kEmail = 'user_email';
+  static const _kName = 'user_name';
   static const _kShopName = 'user_shopName';
   static const _kAvatar = 'user_avatar';
   static const _kProvider = 'user_authProvider';
@@ -47,10 +48,10 @@ class AuthRepository {
           .post(
             uri,
             headers: {'Content-Type': 'application/json; charset=UTF-8'},
-            body: jsonEncode({'email': email.trim(), 'password': password}),
+            body: jsonEncode({'email': email.trim(), 'identifier': email.trim(), 'password': password}),
           )
           .timeout(_timeout);
-      return _handleAuthResponse(response);
+      return await _handleAuthResponse(response);
     } on SocketException {
       return AuthResult.failure(
           'Không thể kết nối máy chủ. Kiểm tra Wifi và IP!');
@@ -83,7 +84,7 @@ class AuthRepository {
             }),
           )
           .timeout(_timeout);
-      return _handleAuthResponse(response);
+      return await _handleAuthResponse(response);
     } on SocketException {
       return AuthResult.failure(
           'Không thể kết nối máy chủ. Kiểm tra Wifi và IP!');
@@ -117,7 +118,7 @@ class AuthRepository {
             body: jsonEncode({'idToken': idToken}),
           )
           .timeout(_timeout);
-      return _handleAuthResponse(response);
+      return await _handleAuthResponse(response);
     } on SocketException {
       return AuthResult.failure(
           'Không thể kết nối máy chủ. Kiểm tra Wifi và IP!');
@@ -151,6 +152,7 @@ class AuthRepository {
       return UserInfo(
         id: userId,
         email: await _storage.read(key: _kEmail) ?? '',
+        name: await _storage.read(key: _kName),
         shopName: await _storage.read(key: _kShopName) ?? '',
         avatar: await _storage.read(key: _kAvatar),
         authProvider: await _storage.read(key: _kProvider) ?? 'local',
@@ -183,6 +185,7 @@ class AuthRepository {
         final role = info['role']?.toString() ?? 'OWNER';
         final plan = info['subscriptionPlan']?.toString() ?? 'FREE';
         final phone = info['phone']?.toString();
+        final name = info['name']?.toString();
         final shopName = info['shopName']?.toString() ?? '';
         final email = info['email']?.toString() ?? '';
         final avatar = info['avatar']?.toString();
@@ -191,6 +194,7 @@ class AuthRepository {
           _storage.write(key: _kRole, value: role),
           _storage.write(key: _kSubscriptionPlan, value: plan),
           if (phone != null) _storage.write(key: _kPhone, value: phone),
+          if (name != null) _storage.write(key: _kName, value: name),
           _storage.write(key: _kShopName, value: shopName),
           _storage.write(key: _kEmail, value: email),
           if (avatar != null) _storage.write(key: _kAvatar, value: avatar),
@@ -199,6 +203,7 @@ class AuthRepository {
         return UserInfo(
           id: info['id']?.toString() ?? (await getUserId()) ?? '',
           email: email,
+          name: name,
           shopName: shopName,
           avatar: avatar,
           authProvider: info['authProvider']?.toString() ?? 'local',
@@ -215,6 +220,38 @@ class AuthRepository {
     } catch (e) {
       debugPrint('fetchUserProfile error: $e');
       return null;
+    }
+  }
+
+  /// Đổi mật khẩu
+  Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final token = await getAccessToken();
+      if (token == null) return {'success': false, 'message': 'Chưa đăng nhập.'};
+
+      final uri = Uri.parse('$_authBaseUrl/change-password');
+      final response = await http.put(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        }),
+      ).timeout(_timeout);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': response.statusCode == 200 && body['success'] == true,
+        'message': body['message'] ?? (body['error'] ?? 'Lỗi đổi mật khẩu.'),
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi kết nối: $e'};
     }
   }
 
@@ -239,12 +276,14 @@ class AuthRepository {
       final role = userInfo['role']?.toString() ?? 'OWNER';
       final plan = userInfo['subscriptionPlan']?.toString() ?? 'FREE';
       final phone = userInfo['phone']?.toString() ?? '';
+      final name = userInfo['name']?.toString() ?? '';
 
       await Future.wait([
         _storage.write(key: _kAccessToken, value: accessToken),
         _storage.write(key: _kUserId, value: userInfo['id']?.toString() ?? ''),
         _storage.write(
             key: _kEmail, value: userInfo['email']?.toString() ?? ''),
+        if (name.isNotEmpty) _storage.write(key: _kName, value: name),
         _storage.write(
             key: _kShopName, value: userInfo['shopName']?.toString() ?? ''),
         _storage.write(key: _kAvatar, value: userInfo['avatar']?.toString()),
@@ -259,6 +298,7 @@ class AuthRepository {
       return AuthResult.success(UserInfo(
         id: userInfo['id']?.toString() ?? '',
         email: userInfo['email']?.toString() ?? '',
+        name: name.isNotEmpty ? name : null,
         shopName: userInfo['shopName']?.toString() ?? '',
         avatar: userInfo['avatar']?.toString(),
         authProvider: userInfo['authProvider']?.toString() ?? 'local',
@@ -291,6 +331,7 @@ class AuthResult {
 class UserInfo {
   final String id;
   final String email;
+  final String? name;
   final String shopName;
   final String? avatar;
   final String authProvider;
@@ -303,6 +344,7 @@ class UserInfo {
   const UserInfo({
     required this.id,
     required this.email,
+    this.name,
     required this.shopName,
     this.avatar,
     required this.authProvider,

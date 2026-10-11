@@ -15,7 +15,10 @@ router.post('/google', authController.googleSignIn);
 // GET /api/auth/me  — Lấy thông tin user hiện tại (cần token)
 router.get('/me', verifyToken, authController.getMe);
 
-// PUT /api/auth/profile  — Cập nhật shopName, phone, avatar (cần token)
+// PUT /api/auth/profile  — Cập nhật name, shopName, phone, avatar (cần token)
 router.put('/profile', verifyToken, authController.updateProfile);
+
+// PUT /api/auth/change-password  — Đổi mật khẩu (cần token)
+router.put('/change-password', verifyToken, authController.changePassword);
 
 module.exports = router;

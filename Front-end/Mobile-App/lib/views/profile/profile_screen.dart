@@ -21,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   );
 
   String _shopName  = '';
+  String _name      = '';
   String _email     = '';
   String _phone     = '';
   String? _avatar;
@@ -43,6 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profile = await AuthRepository().fetchUserProfile();
     if (profile != null && mounted) {
       setState(() {
+        _name = profile.name ?? '';
         _shopName = profile.shopName;
         _email = profile.email;
         _phone = profile.phone ?? '';
@@ -50,6 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _subscriptionPlan = profile.subscriptionPlan;
       });
     } else {
+      final name     = await _storage.read(key: 'user_name')     ?? '';
       final shopName = await _storage.read(key: 'user_shopName') ?? '';
       final email    = await _storage.read(key: 'user_email')    ?? '';
       final phone    = await _storage.read(key: 'user_phone')    ?? '';
@@ -57,6 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final plan     = await _storage.read(key: 'user_subscriptionPlan') ?? 'FREE';
       if (!mounted) return;
       setState(() {
+        _name     = name;
         _shopName = shopName;
         _email    = email;
         _phone    = phone;
@@ -79,6 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _openEditDialog() async {
+    final nameCtrl  = TextEditingController(text: _name);
     final shopCtrl  = TextEditingController(text: _shopName);
     final phoneCtrl = TextEditingController(text: _phone);
 
@@ -86,31 +91,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Sửa thông tin', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: shopCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Tên cửa hàng',
-                prefixIcon: Icon(Icons.storefront_outlined),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Họ và tên',
+                  prefixIcon: Icon(Icons.person_outline),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: phoneCtrl,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'Số điện thoại',
-                prefixIcon: Icon(Icons.phone_outlined),
+              const SizedBox(height: 12),
+              TextField(
+                controller: shopCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Tên cửa hàng',
+                  prefixIcon: Icon(Icons.storefront_outlined),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Số điện thoại',
+                  prefixIcon: Icon(Icons.phone_outlined),
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, {
+              'name': nameCtrl.text.trim(),
               'shopName': shopCtrl.text.trim(),
               'phone': phoneCtrl.text.trim(),
             }),
@@ -121,10 +137,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (result == null) return;
-    await _updateProfile(result['shopName']!, result['phone']!);
+    await _updateProfile(result['name']!, result['shopName']!, result['phone']!);
   }
 
-  Future<void> _updateProfile(String shopName, String phone) async {
+  Future<void> _updateProfile(String name, String shopName, String phone) async {
     setState(() { _isLoading = true; });
     try {
       final token   = await _storage.read(key: 'access_token') ?? '';
@@ -138,6 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
+          'name': name,
           'shopName': shopName,
           'phone': phone,
         }),
@@ -147,13 +164,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (response.statusCode == 200 && body['success'] == true) {
         final info = body['userInfo'] as Map<String, dynamic>;
         
-        await _storage.write(key: 'user_shopName', value: info['shopName']?.toString() ?? '');
-        await _storage.write(key: 'user_phone', value: info['phone']?.toString() ?? '');
+        await _storage.write(key: 'user_name', value: info['name']?.toString() ?? name);
+        await _storage.write(key: 'user_shopName', value: info['shopName']?.toString() ?? shopName);
+        await _storage.write(key: 'user_phone', value: info['phone']?.toString() ?? phone);
         
         if (!mounted) return;
         setState(() {
-          _shopName = info['shopName']?.toString() ?? '';
-          _phone    = info['phone']?.toString() ?? '';
+          _name     = info['name']?.toString() ?? name;
+          _shopName = info['shopName']?.toString() ?? shopName;
+          _phone    = info['phone']?.toString() ?? phone;
         });
         _showSnack('Cập nhật thành công!', isSuccess: true);
       } else {
@@ -163,6 +182,117 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _showSnack('Lỗi kết nối: $e');
     } finally {
       if (mounted) setState(() { _isLoading = false; });
+    }
+  }
+
+  Future<void> _openChangePasswordDialog() async {
+    final currentPassCtrl = TextEditingController();
+    final newPassCtrl = TextEditingController();
+    final confirmPassCtrl = TextEditingController();
+    bool obscureCurrent = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Đổi mật khẩu', style: TextStyle(fontWeight: FontWeight.bold)),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: currentPassCtrl,
+                    obscureText: obscureCurrent,
+                    decoration: InputDecoration(
+                      labelText: 'Mật khẩu hiện tại',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscureCurrent ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setDialogState(() => obscureCurrent = !obscureCurrent),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: newPassCtrl,
+                    obscureText: obscureNew,
+                    decoration: InputDecoration(
+                      labelText: 'Mật khẩu mới',
+                      prefixIcon: const Icon(Icons.lock_reset),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setDialogState(() => obscureNew = !obscureNew),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: confirmPassCtrl,
+                    obscureText: obscureConfirm,
+                    decoration: InputDecoration(
+                      labelText: 'Xác nhận mật khẩu mới',
+                      prefixIcon: const Icon(Icons.check_circle_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscureConfirm ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Hủy'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final cur = currentPassCtrl.text.trim();
+                  final newP = newPassCtrl.text.trim();
+                  final conf = confirmPassCtrl.text.trim();
+                  if (cur.isEmpty) {
+                    _showSnack('Vui lòng nhập mật khẩu hiện tại');
+                    return;
+                  }
+                  if (newP.length < 6) {
+                    _showSnack('Mật khẩu mới phải có ít nhất 6 ký tự');
+                    return;
+                  }
+                  if (newP != conf) {
+                    _showSnack('Mật khẩu xác nhận không khớp');
+                    return;
+                  }
+                  Navigator.pop(ctx, true);
+                },
+                child: const Text('Cập nhật'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (result == true) {
+      setState(() { _isLoading = true; });
+      try {
+        final res = await AuthRepository().changePassword(
+          currentPassword: currentPassCtrl.text.trim(),
+          newPassword: newPassCtrl.text.trim(),
+        );
+        if (res['success'] == true) {
+          _showSnack(res['message'] ?? 'Đổi mật khẩu thành công!', isSuccess: true);
+        } else {
+          _showSnack(res['message'] ?? 'Đổi mật khẩu thất bại!');
+        }
+      } catch (e) {
+        _showSnack('Lỗi: $e');
+      } finally {
+        if (mounted) setState(() { _isLoading = false; });
+      }
     }
   }
 
@@ -282,7 +412,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 backgroundColor: primaryPink.withValues(alpha: 0.15),
                                 child: _avatar == null || !_avatar!.startsWith('http')
                                     ? Text(
-                                        _shopName.isNotEmpty ? _shopName[0].toUpperCase() : 'V',
+                                        _name.isNotEmpty ? _name[0].toUpperCase() : (_shopName.isNotEmpty ? _shopName[0].toUpperCase() : 'V'),
                                         style: const TextStyle(fontSize: 32, color: primaryPink, fontWeight: FontWeight.bold),
                                       )
                                     : null,
@@ -307,9 +437,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          _shopName.isNotEmpty ? _shopName : 'Cửa hàng Vikeso',
+                          _name.isNotEmpty ? _name : (_shopName.isNotEmpty ? _shopName : 'Cửa hàng Vikeso'),
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                         ),
+                        if (_shopName.isNotEmpty && _name.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(_shopName, style: const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w500)),
+                        ],
                         const SizedBox(height: 4),
                         Text(_email, style: const TextStyle(color: Colors.grey, fontSize: 14)),
                         if (_phone.isNotEmpty) ...[
@@ -436,7 +570,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _menuItem(context, Icons.storefront, 'Thông tin cửa hàng', onTap: _openEditDialog),
                         _menuItem(context, Icons.edit, 'Sửa thông tin', onTap: _openEditDialog),
                         _menuItem(context, Icons.workspace_premium, 'Gói dịch vụ PRO & Thanh toán', onTap: _navigateToUpgradePro),
-                        _menuItem(context, Icons.lock_outline, 'Đổi mật khẩu', onTap: () => _showSnack('Tính năng đổi mật khẩu đang cập nhật!')),
+                        _menuItem(context, Icons.lock_outline, 'Đổi mật khẩu', onTap: _openChangePasswordDialog),
                         _menuItem(context, Icons.settings_outlined, 'Cài đặt hệ thống', onTap: () => _showSnack('Cài đặt hệ thống đang cập nhật!')),
                       ],
                     ),
