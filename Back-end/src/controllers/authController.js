@@ -372,12 +372,15 @@ exports.forgotPassword = async (req, res) => {
     } catch (mailError) {
       console.error('Lỗi gửi email:', mailError.message);
 
-      // Nếu là do Render chặn cổng SMTP (Connection timeout / ETIMEDOUT)
-      if (mailError.message?.includes('timeout') || mailError.code === 'ETIMEDOUT') {
-        console.warn(`⚠️ Render Free chặn SMTP. Mã OTP tạo thành công cho ${user.email}: ${code}`);
+      // Nếu Render chặn SMTP hoặc Resend test mode chỉ cho gửi đến email chủ tài khoản
+      const isSmtpTimeout = mailError.message?.includes('timeout') || mailError.code === 'ETIMEDOUT';
+      const isResendRestriction = mailError.message?.includes('Resend restriction') || mailError.message?.includes('only send testing emails');
+
+      if (isSmtpTimeout || isResendRestriction) {
+        console.warn(`⚠️ Cung cấp mã OTP trực tiếp cho ${user.email}: ${code}`);
         return res.status(200).json({
           success: true,
-          message: `Máy chủ Render chặn cổng SMTP gửi email. Mã xác nhận của bạn là: ${code}`,
+          message: `Mã xác nhận đặt lại mật khẩu của bạn là: ${code}`,
           email: user.email,
           maskedEmail: maskEmail(user.email),
           expiresInMinutes: RESET_CODE_TTL_MINUTES,
@@ -392,6 +395,7 @@ exports.forgotPassword = async (req, res) => {
       await user.save();
       throw mailError;
     }
+
 
 
     console.log(`📧 Đã gửi mã đặt lại mật khẩu cho: ${user.email}`);

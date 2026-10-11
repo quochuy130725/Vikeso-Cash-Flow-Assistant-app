@@ -85,10 +85,15 @@ exports.sendResetPasswordEmail = async ({ to, name, code, minutes }) => {
         return { provider: 'resend', id: data.id };
       }
       console.warn('⚠️ Resend thất bại:', data);
+      if (data?.message?.includes('only send testing emails')) {
+        throw new Error(`Resend restriction: ${data.message}`);
+      }
     } catch (err) {
+      if (err.message?.includes('Resend restriction')) throw err;
       console.warn('⚠️ Lỗi Resend HTTP API:', err.message);
     }
   }
+
 
   // 2. Thử gửi qua Brevo HTTP API (Port 443 — Render Free KHÔNG chặn)
   if (process.env.BREVO_API_KEY) {
