@@ -255,6 +255,57 @@ class AuthRepository {
     }
   }
 
+  /// Quên mật khẩu — gửi mã OTP về email (nhận email hoặc SĐT)
+  Future<Map<String, dynamic>> forgotPassword(String identifier) async {
+    try {
+      final uri = Uri.parse('$_authBaseUrl/forgot-password');
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({'email': identifier.trim()}),
+      ).timeout(_timeout);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': response.statusCode == 200 && body['success'] == true,
+        'message': body['message'] ?? body['error'] ?? 'Không thể gửi mã xác nhận.',
+        'email': body['email'],
+      };
+    } on SocketException {
+      return {'success': false, 'message': 'Không thể kết nối máy chủ. Kiểm tra mạng!'};
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi kết nối: $e'};
+    }
+  }
+
+  /// Đặt lại mật khẩu bằng mã OTP
+  Future<Map<String, dynamic>> resetPassword({
+    required String identifier,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      final uri = Uri.parse('$_authBaseUrl/reset-password');
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({
+          'email': identifier.trim(),
+          'code': code.trim(),
+          'newPassword': newPassword,
+        }),
+      ).timeout(_timeout);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': response.statusCode == 200 && body['success'] == true,
+        'message': body['message'] ?? body['error'] ?? 'Đặt lại mật khẩu thất bại.',
+      };
+    } on SocketException {
+      return {'success': false, 'message': 'Không thể kết nối máy chủ. Kiểm tra mạng!'};
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi kết nối: $e'};
+    }
+  }
+
   Future<void> logout() async {
     await _storage.deleteAll();
     try {

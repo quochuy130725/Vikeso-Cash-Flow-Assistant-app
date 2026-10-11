@@ -1,7 +1,13 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
+const crypto = require('crypto');
 const User = require('../models/User');
+const { sendResetPasswordEmail } = require('../services/mailService');
+
+const RESET_CODE_TTL_MINUTES = 10;
+const RESET_CODE_RESEND_SECONDS = 60;
+const RESET_CODE_MAX_ATTEMPTS = 5;
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
@@ -304,6 +310,140 @@ exports.changePassword = async (req, res) => {
     return res.status(200).json({ success: true, message: 'Đổi mật khẩu thành công!' });
   } catch (error) {
     console.error('Lỗi change-password:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// Helper: tìm user theo email hoặc số điện thoại
+const findUserByIdentifier = (identifier) => User.findOne({
+  $or: [
+    { email: identifier.toLowerCase() },
+    { phone: identifier },
+  ],
+});
+
+// Helper: che bớt email (vd: qh***@gmail.com)
+const maskEmail = (email) => {
+  const [local, domain] = email.split('@');
+  if (!domain) return email;
+  const visible = local.slice(0, Math.min(2, local.length));
+  return `${visible}${'*'.repeat(Math.max(local.length - visible.length, 3))}@${domain}`;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/auth/forgot-password  — Gửi mã OTP đặt lại mật khẩu qua email
+// Body: { email }  (chấp nhận email hoặc số điện thoại)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.forgotPassword = async (req, res) => {
+  try {
+    const identifier = (req.body.email || req.body.identifier || req.body.phone || '').trim();
+    if (!identifier) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập email hoặc số điện thoại.' });
+    }
+
+    const user = await findUserByIdentifier(identifier);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản với thông tin này.' });
+    }
+
+    // Chống spam: chỉ cho gửi lại sau RESET_CODE_RESEND_SECONDS giây
+    if (user.resetPasswordSentAt) {
+      const elapsed = (Date.now() - user.resetPasswordSentAt.getTime()) / 1000;
+      if (elapsed < RESET_CODE_RESEND_SECONDS) {
+        const wait = Math.ceil(RESET_CODE_RESEND_SECONDS - elapsed);
+        return res.status(429).json({ success: false, message: `Vui lòng đợi ${wait} giây trước khi gửi lại mã.` });
+      }
+    }
+
+    const code = crypto.randomInt(0, 1000000).toString().padStart(6, '0');
+    user.resetPasswordCode = await bcrypt.hash(code, 10);
+    user.resetPasswordExpires = new Date(Date.now() + RESET_CODE_TTL_MINUTES * 60 * 1000);
+    user.resetPasswordSentAt = new Date();
+    user.resetPasswordAttempts = 0;
+    await user.save();
+
+    try {
+      await sendResetPasswordEmail({
+        to: user.email,
+        name: user.name || user.shopName,
+        code,
+        minutes: RESET_CODE_TTL_MINUTES,
+      });
+    } catch (mailError) {
+      // Gửi mail thất bại → xóa mã để người dùng có thể thử lại ngay
+      user.resetPasswordCode = null;
+      user.resetPasswordExpires = null;
+      user.resetPasswordSentAt = null;
+      await user.save();
+      throw mailError;
+    }
+
+    console.log(`📧 Đã gửi mã đặt lại mật khẩu cho: ${user.email}`);
+    return res.status(200).json({
+      success: true,
+      message: `Mã xác nhận đã được gửi tới ${maskEmail(user.email)}.`,
+      email: user.email,
+      maskedEmail: maskEmail(user.email),
+      expiresInMinutes: RESET_CODE_TTL_MINUTES,
+    });
+  } catch (error) {
+    console.error('Lỗi forgot-password:', error);
+    return res.status(500).json({ success: false, message: 'Không thể gửi email lúc này. Vui lòng thử lại sau.', error: error.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/auth/reset-password  — Xác thực OTP và đặt mật khẩu mới
+// Body: { email, code, newPassword }
+// ─────────────────────────────────────────────────────────────────────────────
+exports.resetPassword = async (req, res) => {
+  try {
+    const identifier = (req.body.email || req.body.identifier || req.body.phone || '').trim();
+    const code = (req.body.code || '').toString().trim();
+    const { newPassword } = req.body;
+
+    if (!identifier || !code || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập đầy đủ mã xác nhận và mật khẩu mới.' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Mật khẩu mới phải có ít nhất 6 ký tự.' });
+    }
+
+    const user = await findUserByIdentifier(identifier);
+    if (!user || !user.resetPasswordCode || !user.resetPasswordExpires) {
+      return res.status(400).json({ success: false, message: 'Mã xác nhận không hợp lệ. Vui lòng yêu cầu mã mới.' });
+    }
+
+    if (user.resetPasswordExpires.getTime() < Date.now()) {
+      return res.status(400).json({ success: false, message: 'Mã xác nhận đã hết hạn. Vui lòng yêu cầu mã mới.' });
+    }
+
+    if (user.resetPasswordAttempts >= RESET_CODE_MAX_ATTEMPTS) {
+      return res.status(429).json({ success: false, message: 'Bạn đã nhập sai quá nhiều lần. Vui lòng yêu cầu mã mới.' });
+    }
+
+    const isMatch = await bcrypt.compare(code, user.resetPasswordCode);
+    if (!isMatch) {
+      user.resetPasswordAttempts += 1;
+      await user.save();
+      const left = RESET_CODE_MAX_ATTEMPTS - user.resetPasswordAttempts;
+      return res.status(400).json({
+        success: false,
+        message: left > 0 ? `Mã xác nhận không đúng. Còn ${left} lần thử.` : 'Bạn đã nhập sai quá nhiều lần. Vui lòng yêu cầu mã mới.',
+      });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.resetPasswordCode = null;
+    user.resetPasswordExpires = null;
+    user.resetPasswordSentAt = null;
+    user.resetPasswordAttempts = 0;
+    await user.save();
+
+    console.log(`🔑 Đặt lại mật khẩu thành công cho: ${user.email}`);
+    return res.status(200).json({ success: true, message: 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.' });
+  } catch (error) {
+    console.error('Lỗi reset-password:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 };

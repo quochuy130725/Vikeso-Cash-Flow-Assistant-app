@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../data/repositories/auth_repository.dart';
+import 'forgot_password_screen.dart';
 
 /// LoginScreen - Dang nhap bang Email/Password hoac Google Sign-In.
 /// Su dung AuthRepository de goi API backend va luu JWT vao SecureStorage.
@@ -97,6 +98,23 @@ class _LoginScreenState extends State<LoginScreen> {
   // =========================================================
   // CHUYEN MAN HINH DASHBOARD (luu userId vao dotenv runtime)
   // =========================================================
+  // =========================================================
+  // QUEN MAT KHAU
+  // =========================================================
+  Future<void> _openForgotPassword() async {
+    final email = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => ForgotPasswordScreen(initialIdentifier: _emailController.text),
+      ),
+    );
+    if (!mounted || email == null) return;
+    setState(() {
+      _emailController.text = email;
+      _passwordController.clear();
+      _errorMessage = null;
+    });
+  }
+
   void _navigateToDashboard(UserInfo user) {
     // Cap nhat USER_ID trong dotenv runtime de cac screen khac dung duoc
     dotenv.env['USER_ID'] = user.id;
@@ -239,7 +257,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 24),
+                  if (!_isRegisterMode)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _isLoading ? null : _openForgotPassword,
+                        child: const Text('Quên mật khẩu?', style: TextStyle(fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                  SizedBox(height: _isRegisterMode ? 24 : 8),
 
                   // Nut Dang nhap / Dang ky
                   SizedBox(
