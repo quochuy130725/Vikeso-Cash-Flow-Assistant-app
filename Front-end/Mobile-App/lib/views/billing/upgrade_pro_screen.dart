@@ -56,7 +56,7 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
     });
 
     if (order != null) {
-      if (order.status == 'PAID') {
+      if (order.status == 'PAID' || order.status == 'SUCCESS') {
         _onPaymentSuccess();
       } else {
         _startTimers(order.orderCode);
@@ -79,7 +79,7 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
         timer.cancel();
         return;
       }
-      if (statusOrder != null && statusOrder.status == 'PAID') {
+      if (statusOrder != null && (statusOrder.status == 'PAID' || statusOrder.status == 'SUCCESS')) {
         timer.cancel();
         _countdownTimer?.cancel();
         _onPaymentSuccess();
@@ -116,7 +116,7 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
     if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (statusOrder != null && statusOrder.status == 'PAID') {
+    if (statusOrder != null && (statusOrder.status == 'PAID' || statusOrder.status == 'SUCCESS')) {
       _pollingTimer?.cancel();
       _countdownTimer?.cancel();
       _onPaymentSuccess();

@@ -37,7 +37,7 @@ class BillingOrder {
       orderCode: json['orderCode']?.toString() ?? '',
       plan: json['plan']?.toString() ?? 'PRO',
       amount: (json['amount'] is num) ? (json['amount'] as num).toInt() : 99000,
-      status: json['status']?.toString() ?? 'PENDING',
+      status: (json['status'] == 'SUCCESS' || json['status'] == 'PAID') ? 'PAID' : (json['status']?.toString() ?? 'PENDING'),
       transferContent: json['transferContent']?.toString() ?? '',
       qrUrl: json['qrUrl']?.toString() ?? '',
       bankCode: json['bankCode']?.toString() ?? 'MB',
