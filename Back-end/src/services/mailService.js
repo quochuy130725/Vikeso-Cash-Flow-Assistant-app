@@ -57,11 +57,78 @@ const buildResetPasswordHTML = ({ name, code, minutes }) => `
 </html>`;
 
 exports.sendResetPasswordEmail = async ({ to, name, code, minutes }) => {
-  await getTransporter().sendMail({
+  const subject = `[VikeSo] Mã đặt lại mật khẩu: ${code}`;
+  const html = buildResetPasswordHTML({ name, code, minutes });
+  const text = `Mã đặt lại mật khẩu VikeSo của bạn là ${code}. Mã có hiệu lực trong ${minutes} phút.`;
+
+  // 1. Thử gửi qua Resend HTTP API (Port 443 — Render Free KHÔNG chặn)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      console.log('📤 Đang gửi mail qua Resend HTTP API...');
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: process.env.RESEND_FROM || 'VikeSo <onboarding@resend.dev>',
+          to: [to],
+          subject,
+          html,
+          text,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        console.log('✅ Gửi email qua Resend thành công:', data.id);
+        return { provider: 'resend', id: data.id };
+      }
+      console.warn('⚠️ Resend thất bại:', data);
+    } catch (err) {
+      console.warn('⚠️ Lỗi Resend HTTP API:', err.message);
+    }
+  }
+
+  // 2. Thử gửi qua Brevo HTTP API (Port 443 — Render Free KHÔNG chặn)
+  if (process.env.BREVO_API_KEY) {
+    try {
+      console.log('📤 Đang gửi mail qua Brevo HTTP API...');
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: 'VikeSo', email: process.env.MAIL_USER || 'baocao.vikeso@gmail.com' },
+          to: [{ email: to, name: name || 'Người dùng' }],
+          subject,
+          htmlContent: html,
+          textContent: text,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        console.log('✅ Gửi email qua Brevo thành công:', data.messageId);
+        return { provider: 'brevo', messageId: data.messageId };
+      }
+      console.warn('⚠️ Brevo thất bại:', data);
+    } catch (err) {
+      console.warn('⚠️ Lỗi Brevo HTTP API:', err.message);
+    }
+  }
+
+  // 3. Fallback qua Gmail SMTP (Chạy tốt ở Local hoặc Render gói trả phí)
+  console.log('📤 Đang gửi mail qua Gmail SMTP...');
+  const info = await getTransporter().sendMail({
     from: `"VikeSo" <${process.env.MAIL_USER}>`,
     to,
-    subject: `[VikeSo] Mã đặt lại mật khẩu: ${code}`,
-    text: `Mã đặt lại mật khẩu VikeSo của bạn là ${code}. Mã có hiệu lực trong ${minutes} phút.`,
-    html: buildResetPasswordHTML({ name, code, minutes }),
+    subject,
+    text,
+    html,
   });
+  console.log('✅ Gửi email qua Gmail SMTP thành công:', info.messageId);
+  return { provider: 'smtp', messageId: info.messageId };
 };
+

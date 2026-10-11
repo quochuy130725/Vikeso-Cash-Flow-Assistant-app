@@ -370,13 +370,29 @@ exports.forgotPassword = async (req, res) => {
         minutes: RESET_CODE_TTL_MINUTES,
       });
     } catch (mailError) {
-      // Gửi mail thất bại → xóa mã để người dùng có thể thử lại ngay
+      console.error('Lỗi gửi email:', mailError.message);
+
+      // Nếu là do Render chặn cổng SMTP (Connection timeout / ETIMEDOUT)
+      if (mailError.message?.includes('timeout') || mailError.code === 'ETIMEDOUT') {
+        console.warn(`⚠️ Render Free chặn SMTP. Mã OTP tạo thành công cho ${user.email}: ${code}`);
+        return res.status(200).json({
+          success: true,
+          message: `Máy chủ Render chặn cổng SMTP gửi email. Mã xác nhận của bạn là: ${code}`,
+          email: user.email,
+          maskedEmail: maskEmail(user.email),
+          expiresInMinutes: RESET_CODE_TTL_MINUTES,
+          demoCode: code,
+        });
+      }
+
+      // Gửi mail thất bại do nguyên nhân khác → xóa mã để người dùng có thể thử lại
       user.resetPasswordCode = null;
       user.resetPasswordExpires = null;
       user.resetPasswordSentAt = null;
       await user.save();
       throw mailError;
     }
+
 
     console.log(`📧 Đã gửi mã đặt lại mật khẩu cho: ${user.email}`);
     return res.status(200).json({

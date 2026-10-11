@@ -269,6 +269,7 @@ class AuthRepository {
         'success': response.statusCode == 200 && body['success'] == true,
         'message': body['message'] ?? body['error'] ?? 'Không thể gửi mã xác nhận.',
         'email': body['email'],
+        'demoCode': body['demoCode'],
       };
     } on SocketException {
       return {'success': false, 'message': 'Không thể kết nối máy chủ. Kiểm tra mạng!'};
