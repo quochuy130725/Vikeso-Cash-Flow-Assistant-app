@@ -354,9 +354,9 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
                     const SizedBox(height: 16),
 
                     // Chi tiết tài khoản
-                    _buildCopyableRow('Ngân hàng', 'Vietcombank (VCB)', null),
-                    _buildCopyableRow('Số tài khoản', '1026466727', () => _copyToClipboard('1026466727', 'Số tài khoản')),
-                    _buildCopyableRow('Tên chủ tài khoản', 'VIKESO', null),
+                    _buildCopyableRow('Ngân hàng', _currentOrder!.bankCode.isNotEmpty ? _currentOrder!.bankCode : 'MB', null),
+                    _buildCopyableRow('Số tài khoản', _currentOrder!.bankAccount.isNotEmpty ? _currentOrder!.bankAccount : '0829100286', () => _copyToClipboard(_currentOrder!.bankAccount.isNotEmpty ? _currentOrder!.bankAccount : '0829100286', 'Số tài khoản')),
+                    _buildCopyableRow('Tên chủ tài khoản', _currentOrder!.accountName.isNotEmpty ? _currentOrder!.accountName : 'PHAM HUYNH QUOC HUY', null),
                     _buildCopyableRow('Số tiền', '99.000 VNĐ', () => _copyToClipboard('99000', 'Số tiền')),
                     _buildCopyableRow('Nội dung chuyển khoản', _currentOrder!.transferContent, () => _copyToClipboard(_currentOrder!.transferContent, 'Nội dung chuyển khoản')),
 

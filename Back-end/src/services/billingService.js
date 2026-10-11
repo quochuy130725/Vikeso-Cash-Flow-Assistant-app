@@ -20,17 +20,31 @@ const createOrder = async (userId) => {
   const existing = await SubscriptionOrder.findOne({
     userId, status: 'PENDING', expiresAt: { $gt: new Date() },
   }).sort({ createdAt: -1 });
-  if (existing) return existing;
+  if (existing) {
+    const obj = existing.toObject();
+    obj.bankCode = existing.bankCode || sepayConfig.bankCode;
+    obj.bankAccount = existing.bankAccount || sepayConfig.bankAccount;
+    obj.accountName = existing.accountName || sepayConfig.accountName;
+    return obj;
+  }
 
   const orderCode = sepayService.makeOrderCode();
   const transferContent = sepayService.makeTransferContent(orderCode);
   const qrUrl = sepayConfig.buildQrUrl({ amount: sepayConfig.proPrice, content: transferContent });
   const expiresAt = new Date(Date.now() + sepayConfig.qrExpireMinutes * 60 * 1000);
 
-  return SubscriptionOrder.create({
+  const created = await SubscriptionOrder.create({
     userId, orderCode, plan: 'PRO', amount: sepayConfig.proPrice,
     status: 'PENDING', transferContent, qrUrl, expiresAt,
+    bankCode: sepayConfig.bankCode,
+    bankAccount: sepayConfig.bankAccount,
+    accountName: sepayConfig.accountName,
   });
+  const obj = created.toObject();
+  obj.bankCode = sepayConfig.bankCode;
+  obj.bankAccount = sepayConfig.bankAccount;
+  obj.accountName = sepayConfig.accountName;
+  return obj;
 };
 
 const getOrderStatus = async (orderCode) => {
@@ -44,7 +58,11 @@ const getOrderStatus = async (orderCode) => {
     order.status = 'EXPIRED';
     await order.save();
   }
-  return order;
+  const obj = order.toObject();
+  obj.bankCode = order.bankCode || sepayConfig.bankCode;
+  obj.bankAccount = order.bankAccount || sepayConfig.bankAccount;
+  obj.accountName = order.accountName || sepayConfig.accountName;
+  return obj;
 };
 
 const getHistory = async (userId) =>

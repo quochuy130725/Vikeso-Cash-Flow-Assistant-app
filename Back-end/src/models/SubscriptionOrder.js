@@ -17,7 +17,10 @@ const subscriptionOrderSchema = new mongoose.Schema({
     index: true,
   },
   // id giao dich SePay gui ve — dedup chong replay/retry
-  sepayTransactionId: { type: Number, default: null, unique: true, sparse: true },
+  sepayTransactionId: { type: Number, index: { unique: true, partialFilterExpression: { sepayTransactionId: { $type: 'number' } } } },
+  bankCode: { type: String, default: '' },
+  bankAccount: { type: String, default: '' },
+  accountName: { type: String, default: '' },
   transferContent: { type: String, default: '' },
   qrUrl: { type: String, default: '' },
   gateway: { type: String, default: '' },
