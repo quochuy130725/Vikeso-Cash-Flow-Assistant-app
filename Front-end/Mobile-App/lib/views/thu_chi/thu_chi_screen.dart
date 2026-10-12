@@ -4,6 +4,7 @@ import '../shared_widgets/side_drawer.dart';
 import 'package:intl/intl.dart';
 import '../../data/services/api_service.dart';
 import '../../data/services/excel_export_service.dart';
+import '../../data/repositories/auth_repository.dart';
 import 'widgets/thu_chi_list_item.dart';
 
 class ThuChiScreen extends StatefulWidget {
@@ -38,7 +39,9 @@ class _ThuChiScreenState extends State<ThuChiScreen>
       _isLoading = true;
     });
 
-    final String userId = dotenv.env['USER_ID'] ?? '';
+    final String storedUserId = await AuthRepository().getUserId() ?? '';
+    final String userId = storedUserId.isNotEmpty ? storedUserId : (dotenv.env['USER_ID'] ?? '');
+
     try {
       final txs = await ApiService().getTransactions(userId);
       setState(() {
@@ -74,11 +77,27 @@ class _ThuChiScreenState extends State<ThuChiScreen>
     if (dateVal == null) return null;
     if (dateVal is DateTime) return dateVal;
     if (dateVal is Map) {
-      if (dateVal.containsKey('\$date')) {
-        return DateTime.tryParse(dateVal['\$date'].toString());
+      if (dateVal.containsKey(r'$date')) {
+        return DateTime.tryParse(dateVal[r'$date'].toString());
       }
     }
     return DateTime.tryParse(dateVal.toString());
+  }
+
+  String _formatCategoryName(String raw) {
+    switch (raw) {
+      case 'Hoa Don Le':
+        return 'Hóa đơn lẻ';
+      case 'POS Ket Ca':
+        return 'POS kết ca';
+      case 'So Tay':
+        return 'Sổ tay';
+      case 'Chuyen Khoan':
+        return 'Chuyển khoản';
+      case 'Khac':
+      default:
+        return raw.isNotEmpty ? raw : 'Khác';
+    }
   }
 
   String _getDateHeader(DateTime date) {
@@ -114,6 +133,282 @@ class _ThuChiScreenState extends State<ThuChiScreen>
       groups[key]!.add(tx);
     }
     return groups;
+  }
+
+  void _showTransactionDetail(BuildContext context, Map<String, dynamic> tx) {
+    final type = tx['transactionType'] ?? 'THU';
+    final isChi = type == 'CHI';
+    final double amount = (tx['totalAmount'] as num?)?.toDouble() ?? 0.0;
+    final reason = (tx['reason'] as String?)?.trim() ?? '';
+    final rawCategory = tx['category'] as String? ?? 'Khac';
+    final categoryName = _formatCategoryName(rawCategory);
+    final tDate = _parseDate(tx['transactionDate'])?.toLocal() ?? DateTime.now();
+    final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(tDate);
+    final receiptUrl = (tx['receiptUrl'] as String?)?.trim() ?? '';
+
+    // Hình thức ghi nhận
+    String method = 'Nhập thủ công';
+    if (receiptUrl.isNotEmpty) {
+      method = 'AI Quét hóa đơn';
+    } else if (rawCategory == 'POS Ket Ca') {
+      method = 'Máy tính tiền kết ca';
+    } else if (rawCategory == 'Chuyen Khoan') {
+      method = 'Quét mã VietQR';
+    } else if (rawCategory == 'So Tay') {
+      method = 'Sổ tay thu chi';
+    }
+
+    final formattedAmount =
+        '${isChi ? '-' : '+'}${NumberFormat.decimalPattern('vi').format(amount)} đ';
+
+    List<dynamic> products = [];
+    if (tx['aiRawData'] is Map) {
+      final aiMap = tx['aiRawData'] as Map;
+      if (aiMap['ChiTietSanPham'] is List) {
+        products = aiMap['ChiTietSanPham'] as List;
+      }
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 12,
+            bottom: MediaQuery.of(ctx).padding.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Chi tiết giao dịch',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20, color: Colors.grey),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Hiển thị số tiền to rõ
+              Center(
+                child: Text(
+                  formattedAmount,
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: isChi ? const Color(0xFFE11D48) : const Color(0xFF16A34A),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: isChi ? const Color(0xFFFFE4E6) : const Color(0xFFDCFCE7),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    isChi ? 'Khoản Chi Tiền' : 'Khoản Thu Tiền',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isChi ? const Color(0xFFBE123C) : const Color(0xFF15803D),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 18),
+              const Divider(height: 1),
+              const SizedBox(height: 12),
+
+              _buildDetailRow('Lý do / Nội dung:',
+                  reason.isNotEmpty ? reason : 'Giao dịch không có ghi chú'),
+              _buildDetailRow('Danh mục:', categoryName),
+              _buildDetailRow('Loại giao dịch:', isChi ? 'Khoản Chi' : 'Khoản Thu'),
+              _buildDetailRow('Hình thức ghi nhận:', method),
+              _buildDetailRow('Thời gian ghi nhận:', dateStr),
+              _buildDetailRow(
+                'Trạng thái đối soát:',
+                tx['status'] == 'MERGED'
+                    ? 'Đã tự động gộp (MERGED)'
+                    : 'Đã đối soát hợp lệ (VALID)',
+              ),
+
+              if (products.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                const Text(
+                  'Chi tiết sản phẩm / Mặt hàng:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF475569),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    children: products.map((prod) {
+                      final pName = prod['Ten'] ?? prod['name'] ?? 'Mặt hàng';
+                      final pPrice = (prod['Gia'] ?? prod['price'] ?? 0);
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '• $pName',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF334155),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              '${NumberFormat.decimalPattern('vi').format(pPrice)} đ',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+
+              if (receiptUrl.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    onPressed: () {
+                      _showReceiptImageDialog(context, receiptUrl);
+                    },
+                    icon: const Icon(Icons.image, size: 18),
+                    label: const Text('Xem ảnh hóa đơn gốc'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(color: Color(0xFF64748B), fontSize: 13.5),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13.5,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReceiptImageDialog(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppBar(
+                title: const Text('Hóa đơn quét AI', style: TextStyle(fontSize: 16)),
+                leading: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ),
+              InteractiveViewer(
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Text('Không thể tải ảnh hóa đơn'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -273,15 +568,23 @@ class _ThuChiScreenState extends State<ThuChiScreen>
             final type = tx['transactionType'] ?? 'THU';
             final isThu = type == 'THU';
             final amount = (tx['totalAmount'] as num?)?.toDouble() ?? 0.0;
-            final category = tx['category'] ?? 'Khác';
+            final reason = (tx['reason'] as String?)?.trim() ?? '';
+            final rawCategory = tx['category'] as String? ?? 'Khác';
+            final categoryName = _formatCategoryName(rawCategory);
             final tDate = _parseDate(tx['transactionDate'])?.toLocal() ?? DateTime.now();
             final timeStr = DateFormat('HH:mm').format(tDate);
 
+            // Ưu tiên hiển thị lý do nếu có ("tiền nhập hàng", "Khách lẻ thanh toán...")
+            final displayTitle = reason.isNotEmpty ? reason : categoryName;
+            final subtitle = '$categoryName • $timeStr';
+
             return TransactionItemCard(
-              title: category,
+              title: displayTitle,
+              subtitle: subtitle,
               time: timeStr,
               value: isThu ? amount : -amount,
               isThu: isThu,
+              onTap: () => _showTransactionDetail(context, tx),
             );
           }).toList();
 
