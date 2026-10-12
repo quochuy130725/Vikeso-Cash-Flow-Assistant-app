@@ -61,7 +61,36 @@ exports.sendResetPasswordEmail = async ({ to, name, code, minutes }) => {
   const html = buildResetPasswordHTML({ name, code, minutes });
   const text = `Mã đặt lại mật khẩu VikeSo của bạn là ${code}. Mã có hiệu lực trong ${minutes} phút.`;
 
-  // 1. Thử gửi qua Resend HTTP API (Port 443 — Render Free KHÔNG chặn)
+  // 1. Thử gửi qua Brevo HTTP API (Port 443 — Gửi được cho MỌI email mà không cần domain)
+  if (process.env.BREVO_API_KEY) {
+    try {
+      console.log('📤 Đang gửi mail qua Brevo HTTP API...');
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: 'VikeSo', email: process.env.BREVO_SENDER_EMAIL || process.env.MAIL_USER || 'baocao.vikeso@gmail.com' },
+          to: [{ email: to, name: name || 'Người dùng' }],
+          subject,
+          htmlContent: html,
+          textContent: text,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        console.log('✅ Gửi email qua Brevo thành công:', data.messageId);
+        return { provider: 'brevo', messageId: data.messageId };
+      }
+      console.warn('⚠️ Brevo thất bại:', data);
+    } catch (err) {
+      console.warn('⚠️ Lỗi Brevo HTTP API:', err.message);
+    }
+  }
+
+  // 2. Thử gửi qua Resend HTTP API (Port 443)
   if (process.env.RESEND_API_KEY) {
     try {
       console.log('📤 Đang gửi mail qua Resend HTTP API...');
@@ -85,42 +114,8 @@ exports.sendResetPasswordEmail = async ({ to, name, code, minutes }) => {
         return { provider: 'resend', id: data.id };
       }
       console.warn('⚠️ Resend thất bại:', data);
-      if (data?.message?.includes('only send testing emails')) {
-        throw new Error(`Resend restriction: ${data.message}`);
-      }
     } catch (err) {
-      if (err.message?.includes('Resend restriction')) throw err;
       console.warn('⚠️ Lỗi Resend HTTP API:', err.message);
-    }
-  }
-
-
-  // 2. Thử gửi qua Brevo HTTP API (Port 443 — Render Free KHÔNG chặn)
-  if (process.env.BREVO_API_KEY) {
-    try {
-      console.log('📤 Đang gửi mail qua Brevo HTTP API...');
-      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-          'api-key': process.env.BREVO_API_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sender: { name: 'VikeSo', email: process.env.MAIL_USER || 'baocao.vikeso@gmail.com' },
-          to: [{ email: to, name: name || 'Người dùng' }],
-          subject,
-          htmlContent: html,
-          textContent: text,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        console.log('✅ Gửi email qua Brevo thành công:', data.messageId);
-        return { provider: 'brevo', messageId: data.messageId };
-      }
-      console.warn('⚠️ Brevo thất bại:', data);
-    } catch (err) {
-      console.warn('⚠️ Lỗi Brevo HTTP API:', err.message);
     }
   }
 
@@ -136,4 +131,5 @@ exports.sendResetPasswordEmail = async ({ to, name, code, minutes }) => {
   console.log('✅ Gửi email qua Gmail SMTP thành công:', info.messageId);
   return { provider: 'smtp', messageId: info.messageId };
 };
+
 
