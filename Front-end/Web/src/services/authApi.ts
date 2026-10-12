@@ -96,3 +96,16 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthRespon
     };
   }
 }
+
+
+/**
+ * Tự động đánh thức máy chủ Backend (Prewarm / Keep-alive)
+ * Giúp tránh độ trễ Cold Start của gói Render Free Tier khi người dùng vừa vào trang hoặc mở modal
+ */
+export function prewarmServer(): void {
+  try {
+    fetch(`${API_BASE_URL}/health`, { method: 'GET' }).catch(() => {});
+  } catch {
+    // ignore
+  }
+}

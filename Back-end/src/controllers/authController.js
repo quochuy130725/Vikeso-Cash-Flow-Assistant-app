@@ -101,13 +101,18 @@ exports.login = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Vui lòng nhập email hoặc số điện thoại và mật khẩu.' });
     }
 
-    // Cho phép tìm bằng email HOẶC số điện thoại
-    const user = await User.findOne({
-      $or: [
-        { email: identifier.toLowerCase() },
-        { phone: identifier },
-      ],
-    });
+    // Tối ưu hóa truy vấn: nếu có '@' thì tìm trực tiếp theo index email (nhanh gấp nhiều lần)
+    const isEmail = identifier.includes('@');
+    const query = isEmail
+      ? { email: identifier.toLowerCase().trim() }
+      : {
+          $or: [
+            { phone: identifier },
+            { email: identifier.toLowerCase().trim() },
+          ],
+        };
+
+    const user = await User.findOne(query);
     if (!user || !user.password) {
       return res.status(401).json({ success: false, message: 'Email/Số điện thoại hoặc mật khẩu không đúng.' });
     }
@@ -119,7 +124,7 @@ exports.login = async (req, res) => {
 
     // Tự động bổ sung role nếu tài khoản cũ chưa có trong Database
     if (!user.role) {
-      user.role = (email.toLowerCase().includes('admin') || email.toLowerCase().includes('finity')) ? 'ADMIN' : 'OWNER';
+      user.role = (user.email && (user.email.toLowerCase().includes('admin') || user.email.toLowerCase().includes('finity'))) ? 'ADMIN' : 'OWNER';
       await user.save();
     }
 

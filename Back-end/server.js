@@ -38,6 +38,10 @@ require('./src/services/cronService');
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+// Health check & Prewarm endpoint
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok', time: Date.now() }));
+app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok', time: Date.now() }));
+
 // Gắn toàn bộ routes
 app.use('/api/auth', authRoutes);   // ─ Đăng nhập/Đăng ký/Google Sign-In
 app.use('/api', apiRoutes);         // ─ Scan receipt, manual-entry, transactions...

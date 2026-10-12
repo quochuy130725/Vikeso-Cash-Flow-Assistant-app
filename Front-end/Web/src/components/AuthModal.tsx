@@ -13,7 +13,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
-import { loginUser, registerUser } from '../services/authApi';
+import { loginUser, registerUser, prewarmServer } from '../services/authApi';
 
 export interface UserAccount {
   id?: string;
@@ -53,8 +53,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [phone, setPhone] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingSeconds, setLoadingSeconds] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMode, setSuccessMode] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    let timer: any;
+    if (isLoading) {
+      setLoadingSeconds(0);
+      timer = setInterval(() => {
+        setLoadingSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setLoadingSeconds(0);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isLoading]);
 
   // Reset states on open/mode switch
   React.useEffect(() => {
@@ -456,7 +472,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 className="w-full py-3.5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#d0f81b]/25 active:scale-98 transition-all disabled:opacity-50 cursor-pointer border border-[#bde412]"
               >
                 {isLoading ? (
-                  <span>Đang xử lý dữ liệu...</span>
+                  <span className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+                <span>{loadingSeconds > 2 ? 'Đang khởi động máy chủ đám mây (Render)...' : 'Đang xử lý dữ liệu...'}</span>
+              </span>
                 ) : (
                   <>
                     <span>{mode === 'login' ? 'Đăng Nhập Ngay' : 'Hoàn Tất Đăng Ký (1-Chạm)'}</span>
