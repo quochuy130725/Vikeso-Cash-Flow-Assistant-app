@@ -27,8 +27,13 @@ initSocket(httpServer);
 // Kết nối MongoDB Atlas
 connectDB();
 
-// Middleware parse JSON
-app.use(cors());            // ← Cho phép Flutter Web / Postman gọi API
+// Middleware parse JSON & CORS với cache preflight 24h (loại bỏ độ trễ OPTIONS mỗi lần click)
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
