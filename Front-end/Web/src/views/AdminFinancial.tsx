@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { subscriptionPayments } from '../data/mockData';
+import { fetchAdminPayments } from '../services/api';
+import { SubscriptionPayment } from '../types';
 
 const monthlyUnitEconomics = [
   {

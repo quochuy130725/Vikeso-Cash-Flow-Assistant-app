@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { telegramHistory } from '../data/mockData';
+import { defaultTelegramHistory as telegramHistory } from '../services/api';
 import { UserAccount } from '../components/AuthModal';
 
 interface OwnerTelegramProps {

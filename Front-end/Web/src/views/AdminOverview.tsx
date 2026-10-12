@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { businessHouseholds } from '../data/mockData';
+import { fetchAdminUsers, fetchAdminOverview } from '../services/api';
+import { BusinessHousehold } from '../types';
 import { UserAccount } from '../components/AuthModal';
 
 interface AdminOverviewProps {
@@ -12,7 +13,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
   const [timeView, setTimeView] = useState<'30days' | 'quarter'>('30days');
 
   const filteredHouseholds = useMemo(() => {
-    return businessHouseholds.filter((hh) => {
+    return households.filter((hh) => {
       if (planFilter !== 'all' && hh.plan !== planFilter) return false;
       if (searchTerm.trim() !== '') {
         const query = searchTerm.toLowerCase();

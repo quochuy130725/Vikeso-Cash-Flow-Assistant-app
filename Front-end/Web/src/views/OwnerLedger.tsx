@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { ownerTransactions } from '../data/mockData';
+import { fetchUserTransactions } from '../services/api';
+import { UserAccount } from '../components/AuthModal';
 import { Transaction } from '../types';
 
 interface OwnerLedgerProps {
@@ -18,7 +19,7 @@ export const OwnerLedger: React.FC<OwnerLedgerProps> = ({
 
   // Filtered transactions
   const filteredTransactions = useMemo(() => {
-    return ownerTransactions.filter((tx) => {
+    return transactions.filter((tx) => {
       // Type filter
       if (typeFilter !== 'all') {
         if (typeFilter === 'in' && tx.type !== 'in') return false;

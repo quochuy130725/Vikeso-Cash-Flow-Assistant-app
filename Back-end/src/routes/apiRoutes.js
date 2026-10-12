@@ -93,7 +93,11 @@ router.get('/transactions', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Thiếu userId' });
     }
 
-    const receipts = await Receipt.find({ userId, status: 'VALID' }).sort({ transactionDate: -1 });
+    const filter = { userId };
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+    const receipts = await Receipt.find(filter).sort({ transactionDate: -1 });
 
     return res.status(200).json({
       success: true,
