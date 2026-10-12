@@ -16,6 +16,15 @@ export const OwnerLedger: React.FC<OwnerLedgerProps> = ({
   const [timeFilter, setTimeFilter] = useState<'today' | 'yesterday' | '7days' | 'month'>('today');
   const [typeFilter, setTypeFilter] = useState<'all' | 'in' | 'out' | 'merged'>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    fetchUserTransactions().then((data) => {
+      if (isMounted && Array.isArray(data)) setTransactions(data);
+    });
+    return () => { isMounted = false; };
+  }, []);
 
   // Filtered transactions
   const filteredTransactions = useMemo(() => {

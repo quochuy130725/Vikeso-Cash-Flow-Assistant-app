@@ -3,9 +3,7 @@
  * Connects directly to VikeSo Backend API
  */
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  'https://vikeso-cash-flow-assistant-app.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export interface LoginPayload {
   email: string;

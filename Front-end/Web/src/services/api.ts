@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Central API Service for VikeSo Web
  * Connects directly to real Backend APIs (MongoDB & Render)
  */
@@ -6,8 +6,7 @@
 import { Transaction, BusinessHousehold, SubscriptionPayment } from '../types';
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  'https://vikeso-cash-flow-assistant-app.onrender.com/api';
+  import.meta.env.VITE_API_URL;
 
 export function getAuthToken(): string | null {
   try {
@@ -64,8 +63,8 @@ export function mapReceiptToTransaction(r: any): Transaction {
   const dateLabel = isToday
     ? 'Hôm nay'
     : isYesterday
-    ? 'Hôm qua'
-    : `${dateObj.getDate()}/${dateObj.getMonth() + 1}`;
+      ? 'Hôm qua'
+      : `${dateObj.getDate()}/${dateObj.getMonth() + 1}`;
 
   const isThu = r.transactionType === 'THU';
   const isChi = r.transactionType === 'CHI';

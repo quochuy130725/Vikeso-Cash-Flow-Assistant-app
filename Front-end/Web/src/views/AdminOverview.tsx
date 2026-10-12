@@ -11,6 +11,19 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
   const [searchTerm, setSearchTerm] = useState('');
   const [planFilter, setPlanFilter] = useState<'all' | 'pro' | 'free'>('all');
   const [timeView, setTimeView] = useState<'30days' | 'quarter'>('30days');
+  const [households, setHouseholds] = useState<BusinessHousehold[]>([]);
+  const [overviewStats, setOverviewStats] = useState<any>(null);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    fetchAdminUsers().then((data) => {
+      if (isMounted && Array.isArray(data)) setHouseholds(data);
+    });
+    fetchAdminOverview().then((stats) => {
+      if (isMounted && stats) setOverviewStats(stats);
+    });
+    return () => { isMounted = false; };
+  }, []);
 
   const filteredHouseholds = useMemo(() => {
     return households.filter((hh) => {
