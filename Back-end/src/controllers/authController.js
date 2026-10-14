@@ -42,6 +42,11 @@ const buildUserInfo = (user) => ({
   subscriptionPlan: user.subscriptionPlan,
   authProvider: user.authProvider,
   role: user.role || 'OWNER',
+  notificationSettings: user.notificationSettings || {
+    receiveEmail: true,
+    receiveTelegram: !!user.telegramChatId,
+    receiveInApp: true,
+  },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

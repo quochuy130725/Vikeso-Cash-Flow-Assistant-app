@@ -15,7 +15,7 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserver {
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(),
   );
@@ -36,11 +36,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadProfile();
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadProfile();
+    }
+  }
+
   Future<void> _loadProfile() async {
-    // Tự động đồng bộ thông tin mới nhất từ server
+    // 1. Tự động đồng bộ thông tin mới nhất từ server
     final profile = await AuthRepository().fetchUserProfile();
     if (profile != null && mounted) {
       setState(() {
@@ -69,15 +83,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
 
+    // 2. Đồng bộ Telegram và Cài đặt thông báo trực tiếp từ Server
+    final userId = await AuthRepository().getUserId();
+    if (userId != null && userId.isNotEmpty) {
+      try {
+        final serverProfile = await ApiService().getUserProfile(userId);
+        if (serverProfile['success'] == true && mounted) {
+          final bool hasTg = serverProfile['hasTelegram'] == true;
+          final Map<String, dynamic>? st = serverProfile['settings'] as Map<String, dynamic>?;
+          if (st != null) {
+            setState(() {
+              _hasTelegram = hasTg;
+              _receiveEmail = st['receiveEmail'] ?? true;
+              _receiveTelegram = hasTg && (st['receiveTelegram'] == true);
+              _receiveInApp = st['receiveInApp'] ?? true;
+            });
+            await _storage.write(key: 'user_telegramChatId', value: hasTg ? 'linked' : '');
+            await _storage.write(key: 'user_notificationSettings', value: jsonEncode(st));
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 3. Fallback đọc từ local storage nếu mất kết nối
     final settingsStr = await _storage.read(key: 'user_notificationSettings');
-    if (settingsStr != null) {
+    if (settingsStr != null && mounted) {
       try {
         final Map<String, dynamic> settings = jsonDecode(settingsStr);
-        _receiveEmail = settings['receiveEmail'] ?? true;
         final hasTg = await _storage.read(key: 'user_telegramChatId');
-        _hasTelegram = hasTg != null && hasTg.isNotEmpty;
-        _receiveTelegram = _hasTelegram && (settings['receiveTelegram'] == true);
-        _receiveInApp = settings['receiveInApp'] ?? true;
+        final hasTelegram = hasTg != null && hasTg.isNotEmpty;
+        setState(() {
+          _receiveEmail = settings['receiveEmail'] ?? true;
+          _hasTelegram = hasTelegram;
+          _receiveTelegram = hasTelegram && (settings['receiveTelegram'] == true);
+          _receiveInApp = settings['receiveInApp'] ?? true;
+        });
       } catch (_) {}
     }
   }
@@ -390,8 +431,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       drawer: const CustomSideDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          : RefreshIndicator(
+              onRefresh: _loadProfile,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
               child: Column(
                 children: [
                   Center(
@@ -642,6 +686,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
+          ),
     );
   }
 
@@ -691,6 +736,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           } catch (e) {
             _showSnack('Không thể mở Telegram: $e', isSuccess: false);
           }
+        }
+        // Tự động tải lại profile để cập nhật trạng thái cần gạt Telegram
+        await Future.delayed(const Duration(seconds: 2));
+        if (mounted) {
+          await _loadProfile();
         }
       }
     }

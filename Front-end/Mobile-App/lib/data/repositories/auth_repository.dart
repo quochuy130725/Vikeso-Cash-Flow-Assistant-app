@@ -189,6 +189,10 @@ class AuthRepository {
         final shopName = info['shopName']?.toString() ?? '';
         final email = info['email']?.toString() ?? '';
         final avatar = info['avatar']?.toString();
+        final telegramChatId = info['telegramChatId']?.toString();
+        final notificationSettings = info['notificationSettings'] != null
+            ? jsonEncode(info['notificationSettings'])
+            : null;
 
         await Future.wait([
           _storage.write(key: _kRole, value: role),
@@ -198,6 +202,10 @@ class AuthRepository {
           _storage.write(key: _kShopName, value: shopName),
           _storage.write(key: _kEmail, value: email),
           if (avatar != null) _storage.write(key: _kAvatar, value: avatar),
+          if (telegramChatId != null && telegramChatId.isNotEmpty)
+            _storage.write(key: 'user_telegramChatId', value: telegramChatId),
+          if (notificationSettings != null)
+            _storage.write(key: 'user_notificationSettings', value: notificationSettings),
         ]);
 
         return UserInfo(
@@ -329,6 +337,10 @@ class AuthRepository {
       final plan = userInfo['subscriptionPlan']?.toString() ?? 'FREE';
       final phone = userInfo['phone']?.toString() ?? '';
       final name = userInfo['name']?.toString() ?? '';
+      final telegramChatId = userInfo['telegramChatId']?.toString();
+      final notificationSettings = userInfo['notificationSettings'] != null
+          ? jsonEncode(userInfo['notificationSettings'])
+          : null;
 
       await Future.wait([
         _storage.write(key: _kAccessToken, value: accessToken),
@@ -345,6 +357,10 @@ class AuthRepository {
         _storage.write(key: _kRole, value: role),
         _storage.write(key: _kSubscriptionPlan, value: plan),
         if (phone.isNotEmpty) _storage.write(key: _kPhone, value: phone),
+        if (telegramChatId != null && telegramChatId.isNotEmpty)
+          _storage.write(key: 'user_telegramChatId', value: telegramChatId),
+        if (notificationSettings != null)
+          _storage.write(key: 'user_notificationSettings', value: notificationSettings),
       ]);
 
       return AuthResult.success(UserInfo(
