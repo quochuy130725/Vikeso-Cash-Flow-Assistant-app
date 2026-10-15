@@ -102,6 +102,7 @@ const updatePlan = async (id, { plan, extendDays }) => {
     user.proExpiresAt = null;
   }
   await user.save();
+  require('../socket').emitToUser(user._id, 'profile_updated', { reason: 'plan_changed', plan });
   return user;
 };
 
@@ -109,6 +110,7 @@ const updateRole = async (id, { role }) => {
   if (!['OWNER', 'ADMIN'].includes(role)) { const e = new Error('role chỉ nhận OWNER|ADMIN.'); e.statusCode = 400; throw e; }
   const user = await User.findByIdAndUpdate(id, { $set: { role } }, { new: true }).select('-password');
   if (!user) { const e = new Error('Không tìm thấy người dùng.'); e.statusCode = 404; throw e; }
+  require('../socket').emitToUser(user._id, 'profile_updated', { reason: 'role_changed', role });
   return user;
 };
 

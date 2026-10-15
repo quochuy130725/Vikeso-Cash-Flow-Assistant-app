@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/services/billing_service.dart';
+import '../../data/services/socket_service.dart';
 
 class UpgradeProScreen extends StatefulWidget {
   const UpgradeProScreen({super.key});
@@ -21,9 +22,22 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
   Timer? _countdownTimer;
   int _remainingSeconds = 15 * 60; // 15 phút
   bool _isPaid = false;
+  StreamSubscription? _subSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _subSub = SocketService.instance.onSubscriptionUpgraded.listen((_) {
+      if (!mounted) return;
+      _pollingTimer?.cancel();
+      _countdownTimer?.cancel();
+      _onPaymentSuccess();
+    });
+  }
 
   @override
   void dispose() {
+    _subSub?.cancel();
     _pollingTimer?.cancel();
     _countdownTimer?.cancel();
     super.dispose();
@@ -63,7 +77,8 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không thể tạo đơn hàng thanh toán. Thử lại sau!')),
+        const SnackBar(
+            content: Text('Không thể tạo đơn hàng thanh toán. Thử lại sau!')),
       );
     }
   }
@@ -79,7 +94,8 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
         timer.cancel();
         return;
       }
-      if (statusOrder != null && (statusOrder.status == 'PAID' || statusOrder.status == 'SUCCESS')) {
+      if (statusOrder != null &&
+          (statusOrder.status == 'PAID' || statusOrder.status == 'SUCCESS')) {
         timer.cancel();
         _countdownTimer?.cancel();
         _onPaymentSuccess();
@@ -90,7 +106,8 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
           _currentOrder = statusOrder;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mã thanh toán đã hết hạn. Vui lòng tạo mã mới.')),
+          const SnackBar(
+              content: Text('Mã thanh toán đã hết hạn. Vui lòng tạo mã mới.')),
         );
       }
     });
@@ -112,18 +129,21 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
   Future<void> _checkPaymentNow() async {
     if (_currentOrder == null) return;
     setState(() => _isLoading = true);
-    final statusOrder = await _billingService.getOrderStatus(_currentOrder!.orderCode);
+    final statusOrder =
+        await _billingService.getOrderStatus(_currentOrder!.orderCode);
     if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (statusOrder != null && (statusOrder.status == 'PAID' || statusOrder.status == 'SUCCESS')) {
+    if (statusOrder != null &&
+        (statusOrder.status == 'PAID' || statusOrder.status == 'SUCCESS')) {
       _pollingTimer?.cancel();
       _countdownTimer?.cancel();
       _onPaymentSuccess();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Hệ thống chưa nhận được tiền chuyển khoản. Vui lòng kiểm tra lại sau giây lát!'),
+          content: Text(
+              'Hệ thống chưa nhận được tiền chuyển khoản. Vui lòng kiểm tra lại sau giây lát!'),
         ),
       );
     }
@@ -155,20 +175,23 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
-            Text('Tài khoản của bạn đã được mở khóa toàn bộ tính năng cao cấp không giới hạn trong 30 ngày.'),
+            Text(
+                'Tài khoản của bạn đã được mở khóa toàn bộ tính năng cao cấp không giới hạn trong 30 ngày.'),
           ],
         ),
         actions: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF5C8D),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
             ),
             onPressed: () {
               Navigator.pop(ctx);
               Navigator.pop(context, true);
             },
-            child: const Text('Bắt đầu sử dụng', style: TextStyle(color: Colors.white)),
+            child: const Text('Bắt đầu sử dụng',
+                style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -197,7 +220,8 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nâng cấp gói VikeSo PRO', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text('Nâng cấp gói VikeSo PRO',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: primaryPink,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -227,16 +251,19 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
               child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFD700).withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFFFD700), width: 1.5),
+                      border: Border.all(
+                          color: const Color(0xFFFFD700), width: 1.5),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.workspace_premium, color: Color(0xFFFFD700), size: 20),
+                        Icon(Icons.workspace_premium,
+                            color: Color(0xFFFFD700), size: 20),
                         SizedBox(width: 6),
                         Text(
                           'VIKESO PRO MEMBER',
@@ -253,12 +280,18 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
                   const Text(
                     'Trợ lý Tài chính & Thu chi Toàn diện',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     '99.000 đ / 30 ngày',
-                    style: TextStyle(color: Color(0xFFFFE082), fontSize: 26, fontWeight: FontWeight.w900),
+                    style: TextStyle(
+                        color: Color(0xFFFFE082),
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900),
                   ),
                 ],
               ),
@@ -272,11 +305,16 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            _buildBenefitItem(Icons.document_scanner, 'Quét hóa đơn AI (Gemini OCR) không giới hạn'),
-            _buildBenefitItem(Icons.send_rounded, 'Báo cáo chốt ca tự động qua Telegram Bot & Email 22:00'),
-            _buildBenefitItem(Icons.insights, 'Biểu đồ phân tích tài chính dòng tiền chuyên sâu'),
-            _buildBenefitItem(Icons.filter_alt, 'Lưới lọc thông minh chống trùng lặp hóa đơn POS'),
-            _buildBenefitItem(Icons.table_chart, 'Xuất báo cáo doanh thu & thu chi ra Excel'),
+            _buildBenefitItem(Icons.document_scanner,
+                'Quét hóa đơn AI (Gemini OCR) không giới hạn'),
+            _buildBenefitItem(Icons.send_rounded,
+                'Báo cáo chốt ca tự động qua Telegram Bot & Email 22:00'),
+            _buildBenefitItem(Icons.insights,
+                'Biểu đồ phân tích tài chính dòng tiền chuyên sâu'),
+            _buildBenefitItem(Icons.filter_alt,
+                'Lưới lọc thông minh chống trùng lặp hóa đơn POS'),
+            _buildBenefitItem(
+                Icons.table_chart, 'Xuất báo cáo doanh thu & thu chi ra Excel'),
 
             const SizedBox(height: 28),
 
@@ -303,21 +341,26 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
                       children: [
                         const Text(
                           'Quét mã VietQR chuyển khoản',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
                             color: Colors.red.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.timer_outlined, color: Colors.red, size: 16),
+                              const Icon(Icons.timer_outlined,
+                                  color: Colors.red, size: 16),
                               const SizedBox(width: 4),
                               Text(
                                 _formatTimer(_remainingSeconds),
-                                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -354,11 +397,35 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
                     const SizedBox(height: 16),
 
                     // Chi tiết tài khoản
-                    _buildCopyableRow('Ngân hàng', _currentOrder!.bankCode.isNotEmpty ? _currentOrder!.bankCode : 'MB', null),
-                    _buildCopyableRow('Số tài khoản', _currentOrder!.bankAccount.isNotEmpty ? _currentOrder!.bankAccount : '0829100286', () => _copyToClipboard(_currentOrder!.bankAccount.isNotEmpty ? _currentOrder!.bankAccount : '0829100286', 'Số tài khoản')),
-                    _buildCopyableRow('Tên chủ tài khoản', _currentOrder!.accountName.isNotEmpty ? _currentOrder!.accountName : 'PHAM HUYNH QUOC HUY', null),
-                    _buildCopyableRow('Số tiền', '99.000 VNĐ', () => _copyToClipboard('99000', 'Số tiền')),
-                    _buildCopyableRow('Nội dung chuyển khoản', _currentOrder!.transferContent, () => _copyToClipboard(_currentOrder!.transferContent, 'Nội dung chuyển khoản')),
+                    _buildCopyableRow(
+                        'Ngân hàng',
+                        _currentOrder!.bankCode.isNotEmpty
+                            ? _currentOrder!.bankCode
+                            : 'MB',
+                        null),
+                    _buildCopyableRow(
+                        'Số tài khoản',
+                        _currentOrder!.bankAccount.isNotEmpty
+                            ? _currentOrder!.bankAccount
+                            : '0829100286',
+                        () => _copyToClipboard(
+                            _currentOrder!.bankAccount.isNotEmpty
+                                ? _currentOrder!.bankAccount
+                                : '0829100286',
+                            'Số tài khoản')),
+                    _buildCopyableRow(
+                        'Tên chủ tài khoản',
+                        _currentOrder!.accountName.isNotEmpty
+                            ? _currentOrder!.accountName
+                            : 'PHAM HUYNH QUOC HUY',
+                        null),
+                    _buildCopyableRow('Số tiền', '99.000 VNĐ',
+                        () => _copyToClipboard('99000', 'Số tiền')),
+                    _buildCopyableRow(
+                        'Nội dung chuyển khoản',
+                        _currentOrder!.transferContent,
+                        () => _copyToClipboard(_currentOrder!.transferContent,
+                            'Nội dung chuyển khoản')),
 
                     const SizedBox(height: 16),
                     Container(
@@ -369,12 +436,14 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                          Icon(Icons.info_outline,
+                              color: Colors.blue, size: 20),
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               'Hệ thống tự động kích hoạt gói PRO ngay sau khi nhận được tiền (thường từ 3 - 10 giây).',
-                              style: TextStyle(fontSize: 12, color: Colors.black87),
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.black87),
                             ),
                           ),
                         ],
@@ -388,7 +457,8 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
                       label: const Text('Tôi đã chuyển khoản - Kiểm tra ngay'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: BorderSide(color: primaryPink.withValues(alpha: 0.5)),
+                        side: BorderSide(
+                            color: primaryPink.withValues(alpha: 0.5)),
                       ),
                     ),
                   ],
@@ -401,14 +471,25 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryPink,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 icon: _isLoading
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Icon(Icons.qr_code_2, color: Colors.white, size: 24),
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
+                    : const Icon(Icons.qr_code_2,
+                        color: Colors.white, size: 24),
                 label: Text(
-                  _isLoading ? 'Đang tạo đơn...' : 'Thanh toán VietQR ngay (99.000 đ)',
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  _isLoading
+                      ? 'Đang tạo đơn...'
+                      : 'Thanh toán VietQR ngay (99.000 đ)',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -454,13 +535,15 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
             children: [
               Text(
                 value,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               if (onCopy != null) ...[
                 const SizedBox(width: 4),
                 IconButton(
                   onPressed: onCopy,
-                  icon: const Icon(Icons.copy, size: 16, color: Color(0xFFFF5C8D)),
+                  icon: const Icon(Icons.copy,
+                      size: 16, color: Color(0xFFFF5C8D)),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   splashRadius: 16,

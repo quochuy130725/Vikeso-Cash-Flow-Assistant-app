@@ -272,6 +272,7 @@ exports.updateProfile = async (req, res) => {
     }
 
     console.log(`✅ Cập nhật profile: ${user.email}`);
+    require('../socket').emitToUser(user._id, 'profile_updated', { reason: 'profile_edited' });
     return res.status(200).json({
       success: true,
       message: 'Cập nhật thông tin thành công!',

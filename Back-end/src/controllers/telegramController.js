@@ -54,6 +54,7 @@ exports.handleWebhook = async (req, res) => {
       targetUser.notificationSettings.receiveTelegram = true;
     }
     await targetUser.save();
+    require('../socket').emitToUser(targetUser._id, 'profile_updated', { reason: 'telegram_linked' });
 
     await sendMessage(chatId,
       `✅ *Kết nối thành công!*\n\nTài khoản *${targetUser.shopName || targetUser.email}* đã được liên kết với Telegram.\n\nBạn sẽ nhận báo cáo tài chính hàng ngày lúc *22:00 🕙* tại đây.`,

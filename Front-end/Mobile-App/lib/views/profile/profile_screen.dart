@@ -4,9 +4,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:async';
 import '../shared_widgets/side_drawer.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/services/api_service.dart';
+import '../../data/services/socket_service.dart';
 import '../billing/upgrade_pro_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -32,16 +34,21 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   bool _receiveTelegram = false;
   bool _receiveInApp = true;
   bool _hasTelegram = false;
+  StreamSubscription? _profileSub;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadProfile();
+    _profileSub = SocketService.instance.onProfileChanged.listen((_) {
+      _loadProfile();
+    });
   }
 
   @override
   void dispose() {
+    _profileSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

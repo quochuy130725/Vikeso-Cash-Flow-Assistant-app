@@ -1,7 +1,7 @@
 const axios = require('axios');
 const Receipt = require('../models/Receipt');
 const User = require('../models/User');
-const { getIO } = require('../socket'); // Socket.IO — chỉ dùng để refresh dashboard
+const { emitToUser } = require('../socket'); // Socket.IO — chỉ dùng để refresh dashboard
 
 exports.saveManualEntry = async (req, res) => {
   try {
@@ -85,9 +85,7 @@ exports.saveManualEntry = async (req, res) => {
     const hasTelegram = user && !!user.telegramChatId;
 
     // 📡 Thông báo cho Dashboard tự refresh biểu đồ (không đụng luồng lưu)
-    try {
-      getIO().emit('new_transaction', { userId });
-    } catch (_) {} // Ignore nếu socket chưa init (ví dụ: test Postman không cần realtime)
+    emitToUser(userId, 'new_transaction');
 
     // Phản hồi thành công
     return res.status(200).json({ success: true, message: "Đã lưu dữ liệu thành công!", hasTelegram });

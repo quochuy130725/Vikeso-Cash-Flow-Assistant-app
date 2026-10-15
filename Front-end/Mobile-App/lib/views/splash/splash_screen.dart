@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/services/socket_service.dart';
 
 /// SplashScreen - Hien logo va tu dong dang nhap neu da co JWT luu truoc do.
 class SplashScreen extends StatefulWidget {
@@ -37,6 +38,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     if (userInfo != null) {
       // Token con han - tu dong vao Dashboard
       dotenv.env['USER_ID'] = userInfo.id;
+      SocketService.instance.connect();
       Navigator.of(context).pushReplacementNamed('/dashboard');
     } else {
       // Chua dang nhap hoac het han - vao man Login

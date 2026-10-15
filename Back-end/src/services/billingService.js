@@ -2,7 +2,7 @@ const sepayConfig = require('../config/sepay');
 const sepayService = require('./sepayService');
 const SubscriptionOrder = require('../models/SubscriptionOrder');
 const User = require('../models/User');
-const { getIO } = require('../socket');
+const { emitToUser } = require('../socket');
 
 /**
  * Billing service — nơi DUY NHẤT chạm DB cho thanh toán.
@@ -132,9 +132,7 @@ const handleSepayWebhook = async (payload) => {
     }
   );
 
-  try {
-    getIO().emit('subscription_upgraded', { userId: String(order.userId), plan: 'PRO', orderCode });
-  } catch (_) {}
+  emitToUser(order.userId, 'subscription_upgraded', { plan: 'PRO', orderCode });
 
   return { success: true, order };
 };

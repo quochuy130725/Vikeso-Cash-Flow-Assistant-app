@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:async';
 import '../../data/services/api_service.dart';
+import '../../data/services/socket_service.dart';
 import '../../data/services/excel_export_service.dart';
 import '../shared_widgets/side_drawer.dart';
 
@@ -24,17 +26,29 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Map<String, double> _categoryThuSums = {};
   Map<String, double> _categoryChiSums = {};
   bool _showThuPieChart = true;
+  StreamSubscription? _txSub;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _txSub = SocketService.instance.onTransactionChanged.listen((_) {
+      _loadData(silent: true);
+    });
   }
 
-  Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-    });
+  @override
+  void dispose() {
+    _txSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadData({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
       final String userId = dotenv.env['USER_ID'] ?? '';

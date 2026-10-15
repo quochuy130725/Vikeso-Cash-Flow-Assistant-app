@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
+import '../services/socket_service.dart';
 
 /// AuthRepository - Quản lý toàn bộ luồng xác thực FinAuto.
 class AuthRepository {
@@ -316,6 +317,7 @@ class AuthRepository {
   }
 
   Future<void> logout() async {
+    SocketService.instance.disconnect();
     await _storage.deleteAll();
     try {
       await _googleSignIn.signOut();
@@ -362,6 +364,9 @@ class AuthRepository {
         if (notificationSettings != null)
           _storage.write(key: 'user_notificationSettings', value: notificationSettings),
       ]);
+
+      // Kết nối WebSocket ngay khi đăng nhập thành công
+      SocketService.instance.connect();
 
       return AuthResult.success(UserInfo(
         id: userInfo['id']?.toString() ?? '',

@@ -153,6 +153,7 @@ router.put('/user/:id/notification-settings', async (req, res) => {
     if (receiveInApp !== undefined) user.notificationSettings.receiveInApp = receiveInApp;
 
     await user.save();
+    require('../socket').emitToUser(user._id, 'profile_updated', { reason: 'notification_settings' });
 
     return res.status(200).json({
       success: true,

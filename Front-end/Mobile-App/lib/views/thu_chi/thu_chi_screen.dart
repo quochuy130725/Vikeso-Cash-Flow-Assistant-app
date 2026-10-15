@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../shared_widgets/side_drawer.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 import '../../data/services/api_service.dart';
+import '../../data/services/socket_service.dart';
 import '../../data/services/excel_export_service.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'widgets/thu_chi_list_item.dart';
@@ -20,6 +22,7 @@ class _ThuChiScreenState extends State<ThuChiScreen>
   bool _isLoading = true;
   List<Map<String, dynamic>> _allTransactions = [];
   List<Map<String, dynamic>> _filteredTransactions = [];
+  StreamSubscription? _txSub;
 
   @override
   void initState() {
@@ -27,6 +30,9 @@ class _ThuChiScreenState extends State<ThuChiScreen>
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_handleTabSelection);
     _fetchTransactions();
+    _txSub = SocketService.instance.onTransactionChanged.listen((_) {
+      _fetchTransactions(silent: true);
+    });
   }
 
   void _handleTabSelection() {
@@ -34,10 +40,12 @@ class _ThuChiScreenState extends State<ThuChiScreen>
     _applyFilter();
   }
 
-  Future<void> _fetchTransactions() async {
-    setState(() {
-      _isLoading = true;
-    });
+  Future<void> _fetchTransactions({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     final String storedUserId = await AuthRepository().getUserId() ?? '';
     final String userId = storedUserId.isNotEmpty ? storedUserId : (dotenv.env['USER_ID'] ?? '');
@@ -413,6 +421,7 @@ class _ThuChiScreenState extends State<ThuChiScreen>
 
   @override
   void dispose() {
+    _txSub?.cancel();
     _tabController.dispose();
     super.dispose();
   }
