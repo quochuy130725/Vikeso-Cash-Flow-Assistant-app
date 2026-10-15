@@ -60,7 +60,12 @@ exports.sendResetPasswordEmail = async ({ to, name, code, minutes }) => {
   const subject = `[VikeSo] Mã đặt lại mật khẩu: ${code}`;
   const html = buildResetPasswordHTML({ name, code, minutes });
   const text = `Mã đặt lại mật khẩu VikeSo của bạn là ${code}. Mã có hiệu lực trong ${minutes} phút.`;
+  return sendEmail({ to, name, subject, html, text });
+};
 
+// Hàm gửi mail dùng chung: Brevo (HTTPS) → Resend (HTTPS) → Gmail SMTP
+// Render free chặn SMTP nên ưu tiên các provider qua HTTPS (port 443)
+const sendEmail = async ({ to, name, subject, html, text, senderName = 'VikeSo' }) => {
   // 1. Thử gửi qua Brevo HTTP API (Port 443 — Gửi được cho MỌI email mà không cần domain)
   if (process.env.BREVO_API_KEY) {
     try {
@@ -72,7 +77,7 @@ exports.sendResetPasswordEmail = async ({ to, name, code, minutes }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sender: { name: 'VikeSo', email: process.env.BREVO_SENDER_EMAIL || process.env.MAIL_USER || 'baocao.vikeso@gmail.com' },
+          sender: { name: senderName, email: process.env.BREVO_SENDER_EMAIL || process.env.MAIL_USER || 'baocao.vikeso@gmail.com' },
           to: [{ email: to, name: name || 'Người dùng' }],
           subject,
           htmlContent: html,
@@ -101,7 +106,7 @@ exports.sendResetPasswordEmail = async ({ to, name, code, minutes }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: process.env.RESEND_FROM || 'VikeSo <onboarding@resend.dev>',
+          from: process.env.RESEND_FROM || `${senderName} <onboarding@resend.dev>`,
           to: [to],
           subject,
           html,
@@ -122,7 +127,7 @@ exports.sendResetPasswordEmail = async ({ to, name, code, minutes }) => {
   // 3. Fallback qua Gmail SMTP (Chạy tốt ở Local hoặc Render gói trả phí)
   console.log('📤 Đang gửi mail qua Gmail SMTP...');
   const info = await getTransporter().sendMail({
-    from: `"VikeSo" <${process.env.MAIL_USER}>`,
+    from: `"${senderName}" <${process.env.MAIL_USER}>`,
     to,
     subject,
     text,
@@ -131,5 +136,7 @@ exports.sendResetPasswordEmail = async ({ to, name, code, minutes }) => {
   console.log('✅ Gửi email qua Gmail SMTP thành công:', info.messageId);
   return { provider: 'smtp', messageId: info.messageId };
 };
+
+exports.sendEmail = sendEmail;
 
 

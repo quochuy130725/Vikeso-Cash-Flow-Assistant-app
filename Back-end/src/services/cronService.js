@@ -4,25 +4,9 @@ if (dns.setDefaultResultOrder) {
 }
 const cron = require('node-cron');
 const axios = require('axios');
-const nodemailer = require('nodemailer');
 const User = require('../models/User');
 const Receipt = require('../models/Receipt');
-
-const createMailTransporter = () => nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    pool: true,
-    maxConnections: 5,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-    lookup: (hostname, options, callback) => dns.lookup(hostname, { family: 4 }, callback),
-    auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-    },
-});
+const { sendEmail } = require('./mailService');
 
 // ─── Template Email HTML ──────────────────────────────────────────────────
 const buildEmailHTML = ({ shopName, tongThu, tongChi, loinhuan, soHoaDon, ngay }) => `
@@ -154,8 +138,6 @@ const runDailyReport = async ({ sendZeroReports = false, targetEmail = null } = 
         }
     }
 
-    const transporter = createMailTransporter();
-
     await Promise.all(usersToProcess.map(async (user) => {
         const userReceipts = await Receipt.find({ userId: user._id, ...dateFilter });
 
@@ -191,13 +173,15 @@ const runDailyReport = async ({ sendZeroReports = false, targetEmail = null } = 
         // ── Email (nếu bật) ─────────────────────────────────────────────
         if (shouldSendEmail && user.email) {
             try {
-                await transporter.sendMail({
-                    from: `"Vikeso AI" <${process.env.MAIL_USER}>`,
+                const info = await sendEmail({
+                    senderName: 'Vikeso AI',
                     to: user.email,
+                    name: shopName,
                     subject: `📊 Báo cáo chốt ca ${ngayFormat} - ${shopName}`,
                     html: buildEmailHTML({ ...data, loinhuan }),
+                    text: buildTelegramMessage({ ...data, loinhuan: fmt(loinhuan) }).replace(/\*/g, ''),
                 });
-                console.log(`✉️  Email → ${user.email} ✅`);
+                console.log(`✉️  Email → ${user.email} ✅ (${info.provider})`);
                 results.emailSent++;
             } catch (mailErr) {
                 console.error(`❌ Email lỗi (${user.email}):`, mailErr.message);
@@ -227,8 +211,6 @@ const runDailyReport = async ({ sendZeroReports = false, targetEmail = null } = 
             console.log(`⚠️  ${user.email} đã tắt nhận báo cáo qua Telegram.`);
         }
     }));
-
-    try { transporter.close(); } catch (_) {}
 
     return { totalUsers: usersToProcess.length, ...results };
 };
