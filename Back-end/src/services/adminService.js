@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Receipt = require('../models/Receipt');
 const SubscriptionOrder = require('../models/SubscriptionOrder');
@@ -187,4 +188,190 @@ const listPayments = async ({ status, from, to, page = 1, limit = 20 }) => {
   return { data, sums, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
 };
 
-module.exports = { listUsers, getUserDetail, updatePlan, updateRole, deleteUser, getOverview, listTransactions, listPayments };
+// ── 8. Tạo user (admin tạo tài khoản thủ công) ──
+const createUser = async ({ email, password, name, shopName, phone, role = 'OWNER', subscriptionPlan = 'FREE' }) => {
+  const normalizedEmail = (email || '').toString().toLowerCase().trim();
+  if (!normalizedEmail) { const e = new Error('Vui lòng nhập email.'); e.statusCode = 400; throw e; }
+  const hasPassword = password !== undefined && password !== null && String(password) !== '';
+  if (hasPassword && String(password).length < 6) { const e = new Error('Mật khẩu phải có ít nhất 6 ký tự.'); e.statusCode = 400; throw e; }
+  if (!['OWNER', 'ADMIN'].includes(role)) { const e = new Error('role chỉ nhận OWNER|ADMIN.'); e.statusCode = 400; throw e; }
+  if (!['FREE', 'PRO'].includes(subscriptionPlan)) { const e = new Error('subscriptionPlan chỉ nhận FREE|PRO.'); e.statusCode = 400; throw e; }
+
+  const existing = await User.findOne({ email: normalizedEmail });
+  if (existing) { const e = new Error('Email này đã được đăng ký.'); e.statusCode = 409; throw e; }
+
+  await User.create({
+    email: normalizedEmail,
+    name: (name || '').toString().trim(),
+    shopName: (shopName || '').toString().trim(),
+    phone: (phone || '').toString().trim() || null,
+    password: hasPassword ? await bcrypt.hash(String(password), 10) : null,
+    role,
+    subscriptionPlan,
+    authProvider: hasPassword ? 'local' : 'google',
+  });
+
+  return User.findOne({ email: normalizedEmail }).select('-password').lean();
+};
+
+// ── 9. Cập nhật thông tin chung của user ──
+const updateUser = async (id, { name, shopName, phone, avatar }) => {
+  if (!toObjectId(id)) { const e = new Error('userId không hợp lệ.'); e.statusCode = 400; throw e; }
+  const updateFields = {};
+  if (name !== undefined) updateFields.name = String(name).trim();
+  if (shopName !== undefined) updateFields.shopName = String(shopName).trim();
+  if (phone !== undefined) updateFields.phone = String(phone).trim();
+  if (avatar !== undefined) updateFields.avatar = avatar;
+  if (Object.keys(updateFields).length === 0) { const e = new Error('Không có trường nào để cập nhật.'); e.statusCode = 400; throw e; }
+
+  const user = await User.findByIdAndUpdate(id, { $set: updateFields }, { new: true, runValidators: true }).select('-password').lean();
+  if (!user) { const e = new Error('Không tìm thấy người dùng.'); e.statusCode = 404; throw e; }
+  require('../socket').emitToUser(user._id, 'profile_updated', { reason: 'profile_edited' });
+  return user;
+};
+
+// ── 10. Chi tiết 1 giao dịch ──
+const getTransaction = async (id) => {
+  if (!toObjectId(id)) { const e = new Error('transactionId không hợp lệ.'); e.statusCode = 400; throw e; }
+  const tx = await Receipt.findById(id).populate('userId', 'email shopName').lean();
+  if (!tx) { const e = new Error('Không tìm thấy giao dịch.'); e.statusCode = 404; throw e; }
+  return tx;
+};
+
+// ── 11. Tạo giao dịch ──
+const createTransaction = async ({ userId, category = 'Khac', transactionType, totalAmount, reason = '', confidenceLevel = 'HIGH', status = 'VALID', transactionDate, receiptUrl = '' }) => {
+  if (!toObjectId(userId)) { const e = new Error('userId không hợp lệ.'); e.statusCode = 400; throw e; }
+  if (!['THU', 'CHI'].includes(transactionType)) { const e = new Error('transactionType chỉ nhận THU|CHI.'); e.statusCode = 400; throw e; }
+  const amount = Number(totalAmount);
+  if (totalAmount === undefined || Number.isNaN(amount)) { const e = new Error('totalAmount không hợp lệ.'); e.statusCode = 400; throw e; }
+  if (!['Khac', 'Hoa Don Le', 'POS Ket Ca', 'So Tay', 'Chuyen Khoan'].includes(category)) { const e = new Error('category không hợp lệ.'); e.statusCode = 400; throw e; }
+  if (!['HIGH', 'MEDIUM', 'LOW'].includes(confidenceLevel)) { const e = new Error('confidenceLevel chỉ nhận HIGH|MEDIUM|LOW.'); e.statusCode = 400; throw e; }
+  if (!['VALID', 'MERGED'].includes(status)) { const e = new Error('status chỉ nhận VALID|MERGED.'); e.statusCode = 400; throw e; }
+  const user = await User.findById(userId);
+  if (!user) { const e = new Error('Không tìm thấy người dùng.'); e.statusCode = 404; throw e; }
+
+  const tx = await Receipt.create({
+    userId,
+    category,
+    transactionType,
+    totalAmount: amount,
+    reason,
+    confidenceLevel,
+    status,
+    transactionDate: transactionDate ? new Date(transactionDate) : new Date(),
+    receiptUrl,
+  });
+  require('../socket').emitToUser(userId, 'new_transaction', { transactions: [tx] });
+  return tx;
+};
+
+// ── 12. Cập nhật giao dịch ──
+const updateTransaction = async (id, body) => {
+  if (!toObjectId(id)) { const e = new Error('transactionId không hợp lệ.'); e.statusCode = 400; throw e; }
+  const tx = await Receipt.findById(id);
+  if (!tx) { const e = new Error('Không tìm thấy giao dịch.'); e.statusCode = 404; throw e; }
+
+  const { userId, category, transactionType, totalAmount, reason, confidenceLevel, status, transactionDate, receiptUrl } = body;
+  if (userId !== undefined) {
+    if (!toObjectId(userId)) { const e = new Error('userId không hợp lệ.'); e.statusCode = 400; throw e; }
+    const user = await User.findById(userId);
+    if (!user) { const e = new Error('Không tìm thấy người dùng.'); e.statusCode = 404; throw e; }
+    tx.userId = userId;
+  }
+  if (category !== undefined) {
+    if (!['Khac', 'Hoa Don Le', 'POS Ket Ca', 'So Tay', 'Chuyen Khoan'].includes(category)) { const e = new Error('category không hợp lệ.'); e.statusCode = 400; throw e; }
+    tx.category = category;
+  }
+  if (transactionType !== undefined) {
+    if (!['THU', 'CHI'].includes(transactionType)) { const e = new Error('transactionType chỉ nhận THU|CHI.'); e.statusCode = 400; throw e; }
+    tx.transactionType = transactionType;
+  }
+  if (totalAmount !== undefined) {
+    const amount = Number(totalAmount);
+    if (Number.isNaN(amount)) { const e = new Error('totalAmount không hợp lệ.'); e.statusCode = 400; throw e; }
+    tx.totalAmount = amount;
+  }
+  if (reason !== undefined) tx.reason = String(reason);
+  if (confidenceLevel !== undefined) {
+    if (!['HIGH', 'MEDIUM', 'LOW'].includes(confidenceLevel)) { const e = new Error('confidenceLevel chỉ nhận HIGH|MEDIUM|LOW.'); e.statusCode = 400; throw e; }
+    tx.confidenceLevel = confidenceLevel;
+  }
+  if (status !== undefined) {
+    if (!['VALID', 'MERGED'].includes(status)) { const e = new Error('status chỉ nhận VALID|MERGED.'); e.statusCode = 400; throw e; }
+    tx.status = status;
+  }
+  if (transactionDate !== undefined) tx.transactionDate = new Date(transactionDate);
+  if (receiptUrl !== undefined) tx.receiptUrl = String(receiptUrl);
+
+  await tx.save();
+  const saved = await Receipt.findById(id).populate('userId', 'email shopName').lean();
+  require('../socket').emitToUser(saved.userId, 'new_transaction', { transactions: [saved] });
+  return saved;
+};
+
+// ── 13. Xóa giao dịch (hard delete) ──
+const deleteTransaction = async (id) => {
+  if (!toObjectId(id)) { const e = new Error('transactionId không hợp lệ.'); e.statusCode = 400; throw e; }
+  const tx = await Receipt.findByIdAndDelete(id);
+  if (!tx) { const e = new Error('Không tìm thấy giao dịch.'); e.statusCode = 404; throw e; }
+  require('../socket').emitToUser(tx.userId, 'new_transaction');
+  return { deleted: String(tx._id) };
+};
+
+// ── 14. Chi tiết 1 đơn thanh toán ──
+const getPayment = async (id) => {
+  if (!toObjectId(id)) { const e = new Error('paymentId không hợp lệ.'); e.statusCode = 400; throw e; }
+  const order = await SubscriptionOrder.findById(id).populate('userId', 'email shopName').lean();
+  if (!order) { const e = new Error('Không tìm thấy đơn thanh toán.'); e.statusCode = 404; throw e; }
+  return order;
+};
+
+// ── 15. Cập nhật đơn thanh toán ──
+const updatePayment = async (id, body) => {
+  if (!toObjectId(id)) { const e = new Error('paymentId không hợp lệ.'); e.statusCode = 400; throw e; }
+  const order = await SubscriptionOrder.findById(id);
+  if (!order) { const e = new Error('Không tìm thấy đơn thanh toán.'); e.statusCode = 404; throw e; }
+  const wasSuccess = order.status === 'SUCCESS';
+
+  const { status, amount, plan, paidAt, bankCode, bankAccount, accountName, transferContent } = body;
+  if (status !== undefined) {
+    if (!['PENDING', 'SUCCESS', 'FAILED', 'EXPIRED'].includes(status)) { const e = new Error('status không hợp lệ.'); e.statusCode = 400; throw e; }
+    order.status = status;
+    if (status === 'SUCCESS') order.paidAt = order.paidAt || new Date();
+  }
+  if (amount !== undefined) {
+    const amt = Number(amount);
+    if (Number.isNaN(amt)) { const e = new Error('amount không hợp lệ.'); e.statusCode = 400; throw e; }
+    order.amount = amt;
+  }
+  if (plan !== undefined) {
+    if (!['PRO'].includes(plan)) { const e = new Error('plan chỉ nhận PRO.'); e.statusCode = 400; throw e; }
+    order.plan = plan;
+  }
+  if (paidAt !== undefined) order.paidAt = paidAt ? new Date(paidAt) : null;
+  if (bankCode !== undefined) order.bankCode = String(bankCode);
+  if (bankAccount !== undefined) order.bankAccount = String(bankAccount);
+  if (accountName !== undefined) order.accountName = String(accountName);
+  if (transferContent !== undefined) order.transferContent = String(transferContent);
+
+  await order.save();
+  const saved = await SubscriptionOrder.findById(id).populate('userId', 'email shopName').lean();
+  if (!wasSuccess && saved.status === 'SUCCESS') {
+    require('../socket').emitToUser(saved.userId, 'subscription_upgraded', { plan: saved.plan, orderCode: saved.orderCode });
+  }
+  return saved;
+};
+
+// ── 16. Xóa đơn thanh toán (hard delete) ──
+const deletePayment = async (id) => {
+  if (!toObjectId(id)) { const e = new Error('paymentId không hợp lệ.'); e.statusCode = 400; throw e; }
+  const order = await SubscriptionOrder.findByIdAndDelete(id);
+  if (!order) { const e = new Error('Không tìm thấy đơn thanh toán.'); e.statusCode = 404; throw e; }
+  return { deleted: String(order._id) };
+};
+
+module.exports = {
+  listUsers, getUserDetail, updatePlan, updateRole, deleteUser, getOverview, listTransactions, listPayments,
+  createUser, updateUser, getTransaction, createTransaction, updateTransaction, deleteTransaction,
+  getPayment, updatePayment, deletePayment,
+};
