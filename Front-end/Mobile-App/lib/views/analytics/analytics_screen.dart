@@ -161,7 +161,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 : () => ExcelExportService.exportTransactions(
                       context,
                       _transactions,
-                      fileName: 'FinAuto_PhanTich',
+                      fileName: 'VikeSo_PhanTich',
                     ),
           ),
           IconButton(

@@ -501,7 +501,7 @@ class _ThuChiScreenState extends State<ThuChiScreen>
                           : () => ExcelExportService.exportTransactions(
                                 context,
                                 _filteredTransactions,
-                                fileName: 'FinAuto_ThuChi',
+                                fileName: 'VikeSo_ThuChi',
                               ),
                       child: const Padding(
                         padding: EdgeInsets.all(12),
