@@ -355,32 +355,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </>
               )}
 
-              {/* Quick Fill Demo Credentials */}
-              {mode === 'login' && (
-                <div className="flex items-center gap-2 pt-0.5 pb-1 flex-wrap">
-                  <span className="text-[11px] text-slate-400 font-medium">Tài khoản mẫu:</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmail('test@example.com');
-                      setPassword('password123');
-                    }}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-300 border border-purple-500/30 font-semibold hover:bg-purple-500/25 transition-all cursor-pointer inline-flex items-center gap-1"
-                  >
-                    <span>👑 Admin Demo</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmail('test1@example.com');
-                      setPassword('password123');
-                    }}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-[#d0f81b]/15 text-[#d0f81b] border border-[#d0f81b]/30 font-semibold hover:bg-[#d0f81b]/25 transition-all cursor-pointer inline-flex items-center gap-1"
-                  >
-                    <span>🏪 Chủ Hộ Demo</span>
-                  </button>
-                </div>
-              )}
 
               {/* Email field */}
               <div>
