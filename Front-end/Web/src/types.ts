@@ -16,6 +16,7 @@ export interface Transaction {
   id: string;
   time: string;
   dateLabel: string;
+  rawDate?: string;
   title: string;
   category: string;
   details: string;

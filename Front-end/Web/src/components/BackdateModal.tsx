@@ -158,13 +158,13 @@ export const BackdateModal: React.FC<BackdateModalProps> = ({ isOpen, onClose, o
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 font-black text-xs flex items-center justify-center gap-2 border border-[#bde412] shadow-lg shadow-[#d0f81b]/20 transition-all active:scale-95 cursor-pointer"
+                className="w-full py-3 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white font-black text-xs flex items-center justify-center gap-2 border border-[#ff4783] shadow-lg shadow-[#ff4783]/25 transition-all active:scale-95 cursor-pointer"
               >
                 {isSubmitting ? (
                   <span>Đang ghi nhận vào sổ cũ...</span>
                 ) : (
                   <>
-                    <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                    <CheckCircle2 className="w-4 h-4 text-white" />
                     <span>Lưu Vào Sổ Quỹ Ngày {date}</span>
                   </>
                 )}

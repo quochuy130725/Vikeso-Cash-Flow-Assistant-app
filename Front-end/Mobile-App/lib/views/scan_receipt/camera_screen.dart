@@ -4,6 +4,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
 import '../../core/utils/ui_helpers.dart';
 import '../../data/services/api_service.dart';
+import '../../data/services/subscription_service.dart';
+import '../../data/repositories/auth_repository.dart';
+import '../shared_widgets/pro_paywall_sheet.dart';
 import 'split_screen.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -20,15 +23,29 @@ class _CameraScreenState extends State<CameraScreen> {
   List<CameraDescription>? _cameras;
   bool _isCameraInitialized = false;
   bool _isLoading = false;
+  bool _isPro = false;
+  int _monthlyScans = 0;
 
   final _apiService = ApiService();
   // TODO: Sau khi có login, lấy userId từ Session/SecureStorage
-  String get _userId => dotenv.env['USER_ID']!;
+  String get _userId => dotenv.env['USER_ID'] ?? 'demo_user_bacuong';
 
   @override
   void initState() {
     super.initState();
     _initializeCamera();
+    _loadSubscriptionInfo();
+  }
+
+  Future<void> _loadSubscriptionInfo() async {
+    final isPro = await SubscriptionService().isPro();
+    final count = await SubscriptionService().getMonthlyScanCount();
+    if (mounted) {
+      setState(() {
+        _isPro = isPro;
+        _monthlyScans = count;
+      });
+    }
   }
 
   Future<void> _initializeCamera() async {
@@ -82,9 +99,9 @@ class _CameraScreenState extends State<CameraScreen> {
                   borderRadius: BorderRadius.circular(22),
                   child: _isCameraInitialized
                       ? CameraPreview(_controller!)
-                      : const Center(
+                      : Center(
                           child: CircularProgressIndicator(
-                              color: Color(0xFFFF5C8D)),
+                              color: Theme.of(context).colorScheme.primary),
                         ),
                 ),
               ),
@@ -94,16 +111,21 @@ class _CameraScreenState extends State<CameraScreen> {
             if (_isLoading)
               Positioned.fill(
                 child: Container(
-                  color: Colors.black.withValues(alpha: 0.7),
+                  color: Colors.black.withValues(alpha: 0.8),
                   child: const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(color: Color(0xFFFF5C8D)),
-                        SizedBox(height: 16),
+                        CircularProgressIndicator(color: Color(0xFFFF4783)),
+                        SizedBox(height: 18),
                         Text(
-                          '🤖 AI đang phân tích hóa đơn...',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          'Đang đối soát chứng từ...',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.2,
+                          ),
                         ),
                       ],
                     ),
@@ -111,25 +133,61 @@ class _CameraScreenState extends State<CameraScreen> {
                 ),
               ),
 
-            // Hướng dẫn (Text Overlay)
+            // Hướng dẫn & Hạn mức (Text & Quota Overlay)
             if (_isCameraInitialized && !_isLoading)
               Positioned(
-                top: 40,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(20),
+                top: 24,
+                left: 16,
+                right: 16,
+                child: Column(
+                  children: [
+                    // Quota Chip
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F172A).withValues(alpha: 0.88),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: _isPro ? const Color(0xFFD0F81B) : Colors.white24,
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _isPro ? Icons.workspace_premium_rounded : Icons.qr_code_scanner_rounded,
+                            size: 15,
+                            color: _isPro ? const Color(0xFFD0F81B) : const Color(0xFFFF4783),
+                          ),
+                          const SizedBox(width: 7),
+                          Text(
+                            _isPro
+                                ? 'PRO • Quét không giới hạn'
+                                : 'Lượt quét AI: $_monthlyScans/30 tháng này',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.5,
+                              fontWeight: _isPro ? FontWeight.w800 : FontWeight.w600,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: const Text(
-                      'Hướng khung hình vào hoá đơn/biên lai',
-                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black45,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Text(
+                        'Hướng khung hình vào hoá đơn/biên lai',
+                        style: TextStyle(color: Colors.white70, fontSize: 12.5),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
 
@@ -171,7 +229,7 @@ class _CameraScreenState extends State<CameraScreen> {
                             ? _takePicture
                             : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF5C8D),
+                          backgroundColor: Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 20),
                           shape: RoundedRectangleBorder(
@@ -181,7 +239,7 @@ class _CameraScreenState extends State<CameraScreen> {
                         ),
                         icon: const Icon(Icons.camera_alt_outlined, size: 28),
                         label: const Text(
-                          'Quét tài liệu thông minh',
+                          'Chụp & Quét Chứng Từ',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -212,7 +270,26 @@ class _CameraScreenState extends State<CameraScreen> {
     );
   }
 
+  Future<bool> _checkScanPermission() async {
+    final canScan = await SubscriptionService().canScan();
+    if (!canScan) {
+      if (mounted) {
+        ProPaywallSheet.show(
+          context,
+          featureTitle: 'Đã Hết Lượt Quét AI Tháng Này',
+          featureDescription:
+              'Bạn đã sử dụng hết 30 lượt quét hóa đơn AI miễn phí trong tháng này. Hãy nâng cấp gói VikeSo PRO để quét chứng từ không giới hạn, hoặc sử dụng tính năng Ghi chép thủ công (0đ không giới hạn).',
+        );
+      }
+      return false;
+    }
+    return true;
+  }
+
   Future<void> _takePicture() async {
+    final allowed = await _checkScanPermission();
+    if (!allowed) return;
+
     try {
       final XFile image = await _controller!.takePicture();
       await _handleScannedImage(File(image.path));
@@ -224,6 +301,9 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> _processImageFromGallery() async {
+    final allowed = await _checkScanPermission();
+    if (!allowed) return;
+
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
@@ -242,9 +322,10 @@ class _CameraScreenState extends State<CameraScreen> {
     setState(() => _isLoading = true);
 
     // 🚀 GỌI API THẬT - Gửi ảnh lên Gemini AI
+    final resolvedUserId = await AuthRepository().getUserId() ?? _userId;
     final result = await _apiService.uploadReceipt(
       imageFile: imageFile,
-      userId: _userId,
+      userId: resolvedUserId,
     );
 
     if (!mounted) return;
@@ -279,6 +360,10 @@ class _CameraScreenState extends State<CameraScreen> {
       return;
     }
 
+    // Ghi nhận 1 lượt quét AI thành công vào bộ đếm tháng
+    await SubscriptionService().recordScan();
+    _loadSubscriptionInfo();
+
     // Thành công: Chuyển sang SplitScreen và truyền dữ liệu
     if (!mounted) return;
     Navigator.push(
@@ -286,7 +371,7 @@ class _CameraScreenState extends State<CameraScreen> {
       MaterialPageRoute(
         builder: (context) => SplitScreen(
           items: items.cast<Map<String, dynamic>>(),
-          userId: _userId,
+          userId: resolvedUserId,
           imageFile: imageFile,
         ),
       ),

@@ -17,14 +17,14 @@ class UIHelpers {
       );
   }
 
-  /// Hiển thị thông báo thành công (Màu xanh)
+  /// Hiển thị thông báo thành công
   static void showSuccessToast(BuildContext context, String message) {
-    showSnackBar(context, message, backgroundColor: Colors.green);
+    showSnackBar(context, message, backgroundColor: const Color(0xFF0F172A));
   }
 
-  /// Hiển thị thông báo cảnh báo (Màu cam)
+  /// Hiển thị thông báo cảnh báo
   static void showWarningToast(BuildContext context, String message) {
-    showSnackBar(context, message, backgroundColor: Colors.orange, duration: const Duration(seconds: 4));
+    showSnackBar(context, message, backgroundColor: const Color(0xFFFF4783), duration: const Duration(seconds: 4));
   }
 
   /// Hiển thị Dialog thông báo đơn giản

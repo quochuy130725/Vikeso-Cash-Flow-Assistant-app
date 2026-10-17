@@ -181,10 +181,10 @@ export const WorkflowSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSc
           </span>
           <button
             onClick={onOpenScan}
-            className="px-5 py-2.5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 text-xs font-black transition-all shadow-sm shadow-[#d0f81b]/20 border border-[#bde412] flex items-center gap-1.5 cursor-pointer active:scale-95"
+            className="px-5 py-2.5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black transition-all shadow-md shadow-[#ff4783]/25 border border-[#ff4783] flex items-center gap-1.5 cursor-pointer active:scale-95"
           >
             <span>Thử Nghiệm Miễn Phí</span>
-            <ArrowRight className="w-3.5 h-3.5 text-slate-950" />
+            <ArrowRight className="w-3.5 h-3.5 text-white" />
           </button>
         </div>
       </div>

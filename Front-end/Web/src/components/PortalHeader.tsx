@@ -116,8 +116,8 @@ export const PortalHeader: React.FC<HeaderProps> = ({
                 <span>{storeName || 'Admin Quản Trị'}</span>
               </div>
 
-              <div className="hidden lg:flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <div className="hidden lg:flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-[#d0f81b] text-slate-950 border border-[#bde412] font-black shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-pulse"></span>
                 <span>OCR Engine: 99.8% Ổn định</span>
               </div>
             </div>

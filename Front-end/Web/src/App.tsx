@@ -184,7 +184,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-[#191c1d] flex flex-col font-sans selection:bg-[#198754]/20 selection:text-[#198754]">
+    <div className="min-h-screen bg-[#f8f9fa] text-[#191c1d] flex flex-col font-sans selection:bg-[#ff4783]/20 selection:text-[#ff4783]">
       {/* Sticky Header with Glassmorphism */}
       <Header
         currentUser={currentUser}

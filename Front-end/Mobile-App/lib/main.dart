@@ -7,18 +7,20 @@ import 'views/dashboard/dashboard_screen.dart';
 import 'views/thu_chi/thu_chi_screen.dart';
 import 'views/profile/profile_screen.dart';
 import 'views/billing/upgrade_pro_screen.dart';
-import 'views/admin/admin_dashboard_screen.dart';
 import 'views/scan_receipt/camera_screen.dart';
 import 'views/analytics/analytics_screen.dart';
 import 'data/services/socket_service.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   // Ensure widgets binding is initialized before async operations
   WidgetsFlutterBinding.ensureInitialized();
   // Load .env file
   await dotenv.load(fileName: ".env");
+  // Initialize date formatting for Vietnamese locale
+  await initializeDateFormatting('vi', null);
   
   runApp(const QuanLyCuaHangApp());
 }
@@ -44,7 +46,6 @@ class QuanLyCuaHangApp extends StatelessWidget {
         '/profile': (context) => const MainNavigationShell(initialIndex: 3),
         '/camera': (context) => const CameraScreen(),
         '/upgrade-pro': (context) => const UpgradeProScreen(),
-        '/admin': (context) => const AdminDashboardScreen(),
       },  
     );
   }
@@ -101,10 +102,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           child: NavigationBar(
             selectedIndex: _currentIndex,
             backgroundColor: Colors.white,
-            indicatorColor: Theme.of(context)
-                .colorScheme
-                .primaryContainer
-                .withValues(alpha: 0.2),
+            elevation: 0,
+            indicatorColor: const Color(0xFFFFE4EE), // Soft Hot Pink pill
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
             height: 64,
             onDestinationSelected: (index) {
@@ -112,42 +111,26 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 _currentIndex = index;
               });
             },
-            destinations: [
+            destinations: const [
               NavigationDestination(
-                icon: Icon(Icons.home_outlined,
-                    color: _currentIndex == 0
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey[600]),
-                selectedIcon: Icon(Icons.home,
-                    color: Theme.of(context).colorScheme.primary),
-                label: 'Trang chủ',
+                icon: Icon(Icons.dashboard_outlined, color: Color(0xFF64748B), size: 22),
+                selectedIcon: Icon(Icons.dashboard_rounded, color: Color(0xFFFF4783), size: 22),
+                label: 'Tổng quan',
               ),
               NavigationDestination(
-                icon: Icon(Icons.receipt_long_outlined,
-                    color: _currentIndex == 1
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey[600]),
-                selectedIcon: Icon(Icons.receipt_long,
-                    color: Theme.of(context).colorScheme.primary),
+                icon: Icon(Icons.receipt_long_outlined, color: Color(0xFF64748B), size: 22),
+                selectedIcon: Icon(Icons.receipt_long_rounded, color: Color(0xFFFF4783), size: 22),
                 label: 'Thu Chi',
               ),
               NavigationDestination(
-                icon: Icon(Icons.analytics_outlined,
-                    color: _currentIndex == 2
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey[600]),
-                selectedIcon: Icon(Icons.analytics,
-                    color: Theme.of(context).colorScheme.primary),
+                icon: Icon(Icons.bar_chart_outlined, color: Color(0xFF64748B), size: 22),
+                selectedIcon: Icon(Icons.bar_chart_rounded, color: Color(0xFFFF4783), size: 22),
                 label: 'Báo cáo',
               ),
               NavigationDestination(
-                icon: Icon(Icons.person_outline,
-                    color: _currentIndex == 3
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey[600]),
-                selectedIcon: Icon(Icons.person,
-                    color: Theme.of(context).colorScheme.primary),
-                label: 'Profile',
+                icon: Icon(Icons.storefront_outlined, color: Color(0xFF64748B), size: 22),
+                selectedIcon: Icon(Icons.storefront_rounded, color: Color(0xFFFF4783), size: 22),
+                label: 'Cửa hàng',
               ),
             ],
           ),

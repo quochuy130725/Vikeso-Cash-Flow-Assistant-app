@@ -62,11 +62,6 @@ class _SplitScreenState extends State<SplitScreen> {
     if (_transactionItems.isNotEmpty && _transactionItems.first['category'] != null) {
       _selectedCategory = _transactionItems.first['category'];
     }
-
-    // Hiện đèn giao thông sau khi màn hình load xong
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showTrafficLightAlert();
-    });
   }
 
   bool _isThap(String conf) {
@@ -79,30 +74,10 @@ class _SplitScreenState extends State<SplitScreen> {
     return c.contains('trung') || c.contains('binh') || c.contains('bình');
   }
 
-  void _showTrafficLightAlert() {
-    bool hasThap = _transactionItems.any((item) => _isThap(item['confidence'] as String));
-    bool hasTrungBinh = _transactionItems.any((item) => _isTrungBinh(item['confidence'] as String));
-
-    if (hasThap) {
-      UIHelpers.showInfoDialog(
-        context,
-        '🚨 Cảnh báo mờ/khó đọc',
-        'Một số khoản mục AI đọc chưa chắc chắn (viền đỏ). Anh/chị vui lòng đối chiếu lại thật kỹ trước khi lưu nhé!',
-      );
-    } else if (hasTrungBinh) {
-      UIHelpers.showWarningToast(
-        context,
-        '⚠️ Chữ viết hơi dính nét, anh/chị lướt qua xem AI có tính nhầm không nhé.',
-      );
-    } else {
-      UIHelpers.showSuccessToast(context, '✨ AI đã quét thành công với độ chính xác cao!');
-    }
-  }
-
   Color _getTrafficColor(String confidence) {
-    if (_isThap(confidence)) return Colors.red;
-    if (_isTrungBinh(confidence)) return Colors.orange;
-    return Colors.grey;
+    if (_isThap(confidence)) return const Color(0xFFFF4783);
+    if (_isTrungBinh(confidence)) return const Color(0xFFD0F81B);
+    return const Color(0xFF0F172A);
   }
 
   void _removeItem(int index) {
@@ -188,9 +163,9 @@ class _SplitScreenState extends State<SplitScreen> {
                 try {
                   await launchUrl(uri, mode: LaunchMode.platformDefault);
                 } catch (e) {
-                  if (context.mounted) {
+                  if (mounted) {
                     UIHelpers.showSnackBar(
-                        context, 'Không thể mở Telegram: $e', backgroundColor: Colors.red);
+                        context, 'Không thể mở Telegram: $e', backgroundColor: const Color(0xFFFF4783));
                   }
                 }
               }
@@ -198,7 +173,7 @@ class _SplitScreenState extends State<SplitScreen> {
             icon: const Icon(Icons.send, size: 18),
             label: const Text('Nhận báo cáo Telegram'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0088CC), // Màu Telegram
+              backgroundColor: const Color(0xFFFF4783),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
@@ -222,21 +197,27 @@ class _SplitScreenState extends State<SplitScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.primary,
-        elevation: 0.5,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Rà soát ảnh',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          'Rà Soát Chứng Từ OCR',
+          style: TextStyle(
+            color: Color(0xFF0F172A),
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            letterSpacing: -0.3,
+          ),
         ),
+        centerTitle: true,
       ),
       body: Column(
         children: [
@@ -254,15 +235,19 @@ class _SplitScreenState extends State<SplitScreen> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Hiển thị ảnh thật nếu có, ngược lại dùng placeholder
+                  // Hiển thị ảnh thật nếu có (hỗ trợ pinch-to-zoom), ngược lại dùng placeholder
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: widget.imageFile != null
-                        ? Image.file(
-                            widget.imageFile!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
+                        ? InteractiveViewer(
+                            minScale: 1.0,
+                            maxScale: 4.0,
+                            child: Image.file(
+                              widget.imageFile!,
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
+                            ),
                           )
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -295,10 +280,8 @@ class _SplitScreenState extends State<SplitScreen> {
                           Icon(
                             Icons.check_circle, 
                             color: _transactionItems.any((i) => _isThap(i['confidence']?.toString() ?? '')) 
-                                ? Colors.red 
-                                : _transactionItems.any((i) => _isTrungBinh(i['confidence']?.toString() ?? '')) 
-                                    ? Colors.orange 
-                                    : Colors.green, 
+                                ? const Color(0xFFFF4783) 
+                                : const Color(0xFFD0F81B), 
                             size: 14
                           ),
                           const SizedBox(width: 4),
@@ -388,12 +371,12 @@ class _SplitScreenState extends State<SplitScreen> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: colorScheme.primary,
+                          backgroundColor: const Color(0xFFFF4783),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          elevation: 2,
+                          elevation: 0,
                         ),
                         onPressed: _isSaving ? null : _onSave,
                         child: _isSaving
@@ -409,12 +392,12 @@ class _SplitScreenState extends State<SplitScreen> {
                                     ),
                                   ),
                                   SizedBox(width: 12),
-                                  Text('Đang lưu...', style: TextStyle(fontSize: 16)),
+                                  Text('Đang lưu vào sổ quỹ...', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                                 ],
                               )
                             : const Text(
-                                'XÁC NHẬN VÀ LƯU',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                'Lưu Vào Sổ Quỹ Thu Chi',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: -0.2),
                               ),
                       ),
                     ),

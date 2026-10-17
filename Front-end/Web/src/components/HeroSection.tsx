@@ -77,7 +77,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="text-3xl sm:text-4xl md:text-5xl lg:text-[48px] font-black tracking-tight leading-[1.25] mb-6"
           >
-            <span className="text-[#ff4583]">Trợ Lý AI Quản Lý Dòng Tiền</span>{' '}
+            <span className="text-[#ff4783]">Trợ Lý AI Quản Lý Dòng Tiền</span>{' '}
             <br className="hidden md:inline" />
             <span className="text-slate-950">&amp; Đối Soát Hóa Đơn Cho Hộ Kinh Doanh</span>
           </motion.h1>
@@ -102,9 +102,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <Magnet padding={25} magnetStrength={0.3}>
               <button
                 onClick={onOpenScan}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 text-base font-black shadow-xl shadow-[#d0f81b]/35 active:scale-95 transition-all ring-4 ring-[#d0f81b]/25 border border-[#bde412] cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-base font-black shadow-xl shadow-[#ff4783]/35 active:scale-95 transition-all ring-4 ring-[#ff4783]/25 border border-[#ff4783] cursor-pointer"
               >
-                <Camera className="w-5 h-5 text-slate-950" />
+                <Camera className="w-5 h-5 text-white" />
                 <span>Trải Nghiệm Miễn Phí Ngay (0đ)</span>
               </button>
             </Magnet>
@@ -176,11 +176,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-1.5 text-[11px] text-white/70">
-                <BellRing className="w-3 h-3 text-emerald-400" />
+                <BellRing className="w-3 h-3 text-[#d0f81b]" />
                 <span className="font-bold text-white">VikeSo Bot Telegram</span>
                 <span>• 22:00</span>
               </div>
-              <div className="text-xs font-extrabold text-emerald-400 mt-0.5 font-mono">
+              <div className="text-xs font-black text-[#d0f81b] mt-0.5 font-mono">
                 +11.250.000 đ Lãi ròng hôm nay
               </div>
               <p className="text-[10px] text-white/80">Đã chốt đối soát 42 đơn, ngủ ngon thôi chủ hộ!</p>
@@ -250,7 +250,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                {/* 3 Cash KPI Cards with Emerald Green & Rose */}
+                {/* 3 Cash KPI Cards with Hot Pink, Dark Slate & Cyber Lime */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
                   {/* Tiền Vào (Thu) */}
                   <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 backdrop-blur-md hover:border-slate-600 transition-all">
@@ -258,11 +258,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
                         Tiền Vào (Thu)
                       </span>
-                      <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                      <div className="w-7 h-7 rounded-full bg-[#ff4783]/20 text-[#ff4783] flex items-center justify-center">
                         <ArrowDownLeft className="w-4 h-4" />
                       </div>
                     </div>
-                    <div className="text-2xl font-black text-emerald-400 font-mono font-tabular">
+                    <div className="text-2xl font-black text-[#ff4783] font-mono font-tabular">
                       +15.450.000 đ
                     </div>
                     <div className="text-xs text-slate-400 mt-1 font-medium">
@@ -289,20 +289,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </div>
 
                   {/* Thực Thu (Lợi Nhuận Dòng Tiền) */}
-                  <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-600/30 via-slate-800/80 to-slate-800/80 border border-emerald-500/40 backdrop-blur-md">
+                  <div className="p-5 rounded-2xl bg-gradient-to-br from-[#d0f81b]/15 via-slate-800/80 to-slate-800/80 border border-[#d0f81b]/30 backdrop-blur-md">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#d0f81b]">
                         Lợi Nhuận Thực Thu
                       </span>
-                      <div className="w-7 h-7 rounded-full bg-emerald-500/30 text-emerald-300 flex items-center justify-center">
+                      <div className="w-7 h-7 rounded-full bg-[#d0f81b]/20 text-[#d0f81b] flex items-center justify-center">
                         <Wallet className="w-4 h-4" />
                       </div>
                     </div>
-                    <div className="text-2xl font-black text-emerald-300 font-mono font-tabular">
+                    <div className="text-2xl font-black text-[#d0f81b] font-mono font-tabular">
                       +11.250.000 đ
                     </div>
-                    <div className="text-xs text-emerald-200/90 mt-1 font-medium flex items-center gap-1">
-                      <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                    <div className="text-xs text-slate-300 mt-1 font-medium flex items-center gap-1">
+                      <TrendingUp className="w-3.5 h-3.5 text-[#d0f81b]" />
                       <span>Số liệu đối chiếu sạch 100% không lệch</span>
                     </div>
                   </div>
@@ -433,7 +433,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         <span>Kết Quả AI Bóc Tách Tự Động</span>
                       </span>
                       {hasScanned ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#d0f81b]/20 text-[#d0f81b] border border-[#d0f81b]/30 flex items-center gap-1">
                           <Check className="w-3 h-3" /> Đã Khớp (Đèn Xanh)
                         </span>
                       ) : (
@@ -446,7 +446,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <div className="my-3 space-y-2.5">
                       <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
                         <span className="text-xs text-slate-400">Tổng tiền thực thu</span>
-                        <span className="text-sm font-bold font-mono text-emerald-400">
+                        <span className="text-sm font-bold font-mono text-[#d0f81b]">
                           {hasScanned ? '2.850.000 đ' : '--- đ'}
                         </span>
                       </div>
@@ -467,7 +467,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                       <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
                         <span className="text-xs text-slate-400">Độ tin cậy nhận diện</span>
-                        <span className="text-xs font-bold font-mono text-emerald-400">
+                        <span className="text-xs font-bold font-mono text-[#d0f81b]">
                           {hasScanned ? '99.8% (Đạt chuẩn ghi sổ)' : '---'}
                         </span>
                       </div>

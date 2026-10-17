@@ -26,7 +26,7 @@ class ExcelExportService {
         bold: true,
         fontSize: 14,
         fontColorHex: ExcelColor.fromHexString('#FFFFFF'),
-        backgroundColorHex: ExcelColor.fromHexString('#FF5C8D'),
+        backgroundColorHex: ExcelColor.fromHexString('#FF4783'),
         horizontalAlign: HorizontalAlign.Center,
       );
 
@@ -202,7 +202,7 @@ class ExcelExportService {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Xuất báo cáo thất bại: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFFFF4783),
           ),
         );
       }

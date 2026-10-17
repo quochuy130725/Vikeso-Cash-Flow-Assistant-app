@@ -48,8 +48,8 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF198754),
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).colorScheme.primary,
               onPrimary: Colors.white,
               onSurface: Colors.black87,
             ),
@@ -81,12 +81,23 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     final compareDate = DateTime(date.year, date.month, date.day);
 
     final formatter = DateFormat('dd/MM/yyyy');
+    final dateStr = formatter.format(date);
     if (compareDate == today) {
-      return 'Hôm nay, ${formatter.format(date)}';
+      return 'Hôm nay, $dateStr';
     } else if (compareDate == yesterday) {
-      return 'Hôm qua, ${formatter.format(date)}';
+      return 'Hôm qua, $dateStr';
     } else {
-      return DateFormat('EEEE, dd/MM/yyyy', 'vi').format(date);
+      const weekdays = [
+        'Thứ Hai',
+        'Thứ Ba',
+        'Thứ Tư',
+        'Thứ Năm',
+        'Thứ Sáu',
+        'Thứ Bảy',
+        'Chủ Nhật',
+      ];
+      final weekdayName = weekdays[date.weekday - 1];
+      return '$weekdayName, $dateStr';
     }
   }
 
@@ -155,24 +166,26 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     final currencyFormatter = NumberFormat('#,###', 'vi_VN');
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
-          'Nhập Giao Dịch Thủ Công',
+          'Ghi Chép Giao Dịch',
           style: TextStyle(
-            color: Color(0xFF191C1D),
-            fontWeight: FontWeight.bold,
+            color: Color(0xFF0F172A),
+            fontWeight: FontWeight.w800,
             fontSize: 18,
+            letterSpacing: -0.3,
           ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
-        elevation: 0.5,
-        iconTheme: const IconThemeData(color: Color(0xFF191C1D)),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
           child: Form(
             key: _formKey,
             child: Column(
@@ -188,18 +201,29 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                             _transactionType = 'THU';
                           });
                         },
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
                             color: _transactionType == 'THU'
-                                ? const Color(0xFF198754)
+                                ? const Color(0xFFFF4783)
                                 : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: const Color(0xFF198754),
+                              color: _transactionType == 'THU'
+                                  ? const Color(0xFFFF4783)
+                                  : const Color(0xFFE2E8F0),
                               width: 1.5,
                             ),
+                            boxShadow: _transactionType == 'THU'
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFFFF4783).withValues(alpha: 0.25),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 3),
+                                    )
+                                  ]
+                                : null,
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -208,18 +232,18 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                                 Icons.arrow_downward_rounded,
                                 color: _transactionType == 'THU'
                                     ? Colors.white
-                                    : const Color(0xFF198754),
+                                    : const Color(0xFFFF4783),
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'TIỀN THU',
+                                'KHOẢN THU (+)',
                                 style: TextStyle(
                                   color: _transactionType == 'THU'
                                       ? Colors.white
-                                      : const Color(0xFF198754),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
+                                      : const Color(0xFFFF4783),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
@@ -235,18 +259,29 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                             _transactionType = 'CHI';
                           });
                         },
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
                             color: _transactionType == 'CHI'
-                                ? const Color(0xFFDC3545)
+                                ? const Color(0xFFD0F81B)
                                 : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: const Color(0xFFDC3545),
+                              color: _transactionType == 'CHI'
+                                  ? const Color(0xFFD0F81B)
+                                  : const Color(0xFFE2E8F0),
                               width: 1.5,
                             ),
+                            boxShadow: _transactionType == 'CHI'
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFFD0F81B).withValues(alpha: 0.35),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 3),
+                                    )
+                                  ]
+                                : null,
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -254,19 +289,19 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                               Icon(
                                 Icons.arrow_upward_rounded,
                                 color: _transactionType == 'CHI'
-                                    ? Colors.white
-                                    : const Color(0xFFDC3545),
+                                    ? const Color(0xFF0F172A)
+                                    : const Color(0xFF0F172A),
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'TIỀN CHI',
+                                'KHOẢN CHI (-)',
                                 style: TextStyle(
                                   color: _transactionType == 'CHI'
-                                      ? Colors.white
-                                      : const Color(0xFFDC3545),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
+                                      ? const Color(0xFF0F172A)
+                                      : const Color(0xFF64748B),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
@@ -284,13 +319,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,9 +327,9 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                       const Text(
                         'Số tiền giao dịch *',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF6C757D),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF64748B),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -329,26 +358,26 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                         },
                         style: TextStyle(
                           fontSize: 26,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w900,
                           color: _transactionType == 'THU'
-                              ? const Color(0xFF198754)
-                              : const Color(0xFFDC3545),
+                              ? const Color(0xFFFF4783)
+                              : const Color(0xFF0F172A),
                         ),
                         decoration: const InputDecoration(
                           hintText: '0',
                           hintStyle: TextStyle(
-                            color: Colors.black26,
+                            color: Color(0xFFCBD5E1),
                             fontSize: 26,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w900,
                           ),
                           suffixText: 'đ',
                           suffixStyle: TextStyle(
                             fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black54,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF64748B),
                           ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.all(0),
+                          contentPadding: EdgeInsets.zero,
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -368,13 +397,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,9 +405,9 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                       const Text(
                         'Ngày giao dịch *',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF6C757D),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF64748B),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -397,33 +420,33 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                             vertical: 12,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF1F3F5),
+                            color: const Color(0xFFF8FAFC),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: const Color(0xFFE9ECEF),
+                              color: const Color(0xFFE2E8F0),
                             ),
                           ),
                           child: Row(
                             children: [
                               const Icon(
                                 Icons.calendar_today_outlined,
-                                color: Color(0xFF198754),
-                                size: 20,
+                                color: Color(0xFFFF4783),
+                                size: 18,
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   _formatDisplayDate(_selectedDate),
                                   style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF212529),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF0F172A),
                                   ),
                                 ),
                               ),
                               const Icon(
-                                Icons.arrow_drop_down,
-                                color: Color(0xFF6C757D),
+                                Icons.keyboard_arrow_down_rounded,
+                                color: Color(0xFF64748B),
                               ),
                             ],
                           ),
@@ -440,23 +463,17 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Danh mục giao dịch',
+                        'Danh mục chứng từ',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF6C757D),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF64748B),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -468,17 +485,17 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                             vertical: 12,
                           ),
                           filled: true,
-                          fillColor: const Color(0xFFF1F3F5),
+                          fillColor: const Color(0xFFF8FAFC),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(
-                              color: Color(0xFFE9ECEF),
+                              color: Color(0xFFE2E8F0),
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(
-                              color: Color(0xFFE9ECEF),
+                              color: Color(0xFFE2E8F0),
                             ),
                           ),
                         ),
@@ -488,8 +505,9 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                             child: Text(
                               entry.value,
                               style: const TextStyle(
-                                fontSize: 15,
-                                color: Color(0xFF212529),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF0F172A),
                               ),
                             ),
                           );
@@ -513,23 +531,17 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Lý do / Nội dung',
+                        'Lý do / Nội dung giao dịch',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF6C757D),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF64748B),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -537,25 +549,30 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                         controller: _reasonController,
                         maxLines: 2,
                         decoration: InputDecoration(
-                          hintText: 'Nhập nội dung (VD: Tiền mua rau củ, Bán đơn lẻ...)',
+                          hintText: 'Nhập nội dung (VD: Mua rau củ quả, Thu tiền sầu riêng...)',
                           hintStyle: const TextStyle(
                             fontSize: 14,
-                            color: Colors.black38,
+                            color: Color(0xFF94A3B8),
                           ),
                           filled: true,
-                          fillColor: const Color(0xFFF1F3F5),
+                          fillColor: const Color(0xFFF8FAFC),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(
-                              color: Color(0xFFE9ECEF),
+                              color: Color(0xFFE2E8F0),
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(
-                              color: Color(0xFFE9ECEF),
+                              color: Color(0xFFE2E8F0),
                             ),
                           ),
+                        ),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF0F172A),
                         ),
                       ),
                     ],
@@ -567,12 +584,13 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleSave,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF198754),
+                    backgroundColor: const Color(0xFFFF4783),
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    elevation: 2,
+                    elevation: 0,
                   ),
                   child: _isLoading
                       ? const SizedBox(
@@ -580,15 +598,14 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                           width: 22,
                           child: CircularProgressIndicator(
                             strokeWidth: 2.5,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
                       : const Text(
-                          'LƯU GIAO DỊCH',
+                          'LƯU VÀO SỔ QUỸ',
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
                             color: Colors.white,
                             letterSpacing: 0.5,
                           ),

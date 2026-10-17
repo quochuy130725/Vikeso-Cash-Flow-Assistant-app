@@ -14,19 +14,29 @@
   --font-metric-display: 'JetBrains Mono', 'Be Vietnam Pro', monospace;
   --font-metric-unit: 'Be Vietnam Pro', sans-serif;
 
-  /* Primary Brand Lime Cyber (#d0f81b) - Tông màu chủ đạo */
-  --color-primary: #d0f81b;
-  --color-primary-hover: #bde412;
-  --color-primary-container: #1b2608;
-  --color-on-primary: #090d05;
-  --color-on-primary-container: #d0f81b;
-  --color-primary-fixed: #f4fee0;
-  --color-primary-fixed-dim: #e4fca0;
-  --color-on-primary-fixed: #182205;
-  --color-on-primary-fixed-variant: #283909;
-  --color-inverse-primary: #a3e635;
+  /* Primary Brand Hot Pink (#ff4783) - Tông màu nhận diện cốt lõi */
+  --color-primary: #ff4783;
+  --color-primary-hover: #e0326e;
+  --color-primary-container: #ffe4ee;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #880e3c;
+  --color-primary-fixed: #ffe4ee;
+  --color-primary-fixed-dim: #fecddf;
+  --color-on-primary-fixed: #880e3c;
+  --color-on-primary-fixed-variant: #b01755;
+  --color-inverse-primary: #ff85ab;
 
-  /* AI Intelligence & Secondary */
+  /* Accent Cyber Lime (#d0f81b) - Công nghệ AI & Dòng tiền vào (+THU) */
+  --color-brand-lime: #d0f81b;
+  --color-brand-lime-hover: #bde412;
+  --color-brand-lime-dark: #273805;
+  --color-brand-lime-container: #1b2608;
+  --color-on-brand-lime: #090d05;
+  --color-on-brand-lime-container: #d0f81b;
+  --color-accent-lime: #d0f81b;
+  --color-on-accent-lime: #090d05;
+
+  /* Secondary Deep Slate & Cockpit Dark (#0f172a / #090d05) */
   --color-secondary: #0f172a;
   --color-secondary-container: #1e293b;
   --color-on-secondary: #ffffff;
@@ -36,7 +46,7 @@
   --color-on-secondary-fixed: #0f172a;
   --color-on-secondary-fixed-variant: #334155;
 
-  /* Money Out / Alert (Rose/Crimson) */
+  /* Money Out / Alert (Rose/Crimson #e11d48) */
   --color-tertiary: #e11d48;
   --color-tertiary-container: #be123c;
   --color-on-tertiary: #ffffff;
@@ -46,7 +56,7 @@
   --color-on-tertiary-fixed: #881337;
   --color-on-tertiary-fixed-variant: #9f1239;
 
-  /* Neutrals & Surfaces - Nền Trắng Tinh Tế Chuẩn UI */
+  /* Neutrals & Surfaces - Nền Trắng Tinh Khiết (#ffffff) */
   --color-surface: #ffffff;
   --color-surface-dim: #f8faf6;
   --color-surface-bright: #ffffff;
@@ -56,14 +66,14 @@
   --color-surface-container-high: #e2e8df;
   --color-surface-container-highest: #94a3b8;
   --color-surface-variant: #f4f7f0;
-  --color-surface-tint: #d0f81b;
+  --color-surface-tint: #ff4783;
 
-  --color-on-surface: #0f172a;
+  --color-on-surface: #090d05;
   --color-on-surface-variant: #334155;
   --color-outline: #cbd5e1;
   --color-outline-variant: #e2e8f0;
   --color-background: #ffffff;
-  --color-on-background: #0f172a;
+  --color-on-background: #090d05;
   --color-inverse-surface: #090d05;
   --color-inverse-on-surface: #f8faf6;
 
@@ -73,13 +83,13 @@
   --color-on-error-container: #881337;
 
   /* Semantic Brand Overrides */
-  --color-brand-lime: #d0f81b;
-  --color-brand-lime-hover: #bde412;
-  --color-brand-lime-dark: #273805;
+  --color-brand-pink: #ff4783;
+  --color-brand-pink-hover: #e0326e;
+  --color-brand-pink-light: #ffe4ee;
   --color-emerald-vikeso: #d0f81b;
   --color-emerald-light: #e4fca0;
-  --color-pink-vikeso: #d0f81b;
-  --color-pink-bright: #e4fca0;
+  --color-pink-vikeso: #ff4783;
+  --color-pink-bright: #ff6e9d;
   --color-danger-vikeso: #e11d48;
   --color-warning-vikeso: #d97706;
   --color-surface-bg: #ffffff;
@@ -96,7 +106,25 @@
 }
 
 @layer components {
-  /* Nút bấm chủ đạo Lime Cyber trên nền trắng */
+  /* Nút bấm chủ đạo Hot Pink (#ff4783) */
+  .btn-pink-primary {
+    background-color: #ff4783;
+    color: #ffffff;
+    font-weight: 700;
+    border: 1px solid #ff4783;
+    box-shadow: 0 4px 18px -2px rgba(255, 71, 131, 0.4);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-pink-primary:hover {
+    background-color: #e0326e;
+    box-shadow: 0 6px 24px -2px rgba(255, 71, 131, 0.55);
+    transform: translateY(-1px);
+  }
+  .btn-pink-primary:active {
+    transform: scale(0.98);
+  }
+
+  /* Nút bấm phụ Cyber Lime (#d0f81b) */
   .btn-lime-primary {
     background-color: #d0f81b;
     color: #090d05;
@@ -119,6 +147,13 @@
     background-color: rgba(208, 248, 27, 0.18);
     color: #273805;
     border: 1px solid rgba(208, 248, 27, 0.65);
+  }
+
+  /* Huy hiệu Pink tinh tế */
+  .badge-pink {
+    background-color: rgba(255, 71, 131, 0.12);
+    color: #b01755;
+    border: 1px solid rgba(255, 71, 131, 0.4);
   }
 }
 

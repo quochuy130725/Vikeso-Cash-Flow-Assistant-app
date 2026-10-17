@@ -13,7 +13,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
-import { loginUser, registerUser, prewarmServer } from '../services/authApi';
+import { loginUser, registerUser } from '../services/authApi';
 
 export interface UserAccount {
   id?: string;
@@ -53,24 +53,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [phone, setPhone] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingSeconds, setLoadingSeconds] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMode, setSuccessMode] = useState<string | null>(null);
-
-  React.useEffect(() => {
-    let timer: any;
-    if (isLoading) {
-      setLoadingSeconds(0);
-      timer = setInterval(() => {
-        setLoadingSeconds((prev) => prev + 1);
-      }, 1000);
-    } else {
-      setLoadingSeconds(0);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [isLoading]);
 
   // Reset states on open/mode switch
   React.useEffect(() => {
@@ -232,7 +216,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div>
               <h3 className="font-bold text-sm text-white flex items-center gap-2">
                 <span>{mode === 'login' ? 'Đăng Nhập Tài Khoản' : 'Đăng Ký Tài Khoản Mới'}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#d0f81b]/20 text-[#d0f81b] font-bold border border-[#d0f81b]/40">
                   VikeSo AI
                 </span>
               </h3>
@@ -293,7 +277,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               className="py-10 text-center space-y-3"
             >
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-[#d0f81b]/20 text-[#d0f81b] mx-auto flex items-center justify-center">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
               <h4 className="text-lg font-bold text-white">
@@ -321,7 +305,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <>
                   <div>
                     <label className="text-xs font-semibold text-slate-300 block mb-1">
-                      Họ và Tên chủ cơ sở <span className="text-emerald-400">*</span>
+                      Họ và Tên chủ cơ sở <span className="text-[#ff4783]">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -330,7 +314,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="VD: Nguyễn Văn Cường"
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-[#ff4783] transition-colors"
                       />
                       <User className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                     </div>
@@ -338,7 +322,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                   <div>
                     <label className="text-xs font-semibold text-slate-300 block mb-1">
-                      Tên Vựa / Cửa hàng / Hộ kinh doanh <span className="text-emerald-400">*</span>
+                      Tên Vựa / Cửa hàng / Hộ kinh doanh <span className="text-[#ff4783]">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -347,7 +331,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         value={storeName}
                         onChange={(e) => setStoreName(e.target.value)}
                         placeholder="VD: Vựa Sầu Riêng Ba Cường"
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-[#ff4783] transition-colors"
                       />
                       <Store className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                     </div>
@@ -363,7 +347,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="VD: 0988 888 999"
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-[#ff4783] transition-colors"
                       />
                       <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                     </div>
@@ -371,10 +355,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </>
               )}
 
+
               {/* Email field */}
               <div>
                 <label className="text-xs font-semibold text-slate-300 block mb-1">
-                  Email đăng nhập <span className="text-emerald-400">*</span>
+                  Email đăng nhập <span className="text-[#ff4783]">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -383,7 +368,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="email@example.com"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-[#ff4783] transition-colors"
                   />
                   <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                 </div>
@@ -393,13 +378,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-semibold text-slate-300">
-                    Mật khẩu <span className="text-emerald-400">*</span>
+                    Mật khẩu <span className="text-[#ff4783]">*</span>
                   </label>
                   {mode === 'login' && (
                     <button
                       type="button"
                       onClick={() => alert('Vui lòng liên hệ hỗ trợ hoặc kiểm tra email để đặt lại mật khẩu.')}
-                      className="text-[11px] text-emerald-400 hover:underline cursor-pointer"
+                      className="text-[11px] text-[#ff4783] hover:underline cursor-pointer font-semibold"
                     >
                       Quên mật khẩu?
                     </button>
@@ -412,7 +397,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Tối thiểu 6 ký tự"
-                    className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                    className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-[#ff4783] transition-colors"
                   />
                   <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                   <button
@@ -429,7 +414,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               {mode === 'register' && (
                 <div>
                   <label className="text-xs font-semibold text-slate-300 block mb-1">
-                    Xác nhận lại mật khẩu <span className="text-emerald-400">*</span>
+                    Xác nhận lại mật khẩu <span className="text-[#ff4783]">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -438,7 +423,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Nhập lại mật khẩu trên"
-                      className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                      className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-[#ff4783] transition-colors"
                     />
                     <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                     <button
@@ -459,7 +444,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-emerald-600 focus:ring-0"
+                    className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-[#ff4783] focus:ring-0"
                   />
                   <span>Ghi nhớ đăng nhập trên thiết bị này</span>
                 </label>
@@ -469,17 +454,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#d0f81b]/25 active:scale-98 transition-all disabled:opacity-50 cursor-pointer border border-[#bde412]"
+                className="w-full py-3.5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#ff4783]/30 active:scale-98 transition-all disabled:opacity-50 cursor-pointer border border-[#ff4783]"
               >
                 {isLoading ? (
-                  <span className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
-                <span>{loadingSeconds > 2 ? 'Đang khởi động máy chủ đám mây (Render)...' : 'Đang xử lý dữ liệu...'}</span>
-              </span>
+                  <span>Đang xử lý dữ liệu...</span>
                 ) : (
                   <>
                     <span>{mode === 'login' ? 'Đăng Nhập Ngay' : 'Hoàn Tất Đăng Ký (1-Chạm)'}</span>
-                    <ArrowRight className="w-4 h-4 text-slate-950" />
+                    <ArrowRight className="w-4 h-4 text-white" />
                   </>
                 )}
               </button>

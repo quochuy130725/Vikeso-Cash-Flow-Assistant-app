@@ -139,17 +139,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Logo
                   Center(
                     child: Container(
-                      width: 90,
-                      height: 90,
-                      padding: const EdgeInsets.all(8),
+                      width: 72,
+                      height: 72,
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
+                        color: const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: colorScheme.primary.withValues(alpha: 0.15),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 16,
-                            offset: const Offset(0, 6),
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
@@ -159,16 +159,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Text(
+                  const SizedBox(height: 16),
+                  const Text(
                     'Vikeso',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: colorScheme.primary),
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Color(0xFF0F172A), letterSpacing: -0.5),
                   ),
+                  const SizedBox(height: 4),
                   Text(
-                    _isRegisterMode ? 'Tạo tài khoản mới' : 'Đăng nhập để tiếp tục',
+                    _isRegisterMode ? 'Đăng ký tài khoản quản lý dòng tiền' : 'Đăng nhập vào sổ quỹ cửa hàng',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 32),
 
@@ -177,18 +178,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red.shade200),
+                        color: const Color(0xFFFF4783).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFFF4783).withValues(alpha: 0.25)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                          const Icon(Icons.error_outline_rounded, color: Color(0xFFFF4783), size: 18),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               _errorMessage!,
-                              style: const TextStyle(color: Colors.red, fontSize: 13),
+                              style: const TextStyle(color: Color(0xFFFF4783), fontSize: 13, fontWeight: FontWeight.w600),
                             ),
                           ),
                         ],
@@ -202,7 +203,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: _shopNameController,
                       decoration: _inputDecoration(
-                        label: 'Tên cửa hàng (tùy chọn)',
+                        label: 'Tên cửa hàng / Hộ kinh doanh',
                         icon: Icons.storefront_outlined,
                         colorScheme: colorScheme,
                       ),
@@ -216,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     keyboardType: _isRegisterMode ? TextInputType.emailAddress : TextInputType.text,
                     decoration: _inputDecoration(
                       label: _isRegisterMode ? 'Email đăng nhập' : 'Email hoặc Số điện thoại',
-                      hint: _isRegisterMode ? 'VD: test@example.com' : 'VD: email@example.com hoặc 0987654321',
+                      hint: _isRegisterMode ? 'VD: cuahang@vikeso.vn' : 'VD: cuahang@vikeso.vn hoặc 0987654321',
                       icon: _isRegisterMode ? Icons.email_outlined : Icons.person_outline,
                       colorScheme: colorScheme,
                     ),
@@ -245,8 +246,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ).copyWith(
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                          color: colorScheme.outlineVariant,
+                          _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                          color: const Color(0xFF64748B),
                         ),
                         onPressed: () => setState(() { _obscurePassword = !_obscurePassword; }),
                       ),
@@ -257,27 +258,40 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
-                  if (!_isRegisterMode)
+                  if (!_isRegisterMode) ...[
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: _isLoading ? null : _openForgotPassword,
-                        child: const Text('Quên mật khẩu?', style: TextStyle(fontWeight: FontWeight.w600)),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                        ),
+                        child: const Text(
+                          'Quên mật khẩu?',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
                       ),
                     ),
-                  SizedBox(height: _isRegisterMode ? 24 : 8),
+                    const SizedBox(height: 8),
+                  ] else ...[
+                    const SizedBox(height: 20),
+                  ],
 
                   // Nut Dang nhap / Dang ky
                   SizedBox(
-                    height: 50,
+                    height: 52,
                     child: ElevatedButton(
                       onPressed: _isLoading
                           ? null
                           : (_isRegisterMode ? _handleRegister : _handleLogin),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primaryContainer,
-                        foregroundColor: colorScheme.onPrimaryContainer,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        backgroundColor: const Color(0xFFFF4783),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         elevation: 0,
                       ),
                       child: _isLoading
@@ -286,22 +300,22 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                             )
                           : Text(
-                              _isRegisterMode ? 'Tạo tài khoản' : 'Đăng nhập',
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                              _isRegisterMode ? 'Đăng Ký Tài Khoản' : 'Đăng Nhập',
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: -0.2),
                             ),
                     ),
                   ),
                   const SizedBox(height: 20),
 
                   // Duong chia HOAC
-                  Row(
+                  const Row(
                     children: [
-                      Expanded(child: Divider(color: colorScheme.surfaceContainerHighest, thickness: 1)),
+                      Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('HOẶC', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colorScheme.outlineVariant)),
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('HOẶC', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF94A3B8))),
                       ),
-                      Expanded(child: Divider(color: colorScheme.surfaceContainerHighest, thickness: 1)),
+                      Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -314,13 +328,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       icon: Image.network(
                         'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png',
                         height: 20, width: 20,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 24, color: Colors.red),
+                        errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 24, color: Color(0xFFFF4783)),
                       ),
-                      label: const Text('Đăng nhập với Google'),
+                      label: const Text(
+                        'Đăng nhập với Google',
+                        style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w700, fontSize: 14),
+                      ),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: colorScheme.onSurface,
-                        side: BorderSide(color: colorScheme.outlineVariant),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        backgroundColor: Colors.white,
                       ),
                     ),
                   ),
@@ -336,12 +353,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       }),
                       child: RichText(
                         text: TextSpan(
-                          style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
+                          style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
                           children: [
                             TextSpan(text: _isRegisterMode ? 'Đã có tài khoản? ' : 'Chưa có tài khoản? '),
                             TextSpan(
                               text: _isRegisterMode ? 'Đăng nhập' : 'Đăng ký ngay',
-                              style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
+                              style: const TextStyle(color: Color(0xFFFF4783), fontWeight: FontWeight.w800),
                             ),
                           ],
                         ),
@@ -364,13 +381,17 @@ class _LoginScreenState extends State<LoginScreen> {
     required ColorScheme colorScheme,
   }) {
     return InputDecoration(
-      prefixIcon: Icon(icon, color: colorScheme.outline),
+      prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 20),
       labelText: label,
+      labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
       hintText: hint,
+      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: colorScheme.outlineVariant)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: colorScheme.primary, width: 2)),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.2)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFFF4783), width: 1.8)),
+      filled: true,
+      fillColor: Colors.white,
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
+import '../mock/mock_data.dart';
 import '../services/socket_service.dart';
 
 /// AuthRepository - Quản lý toàn bộ luồng xác thực FinAuto.
@@ -43,6 +44,32 @@ class AuthRepository {
 
   Future<AuthResult> loginWithEmail(
       {required String email, required String password}) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      final user = UserInfo(
+        id: MockData.demoUserId,
+        email: email.isNotEmpty ? email.trim() : MockData.demoEmail,
+        shopName: MockData.demoShopName,
+        authProvider: 'local',
+        accessToken: 'demo_jwt_token_header.payload.sig',
+        role: MockData.demoRole,
+        subscriptionPlan: MockData.demoPlan,
+        phone: MockData.demoPhone,
+      );
+
+      await Future.wait([
+        _storage.write(key: _kAccessToken, value: 'demo_jwt_token_header.payload.sig'),
+        _storage.write(key: _kUserId, value: user.id),
+        _storage.write(key: _kEmail, value: user.email),
+        _storage.write(key: _kShopName, value: user.shopName),
+        _storage.write(key: _kRole, value: user.role),
+        _storage.write(key: _kSubscriptionPlan, value: user.subscriptionPlan),
+        _storage.write(key: _kPhone, value: user.phone ?? ''),
+      ]);
+
+      return AuthResult.success(user);
+    }
+
     try {
       final uri = Uri.parse('$_authBaseUrl/login');
       final response = await http
@@ -99,6 +126,33 @@ class AuthRepository {
   }
 
   Future<AuthResult> loginWithGoogle() async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      const user = UserInfo(
+        id: MockData.demoUserId,
+        email: MockData.demoEmail,
+        shopName: MockData.demoShopName,
+        authProvider: 'google',
+        accessToken: 'demo_jwt_token_google_header.payload.sig',
+        role: MockData.demoRole,
+        subscriptionPlan: MockData.demoPlan,
+        phone: MockData.demoPhone,
+      );
+
+      await Future.wait([
+        _storage.write(key: _kAccessToken, value: 'demo_jwt_token_google_header.payload.sig'),
+        _storage.write(key: _kUserId, value: user.id),
+        _storage.write(key: _kEmail, value: user.email),
+        _storage.write(key: _kShopName, value: user.shopName),
+        _storage.write(key: _kRole, value: user.role),
+        _storage.write(key: _kSubscriptionPlan, value: user.subscriptionPlan),
+        _storage.write(key: _kPhone, value: user.phone ?? ''),
+        _storage.write(key: _kProvider, value: 'google'),
+      ]);
+
+      return AuthResult.success(user);
+    }
+
     try {
       final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
@@ -134,6 +188,32 @@ class AuthRepository {
   }
 
   Future<UserInfo?> autoLogin() async {
+    if (MockData.useMockDemo) {
+      final token = await _storage.read(key: _kAccessToken);
+      if (token == null) {
+        // Tự động khởi tạo phiên cho tài khoản demo
+        await Future.wait([
+          _storage.write(key: _kAccessToken, value: 'demo_jwt_token_header.payload.sig'),
+          _storage.write(key: _kUserId, value: MockData.demoUserId),
+          _storage.write(key: _kEmail, value: MockData.demoEmail),
+          _storage.write(key: _kShopName, value: MockData.demoShopName),
+          _storage.write(key: _kRole, value: MockData.demoRole),
+          _storage.write(key: _kSubscriptionPlan, value: MockData.demoPlan),
+          _storage.write(key: _kPhone, value: MockData.demoPhone),
+        ]);
+      }
+      return UserInfo(
+        id: MockData.demoUserId,
+        email: await _storage.read(key: _kEmail) ?? MockData.demoEmail,
+        shopName: await _storage.read(key: _kShopName) ?? MockData.demoShopName,
+        authProvider: 'local',
+        role: await _storage.read(key: _kRole) ?? MockData.demoRole,
+        subscriptionPlan: await _storage.read(key: _kSubscriptionPlan) ?? MockData.demoPlan,
+        phone: await _storage.read(key: _kPhone) ?? MockData.demoPhone,
+        accessToken: 'demo_jwt_token_header.payload.sig',
+      );
+    }
+
     try {
       final token = await _storage.read(key: _kAccessToken);
       final userId = await _storage.read(key: _kUserId);
@@ -170,6 +250,24 @@ class AuthRepository {
 
   /// Làm mới thông tin user từ server (role, plan, phone, ...)
   Future<UserInfo?> fetchUserProfile() async {
+    if (MockData.useMockDemo) {
+      final role = await _storage.read(key: _kRole) ?? MockData.demoRole;
+      final plan = await _storage.read(key: _kSubscriptionPlan) ?? MockData.demoPlan;
+      final shopName = await _storage.read(key: _kShopName) ?? MockData.demoShopName;
+      final email = await _storage.read(key: _kEmail) ?? MockData.demoEmail;
+      final phone = await _storage.read(key: _kPhone) ?? MockData.demoPhone;
+      return UserInfo(
+        id: MockData.demoUserId,
+        email: email,
+        shopName: shopName,
+        authProvider: 'local',
+        role: role,
+        subscriptionPlan: plan,
+        phone: phone,
+        accessToken: 'demo_jwt_token_header.payload.sig',
+      );
+    }
+
     try {
       final token = await getAccessToken();
       if (token == null) return null;
@@ -326,8 +424,8 @@ class AuthRepository {
 
   Future<String?> getAccessToken() => _storage.read(key: _kAccessToken);
   Future<String?> getUserId() => _storage.read(key: _kUserId);
-  Future<String> getRole() async => (await _storage.read(key: _kRole)) ?? 'OWNER';
-  Future<String> getSubscriptionPlan() async => (await _storage.read(key: _kSubscriptionPlan)) ?? 'FREE';
+  Future<String> getRole() async => (await _storage.read(key: _kRole)) ?? (MockData.useMockDemo ? MockData.demoRole : 'OWNER');
+  Future<String> getSubscriptionPlan() async => (await _storage.read(key: _kSubscriptionPlan)) ?? (MockData.useMockDemo ? MockData.demoPlan : 'FREE');
 
   Future<AuthResult> _handleAuthResponse(http.Response response) async {
     final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -335,6 +433,7 @@ class AuthRepository {
         body['success'] == true) {
       final accessToken = body['accessToken'] as String;
       final userInfo = body['userInfo'] as Map<String, dynamic>;
+      final resolvedUserId = userInfo['id']?.toString() ?? userInfo['_id']?.toString() ?? '';
       final role = userInfo['role']?.toString() ?? 'OWNER';
       final plan = userInfo['subscriptionPlan']?.toString() ?? 'FREE';
       final phone = userInfo['phone']?.toString() ?? '';
@@ -346,7 +445,7 @@ class AuthRepository {
 
       await Future.wait([
         _storage.write(key: _kAccessToken, value: accessToken),
-        _storage.write(key: _kUserId, value: userInfo['id']?.toString() ?? ''),
+        _storage.write(key: _kUserId, value: resolvedUserId),
         _storage.write(
             key: _kEmail, value: userInfo['email']?.toString() ?? ''),
         if (name.isNotEmpty) _storage.write(key: _kName, value: name),
@@ -369,7 +468,7 @@ class AuthRepository {
       SocketService.instance.connect();
 
       return AuthResult.success(UserInfo(
-        id: userInfo['id']?.toString() ?? '',
+        id: resolvedUserId,
         email: userInfo['email']?.toString() ?? '',
         name: name.isNotEmpty ? name : null,
         shopName: userInfo['shopName']?.toString() ?? '',

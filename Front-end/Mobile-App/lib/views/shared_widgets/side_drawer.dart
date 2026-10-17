@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../data/repositories/auth_repository.dart';
+import 'pro_badge.dart';
 
 class CustomSideDrawer extends StatefulWidget {
   const CustomSideDrawer({super.key});
@@ -13,7 +14,6 @@ class _CustomSideDrawerState extends State<CustomSideDrawer> {
   static const _storage = FlutterSecureStorage(aOptions: AndroidOptions());
   String _shopName = 'Cửa hàng Vikeso';
   String _email = '';
-  String _role = 'OWNER';
   String _plan = 'FREE';
 
   @override
@@ -25,14 +25,12 @@ class _CustomSideDrawerState extends State<CustomSideDrawer> {
   Future<void> _loadUserHeader() async {
     final shopName = await _storage.read(key: 'user_shopName');
     final email = await _storage.read(key: 'user_email');
-    final role = await AuthRepository().getRole();
     final plan = await AuthRepository().getSubscriptionPlan();
 
     if (mounted) {
       setState(() {
         if (shopName != null && shopName.isNotEmpty) _shopName = shopName;
         if (email != null && email.isNotEmpty) _email = email;
-        _role = role;
         _plan = plan;
       });
     }
@@ -40,10 +38,7 @@ class _CustomSideDrawerState extends State<CustomSideDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final isPro = _plan.toUpperCase() == 'PRO';
-    final isAdmin = _role.toUpperCase() == 'ADMIN';
 
     return Drawer(
       child: Column(
@@ -51,32 +46,32 @@ class _CustomSideDrawerState extends State<CustomSideDrawer> {
         children: [
           // Header của Drawer chứa thông tin cá nhân/cửa hàng
           DrawerHeader(
-            decoration: BoxDecoration(
-              gradient: isPro
-                  ? const LinearGradient(
-                      colors: [Color(0xFF2C1654), Color(0xFFFF5C8D)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : null,
-              color: isPro ? null : colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
+              ),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 52,
-                  height: 52,
+                  width: 54,
+                  height: 54,
                   decoration: BoxDecoration(
-                    color: isPro ? const Color(0xFFFFD700) : colorScheme.primaryContainer,
+                    color: const Color(0xFFFFF0F5),
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFFFF4783),
+                      width: 2.2,
+                    ),
                   ),
                   child: Center(
                     child: Text(
                       _shopName.isNotEmpty ? _shopName[0].toUpperCase() : 'V',
-                      style: TextStyle(
-                        color: isPro ? Colors.black87 : colorScheme.onPrimaryContainer,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                      style: const TextStyle(
+                        color: Color(0xFFFF4783),
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
@@ -89,61 +84,59 @@ class _CustomSideDrawerState extends State<CustomSideDrawer> {
                     children: [
                       Text(
                         _shopName,
-                        style: TextStyle(
-                          color: isPro ? Colors.white : colorScheme.primary,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+                        style: const TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      const SizedBox(height: 2),
                       Text(
                         _email.isNotEmpty ? _email : 'Chủ cửa hàng',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isPro ? Colors.white70 : Colors.grey[700],
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: isPro
-                                  ? const Color(0xFFFFD700)
-                                  : Colors.grey[300],
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              isPro ? 'PRO MEMBER' : 'FREE PLAN',
-                              style: TextStyle(
-                                color: isPro ? Colors.black87 : Colors.grey[800],
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                              color: isPro ? const Color(0xFFD0F81B) : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: isPro ? const Color(0xFF0F172A) : const Color(0xFFCBD5E1),
+                                width: 1,
                               ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isPro)
+                                  const Icon(Icons.verified, size: 12, color: Color(0xFF0F172A))
+                                else
+                                  const Icon(Icons.storefront, size: 12, color: Color(0xFF64748B)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  isPro ? 'GÓI PRO' : 'GÓI CƠ BẢN',
+                                  style: TextStyle(
+                                    color: isPro ? const Color(0xFF0F172A) : const Color(0xFF475569),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          if (isAdmin) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.redAccent,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Text(
-                                'ADMIN',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
                         ],
                       ),
                     ],
@@ -162,17 +155,16 @@ class _CustomSideDrawerState extends State<CustomSideDrawer> {
                   Navigator.pop(context);
                   Navigator.of(context).pushNamed('/analytics');
                 }),
-                _buildDrawerItem(Icons.workspace_premium, 'Nâng cấp gói VikeSo PRO', () {
-                  Navigator.pop(context);
-                  Navigator.of(context).pushNamed('/upgrade-pro');
-                }, iconColor: const Color(0xFFFF5C8D)),
-
-                // Mục dành riêng cho Admin nếu user có role ADMIN
-                if (isAdmin)
-                  _buildDrawerItem(Icons.admin_panel_settings_outlined, 'Quản trị hệ thống (Admin)', () {
+                _buildDrawerItem(
+                  Icons.workspace_premium_rounded,
+                  isPro ? 'Gói VikeSo PRO (Đang bật)' : 'Nâng cấp gói VikeSo PRO',
+                  () {
                     Navigator.pop(context);
-                    Navigator.of(context).pushNamed('/admin');
-                  }, iconColor: Colors.deepPurple),
+                    Navigator.of(context).pushNamed('/upgrade-pro');
+                  },
+                  iconColor: isPro ? const Color(0xFF0F172A) : const Color(0xFFFF4783),
+                  trailing: isPro ? const ProBadge() : null,
+                ),
 
                 const Divider(),
                 _buildDrawerItem(Icons.settings_outlined, 'Cài đặt', () {
@@ -203,10 +195,10 @@ class _CustomSideDrawerState extends State<CustomSideDrawer> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
+              leading: const Icon(Icons.logout, color: Color(0xFFFF4783)),
               title: const Text(
                 'Đăng xuất',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFFF4783)),
               ),
               onTap: () async {
                 await AuthRepository().logout();
@@ -221,10 +213,17 @@ class _CustomSideDrawerState extends State<CustomSideDrawer> {
     );
   }
 
-  Widget _buildDrawerItem(IconData icon, String title, VoidCallback onTap, {Color? iconColor}) {
+  Widget _buildDrawerItem(
+    IconData icon,
+    String title,
+    VoidCallback onTap, {
+    Color? iconColor,
+    Widget? trailing,
+  }) {
     return ListTile(
       leading: Icon(icon, color: iconColor ?? Colors.grey[700]),
       title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+      trailing: trailing,
       onTap: onTap,
     );
   }

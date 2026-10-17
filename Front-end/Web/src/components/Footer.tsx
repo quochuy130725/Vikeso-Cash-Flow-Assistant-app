@@ -35,7 +35,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
                 />
               </div>
               <span className="text-2xl font-black text-slate-950 tracking-tight">
-                Vike<span className="text-slate-950 bg-[#d0f81b] px-1.5 py-0.5 rounded-lg border border-[#bde412] ml-1">So</span>
+                Vike<span className="text-[#ff4783]">So</span>
               </span>
             </div>
 
@@ -156,7 +156,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
                 />
                 <button
                   type="submit"
-                  className="absolute right-1 top-1 bottom-1 px-3 bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 rounded-lg text-xs font-black transition-colors border border-[#bde412] cursor-pointer"
+                  className="absolute right-1 top-1 bottom-1 px-3 bg-[#ff4783] hover:bg-[#e0326e] text-white rounded-lg text-xs font-black transition-colors border border-[#ff4783] cursor-pointer shadow-xs"
                 >
                   Gửi
                 </button>

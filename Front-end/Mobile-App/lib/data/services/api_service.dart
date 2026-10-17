@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../mock/mock_data.dart';
 
 class ApiService {
   // ============================================================
@@ -21,6 +22,11 @@ class ApiService {
     required File imageFile,
     required String userId,
   }) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 600));
+      return MockData.getScanReceiptMockResult();
+    }
+
     try {
       final uri = Uri.parse('$_baseUrl/scan-receipt');
       final request = http.MultipartRequest('POST', uri);
@@ -77,6 +83,25 @@ class ApiService {
     required String userId,
     required List<Map<String, dynamic>> items,
   }) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      for (final item in items) {
+        final amountNum = double.tryParse(item['amount']?.toString() ?? '0') ?? 0.0;
+        MockData.addTransaction({
+          '_id': 'tx_demo_${DateTime.now().millisecondsSinceEpoch}',
+          'id': 'tx_demo_${DateTime.now().millisecondsSinceEpoch}',
+          'transactionType': item['transactionType'] ?? 'CHI',
+          'category': item['category'] ?? 'Hoa Don Le',
+          'totalAmount': amountNum,
+          'reason': item['reason'] ?? 'Giao dịch mới lưu',
+          'transactionDate': DateTime.now().toIso8601String(),
+          'status': 'VALID',
+          'source': 'SCAN',
+        });
+      }
+      return {'success': true, 'message': 'Đã lưu giao dịch thành công (Demo)'};
+    }
+
     try {
       final uri = Uri.parse('$_baseUrl/manual-entry');
       final response = await http
@@ -100,6 +125,11 @@ class ApiService {
   // 4. API LẤY DANH SÁCH GIAO DỊCH (GET /api/transactions)
   // ============================================================
   Future<List<Map<String, dynamic>>> getTransactions(String userId) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      return MockData.getTransactions();
+    }
+
     try {
       final uri = Uri.parse('$_baseUrl/transactions?userId=$userId');
       final response = await http.get(uri).timeout(const Duration(seconds: 15));
@@ -127,6 +157,21 @@ class ApiService {
     required String email,
     required String password,
   }) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return {
+        'success': true,
+        'user': {
+          'id': MockData.demoUserId,
+          'email': email.isNotEmpty ? email : MockData.demoEmail,
+          'shopName': MockData.demoShopName,
+          'role': MockData.demoRole,
+          'subscriptionPlan': MockData.demoPlan,
+        },
+        'message': 'Đăng nhập thành công (Demo)',
+      };
+    }
+
     try {
       final uri = Uri.parse('$_baseUrl/login');
       final response = await http.post(
@@ -175,6 +220,10 @@ class ApiService {
     bool? receiveTelegram,
     bool? receiveInApp,
   }) async {
+    if (MockData.useMockDemo) {
+      return {'success': true, 'message': 'Cập nhật thành công (Demo)'};
+    }
+
     try {
       final uri = Uri.parse('$_baseUrl/user/$userId/notification-settings');
       final body = <String, dynamic>{};
@@ -200,6 +249,20 @@ class ApiService {
   // 6. LẤY THÔNG TIN PROFILE (GET /api/user/:id/profile)
   // ============================================================
   Future<Map<String, dynamic>> getUserProfile(String userId) async {
+    if (MockData.useMockDemo) {
+      return {
+        'success': true,
+        'user': {
+          'id': MockData.demoUserId,
+          'email': MockData.demoEmail,
+          'shopName': MockData.demoShopName,
+          'phone': MockData.demoPhone,
+          'role': MockData.demoRole,
+          'subscriptionPlan': MockData.demoPlan,
+        }
+      };
+    }
+
     try {
       final uri = Uri.parse('$_baseUrl/user/$userId/profile');
       final response = await http.get(uri).timeout(const Duration(seconds: 15));

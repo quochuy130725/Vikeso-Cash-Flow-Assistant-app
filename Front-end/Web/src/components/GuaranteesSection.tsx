@@ -40,8 +40,8 @@ export const GuaranteesSection: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 text-emerald-600 text-xs font-semibold">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 text-slate-900 text-xs font-bold">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-[#ff4783]" />
               <span>Mã hóa SSL 256-bit chuẩn ngân hàng</span>
             </div>
           </SpotlightCard>
@@ -56,17 +56,17 @@ export const GuaranteesSection: React.FC = () => {
                 <Headphones className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-[#191c1d] mb-2">
+                <h3 className="text-lg font-bold text-slate-900 mb-2">
                   Trải Nghiệm Đầy Đủ Tính Năng
                 </h3>
-                <p className="text-sm text-[#584045] leading-relaxed">
+                <p className="text-sm text-slate-600 leading-relaxed">
                   Trải nghiệm trọn vẹn toàn bộ tính năng nâng cao không giới hạn, sẵn sàng hỗ trợ trực tiếp 1-1 từ đội ngũ phát triển.
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-[#f3f4f5] flex items-center gap-2 text-[#5c6300] text-xs font-semibold">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 text-slate-900 text-xs font-bold">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-[#ff4783]" />
               <span>Hỗ trợ cài đặt kỹ thuật nhanh chóng 24/7</span>
             </div>
           </SpotlightCard>

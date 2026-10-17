@@ -27,3 +27,7 @@ build/
 # File cấu hình môi trường (TUYỆT ĐỐI KHÔNG COMMIT)
 .env
 *.env
+
+build*
+*.nosync
+*.nosync/

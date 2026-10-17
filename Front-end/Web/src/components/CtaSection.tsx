@@ -37,9 +37,9 @@ export const CtaSection: React.FC<CtaSectionProps> = ({
             <Magnet padding={25} magnetStrength={0.25}>
               <button
                 onClick={() => onOpenAuth('register')}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 text-sm font-black shadow-xl shadow-[#d0f81b]/25 hover:shadow-[#d0f81b]/40 active:scale-95 transition-all ring-4 ring-[#d0f81b]/20 cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-sm font-black shadow-xl shadow-[#ff4783]/30 hover:shadow-[#ff4783]/50 active:scale-95 transition-all ring-4 ring-[#ff4783]/20 cursor-pointer"
               >
-                <Rocket className="w-4 h-4 text-slate-950" />
+                <Rocket className="w-4 h-4 text-white" />
                 <span>Tạo Tài Khoản VikeSo Miễn Phí</span>
               </button>
             </Magnet>

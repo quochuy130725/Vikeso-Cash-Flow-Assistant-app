@@ -1,88 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { fetchAdminPayments } from '../services/api';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  fetchAdminPayments,
+  deleteAdminPayment,
+} from '../services/api';
 import { SubscriptionPayment } from '../types';
-
-const monthlyUnitEconomics = [
-  {
-    key: 'T5',
-    label: 'Tháng 5/2024 (Alpha)',
-    shortMonth: 'Tháng 5',
-    mrr: 12.0,
-    cost: 1.8,
-    grossProfit: 10.2,
-    margin: 85.0,
-    x: 110,
-    mrrY: 223,
-    costY: 246,
-    badge: null,
-  },
-  {
-    key: 'T6',
-    label: 'Tháng 6/2024',
-    shortMonth: 'Tháng 6',
-    mrr: 28.0,
-    cost: 2.6,
-    grossProfit: 25.4,
-    margin: 90.7,
-    x: 270,
-    mrrY: 187,
-    costY: 244,
-    badge: null,
-  },
-  {
-    key: 'T7',
-    label: 'Tháng 7/2024',
-    shortMonth: 'Tháng 7',
-    mrr: 35.0,
-    cost: 3.2,
-    grossProfit: 31.8,
-    margin: 90.8,
-    x: 430,
-    mrrY: 171,
-    costY: 243,
-    badge: null,
-  },
-  {
-    key: 'T8',
-    label: 'Tháng 8/2024 (Ra mắt Bot)',
-    shortMonth: 'Tháng 8',
-    mrr: 52.0,
-    cost: 4.4,
-    grossProfit: 47.6,
-    margin: 91.5,
-    x: 590,
-    mrrY: 133,
-    costY: 240,
-    badge: { text: '🚀 Ra mắt Bot Telegram (+48% MRR)', color: 'purple' },
-  },
-  {
-    key: 'T9',
-    label: 'Tháng 9/2024',
-    shortMonth: 'Tháng 9',
-    mrr: 68.0,
-    cost: 5.5,
-    grossProfit: 62.5,
-    margin: 91.9,
-    x: 750,
-    mrrY: 97,
-    costY: 238,
-    badge: null,
-  },
-  {
-    key: 'T10',
-    label: 'Tháng 10/2024 (Hiện tại)',
-    shortMonth: 'Tháng 10',
-    mrr: 84.05,
-    cost: 6.82,
-    grossProfit: 77.23,
-    margin: 91.8,
-    x: 910,
-    mrrY: 61,
-    costY: 235,
-    badge: { text: '⭐ Kỷ lục: 84.05M VNĐ', color: 'emerald' },
-  },
-];
-
 import { UserAccount } from '../components/AuthModal';
 
 interface AdminFinancialProps {
@@ -90,785 +11,647 @@ interface AdminFinancialProps {
 }
 
 export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) => {
-  const [period, setPeriod] = useState<'month' | 'q3' | 'year'>('month');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [toastVisible, setToastVisible] = useState(false);
-  const [activeMonthIdx, setActiveMonthIdx] = useState<number>(5);
-  const [subscriptionPayments, setSubscriptionPayments] = useState<SubscriptionPayment[]>([]);
+  const [payments, setPayments] = useState<SubscriptionPayment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  React.useEffect(() => {
-    let isMounted = true;
-    fetchAdminPayments().then((data) => {
-      if (isMounted && Array.isArray(data)) setSubscriptionPayments(data);
-    });
-    return () => { isMounted = false; };
+  // Filters & Search
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedChartDate, setSelectedChartDate] = useState<string | null>(null);
+
+  // Helper date extractor
+  const extractDate = (timestamp: string): string => {
+    if (!timestamp) return 'Hôm nay';
+    const match = timestamp.match(/\b\d{1,2}\/\d{1,2}\/\d{4}\b/);
+    if (match) return match[0];
+    const parts = timestamp.split(' ');
+    return parts.length > 1 ? parts[parts.length - 1] : timestamp;
+  };
+
+  const formatShortAmount = (amount: number): string => {
+    if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M`;
+    if (amount >= 1_000) return `${Math.round(amount / 1_000)}k`;
+    return `${amount}`;
+  };
+
+  // Toast
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (text: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage({ text, type });
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const loadData = async (silent = false) => {
+    if (!silent) setIsLoading(true);
+    try {
+      const data = await fetchAdminPayments();
+      setPayments(data || []);
+    } catch (err) {
+      console.error('Lỗi khi fetchAdminPayments:', err);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
+  // Filtered payments (strictly completed, paid orders for actual revenue)
   const filteredPayments = useMemo(() => {
-    if (!searchTerm.trim()) return subscriptionPayments;
-    const query = searchTerm.toLowerCase();
-    return subscriptionPayments.filter(
-      (p) =>
-        p.storeName.toLowerCase().includes(query) ||
-        p.invoiceId.toLowerCase().includes(query) ||
-        p.planDescription.toLowerCase().includes(query)
-    );
-  }, [searchTerm]);
+    return payments.filter((p) => {
+      // Exclude all pending orders completely
+      if (p.status !== 'success') return false;
 
-  const handleExportFinancialReport = () => {
-    setToastVisible(true);
-    setTimeout(() => {
-      setToastVisible(false);
-    }, 4000);
+      if (selectedChartDate) {
+        const pDate = extractDate(p.timestamp);
+        if (pDate !== selectedChartDate) return false;
+      }
+      if (searchTerm.trim() !== '') {
+        const query = searchTerm.toLowerCase();
+        const matchesInvoice = p.invoiceId?.toLowerCase().includes(query);
+        const matchesStore = p.storeName?.toLowerCase().includes(query);
+        const matchesPlan = p.planDescription?.toLowerCase().includes(query);
+        return matchesInvoice || matchesStore || matchesPlan;
+      }
+      return true;
+    });
+  }, [payments, selectedChartDate, searchTerm]);
+
+  // Real aggregate numbers: Revenue & Profit (Only Completed Orders)
+  const {
+    totalRevenue,
+    netProfit,
+    operatingCost,
+    countSuccess,
+    dailyData,
+    maxDailyVal,
+  } = useMemo(() => {
+    let rev = 0;
+    let sCount = 0;
+
+    const dateMap: {
+      [dateKey: string]: {
+        date: string;
+        grossRev: number;
+        netProfit: number;
+        successCount: number;
+      };
+    } = {};
+
+    payments.forEach((p) => {
+      if (p.status !== 'success') return; // Strictly ignore any pending transactions
+
+      const dateKey = extractDate(p.timestamp);
+      if (!dateMap[dateKey]) {
+        dateMap[dateKey] = {
+          date: dateKey,
+          grossRev: 0,
+          netProfit: 0,
+          successCount: 0,
+        };
+      }
+
+      rev += p.amount;
+      sCount++;
+      dateMap[dateKey].grossRev += p.amount;
+      dateMap[dateKey].netProfit += Math.round(p.amount * 0.8);
+      dateMap[dateKey].successCount++;
+    });
+
+    const net = Math.round(rev * 0.8);
+    const opCost = rev - net;
+
+    // Sort dates chronologically
+    const sortedDates = Object.values(dateMap).sort((a, b) => {
+      const parseDMY = (s: string) => {
+        const parts = s.split('/');
+        if (parts.length === 3) {
+          return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])).getTime();
+        }
+        return 0;
+      };
+      return parseDMY(a.date) - parseDMY(b.date);
+    });
+
+    let maxVal = 1;
+    sortedDates.forEach((d) => {
+      if (d.grossRev > maxVal) maxVal = d.grossRev;
+    });
+
+    return {
+      totalRevenue: rev,
+      netProfit: net,
+      operatingCost: opCost,
+      countSuccess: sCount,
+      dailyData: sortedDates,
+      maxDailyVal: maxVal,
+    };
+  }, [payments]);
+
+  // Handle Delete Payment
+  const handleDeletePayment = async (p: SubscriptionPayment) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa đơn thanh toán "${p.invoiceId}" của "${p.storeName}"?`)) {
+      return;
+    }
+    const cleanId = p.invoiceId.replace(/^#INV-/, '').replace(/^TX-/, '');
+    try {
+      const res = await deleteAdminPayment(cleanId);
+      if (res.success) {
+        showToast(`Đã xóa đơn thanh toán "${p.invoiceId}"!`);
+        loadData(true);
+      } else {
+        showToast(res.message || 'Lỗi xóa đơn', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Lỗi kết nối máy chủ', 'error');
+    }
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-5 lg:px-6 py-4 space-y-4">
-      {/* Top Executive Command Bar - Compact & Balanced */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-xl shadow-xs border border-slate-200/80">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md font-bold border border-purple-200 uppercase tracking-wider">
-              Báo Cáo Ban Lãnh Đạo
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* 1. Header Banner */}
+      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              Tài Chính Nền Tảng
             </span>
-            <span className="text-xs text-slate-400 font-medium">
-              • Chu kỳ tài chính Q4/2024
+            <span className="text-slate-300">•</span>
+            <span className="text-xs text-slate-700 font-semibold">
+              Cổng thanh toán tự động: <strong className="text-slate-900">SePay VietQR</strong>
             </span>
-            <span className="text-slate-300 hidden sm:inline">•</span>
-            <span className="inline-flex items-center gap-1 font-bold text-slate-800 text-xs">
-              <span className="material-symbols-outlined text-[15px] text-emerald-600">badge</span>
-              <span>{currentUser?.name || 'Admin'}</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded font-extrabold bg-purple-50 text-purple-700 border border-purple-200">
-                {currentUser?.role || 'ADMIN'}
-              </span>
-            </span>
-            <span className="text-slate-300 hidden sm:inline">•</span>
-            <span className="text-slate-500 text-xs hidden sm:inline">
-              {currentUser?.email || 'test@example.com'}
+            <span className="text-slate-300">•</span>
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Webhook 24/7 trực tuyến
             </span>
           </div>
-          <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
-            Báo Cáo Tài Chính &amp; Doanh Thu Thuê Bao Nền Tảng
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+            Quản Lý Doanh Thu Thuê Bao &amp; Đơn Hàng SePay
           </h1>
-          <p className="text-xs text-slate-500 max-w-2xl">
-            Phân tích chỉ số tăng trưởng MRR, cơ cấu dòng tiền, hiệu suất biên lợi nhuận ròng AI VikeSo.
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 max-w-2xl">
+            Theo dõi dòng tiền thuê bao PRO thực tế, kiểm soát các giao dịch chuyển khoản VietQR và phê duyệt đơn thủ công khi cần.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start lg:self-auto shrink-0 flex-wrap">
-          <div className="inline-flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/80">
-            <button
-              onClick={() => setPeriod('month')}
-              className={`px-2.5 py-1 rounded-md text-xs font-semibold cursor-pointer transition-colors ${
-                period === 'month'
-                  ? 'bg-white text-slate-900 font-bold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-              type="button"
-            >
-              Tháng này
-            </button>
-            <button
-              onClick={() => setPeriod('q3')}
-              className={`px-2.5 py-1 rounded-md text-xs font-semibold cursor-pointer transition-colors ${
-                period === 'q3'
-                  ? 'bg-white text-slate-900 font-bold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-              type="button"
-            >
-              Quý 3
-            </button>
-            <button
-              onClick={() => setPeriod('year')}
-              className={`px-2.5 py-1 rounded-md text-xs font-semibold cursor-pointer transition-colors ${
-                period === 'year'
-                  ? 'bg-white text-slate-900 font-bold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-              type="button"
-            >
-              Cả năm
-            </button>
-          </div>
-
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
           <button
-            onClick={handleExportFinancialReport}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer"
+            onClick={() => {
+              setIsRefreshing(true);
+              loadData(true);
+            }}
+            disabled={isRefreshing}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-200 shadow-xs transition-all cursor-pointer disabled:opacity-50"
             type="button"
           >
-            <span className="material-symbols-outlined text-[16px]">verified</span>
-            <span>Xuất Báo Cáo</span>
+            <span className={`material-symbols-outlined text-[16px] text-slate-500 ${isRefreshing ? 'animate-spin' : ''}`}>
+              refresh
+            </span>
+            <span>Làm mới</span>
           </button>
         </div>
       </div>
 
-      {/* Macro Executive KPIs (4 Cards Grid) - Compact */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Card 1: MRR */}
-        <div className="p-3.5 rounded-xl bg-white shadow-xs border border-slate-200/80 flex flex-col justify-between space-y-2 group hover:border-slate-300 transition-all">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-[11px] uppercase tracking-wider font-semibold">
-              Doanh Thu Thuê Bao Tháng
+      {/* 2. Key Revenue Metrics (Real Data) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Metric 1: Tổng doanh thu đã thu */}
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              Tổng doanh thu đã thu
             </span>
-            <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
-              <span className="material-symbols-outlined text-[17px]">payments</span>
+            <div className="w-8 h-8 rounded-lg bg-[#d0f81b]/30 text-slate-950 flex items-center justify-center border border-[#bde412]">
+              <span className="material-symbols-outlined text-[18px]">payments</span>
             </div>
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono font-tabular">
-              84.051.000 <span className="text-xs font-semibold text-slate-400">đ</span>
+            <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
+              {totalRevenue.toLocaleString('vi-VN')} <span className="text-xs font-semibold">đ</span>
             </div>
-            <div className="flex items-center justify-between pt-1 mt-1 border-t border-slate-100">
-              <div className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-100">
-                <span className="material-symbols-outlined text-[12px]">trending_up</span>
-                +22.4%
-              </div>
-              <span className="text-[11px] text-slate-400">so tháng trước</span>
-            </div>
+            <span className="text-xs text-slate-500 mt-1 block">
+              {countSuccess} đơn thanh toán thành công
+            </span>
           </div>
         </div>
 
-        {/* Card 2: Paying Customers */}
-        <div className="p-3.5 rounded-xl bg-white shadow-xs border border-slate-200/80 flex flex-col justify-between space-y-2 group hover:border-slate-300 transition-all">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-[11px] uppercase tracking-wider font-semibold">
-              Tổng Hộ KD Trả Phí
+        {/* Metric 2: Lợi nhuận ròng (80%) */}
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              Lợi Nhuận Ròng (80%)
             </span>
-            <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100">
-              <span className="material-symbols-outlined text-[17px]">storefront</span>
+            <div className="w-8 h-8 rounded-lg bg-pink-50 text-[#ff4783] flex items-center justify-center border border-pink-200">
+              <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
             </div>
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono font-tabular">
-              849 <span className="text-xs font-semibold text-slate-400">hộ</span>
+            <div className="text-2xl font-extrabold text-[#ff4783] font-mono font-tabular tracking-tight">
+              {netProfit.toLocaleString('vi-VN')} <span className="text-xs font-semibold">đ</span>
             </div>
-            <div className="flex items-center justify-between pt-1 mt-1 border-t border-slate-100">
-              <div className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-purple-50 text-purple-700 text-[11px] font-bold border border-purple-100">
-                <span className="material-symbols-outlined text-[12px]">pie_chart</span>
-                Chiếm 68%
-              </div>
-              <span className="text-[11px] text-slate-400">tổng người dùng</span>
-            </div>
+            <span className="text-xs text-slate-500 mt-1 block">
+              Sau chi phí cổng SePay &amp; AI OCR
+            </span>
           </div>
         </div>
 
-        {/* Card 3: Cloud & AI Cost */}
-        <div className="p-3.5 rounded-xl bg-white shadow-xs border border-slate-200/80 flex flex-col justify-between space-y-2 group hover:border-slate-300 transition-all">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-[11px] uppercase tracking-wider font-semibold">
-              Chi Phí Hạ Tầng &amp; AI
+        {/* Metric 3: Đơn hoàn tất */}
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              Đơn hoàn tất (PRO)
             </span>
-            <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
-              <span className="material-symbols-outlined text-[17px]">neurology</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200">
+              <span className="material-symbols-outlined text-[18px]">verified</span>
             </div>
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono font-tabular">
-              6.820.000 <span className="text-xs font-semibold text-slate-400">đ</span>
+            <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
+              {countSuccess} <span className="text-xs font-normal text-slate-400">gói đã kích hoạt</span>
             </div>
-            <div className="flex items-center justify-between pt-1 mt-1 border-t border-slate-100">
-              <div className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-100">
-                <span className="material-symbols-outlined text-[12px]">shield</span>
-                Biên LN: 91.8%
-              </div>
-              <span className="text-[11px] text-slate-400">Tối ưu chi phí</span>
-            </div>
+            <span className="text-xs text-slate-500 mt-1 block">
+              Gia hạn 30 ngày tự động
+            </span>
           </div>
         </div>
 
-        {/* Card 4: LTV */}
-        <div className="p-3.5 rounded-xl bg-white shadow-xs border border-slate-200/80 flex flex-col justify-between space-y-2 group hover:border-slate-300 transition-all">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-[11px] uppercase tracking-wider font-semibold">
-              Giá Trị Vòng Đời (LTV)
+        {/* Metric 4: Giá gói cước niêm yết */}
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              Giá Gói Chuyên Nghiệp (PRO)
             </span>
-            <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
-              <span className="material-symbols-outlined text-[17px]">loyalty</span>
+            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
+              <span className="material-symbols-outlined text-[18px]">sell</span>
             </div>
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono font-tabular">
-              1.188.000 <span className="text-xs font-semibold text-slate-400">đ</span>
+            <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
+              99.000 <span className="text-xs font-semibold text-slate-400">đ / tháng</span>
             </div>
-            <div className="flex items-center justify-between pt-1 mt-1 border-t border-slate-100">
-              <div className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200">
-                <span className="material-symbols-outlined text-[12px]">autorenew</span>
-                12 Tháng
-              </div>
-              <span className="text-[11px] text-slate-400">chu kỳ gắn bó</span>
-            </div>
+            <span className="text-xs text-slate-500 mt-1 block">
+              Đã gồm VAT &amp; phí cổng SePay
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Main Growth Chart Panel: Unit Economics & Gross Margin Health - Highly Intuitive & Visual */}
-      <div className="p-4 sm:p-5 rounded-xl bg-white shadow-xs border border-slate-200/80 space-y-4">
-        {/* Chart Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+      {/* 2.5. Single Unified Chart: Doanh Thu & Lợi Nhuận Thuê Bao (Full Width, Actionable) */}
+      <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-5">
+        {/* Header & Mini KPI Summary */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-slate-100">
           <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-                Tăng Trưởng MRR &amp; Đơn Vị Kinh Tế (Unit Economics)
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-7 h-7 rounded-lg bg-[#d0f81b]/30 text-slate-950 flex items-center justify-center border border-[#bde412]">
+                <span className="material-symbols-outlined text-[17px]">trending_up</span>
+              </div>
+              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
+                Biến Động Doanh Thu &amp; Lợi Nhuận Thuê Bao
               </h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Biên LN Gộp: 91.8%
-              </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              So sánh tương quan giữa Doanh thu định kỳ (MRR) và Chi phí GPU/Server AI thực tế từ T5/2024 đến T10/2024
+            <p className="text-xs text-slate-500">
+              Phân tích doanh thu gộp và lợi nhuận ròng thực nhận (80%) theo từng mốc thời gian.
             </p>
           </div>
 
-          {/* Legend Badges */}
-          <div className="flex items-center gap-2.5 flex-wrap text-xs">
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-indigo-50/70 border border-indigo-200 text-indigo-800 font-semibold">
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
-              <span>Doanh thu MRR</span>
+          {/* 2 Mini KPI Badges (Only Completed / Paid) */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#d0f81b]/25 border border-[#bde412] text-slate-950 text-xs">
+              <span className="w-2 h-2 rounded-full bg-[#15803d]"></span>
+              <span className="text-[11px] font-semibold text-slate-600">Thực thu:</span>
+              <strong className="font-mono font-black">{totalRevenue.toLocaleString('vi-VN')} đ</strong>
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50/70 border border-blue-200 text-blue-800 font-semibold">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-              <span>Chi phí GPU &amp; Cloud</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-purple-50/70 border border-purple-200 text-purple-800 font-semibold">
-              <span className="material-symbols-outlined text-[14px] text-purple-600">rocket_launch</span>
-              <span>Cột mốc Bot T8</span>
+
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-pink-50 border border-pink-200 text-[#ff4783] text-xs">
+              <span className="w-2 h-2 rounded-full bg-[#ff4783]"></span>
+              <span className="text-[11px] font-semibold text-slate-600">Lợi nhuận (80%):</span>
+              <strong className="font-mono font-black">{netProfit.toLocaleString('vi-VN')} đ</strong>
             </div>
           </div>
         </div>
 
-        {/* Chart Canvas Area */}
-        <div className="w-full bg-slate-50/60 rounded-xl p-3.5 sm:p-4 relative border border-slate-200/70 space-y-3">
-          {/* Active Data Inspector Bar */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-3 py-2 bg-white rounded-lg border border-slate-200 shadow-xs">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                {monthlyUnitEconomics[activeMonthIdx].label}
-              </span>
-              <span className="text-xs text-slate-400">•</span>
-              <div className="flex items-center gap-1 text-xs">
-                <span className="text-slate-500">Doanh thu:</span>
-                <span className="font-bold text-indigo-600 font-mono">
-                  {monthlyUnitEconomics[activeMonthIdx].mrr.toLocaleString('vi-VN')}M VNĐ
-                </span>
-              </div>
-              <span className="text-xs text-slate-300">|</span>
-              <div className="flex items-center gap-1 text-xs">
-                <span className="text-slate-500">Chi phí GPU:</span>
-                <span className="font-bold text-blue-600 font-mono">
-                  {monthlyUnitEconomics[activeMonthIdx].cost.toLocaleString('vi-VN')}M VNĐ
-                </span>
-              </div>
-              <span className="text-xs text-slate-300">|</span>
-              <div className="flex items-center gap-1 text-xs">
-                <span className="text-slate-500">Lãi gộp:</span>
-                <span className="font-bold text-emerald-700 font-mono">
-                  +{monthlyUnitEconomics[activeMonthIdx].grossProfit.toLocaleString('vi-VN')}M VNĐ
-                </span>
-                <span className="text-[11px] font-semibold text-emerald-600">
-                  ({monthlyUnitEconomics[activeMonthIdx].margin}%)
-                </span>
-              </div>
-            </div>
-
-            {monthlyUnitEconomics[activeMonthIdx].badge ? (
-              <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded border ${
-                monthlyUnitEconomics[activeMonthIdx].badge?.color === 'purple'
-                  ? 'bg-purple-50 text-purple-700 border-purple-200'
-                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              }`}>
-                {monthlyUnitEconomics[activeMonthIdx].badge?.text}
-              </span>
-            ) : (
-              <span className="text-[11px] text-slate-400 font-medium">
-                Di chuột vào biểu đồ để kiểm tra chi tiết
-              </span>
-            )}
+        {/* Chart Legend */}
+        <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+          <div className="flex items-center gap-4 flex-wrap font-semibold text-slate-600">
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm bg-[#d0f81b] border border-[#bde412]"></span>
+              <span>Doanh thu gộp (Gross)</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm bg-[#ff4783]"></span>
+              <span>Lợi nhuận ròng (Net 80%)</span>
+            </span>
           </div>
+          <span className="text-[11px] text-slate-400 italic">
+            * Nhấn vào cột ngày để lọc nhanh danh sách đơn bên dưới
+          </span>
+        </div>
 
-          {/* SVG Graphical Viewport with Complete Coordinate Grid & Data Labels */}
-          <div className="w-full h-56 sm:h-64 relative">
-            <svg
-              className="w-full h-full overflow-visible select-none"
-              preserveAspectRatio="none"
-              viewBox="0 0 1000 290"
-            >
-              <defs>
-                {/* Revenue Gradient */}
-                <linearGradient id="mrrAreaGrad" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.32"></stop>
-                  <stop offset="50%" stopColor="#10b981" stopOpacity="0.12"></stop>
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.0"></stop>
-                </linearGradient>
-
-                {/* Gross Profit Band Gradient between MRR & Cost */}
-                <linearGradient id="profitBandGrad" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.25"></stop>
-                  <stop offset="85%" stopColor="#3b82f6" stopOpacity="0.08"></stop>
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.02"></stop>
-                </linearGradient>
-
-                {/* Cost Area Gradient */}
-                <linearGradient id="costAreaGrad" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.18"></stop>
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0"></stop>
-                </linearGradient>
-
-                {/* Drop shadow for point callouts */}
-                <filter id="badgeShadow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000000" floodOpacity="0.12" />
-                </filter>
-              </defs>
-
-              {/* Y-Axis Horizontal Gridlines & Scale Labels (0 to 100M) */}
-              {[
-                { val: '100M', y: 35 },
-                { val: '80M', y: 78 },
-                { val: '60M', y: 122 },
-                { val: '40M', y: 165 },
-                { val: '20M', y: 208 },
-                { val: '0 VNĐ', y: 252 },
-              ].map((grid, idx) => (
-                <g key={idx}>
-                  <line
-                    x1="65"
-                    x2="975"
-                    y1={grid.y}
-                    y2={grid.y}
-                    stroke={idx === 5 ? '#cbd5e1' : '#e2e8f0'}
-                    strokeWidth={idx === 5 ? '1.5' : '1'}
-                    strokeDasharray={idx === 5 ? '0' : '4 4'}
-                  />
-                  <text
-                    x="55"
-                    y={grid.y + 4}
-                    textAnchor="end"
-                    fill="#94a3b8"
-                    fontSize="11"
-                    fontFamily="monospace"
-                    fontWeight="600"
-                  >
-                    {grid.val}
-                  </text>
-                </g>
-              ))}
-
-              {/* Active Month Vertical Scanning Guideline */}
-              <line
-                x1={monthlyUnitEconomics[activeMonthIdx].x}
-                x2={monthlyUnitEconomics[activeMonthIdx].x}
-                y1="25"
-                y2="252"
-                stroke="#10b981"
-                strokeWidth="1.5"
-                strokeDasharray="3 3"
-                opacity="0.85"
-              />
-
-              {/* Area 1: Gross Margin Band (Filled polygon between MRR line and Cost line) */}
-              <polygon
-                fill="url(#profitBandGrad)"
-                points="110,223 270,187 430,171 590,133 750,97 910,61 910,235 750,238 590,240 430,243 270,244 110,246"
-              />
-
-              {/* Area 2: Cost Polygon under the blue line */}
-              <polygon
-                fill="url(#costAreaGrad)"
-                points="110,246 270,244 430,243 590,240 750,238 910,235 910,252 110,252"
-              />
-
-              {/* Blue Line: GPU & Cloud Infrastructure Cost */}
-              <polyline
-                fill="none"
-                stroke="#3b82f6"
-                strokeWidth="2.5"
-                strokeDasharray="5 3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                points="110,246 270,244 430,243 590,240 750,238 910,235"
-              />
-
-              {/* Emerald Line: Monthly Recurring Revenue (MRR) */}
-              <polyline
-                fill="none"
-                stroke="#10b981"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                points="110,223 270,187 430,171 590,133 750,97 910,61"
-              />
-
-              {/* Cost Data Points & Minimal Labels */}
-              {monthlyUnitEconomics.map((m, idx) => (
-                <g key={`cost-pt-${idx}`}>
-                  <circle
-                    cx={m.x}
-                    cy={m.costY}
-                    r={activeMonthIdx === idx ? 4.5 : 3.5}
-                    fill="#ffffff"
-                    stroke="#3b82f6"
-                    strokeWidth="2"
-                  />
-                  {/* Subtle Cost Label under point */}
-                  <text
-                    x={m.x}
-                    y={m.costY + 14}
-                    textAnchor="middle"
-                    fill="#3b82f6"
-                    fontSize="10"
-                    fontWeight="700"
-                    fontFamily="monospace"
-                  >
-                    {m.cost}M
-                  </text>
-                </g>
-              ))}
-
-              {/* MRR Data Points & Explicit Value Pill Callouts */}
-              {monthlyUnitEconomics.map((m, idx) => {
-                const isActive = activeMonthIdx === idx;
-                const isSpecial = m.badge !== null;
+        {/* Chart Canvas (Interactive Bars) */}
+        {dailyData.length === 0 ? (
+          <div className="py-12 text-center text-slate-400 text-xs">
+            Chưa có phát sinh dữ liệu thanh toán để vẽ biểu đồ.
+          </div>
+        ) : (
+          <div className="pt-6 pb-2">
+            <div className="h-52 flex items-end justify-between gap-2 sm:gap-3">
+              {dailyData.map((d) => {
+                const isSelected = selectedChartDate === d.date;
+                const revHeight = d.grossRev > 0 ? Math.max(12, Math.round((d.grossRev / maxDailyVal) * 100)) : 0;
+                const profitHeight = d.netProfit > 0 ? Math.max(10, Math.round((d.netProfit / maxDailyVal) * 100)) : 0;
 
                 return (
-                  <g key={`mrr-pt-${idx}`}>
-                    {/* Glowing Ring for Special or Active Point */}
-                    {(isActive || isSpecial) && (
-                      <circle
-                        cx={m.x}
-                        cy={m.mrrY}
-                        r={isActive ? 11 : 8}
-                        fill={isSpecial && m.badge?.color === 'purple' ? '#a855f7' : '#10b981'}
-                        opacity="0.22"
-                      />
-                    )}
+                  <div
+                    key={d.date}
+                    onClick={() => {
+                      setSelectedChartDate(isSelected ? null : d.date);
+                    }}
+                    title={`${d.date}: Doanh thu ${d.grossRev.toLocaleString('vi-VN')} đ | Lợi nhuận ${d.netProfit.toLocaleString('vi-VN')} đ`}
+                    className={`flex-1 flex flex-col items-center justify-end h-full p-2 rounded-xl transition-all cursor-pointer relative group ${
+                      isSelected
+                        ? 'bg-slate-100 ring-2 ring-slate-900 shadow-sm'
+                        : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    {/* Bars Container */}
+                    <div className="w-full flex items-end justify-center gap-1.5 sm:gap-2.5 h-36">
+                      {/* Bar 1: Gross Revenue */}
+                      <div className="w-1/2 max-w-[22px] flex flex-col justify-end h-full">
+                        <div
+                          style={{ height: `${revHeight}%` }}
+                          className={`w-full bg-[#d0f81b] border border-[#bde412] rounded-t-md transition-all duration-300 ${
+                            revHeight === 0 ? 'opacity-0' : 'opacity-100 group-hover:brightness-95'
+                          }`}
+                        ></div>
+                      </div>
 
-                    {/* Point Circle */}
-                    <circle
-                      cx={m.x}
-                      cy={m.mrrY}
-                      r={isActive ? 6 : 5}
-                      fill="#ffffff"
-                      stroke={
-                        isSpecial && m.badge?.color === 'purple'
-                          ? '#7e22ce'
-                          : '#10b981'
-                      }
-                      strokeWidth={isActive ? 3.5 : 2.5}
-                    />
+                      {/* Bar 2: Net Profit */}
+                      <div className="w-1/2 max-w-[22px] flex flex-col justify-end h-full">
+                        <div
+                          style={{ height: `${profitHeight}%` }}
+                          className={`w-full bg-[#ff4783] rounded-t-md transition-all duration-300 ${
+                            profitHeight === 0 ? 'opacity-0' : 'opacity-100 group-hover:brightness-105'
+                          }`}
+                        ></div>
+                      </div>
+                    </div>
 
-                    {/* Value Badge Pill above Point */}
-                    <g filter="url(#badgeShadow)">
-                      <rect
-                        x={m.x - (isSpecial ? 38 : 22)}
-                        y={m.mrrY - 26}
-                        width={isSpecial ? 76 : 44}
-                        height="18"
-                        rx="5"
-                        fill={
-                          isActive
-                            ? '#0f172a'
-                            : isSpecial && m.badge?.color === 'purple'
-                            ? '#7e22ce'
-                            : '#ffffff'
-                        }
-                        stroke={
-                          isActive
-                            ? '#0f172a'
-                            : isSpecial && m.badge?.color === 'purple'
-                            ? '#6b21a8'
-                            : '#cbd5e1'
-                        }
-                        strokeWidth="1"
-                      />
-                      <text
-                        x={m.x}
-                        y={m.mrrY - 13}
-                        textAnchor="middle"
-                        fill={
-                          isActive || (isSpecial && m.badge?.color === 'purple')
-                            ? '#ffffff'
-                            : '#0f172a'
-                        }
-                        fontSize="10"
-                        fontWeight="800"
-                        fontFamily="monospace"
-                      >
-                        {m.mrr}M
-                        {isSpecial && m.badge?.color === 'purple' ? ' (Bot)' : ''}
-                      </text>
-                    </g>
-                  </g>
+                    {/* Date label */}
+                    <span
+                      className={`text-[11px] font-bold mt-2.5 truncate max-w-full font-mono ${
+                        isSelected ? 'text-slate-950 font-black' : 'text-slate-600'
+                      }`}
+                    >
+                      {d.date}
+                    </span>
+                  </div>
                 );
               })}
+            </div>
+          </div>
+        )}
 
-              {/* Transparent Column Hitboxes for Effortless Mouse Hover */}
-              {monthlyUnitEconomics.map((m, idx) => (
-                <rect
-                  key={`hitbox-${idx}`}
-                  x={m.x - 70}
-                  y="20"
-                  width="140"
-                  height="245"
-                  fill="transparent"
-                  className="cursor-pointer"
-                  onMouseEnter={() => setActiveMonthIdx(idx)}
-                />
-              ))}
-            </svg>
+        {/* Actionable Insight Banner */}
+        <div className="p-3.5 sm:p-4 rounded-xl bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-start sm:items-center gap-2.5">
+            <span className="material-symbols-outlined text-[20px] text-[#d0f81b] shrink-0 mt-0.5 sm:mt-0">
+              verified
+            </span>
+            <div className="text-xs leading-relaxed">
+              <span>
+                <strong className="text-[#d0f81b]">Toàn bộ giao dịch đã được đối soát thành công</strong> qua cổng SePay VietQR. Tỷ suất lợi nhuận ròng thực nhận đạt mức tối ưu <strong className="text-white font-black">80%</strong> ({netProfit.toLocaleString('vi-VN')} đ).
+              </span>
+            </div>
           </div>
 
-          {/* Clean 6-Column Monthly KPI Cards (Eliminates Text Wrapping Mess) */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-2 border-t border-slate-200">
-            {monthlyUnitEconomics.map((m, idx) => {
-              const isActive = activeMonthIdx === idx;
-              return (
-                <button
-                  key={m.key}
-                  type="button"
-                  onClick={() => setActiveMonthIdx(idx)}
-                  className={`p-2 sm:p-2.5 rounded-lg text-left transition-all cursor-pointer border ${
-                    isActive
-                      ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-500/20 shadow-xs'
-                      : 'bg-white hover:bg-slate-50 border-slate-200/90'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className={`text-[11px] font-bold ${isActive ? 'text-emerald-900' : 'text-slate-800'}`}>
-                      {m.shortMonth}
-                    </span>
-                    {m.badge && (
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        m.badge.color === 'purple' ? 'bg-purple-600' : 'bg-emerald-600'
-                      }`}></span>
-                    )}
-                  </div>
-
-                  <div className="flex items-baseline justify-between text-xs font-mono font-bold">
-                    <span className="text-indigo-600">{m.mrr}M</span>
-                    <span className="text-blue-600 text-[11px] font-medium">{m.cost}M</span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1 pt-1 border-t border-slate-100">
-                    <span>Lãi gộp:</span>
-                    <span className="font-semibold text-emerald-700">{m.margin}%</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* AI Financial & Unit Economics Diagnostics Banner - Compact */}
-          <div className="mt-3 p-3 rounded-lg bg-gradient-to-r from-emerald-50/70 via-blue-50/40 to-slate-50 border border-emerald-200/70 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="flex items-start gap-2">
-              <span className="material-symbols-outlined text-[16px] text-emerald-600 mt-0.5">verified</span>
-              <div className="flex flex-col text-xs">
-                <span className="font-bold text-slate-900 text-xs">Chi Phí OCR Tối Ưu Cực Đại</span>
-                <span className="text-slate-600 mt-0.5 text-[11px]">
-                  Chỉ <strong>14.6 VNĐ / hóa đơn</strong>. Bộ nhớ đệm OCR Cache giúp tiết kiệm 32% chi phí gọi GPU AI.
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-2">
-              <span className="material-symbols-outlined text-[16px] text-amber-600 mt-0.5">warning</span>
-              <div className="flex flex-col text-xs">
-                <span className="font-bold text-slate-900 text-xs">Phát Hiện Chênh Lệch Sử Dụng</span>
-                <span className="text-slate-600 mt-0.5 text-[11px]">
-                  Nhóm F&amp;B quét trung bình <strong>38 ảnh/ngày</strong> (gấp 2.1x tạp hóa) nhưng cùng đóng 99k/tháng.
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-2">
-              <span className="material-symbols-outlined text-[16px] text-purple-600 mt-0.5">rocket_launch</span>
-              <div className="flex flex-col text-xs">
-                <span className="font-bold text-slate-900 text-xs">Khuyến Nghị Đòn Bẩy Doanh Số</span>
-                <span className="text-slate-600 mt-0.5 text-[11px]">
-                  Ra mắt gói <strong>F&amp;B Đa Ca 149k/tháng</strong>. Dự báo tăng <strong>+18.5M VNĐ MRR</strong> ngay tháng tới.
-                </span>
-              </div>
-            </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
+            {selectedChartDate && (
+              <button
+                onClick={() => setSelectedChartDate(null)}
+                className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1"
+                type="button"
+              >
+                <span className="material-symbols-outlined text-[14px]">close</span>
+                <span>Bỏ lọc ngày ({selectedChartDate})</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Operational Ledger / Transactions Table Section (Unified Master Card) */}
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-hidden">
-        {/* Card Header */}
-        <div className="p-3.5 sm:p-4 px-4 sm:px-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-              Giao Dịch Thanh Toán Gói Cước Gần Nhất
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Sổ cái kế toán thời gian thực từ các cổng đối soát thanh toán trực tiếp
+      {/* 3. SePay Orders Data Grid */}
+      <div id="sepay-orders-table" className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+        {/* Active Date Filter Alert if set */}
+        {selectedChartDate && (
+          <div className="px-5 py-2.5 bg-slate-100 border-b border-slate-200 flex items-center justify-between text-xs">
+            <span className="flex items-center gap-1.5 text-slate-700 font-semibold">
+              <span className="material-symbols-outlined text-[16px] text-[#ff4783]">filter_alt</span>
+              <span>Đang lọc giao dịch theo ngày trên biểu đồ: <strong className="text-slate-900 font-black">{selectedChartDate}</strong></span>
+            </span>
+            <button
+              onClick={() => setSelectedChartDate(null)}
+              className="text-[#ff4783] hover:text-[#d8356c] font-bold underline cursor-pointer"
+            >
+              Xem tất cả ngày
+            </button>
+          </div>
+        )}
+
+        {/* Table Title Header */}
+        <div className="p-5 sm:p-6 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ff4783]"></span>
+              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
+                Danh Sách Đơn Hàng &amp; Đối Soát Giao Dịch SePay
+              </h2>
+            </div>
+            <p className="text-xs text-slate-500">
+              Kiểm soát trạng thái thanh toán gói PRO và doanh thu thực nhận tự động qua cổng SePay VietQR.
             </p>
           </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
+              {filteredPayments.length} giao dịch đã thanh toán
+            </span>
+          </div>
+        </div>
 
-          {/* Search bar */}
-          <div className="relative w-full sm:w-72">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[17px]">
+        {/* Table Toolbar */}
+        <div className="p-4 sm:p-5 bg-slate-50/70 border-b border-slate-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+          <div className="relative flex-1 max-w-md">
+            <span className="material-symbols-outlined text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 text-[18px]">
               search
             </span>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Tìm kiếm hóa đơn, tên hộ KD..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs text-slate-900 bg-slate-50 rounded-lg font-medium placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 border border-slate-200 transition-all shadow-xs"
+              placeholder="Tìm theo mã đơn (#INV), tên cửa hàng, gói cước..."
+              className="w-full h-9.5 pl-9 pr-8 bg-white text-slate-900 placeholder:text-slate-400 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all shadow-xs font-medium"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[15px]">close</span>
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>Đã thanh toán ({filteredPayments.length})</span>
+            </div>
           </div>
         </div>
 
-        {/* Table Container */}
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-left border-collapse">
+        {/* Real Payments Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs min-w-[880px]">
             <thead>
-              <tr className="bg-slate-50 text-slate-500 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200/80">
-                <th className="py-2.5 px-4 sm:px-5 font-semibold">Mã hóa đơn</th>
-                <th className="py-2.5 px-4 sm:px-5 font-semibold">Tên hộ kinh doanh</th>
-                <th className="py-2.5 px-4 sm:px-5 font-semibold">Gói cước</th>
-                <th className="py-2.5 px-4 sm:px-5 font-semibold text-right">Số tiền (VNĐ)</th>
-                <th className="py-2.5 px-4 sm:px-5 font-semibold text-center">Phương thức</th>
-                <th className="py-2.5 px-4 sm:px-5 font-semibold">Thời gian</th>
-                <th className="py-2.5 px-4 sm:px-5 font-semibold text-right">Trạng thái</th>
+              <tr className="bg-slate-50/90 text-slate-700 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200">
+                <th className="py-3 px-3 whitespace-nowrap w-[110px]">Mã Đơn</th>
+                <th className="py-3 px-3 whitespace-nowrap min-w-[130px]">Cửa Hàng</th>
+                <th className="py-3 px-3 whitespace-nowrap min-w-[120px]">Gói Dịch Vụ</th>
+                <th className="py-3 px-3 whitespace-nowrap text-right min-w-[90px]">Số Tiền</th>
+                <th className="py-3 px-3 whitespace-nowrap text-center min-w-[120px]">Kênh Thanh Toán</th>
+                <th className="py-3 px-3 whitespace-nowrap min-w-[95px]">Thời Gian</th>
+                <th className="py-3 px-3 whitespace-nowrap text-center min-w-[115px]">Trạng Thái</th>
+                <th className="py-3 px-3 whitespace-nowrap text-right w-[100px] pr-4">Thao Tác</th>
               </tr>
             </thead>
-            <tbody className="text-xs divide-y divide-slate-100 text-slate-800">
-              {filteredPayments.map((p) => (
-                <tr key={p.invoiceId} className="hover:bg-slate-50/70 transition-colors">
-                  <td className="py-2.5 px-4 sm:px-5">
-                    <span className="font-bold text-slate-900 font-mono text-xs">
-                      {p.invoiceId}
+            <tbody className="divide-y divide-slate-100 text-slate-800">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <span className="material-symbols-outlined text-[32px] animate-spin text-[#ff4783]">
+                      progress_activity
                     </span>
-                  </td>
-
-                  <td className="py-2.5 px-4 sm:px-5">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-[10px] ${p.avatarColor}`}
-                      >
-                        {p.avatarInitials}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-slate-900 text-xs">
-                          {p.storeName}
-                        </span>
-                        <span className="text-[10px] text-slate-400">
-                          {p.storeLocation}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="py-2.5 px-4 sm:px-5">
-                    <span className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 text-[11px] font-semibold border border-purple-100">
-                      {p.planDescription}
-                    </span>
-                  </td>
-
-                  <td className="py-2.5 px-4 sm:px-5 text-right font-mono font-tabular font-bold text-slate-900 text-xs">
-                    {p.amount.toLocaleString('vi-VN')} đ
-                  </td>
-
-                  <td className="py-2.5 px-4 sm:px-5 text-center">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px] font-medium border border-slate-200">
-                      <span className="material-symbols-outlined text-[13px]">
-                        {p.paymentMethod.includes('VietQR') ? 'qr_code_scanner' : 'credit_card'}
-                      </span>
-                      {p.paymentMethod}
-                    </span>
-                  </td>
-
-                  <td className="py-2.5 px-4 sm:px-5 text-slate-400 text-xs">
-                    {p.timestamp}
-                  </td>
-
-                  <td className="py-2.5 px-4 sm:px-5 text-right">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-100">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Thành công
-                    </span>
+                    <p className="text-xs font-semibold text-slate-500 mt-2">Đang tải lịch sử thanh toán SePay...</p>
                   </td>
                 </tr>
-              ))}
+              ) : filteredPayments.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-10 text-center text-slate-500 text-xs">
+                    Chưa có giao dịch thanh toán nào phù hợp với điều kiện tìm kiếm.
+                  </td>
+                </tr>
+              ) : (
+                filteredPayments.map((p) => {
+                  // Format clean concise package description
+                  const planText = p.planDescription?.includes('PRO')
+                    ? 'Gói PRO'
+                    : (p.planDescription || 'Gói PRO');
+
+                  // Format payment method text
+                  const cleanMethod = p.paymentMethod?.replace('Quét mã ', '') || 'VietQR';
+
+                  return (
+                    <tr key={p.invoiceId} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200/80 text-[11px] whitespace-nowrap inline-block">
+                          {p.invoiceId}
+                        </span>
+                      </td>
+
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <div className="flex flex-col whitespace-nowrap">
+                          <span className="font-bold text-slate-900 text-xs whitespace-nowrap">
+                            {p.storeName}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+                            {p.storeLocation || 'Việt Nam'}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-pink-50 text-[#ff4783] text-[11px] font-bold border border-pink-200 whitespace-nowrap">
+                          <span className="material-symbols-outlined text-[13px]">workspace_premium</span>
+                          <span>{planText}</span>
+                        </span>
+                      </td>
+
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                        <span className="font-mono font-black text-slate-900 text-xs whitespace-nowrap">
+                          {p.amount.toLocaleString('vi-VN')} đ
+                        </span>
+                      </td>
+
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold border border-slate-200 whitespace-nowrap">
+                          <span className="material-symbols-outlined text-[13px] text-blue-600">qr_code_2</span>
+                          <span>{cleanMethod}</span>
+                        </span>
+                      </td>
+
+                      <td className="py-2.5 px-3 text-slate-500 text-[11px] whitespace-nowrap font-mono">
+                        <div className="flex flex-col leading-tight whitespace-nowrap">
+                          <span className="font-semibold text-slate-800">{p.timestamp?.split(' ')[1] || p.timestamp}</span>
+                          <span className="text-slate-400 text-[10px]">{p.timestamp?.split(' ')[0]}</span>
+                        </div>
+                      </td>
+
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#d0f81b]/35 text-slate-950 text-[11px] font-black border border-[#bde412] whitespace-nowrap shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                          <span>Đã Thanh Toán</span>
+                        </span>
+                      </td>
+
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap pr-4">
+                        <div className="inline-flex items-center justify-end gap-1.5 whitespace-nowrap">
+                          {/* Delete Order button */}
+                          <button
+                            onClick={() => handleDeletePayment(p)}
+                            className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                            type="button"
+                            title="Xóa đơn hàng"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Footer Summary & Pagination */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 px-4 sm:px-5 bg-slate-50/70 border-t border-slate-100 gap-2.5 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-700 text-xs">
-              Tổng quan:
-            </span>
-            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white shadow-xs font-semibold text-slate-800 border border-slate-200 text-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
-              <span className="font-bold text-indigo-600">849</span> hộ kinh doanh thuê bao đang hoạt động
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <span className="text-slate-400 mr-2 text-xs">
-              Trang 1 / 85
-            </span>
-            <button
-              disabled
-              className="w-6 h-6 rounded-md bg-white shadow-xs flex items-center justify-center text-slate-400 disabled:opacity-40 border border-slate-200"
-              type="button"
-            >
-              <span className="material-symbols-outlined text-[15px]">chevron_left</span>
-            </button>
-            <button
-              className="w-6 h-6 rounded-md bg-slate-900 text-white font-bold text-xs flex items-center justify-center"
-              type="button"
-            >
-              1
-            </button>
-            <button
-              className="w-6 h-6 rounded-md bg-white shadow-xs text-slate-600 hover:bg-slate-100 text-xs flex items-center justify-center border border-slate-200 cursor-pointer"
-              type="button"
-            >
-              2
-            </button>
-            <button
-              className="w-6 h-6 rounded-md bg-white shadow-xs text-slate-600 hover:bg-slate-100 text-xs flex items-center justify-center border border-slate-200 cursor-pointer"
-              type="button"
-            >
-              3
-            </button>
-            <span className="px-1 text-slate-400 text-xs">...</span>
-            <button
-              className="w-6 h-6 rounded-md bg-white shadow-xs text-slate-600 hover:bg-slate-100 text-xs flex items-center justify-center border border-slate-200 cursor-pointer"
-              type="button"
-            >
-              85
-            </button>
-            <button
-              className="w-6 h-6 rounded-md bg-white shadow-xs flex items-center justify-center text-slate-600 hover:text-slate-900 border border-slate-200 cursor-pointer"
-              type="button"
-            >
-              <span className="material-symbols-outlined text-[15px]">chevron_right</span>
-            </button>
-          </div>
+        {/* Table Footer */}
+        <div className="p-3.5 px-5 bg-slate-50/70 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+          <span>
+            Hiển thị <strong>{filteredPayments.length}</strong> đơn hàng đã thanh toán thành công
+          </span>
+          <span className="font-semibold text-slate-700">Đồng bộ tự động qua SePay VietQR Webhook</span>
         </div>
       </div>
 
-      {/* Floating Notification Toast */}
-      {toastVisible && (
-        <div className="fixed bottom-6 right-6 p-4 rounded-xl bg-slate-900 text-white shadow-xl flex items-center gap-3 z-50">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white">
-            <span className="material-symbols-outlined text-[20px]">check_circle</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-bold">
-              Khởi tạo Báo Cáo Tài Chính thành công
-            </span>
-            <span className="text-[11px] text-slate-300">
-              File PDF đã sẵn sàng và gửi về Telegram Ban Quản Trị
-            </span>
-          </div>
+      {/* Floating Toast Notification */}
+      {toastMessage && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-bottom-2 ${
+            toastMessage.type === 'error'
+              ? 'bg-rose-900 text-white border border-rose-700'
+              : 'bg-slate-900 text-white border border-slate-700'
+          }`}
+        >
+          <span
+            className={`material-symbols-outlined text-[18px] ${
+              toastMessage.type === 'error' ? 'text-rose-400' : 'text-[#d0f81b]'
+            }`}
+          >
+            {toastMessage.type === 'error' ? 'error' : 'check_circle'}
+          </span>
+          <span>{toastMessage.text}</span>
         </div>
       )}
     </div>

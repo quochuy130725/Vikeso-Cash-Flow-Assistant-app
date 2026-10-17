@@ -102,7 +102,7 @@ export const PortalView: React.FC<PortalViewProps> = ({
           <div className="pt-2 flex gap-3 justify-center">
             <button
               onClick={onBackToLanding}
-              className="px-5 py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-colors cursor-pointer shadow-sm shadow-emerald-600/20"
+              className="px-5 py-2.5 bg-[#ff4783] text-white text-xs font-bold rounded-xl hover:bg-[#e0326e] transition-colors cursor-pointer shadow-sm shadow-[#ff4783]/20"
             >
               Về Trang Chủ VikeSo
             </button>
@@ -164,7 +164,7 @@ export const PortalView: React.FC<PortalViewProps> = ({
 
   return (
     <div className={`min-h-screen bg-slate-50 text-slate-900 antialiased font-sans ${
-      portal === 'owner' ? 'selection:bg-emerald-100 selection:text-emerald-800' : 'selection:bg-indigo-100 selection:text-indigo-800'
+      portal === 'owner' ? 'selection:bg-[#ff4783]/20 selection:text-[#ff4783]' : 'selection:bg-indigo-100 selection:text-indigo-800'
     }`}>
       {/* Animated Fixed Sidebar */}
       <PortalSidebar
@@ -267,7 +267,7 @@ export const PortalView: React.FC<PortalViewProps> = ({
           {globalToast.type === 'error' ? (
             <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
           ) : (
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-[#d0f81b] shrink-0" />
           )}
           <span className="font-semibold text-xs leading-snug">{globalToast.message}</span>
           <button
