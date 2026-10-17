@@ -6,7 +6,8 @@
 import { Transaction, BusinessHousehold, SubscriptionPayment } from '../types';
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL;
+  import.meta.env.VITE_API_URL ||
+  'https://vikeso-cash-flow-assistant-app.onrender.com/api';
 
 export function getAuthToken(): string | null {
   try {
