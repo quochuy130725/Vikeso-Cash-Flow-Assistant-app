@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { subscriptionPayments } from '../data/mockData';
+import { fetchAdminPayments } from '../services/api';
+import { SubscriptionPayment } from '../types';
 
 const monthlyUnitEconomics = [
   {
@@ -93,6 +94,15 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
   const [searchTerm, setSearchTerm] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const [activeMonthIdx, setActiveMonthIdx] = useState<number>(5);
+  const [subscriptionPayments, setSubscriptionPayments] = useState<SubscriptionPayment[]>([]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    fetchAdminPayments().then((data) => {
+      if (isMounted && Array.isArray(data)) setSubscriptionPayments(data);
+    });
+    return () => { isMounted = false; };
+  }, []);
 
   const filteredPayments = useMemo(() => {
     if (!searchTerm.trim()) return subscriptionPayments;

@@ -28,3 +28,33 @@ exports.listTransactions = async (req, res) => {
 exports.listPayments = async (req, res) => {
   try { return ok(res, await adminService.listPayments(req.query)); } catch (e) { return fail(res, e); }
 };
+
+exports.createUser = async (req, res) => {
+  try { return ok(res, { data: await adminService.createUser(req.body) }, 201); } catch (e) { return fail(res, e); }
+};
+exports.updateUser = async (req, res) => {
+  try { return ok(res, { data: await adminService.updateUser(req.params.id, req.body) }); } catch (e) { return fail(res, e); }
+};
+
+exports.getTransaction = async (req, res) => {
+  try { return ok(res, { data: await adminService.getTransaction(req.params.id) }); } catch (e) { return fail(res, e); }
+};
+exports.createTransaction = async (req, res) => {
+  try { return ok(res, { data: await adminService.createTransaction(req.body) }, 201); } catch (e) { return fail(res, e); }
+};
+exports.updateTransaction = async (req, res) => {
+  try { return ok(res, { data: await adminService.updateTransaction(req.params.id, req.body) }); } catch (e) { return fail(res, e); }
+};
+exports.deleteTransaction = async (req, res) => {
+  try { return ok(res, await adminService.deleteTransaction(req.params.id)); } catch (e) { return fail(res, e); }
+};
+
+exports.getPayment = async (req, res) => {
+  try { return ok(res, { data: await adminService.getPayment(req.params.id) }); } catch (e) { return fail(res, e); }
+};
+exports.updatePayment = async (req, res) => {
+  try { return ok(res, { data: await adminService.updatePayment(req.params.id, req.body) }); } catch (e) { return fail(res, e); }
+};
+exports.deletePayment = async (req, res) => {
+  try { return ok(res, await adminService.deletePayment(req.params.id)); } catch (e) { return fail(res, e); }
+};

@@ -6,7 +6,9 @@ import '../shared_widgets/side_drawer.dart';
 import 'widgets/dashboard_action_buttons.dart';
 import 'widgets/revenue_chart.dart';
 import 'widgets/donut_chart_painter.dart';
+import 'dart:async';
 import '../../data/services/api_service.dart';
+import '../../data/services/socket_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -31,17 +33,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, double> _categoryChiSums = {};
 
   List<double> _weeklyRevenue = List.filled(7, 0.0);
+  StreamSubscription? _txSub;
+  StreamSubscription? _profileSub;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _txSub = SocketService.instance.onTransactionChanged.listen((_) {
+      _loadData(silent: true);
+    });
+    _profileSub = SocketService.instance.onProfileChanged.listen((_) {
+      _loadData(silent: true);
+    });
   }
 
-  Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-    });
+  @override
+  void dispose() {
+    _txSub?.cancel();
+    _profileSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadData({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
       const storage = flutter_secure_storage.FlutterSecureStorage();

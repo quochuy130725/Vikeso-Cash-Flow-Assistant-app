@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { ownerTransactions } from '../data/mockData';
+import { fetchUserTransactions } from '../services/api';
+import { UserAccount } from '../components/AuthModal';
 import { Transaction } from '../types';
 
 interface OwnerLedgerProps {
@@ -15,10 +16,19 @@ export const OwnerLedger: React.FC<OwnerLedgerProps> = ({
   const [timeFilter, setTimeFilter] = useState<'today' | 'yesterday' | '7days' | 'month'>('today');
   const [typeFilter, setTypeFilter] = useState<'all' | 'in' | 'out' | 'merged'>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    fetchUserTransactions().then((data) => {
+      if (isMounted && Array.isArray(data)) setTransactions(data);
+    });
+    return () => { isMounted = false; };
+  }, []);
 
   // Filtered transactions
   const filteredTransactions = useMemo(() => {
-    return ownerTransactions.filter((tx) => {
+    return transactions.filter((tx) => {
       // Type filter
       if (typeFilter !== 'all') {
         if (typeFilter === 'in' && tx.type !== 'in') return false;

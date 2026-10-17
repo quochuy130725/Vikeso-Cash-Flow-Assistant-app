@@ -17,6 +17,12 @@ const userSchema = new mongoose.Schema({
   avatar: { type: String, default: null },            // Google profile picture URL
   authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
 
+  // ── Quên mật khẩu (OTP qua email) ─────────────────────
+  resetPasswordCode: { type: String, default: null },      // bcrypt hash của mã OTP 6 số
+  resetPasswordExpires: { type: Date, default: null },
+  resetPasswordSentAt: { type: Date, default: null },
+  resetPasswordAttempts: { type: Number, default: 0 },
+
   // ── Cài đặt thông báo (Notification Settings) ─────────
   notificationSettings: {
     receiveEmail: { type: Boolean, default: true },

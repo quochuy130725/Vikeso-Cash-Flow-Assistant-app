@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { ownerTransactions } from '../data/mockData';
+import { fetchUserTransactions } from '../services/api';
+import { Transaction } from '../types';
 import { UserAccount } from '../components/AuthModal';
 
 interface OwnerCashflowLedgerProps {
@@ -33,10 +34,48 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
   const [timeChip, setTimeChip] = useState<'today' | 'yesterday' | '7days' | 'month'>('today');
   const [typeFilter, setTypeFilter] = useState<'all' | 'in' | 'out' | 'merged'>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+    fetchUserTransactions(currentUser?.id)
+      .then((data) => {
+        if (isMounted) {
+          setTransactions(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching transactions:', err);
+        if (isMounted) setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser?.id]);
+
+  const { totalIn, totalOut, netCashflow, inRatio } = useMemo(() => {
+    let inSum = 0;
+    let outSum = 0;
+    transactions.forEach((tx) => {
+      if (tx.amount > 0) inSum += tx.amount;
+      else outSum += Math.abs(tx.amount);
+    });
+    const net = inSum - outSum;
+    const ratio = inSum > 0 ? Math.min(100, Math.max(0, Math.round((net / inSum) * 100))) : 0;
+    return {
+      totalIn: inSum,
+      totalOut: outSum,
+      netCashflow: net,
+      inRatio: ratio,
+    };
+  }, [transactions]);
 
   // Filtered transactions
   const filteredTransactions = useMemo(() => {
-    return ownerTransactions.filter((tx) => {
+    return transactions.filter((tx) => {
       // Type filter
       if (typeFilter !== 'all') {
         if (typeFilter === 'in' && tx.type !== 'in') return false;
@@ -183,7 +222,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
             </div>
             <div>
               <div className="text-3xl font-extrabold text-[#ff4783] tracking-tight font-tabular">
-                +15.450.000 <span className="text-lg font-semibold text-[#ff4783]">đ</span>
+                +{totalIn.toLocaleString('vi-VN')} <span className="text-lg font-semibold text-[#ff4783]">đ</span>
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-xs text-slate-950 bg-[#d0f81b] px-2 py-0.5 rounded-md font-black border border-[#bde412]">
@@ -211,7 +250,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
             </div>
             <div>
               <div className="text-3xl font-extrabold text-slate-900 tracking-tight font-tabular">
-                -4.200.000 <span className="text-lg font-semibold text-slate-900">đ</span>
+                -{totalOut.toLocaleString('vi-VN')} <span className="text-lg font-semibold text-slate-900">đ</span>
               </div>
               <p className="text-xs text-slate-500 mt-2 truncate">
                 Nhập nước giải khát, tiền điện nước, xăng xe giao hàng
@@ -234,11 +273,11 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
             </div>
             <div>
               <div className="text-3xl font-extrabold text-slate-900 tracking-tight font-tabular">
-                +11.250.000 <span className="text-lg font-semibold text-slate-900">đ</span>
+                {netCashflow >= 0 ? '+' : '-'}{Math.abs(netCashflow).toLocaleString('vi-VN')} <span className="text-lg font-semibold text-slate-900">đ</span>
               </div>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <span className="text-xs text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md font-bold border border-slate-200">
-                  Tỷ lệ ròng 72.8%
+                  Tỷ lệ ròng {inRatio}%
                 </span>
                 <span className="text-xs text-slate-800 font-semibold flex items-center gap-1">
                   <span className="material-symbols-outlined text-[16px] text-[#ff4783]">check_circle</span>

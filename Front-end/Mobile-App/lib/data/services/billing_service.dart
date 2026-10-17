@@ -13,6 +13,9 @@ class BillingOrder {
   final String status; // 'PENDING' | 'PAID' | 'EXPIRED'
   final String transferContent;
   final String qrUrl;
+  final String bankCode;
+  final String bankAccount;
+  final String accountName;
   final DateTime? expiresAt;
   final DateTime? createdAt;
 
@@ -23,6 +26,9 @@ class BillingOrder {
     required this.status,
     required this.transferContent,
     required this.qrUrl,
+    this.bankCode = 'MB',
+    this.bankAccount = '0829100286',
+    this.accountName = 'PHAM HUYNH QUOC HUY',
     this.expiresAt,
     this.createdAt,
   });
@@ -32,9 +38,12 @@ class BillingOrder {
       orderCode: json['orderCode']?.toString() ?? '',
       plan: json['plan']?.toString() ?? 'PRO',
       amount: (json['amount'] is num) ? (json['amount'] as num).toInt() : 99000,
-      status: json['status']?.toString() ?? 'PENDING',
+      status: (json['status'] == 'SUCCESS' || json['status'] == 'PAID') ? 'PAID' : (json['status']?.toString() ?? 'PENDING'),
       transferContent: json['transferContent']?.toString() ?? '',
       qrUrl: json['qrUrl']?.toString() ?? '',
+      bankCode: json['bankCode']?.toString() ?? 'MB',
+      bankAccount: json['bankAccount']?.toString() ?? '0829100286',
+      accountName: json['accountName']?.toString() ?? 'PHAM HUYNH QUOC HUY',
       expiresAt: json['expiresAt'] != null ? DateTime.tryParse(json['expiresAt'].toString()) : null,
       createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null,
     );

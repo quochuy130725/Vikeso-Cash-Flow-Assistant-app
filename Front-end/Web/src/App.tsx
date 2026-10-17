@@ -22,6 +22,7 @@ import { PlanModal } from './components/PlanModal';
 import { AuthModal, UserAccount } from './components/AuthModal';
 import { BackdateModal } from './components/BackdateModal';
 import { PortalView } from './components/PortalView';
+import { prewarmServer } from './services/authApi';
 import { PortalType } from './types';
 import { CheckCircle2 } from 'lucide-react';
 

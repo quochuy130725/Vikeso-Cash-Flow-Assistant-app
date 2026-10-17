@@ -9,6 +9,7 @@ import 'views/profile/profile_screen.dart';
 import 'views/billing/upgrade_pro_screen.dart';
 import 'views/scan_receipt/camera_screen.dart';
 import 'views/analytics/analytics_screen.dart';
+import 'data/services/socket_service.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -73,6 +74,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    SocketService.instance.connect();
   }
 
   @override

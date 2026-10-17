@@ -1,3 +1,7 @@
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 require('dotenv').config(); // Đọc file .env đầu tiên
 
 const http = require('http');
@@ -23,8 +27,13 @@ initSocket(httpServer);
 // Kết nối MongoDB Atlas
 connectDB();
 
-// Middleware parse JSON
-app.use(cors());            // ← Cho phép Flutter Web / Postman gọi API
+// Middleware parse JSON & CORS với cache preflight 24h (loại bỏ độ trễ OPTIONS mỗi lần click)
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -33,6 +42,10 @@ require('./src/services/cronService');
 
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Health check & Prewarm endpoint
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok', time: Date.now() }));
+app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok', time: Date.now() }));
 
 // Gắn toàn bộ routes
 app.use('/api/auth', authRoutes);   // ─ Đăng nhập/Đăng ký/Google Sign-In

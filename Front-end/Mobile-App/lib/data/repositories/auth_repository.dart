@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../mock/mock_data.dart';
+import '../services/socket_service.dart';
 
 /// AuthRepository - Quản lý toàn bộ luồng xác thực FinAuto.
 class AuthRepository {
@@ -32,6 +33,7 @@ class AuthRepository {
   static const _kAccessToken = 'access_token';
   static const _kUserId = 'user_id';
   static const _kEmail = 'user_email';
+  static const _kName = 'user_name';
   static const _kShopName = 'user_shopName';
   static const _kAvatar = 'user_avatar';
   static const _kProvider = 'user_authProvider';
@@ -74,10 +76,10 @@ class AuthRepository {
           .post(
             uri,
             headers: {'Content-Type': 'application/json; charset=UTF-8'},
-            body: jsonEncode({'email': email.trim(), 'password': password}),
+            body: jsonEncode({'email': email.trim(), 'identifier': email.trim(), 'password': password}),
           )
           .timeout(_timeout);
-      return _handleAuthResponse(response);
+      return await _handleAuthResponse(response);
     } on SocketException {
       return AuthResult.failure(
           'Không thể kết nối máy chủ. Kiểm tra Wifi và IP!');
@@ -110,7 +112,7 @@ class AuthRepository {
             }),
           )
           .timeout(_timeout);
-      return _handleAuthResponse(response);
+      return await _handleAuthResponse(response);
     } on SocketException {
       return AuthResult.failure(
           'Không thể kết nối máy chủ. Kiểm tra Wifi và IP!');
@@ -171,7 +173,7 @@ class AuthRepository {
             body: jsonEncode({'idToken': idToken}),
           )
           .timeout(_timeout);
-      return _handleAuthResponse(response);
+      return await _handleAuthResponse(response);
     } on SocketException {
       return AuthResult.failure(
           'Không thể kết nối máy chủ. Kiểm tra Wifi và IP!');
@@ -231,6 +233,7 @@ class AuthRepository {
       return UserInfo(
         id: userId,
         email: await _storage.read(key: _kEmail) ?? '',
+        name: await _storage.read(key: _kName),
         shopName: await _storage.read(key: _kShopName) ?? '',
         avatar: await _storage.read(key: _kAvatar),
         authProvider: await _storage.read(key: _kProvider) ?? 'local',
@@ -281,22 +284,33 @@ class AuthRepository {
         final role = info['role']?.toString() ?? 'OWNER';
         final plan = info['subscriptionPlan']?.toString() ?? 'FREE';
         final phone = info['phone']?.toString();
+        final name = info['name']?.toString();
         final shopName = info['shopName']?.toString() ?? '';
         final email = info['email']?.toString() ?? '';
         final avatar = info['avatar']?.toString();
+        final telegramChatId = info['telegramChatId']?.toString();
+        final notificationSettings = info['notificationSettings'] != null
+            ? jsonEncode(info['notificationSettings'])
+            : null;
 
         await Future.wait([
           _storage.write(key: _kRole, value: role),
           _storage.write(key: _kSubscriptionPlan, value: plan),
           if (phone != null) _storage.write(key: _kPhone, value: phone),
+          if (name != null) _storage.write(key: _kName, value: name),
           _storage.write(key: _kShopName, value: shopName),
           _storage.write(key: _kEmail, value: email),
           if (avatar != null) _storage.write(key: _kAvatar, value: avatar),
+          if (telegramChatId != null && telegramChatId.isNotEmpty)
+            _storage.write(key: 'user_telegramChatId', value: telegramChatId),
+          if (notificationSettings != null)
+            _storage.write(key: 'user_notificationSettings', value: notificationSettings),
         ]);
 
         return UserInfo(
           id: info['id']?.toString() ?? (await getUserId()) ?? '',
           email: email,
+          name: name,
           shopName: shopName,
           avatar: avatar,
           authProvider: info['authProvider']?.toString() ?? 'local',
@@ -316,7 +330,92 @@ class AuthRepository {
     }
   }
 
+  /// Đổi mật khẩu
+  Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final token = await getAccessToken();
+      if (token == null) return {'success': false, 'message': 'Chưa đăng nhập.'};
+
+      final uri = Uri.parse('$_authBaseUrl/change-password');
+      final response = await http.put(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        }),
+      ).timeout(_timeout);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': response.statusCode == 200 && body['success'] == true,
+        'message': body['message'] ?? (body['error'] ?? 'Lỗi đổi mật khẩu.'),
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi kết nối: $e'};
+    }
+  }
+
+  /// Quên mật khẩu — gửi mã OTP về email (nhận email hoặc SĐT)
+  Future<Map<String, dynamic>> forgotPassword(String identifier) async {
+    try {
+      final uri = Uri.parse('$_authBaseUrl/forgot-password');
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({'email': identifier.trim()}),
+      ).timeout(_timeout);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': response.statusCode == 200 && body['success'] == true,
+        'message': body['message'] ?? body['error'] ?? 'Không thể gửi mã xác nhận.',
+        'email': body['email'],
+        'demoCode': body['demoCode'],
+      };
+    } on SocketException {
+      return {'success': false, 'message': 'Không thể kết nối máy chủ. Kiểm tra mạng!'};
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi kết nối: $e'};
+    }
+  }
+
+  /// Đặt lại mật khẩu bằng mã OTP
+  Future<Map<String, dynamic>> resetPassword({
+    required String identifier,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      final uri = Uri.parse('$_authBaseUrl/reset-password');
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({
+          'email': identifier.trim(),
+          'code': code.trim(),
+          'newPassword': newPassword,
+        }),
+      ).timeout(_timeout);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': response.statusCode == 200 && body['success'] == true,
+        'message': body['message'] ?? body['error'] ?? 'Đặt lại mật khẩu thất bại.',
+      };
+    } on SocketException {
+      return {'success': false, 'message': 'Không thể kết nối máy chủ. Kiểm tra mạng!'};
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi kết nối: $e'};
+    }
+  }
+
   Future<void> logout() async {
+    SocketService.instance.disconnect();
     await _storage.deleteAll();
     try {
       await _googleSignIn.signOut();
@@ -338,12 +437,18 @@ class AuthRepository {
       final role = userInfo['role']?.toString() ?? 'OWNER';
       final plan = userInfo['subscriptionPlan']?.toString() ?? 'FREE';
       final phone = userInfo['phone']?.toString() ?? '';
+      final name = userInfo['name']?.toString() ?? '';
+      final telegramChatId = userInfo['telegramChatId']?.toString();
+      final notificationSettings = userInfo['notificationSettings'] != null
+          ? jsonEncode(userInfo['notificationSettings'])
+          : null;
 
       await Future.wait([
         _storage.write(key: _kAccessToken, value: accessToken),
         _storage.write(key: _kUserId, value: resolvedUserId),
         _storage.write(
             key: _kEmail, value: userInfo['email']?.toString() ?? ''),
+        if (name.isNotEmpty) _storage.write(key: _kName, value: name),
         _storage.write(
             key: _kShopName, value: userInfo['shopName']?.toString() ?? ''),
         _storage.write(key: _kAvatar, value: userInfo['avatar']?.toString()),
@@ -353,11 +458,19 @@ class AuthRepository {
         _storage.write(key: _kRole, value: role),
         _storage.write(key: _kSubscriptionPlan, value: plan),
         if (phone.isNotEmpty) _storage.write(key: _kPhone, value: phone),
+        if (telegramChatId != null && telegramChatId.isNotEmpty)
+          _storage.write(key: 'user_telegramChatId', value: telegramChatId),
+        if (notificationSettings != null)
+          _storage.write(key: 'user_notificationSettings', value: notificationSettings),
       ]);
+
+      // Kết nối WebSocket ngay khi đăng nhập thành công
+      SocketService.instance.connect();
 
       return AuthResult.success(UserInfo(
         id: resolvedUserId,
         email: userInfo['email']?.toString() ?? '',
+        name: name.isNotEmpty ? name : null,
         shopName: userInfo['shopName']?.toString() ?? '',
         avatar: userInfo['avatar']?.toString(),
         authProvider: userInfo['authProvider']?.toString() ?? 'local',
@@ -390,6 +503,7 @@ class AuthResult {
 class UserInfo {
   final String id;
   final String email;
+  final String? name;
   final String shopName;
   final String? avatar;
   final String authProvider;
@@ -402,6 +516,7 @@ class UserInfo {
   const UserInfo({
     required this.id,
     required this.email,
+    this.name,
     required this.shopName,
     this.avatar,
     required this.authProvider,

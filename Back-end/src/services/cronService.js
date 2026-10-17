@@ -1,17 +1,12 @@
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
 const cron = require('node-cron');
 const axios = require('axios');
-const nodemailer = require('nodemailer');
 const User = require('../models/User');
 const Receipt = require('../models/Receipt');
-
-// ─── Khởi tạo bộ gửi email ────────────────────────────────────────────────
-const createMailTransporter = () => nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-    },
-});
+const { sendEmail } = require('./mailService');
 
 // ─── Template Email HTML ──────────────────────────────────────────────────
 const buildEmailHTML = ({ shopName, tongThu, tongChi, loinhuan, soHoaDon, ngay }) => `
@@ -99,7 +94,7 @@ const buildTelegramMessage = ({ shopName, tongThu, tongChi, loinhuan, soHoaDon, 
 // =========================================================================
 // HÀM CORE: Chạy toàn bộ luồng báo cáo (dùng chung cho Cron và Test API)
 // =========================================================================
-const runDailyReport = async ({ sendZeroReports = false } = {}) => {
+const runDailyReport = async ({ sendZeroReports = false, targetEmail = null } = {}) => {
     const results = { emailSent: 0, telegramSent: 0, skipped: 0, errors: [] };
 
     // Tính chính xác 00:00:00 -> 23:59:59.999 theo giờ Việt Nam (UTC+7)
@@ -121,7 +116,11 @@ const runDailyReport = async ({ sendZeroReports = false } = {}) => {
 
     let usersToProcess = [];
 
-    if (sendZeroReports) {
+    if (targetEmail) {
+        // Chế độ test chỉ định 1 email cụ thể
+        usersToProcess = await User.find({ email: targetEmail.trim().toLowerCase() });
+        console.log(`🎯 [Chế độ chỉ định email: ${targetEmail}] Tìm thấy ${usersToProcess.length} người dùng.`);
+    } else if (sendZeroReports) {
         // Gửi cho tất cả users có bật nhận thông báo (email hoặc telegram)
         usersToProcess = await User.find({
             $or: [
@@ -139,9 +138,7 @@ const runDailyReport = async ({ sendZeroReports = false } = {}) => {
         }
     }
 
-    const transporter = createMailTransporter();
-
-    for (const user of usersToProcess) {
+    await Promise.all(usersToProcess.map(async (user) => {
         const userReceipts = await Receipt.find({ userId: user._id, ...dateFilter });
 
         let tongThu = 0, tongChi = 0;
@@ -166,16 +163,25 @@ const runDailyReport = async ({ sendZeroReports = false } = {}) => {
         const shouldSendEmail = user.notificationSettings?.receiveEmail ?? true;
         const shouldSendTelegram = user.notificationSettings?.receiveTelegram ?? true;
 
+        // Bỏ qua tài khoản test mẫu (@example.com)
+        if (user.email && user.email.toLowerCase().endsWith('@example.com')) {
+            console.log(`⚠️  ${user.email} là tài khoản mẫu (@example.com) — bỏ qua.`);
+            results.skipped++;
+            return;
+        }
+
         // ── Email (nếu bật) ─────────────────────────────────────────────
         if (shouldSendEmail && user.email) {
             try {
-                await transporter.sendMail({
-                    from: `"Vikeso AI" <${process.env.MAIL_USER}>`,
+                const info = await sendEmail({
+                    senderName: 'Vikeso AI',
                     to: user.email,
+                    name: shopName,
                     subject: `📊 Báo cáo chốt ca ${ngayFormat} - ${shopName}`,
                     html: buildEmailHTML({ ...data, loinhuan }),
+                    text: buildTelegramMessage({ ...data, loinhuan: fmt(loinhuan) }).replace(/\*/g, ''),
                 });
-                console.log(`✉️  Email → ${user.email} ✅`);
+                console.log(`✉️  Email → ${user.email} ✅ (${info.provider})`);
                 results.emailSent++;
             } catch (mailErr) {
                 console.error(`❌ Email lỗi (${user.email}):`, mailErr.message);
@@ -204,7 +210,7 @@ const runDailyReport = async ({ sendZeroReports = false } = {}) => {
         } else if (!shouldSendTelegram) {
             console.log(`⚠️  ${user.email} đã tắt nhận báo cáo qua Telegram.`);
         }
-    }
+    }));
 
     return { totalUsers: usersToProcess.length, ...results };
 };

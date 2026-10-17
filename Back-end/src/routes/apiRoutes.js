@@ -48,14 +48,20 @@ router.post('/confirm-receipt', aiReceiptController.confirmReceipt);
 // ---------------------------------------------------------
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Vui lòng nhập email và mật khẩu' });
+    const identifier = (req.body.email || req.body.phone || req.body.identifier || '').trim();
+    const { password } = req.body;
+    if (!identifier || !password) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập email/số điện thoại và mật khẩu' });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      $or: [
+        { email: identifier.toLowerCase() },
+        { phone: identifier }
+      ]
+    });
     if (!user || user.password !== password) {
-      return res.status(400).json({ success: false, message: 'Email hoặc mật khẩu không đúng' });
+      return res.status(400).json({ success: false, message: 'Email/Số điện thoại hoặc mật khẩu không đúng' });
     }
 
     return res.status(200).json({
@@ -87,7 +93,11 @@ router.get('/transactions', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Thiếu userId' });
     }
 
-    const receipts = await Receipt.find({ userId, status: 'VALID' }).sort({ transactionDate: -1 });
+    const filter = { userId };
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+    const receipts = await Receipt.find(filter).sort({ transactionDate: -1 });
 
     return res.status(200).json({
       success: true,
@@ -143,6 +153,7 @@ router.put('/user/:id/notification-settings', async (req, res) => {
     if (receiveInApp !== undefined) user.notificationSettings.receiveInApp = receiveInApp;
 
     await user.save();
+    require('../socket').emitToUser(user._id, 'profile_updated', { reason: 'notification_settings' });
 
     return res.status(200).json({
       success: true,
@@ -162,8 +173,9 @@ router.put('/user/:id/notification-settings', async (req, res) => {
 router.post('/test-report', async (req, res) => {
   try {
     const sendZeroReports = req.body?.sendZeroReports !== undefined ? req.body.sendZeroReports : true;
-    console.log(`🧪 [TEST] Trigger báo cáo thủ công... (sendZeroReports: ${sendZeroReports})`);
-    const result = await runDailyReport({ sendZeroReports });
+    const targetEmail = req.body?.email || req.body?.targetEmail || null;
+    console.log(`🧪 [TEST] Trigger báo cáo thủ công... (sendZeroReports: ${sendZeroReports}, targetEmail: ${targetEmail || 'all'})`);
+    const result = await runDailyReport({ sendZeroReports, targetEmail });
     return res.status(200).json({
       success: true,
       message: 'Báo cáo đã được gửi thành công!',
@@ -182,5 +194,65 @@ router.post('/test-report', async (req, res) => {
 // ---------------------------------------------------------
 router.post('/telegram/webhook', telegramController.handleWebhook);
 router.get('/telegram/set-webhook', telegramController.setWebhook);
+
+// ---------------------------------------------------------
+// TELEGRAM BOT — Lịch sử gửi báo cáo kết ca thực tế của User
+// GET /api/telegram/history?userId=...
+// ---------------------------------------------------------
+router.get('/telegram/history', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'Thiếu userId' });
+    }
+
+    const receipts = await Receipt.find({ userId }).sort({ transactionDate: -1 }).lean();
+
+    const groups = {};
+    receipts.forEach((r) => {
+      const d = r.transactionDate ? new Date(r.transactionDate) : new Date(r.createdAt || Date.now());
+      const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (!groups[dayKey]) {
+        groups[dayKey] = { date: d, thu: 0, chi: 0, count: 0 };
+      }
+      groups[dayKey].count += 1;
+      if (r.transactionType === 'THU') {
+        groups[dayKey].thu += (r.totalAmount || 0);
+      } else {
+        groups[dayKey].chi += (r.totalAmount || 0);
+      }
+    });
+
+    const history = Object.keys(groups).sort().reverse().map((key) => {
+      const g = groups[key];
+      const d = g.date;
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      const dateStr = `${day}/${month}/${year}`;
+      const dateCompact = `${day}${month}${year}`;
+      const net = g.thu - g.chi;
+
+      return {
+        sendTime: `${dateStr} 22:00:00`,
+        shift: `Ca Ngày ${dateStr}`,
+        inflow: `+${g.thu.toLocaleString('vi-VN')} đ`,
+        outflow: `-${g.chi.toLocaleString('vi-VN')} đ`,
+        net: `${net >= 0 ? '+' : '-'}${Math.abs(net).toLocaleString('vi-VN')} đ`,
+        file: `BangKe_${dateCompact}.xlsx`,
+        status: 'Thành công (200 OK - Đã gửi Bot)',
+        receiptCount: g.count,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: history,
+    });
+  } catch (error) {
+    console.error('Lỗi telegram history:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 module.exports = router;

@@ -5,6 +5,7 @@ class TransactionItemCard extends StatelessWidget {
   final String time;
   final double value;
   final bool isThu;
+  final String? subtitle;
   final VoidCallback? onTap;
 
   const TransactionItemCard({
@@ -13,12 +14,13 @@ class TransactionItemCard extends StatelessWidget {
     required this.time,
     required this.value,
     required this.isThu,
+    this.subtitle,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final valueString = '${isThu ? '+' : '-'}${value.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
+    final valueString = '${isThu ? '+' : '-'}${value.abs().toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
 
     return Material(
       color: Colors.transparent,
@@ -74,12 +76,14 @@ class TransactionItemCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      time,
+                      subtitle ?? time,
                       style: const TextStyle(
                         color: Color(0xFF94A3B8),
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

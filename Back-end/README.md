@@ -113,7 +113,7 @@ Xử lý tại `manualEntryController.js` nhằm triệt tiêu lỗi trùng lặ
 
 ---
 
-## 📡 Danh Sách API (14 Endpoints)
+## 📡 Danh Sách API (25 Endpoints)
 
 Tài liệu Swagger tương tác trực quan xem tại: **`/api-docs`**
 
@@ -146,6 +146,25 @@ Tài liệu Swagger tương tác trực quan xem tại: **`/api-docs`**
 | `POST` | `/api/telegram/webhook` | Webhook tiếp nhận tin nhắn từ Telegram Bot |
 | `GET` | `/api/telegram/set-webhook` | Đăng ký Webhook URL với Telegram API (gọi 1 lần) |
 | `POST` | `/api/test-report` | Kích hoạt gửi báo cáo chốt ca kiểm tra ngay lập tức |
+
+### 5. Nhóm Thanh Toán SePay VietQR (Billing)
+| Method | Endpoint | Mô tả | Auth |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/billing/create-order` | Tạo đơn hàng nâng cấp PRO và sinh mã VietQR | ❌ |
+| `GET` | `/api/billing/status/:orderCode` | Kiểm tra trạng thái đơn hàng (PENDING / PAID / EXPIRED) | ❌ |
+| `GET` | `/api/billing/history?userId=...` | Lịch sử các giao dịch nâng cấp gói của user | ❌ |
+| `POST` | `/api/billing/sepay/webhook` | Webhook tiếp nhận thanh toán từ SePay Gateway (xác thực API Key) | 🔑 SePay Key |
+
+### 6. Nhóm Quản Trị Hệ Thống (Admin - Yêu cầu Role ADMIN)
+| Method | Endpoint | Mô tả | Auth |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/api/admin/overview` | Thống kê tổng quan: Users, Giao dịch, Doanh thu SePay | 🛡️ Admin Token |
+| `GET` | `/api/admin/users` | Danh sách người dùng hệ thống (kèm phân trang, tìm kiếm) | 🛡️ Admin Token |
+| `GET` | `/api/admin/users/:id` | Xem chi tiết 1 người dùng | 🛡️ Admin Token |
+| `PUT` | `/api/admin/users/:id/role` | Cập nhật quyền hạn (OWNER / ADMIN) | 🛡️ Admin Token |
+| `PUT` | `/api/admin/users/:id/plan` | Cập nhật gói cước thủ công (FREE / PRO) | 🛡️ Admin Token |
+| `GET` | `/api/admin/transactions` | Danh sách toàn bộ hóa đơn/giao dịch trong hệ thống | 🛡️ Admin Token |
+| `GET` | `/api/admin/payments` | Danh sách lịch sử đơn hàng thanh toán SePay | 🛡️ Admin Token |
 
 ---
 

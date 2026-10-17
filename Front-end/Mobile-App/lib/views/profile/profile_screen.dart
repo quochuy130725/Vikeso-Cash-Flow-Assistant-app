@@ -4,11 +4,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:async';
 import '../shared_widgets/side_drawer.dart';
 import '../shared_widgets/pro_badge.dart';
 import '../shared_widgets/pro_paywall_sheet.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/services/api_service.dart';
+import '../../data/services/socket_service.dart';
 import '../billing/upgrade_pro_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -17,12 +19,13 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserver {
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(),
   );
 
   String _shopName  = '';
+  String _name      = '';
   String _email     = '';
   String _phone     = '';
   String? _avatar;
@@ -33,18 +36,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _receiveTelegram = false;
   bool _receiveInApp = true;
   bool _hasTelegram = false;
+  StreamSubscription? _profileSub;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadProfile();
+    _profileSub = SocketService.instance.onProfileChanged.listen((_) {
+      _loadProfile();
+    });
+  }
+
+  @override
+  void dispose() {
+    _profileSub?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadProfile();
+    }
   }
 
   Future<void> _loadProfile() async {
-    // Tự động đồng bộ thông tin mới nhất từ server
+    // 1. Tự động đồng bộ thông tin mới nhất từ server
     final profile = await AuthRepository().fetchUserProfile();
     if (profile != null && mounted) {
       setState(() {
+        _name = profile.name ?? '';
         _shopName = profile.shopName;
         _email = profile.email;
         _phone = profile.phone ?? '';
@@ -52,6 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _subscriptionPlan = profile.subscriptionPlan;
       });
     } else {
+      final name     = await _storage.read(key: 'user_name')     ?? '';
       final shopName = await _storage.read(key: 'user_shopName') ?? '';
       final email    = await _storage.read(key: 'user_email')    ?? '';
       final phone    = await _storage.read(key: 'user_phone')    ?? '';
@@ -59,6 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final plan     = await _storage.read(key: 'user_subscriptionPlan') ?? 'FREE';
       if (!mounted) return;
       setState(() {
+        _name     = name;
         _shopName = shopName;
         _email    = email;
         _phone    = phone;
@@ -67,20 +92,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
 
+    // 2. Đồng bộ Telegram và Cài đặt thông báo trực tiếp từ Server
+    final userId = await AuthRepository().getUserId();
+    if (userId != null && userId.isNotEmpty) {
+      try {
+        final serverProfile = await ApiService().getUserProfile(userId);
+        if (serverProfile['success'] == true && mounted) {
+          final bool hasTg = serverProfile['hasTelegram'] == true;
+          final Map<String, dynamic>? st = serverProfile['settings'] as Map<String, dynamic>?;
+          if (st != null) {
+            setState(() {
+              _hasTelegram = hasTg;
+              _receiveEmail = st['receiveEmail'] ?? true;
+              _receiveTelegram = hasTg && (st['receiveTelegram'] == true);
+              _receiveInApp = st['receiveInApp'] ?? true;
+            });
+            await _storage.write(key: 'user_telegramChatId', value: hasTg ? 'linked' : '');
+            await _storage.write(key: 'user_notificationSettings', value: jsonEncode(st));
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 3. Fallback đọc từ local storage nếu mất kết nối
     final settingsStr = await _storage.read(key: 'user_notificationSettings');
-    if (settingsStr != null) {
+    if (settingsStr != null && mounted) {
       try {
         final Map<String, dynamic> settings = jsonDecode(settingsStr);
-        _receiveEmail = settings['receiveEmail'] ?? true;
         final hasTg = await _storage.read(key: 'user_telegramChatId');
-        _hasTelegram = hasTg != null && hasTg.isNotEmpty;
-        _receiveTelegram = _hasTelegram && (settings['receiveTelegram'] == true);
-        _receiveInApp = settings['receiveInApp'] ?? true;
+        final hasTelegram = hasTg != null && hasTg.isNotEmpty;
+        setState(() {
+          _receiveEmail = settings['receiveEmail'] ?? true;
+          _hasTelegram = hasTelegram;
+          _receiveTelegram = hasTelegram && (settings['receiveTelegram'] == true);
+          _receiveInApp = settings['receiveInApp'] ?? true;
+        });
       } catch (_) {}
     }
   }
 
   Future<void> _openEditDialog() async {
+    final nameCtrl  = TextEditingController(text: _name);
     final shopCtrl  = TextEditingController(text: _shopName);
     final phoneCtrl = TextEditingController(text: _phone);
 
@@ -88,31 +141,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Sửa thông tin', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: shopCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Tên cửa hàng',
-                prefixIcon: Icon(Icons.storefront_outlined),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Họ và tên',
+                  prefixIcon: Icon(Icons.person_outline),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: phoneCtrl,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'Số điện thoại',
-                prefixIcon: Icon(Icons.phone_outlined),
+              const SizedBox(height: 12),
+              TextField(
+                controller: shopCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Tên cửa hàng',
+                  prefixIcon: Icon(Icons.storefront_outlined),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Số điện thoại',
+                  prefixIcon: Icon(Icons.phone_outlined),
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, {
+              'name': nameCtrl.text.trim(),
               'shopName': shopCtrl.text.trim(),
               'phone': phoneCtrl.text.trim(),
             }),
@@ -123,10 +187,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (result == null) return;
-    await _updateProfile(result['shopName']!, result['phone']!);
+    await _updateProfile(result['name']!, result['shopName']!, result['phone']!);
   }
 
-  Future<void> _updateProfile(String shopName, String phone) async {
+  Future<void> _updateProfile(String name, String shopName, String phone) async {
     setState(() { _isLoading = true; });
     try {
       final token   = await _storage.read(key: 'access_token') ?? '';
@@ -140,6 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
+          'name': name,
           'shopName': shopName,
           'phone': phone,
         }),
@@ -149,13 +214,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (response.statusCode == 200 && body['success'] == true) {
         final info = body['userInfo'] as Map<String, dynamic>;
         
-        await _storage.write(key: 'user_shopName', value: info['shopName']?.toString() ?? '');
-        await _storage.write(key: 'user_phone', value: info['phone']?.toString() ?? '');
+        await _storage.write(key: 'user_name', value: info['name']?.toString() ?? name);
+        await _storage.write(key: 'user_shopName', value: info['shopName']?.toString() ?? shopName);
+        await _storage.write(key: 'user_phone', value: info['phone']?.toString() ?? phone);
         
         if (!mounted) return;
         setState(() {
-          _shopName = info['shopName']?.toString() ?? '';
-          _phone    = info['phone']?.toString() ?? '';
+          _name     = info['name']?.toString() ?? name;
+          _shopName = info['shopName']?.toString() ?? shopName;
+          _phone    = info['phone']?.toString() ?? phone;
         });
         _showSnack('Cập nhật thành công!', isSuccess: true);
       } else {
@@ -165,6 +232,117 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _showSnack('Lỗi kết nối: $e');
     } finally {
       if (mounted) setState(() { _isLoading = false; });
+    }
+  }
+
+  Future<void> _openChangePasswordDialog() async {
+    final currentPassCtrl = TextEditingController();
+    final newPassCtrl = TextEditingController();
+    final confirmPassCtrl = TextEditingController();
+    bool obscureCurrent = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Đổi mật khẩu', style: TextStyle(fontWeight: FontWeight.bold)),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: currentPassCtrl,
+                    obscureText: obscureCurrent,
+                    decoration: InputDecoration(
+                      labelText: 'Mật khẩu hiện tại',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscureCurrent ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setDialogState(() => obscureCurrent = !obscureCurrent),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: newPassCtrl,
+                    obscureText: obscureNew,
+                    decoration: InputDecoration(
+                      labelText: 'Mật khẩu mới',
+                      prefixIcon: const Icon(Icons.lock_reset),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setDialogState(() => obscureNew = !obscureNew),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: confirmPassCtrl,
+                    obscureText: obscureConfirm,
+                    decoration: InputDecoration(
+                      labelText: 'Xác nhận mật khẩu mới',
+                      prefixIcon: const Icon(Icons.check_circle_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscureConfirm ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Hủy'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final cur = currentPassCtrl.text.trim();
+                  final newP = newPassCtrl.text.trim();
+                  final conf = confirmPassCtrl.text.trim();
+                  if (cur.isEmpty) {
+                    _showSnack('Vui lòng nhập mật khẩu hiện tại');
+                    return;
+                  }
+                  if (newP.length < 6) {
+                    _showSnack('Mật khẩu mới phải có ít nhất 6 ký tự');
+                    return;
+                  }
+                  if (newP != conf) {
+                    _showSnack('Mật khẩu xác nhận không khớp');
+                    return;
+                  }
+                  Navigator.pop(ctx, true);
+                },
+                child: const Text('Cập nhật'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (result == true) {
+      setState(() { _isLoading = true; });
+      try {
+        final res = await AuthRepository().changePassword(
+          currentPassword: currentPassCtrl.text.trim(),
+          newPassword: newPassCtrl.text.trim(),
+        );
+        if (res['success'] == true) {
+          _showSnack(res['message'] ?? 'Đổi mật khẩu thành công!', isSuccess: true);
+        } else {
+          _showSnack(res['message'] ?? 'Đổi mật khẩu thất bại!');
+        }
+      } catch (e) {
+        _showSnack('Lỗi: $e');
+      } finally {
+        if (mounted) setState(() { _isLoading = false; });
+      }
     }
   }
 
@@ -272,8 +450,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       drawer: const CustomSideDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          : RefreshIndicator(
+              onRefresh: _loadProfile,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
               child: Column(
                 children: [
                   Center(
@@ -296,9 +477,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 backgroundColor: const Color(0xFFFFF0F5),
                                 child: _avatar == null || !_avatar!.startsWith('http')
                                     ? Text(
-                                        _shopName.isNotEmpty ? _shopName[0].toUpperCase() : 'V',
+                                        _name.isNotEmpty
+                                            ? _name[0].toUpperCase()
+                                            : (_shopName.isNotEmpty ? _shopName[0].toUpperCase() : 'V'),
                                         style: const TextStyle(
-                                          fontSize: 36,
+                                          fontSize: 34,
                                           color: Color(0xFFFF4783),
                                           fontWeight: FontWeight.w900,
                                         ),
@@ -338,7 +521,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 14),
                         Text(
-                          _shopName.isNotEmpty ? _shopName : 'Cửa hàng Vikeso',
+                          _name.isNotEmpty ? _name : (_shopName.isNotEmpty ? _shopName : 'Cửa hàng Vikeso'),
                           style: const TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 19,
@@ -346,6 +529,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             letterSpacing: -0.3,
                           ),
                         ),
+                        if (_shopName.isNotEmpty && _name.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            _shopName,
+                            style: const TextStyle(
+                              color: Color(0xFF334155),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 3),
                         Text(
                           _email,
@@ -504,6 +698,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         _menuItem(context, Icons.storefront_rounded, 'Cập nhật thông tin cửa hàng', onTap: _openEditDialog),
                         _menuItem(context, Icons.workspace_premium_rounded, 'Gói dịch vụ PRO & Hóa đơn thanh toán', onTap: _navigateToUpgradePro),
+                        _menuItem(context, Icons.lock_outline_rounded, 'Đổi mật khẩu', onTap: _openChangePasswordDialog),
                         _menuItem(
                           context,
                           Icons.send_rounded,
@@ -643,6 +838,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
+          ),
     );
   }
 
@@ -708,6 +904,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           } catch (e) {
             _showSnack('Không thể mở Telegram: $e', isSuccess: false);
           }
+        }
+        // Tự động tải lại profile để cập nhật trạng thái cần gạt Telegram
+        await Future.delayed(const Duration(seconds: 2));
+        if (mounted) {
+          await _loadProfile();
         }
       }
     }

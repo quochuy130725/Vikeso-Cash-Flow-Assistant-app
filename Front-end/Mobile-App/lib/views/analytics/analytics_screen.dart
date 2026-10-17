@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:async';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../data/services/api_service.dart';
+import '../../data/services/socket_service.dart';
 import '../../data/services/excel_export_service.dart';
 import '../../data/services/subscription_service.dart';
 import '../shared_widgets/pro_paywall_sheet.dart';
@@ -29,17 +31,29 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Map<String, double> _categoryChiSums = {};
   bool _showThuPieChart = true;
   int _touchedPieIndex = -1;
+  StreamSubscription? _txSub;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _txSub = SocketService.instance.onTransactionChanged.listen((_) {
+      _loadData(silent: true);
+    });
   }
 
-  Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-    });
+  @override
+  void dispose() {
+    _txSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadData({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
       const storage = FlutterSecureStorage(aOptions: AndroidOptions());

@@ -13,7 +13,7 @@ class ExcelExportService {
   static Future<void> exportTransactions(
     BuildContext context,
     List<Map<String, dynamic>> transactions, {
-    String fileName = 'FinAuto_BaoCao',
+    String fileName = 'VikeSo_BaoCao',
   }) async {
     try {
       final excel = Excel.createExcel();
@@ -35,7 +35,7 @@ class ExcelExportService {
         CellIndex.indexByString('F1'),
       );
       final titleCell = sheet.cell(CellIndex.indexByString('A1'));
-      titleCell.value = TextCellValue('BÁO CÁO THU CHI - FINAUTO');
+      titleCell.value = TextCellValue('BÁO CÁO THU CHI - VIKESO');
       titleCell.cellStyle = titleStyle;
 
       // Ngày xuất
@@ -194,8 +194,8 @@ class ExcelExportService {
 
       await Share.shareXFiles(
         [XFile(filePath)],
-        text: 'Báo cáo thu chi FinAuto',
-        subject: 'Báo cáo thu chi FinAuto',
+        text: 'Báo cáo thu chi VikeSo',
+        subject: 'Báo cáo thu chi VikeSo',
       );
     } catch (e) {
       if (context.mounted) {

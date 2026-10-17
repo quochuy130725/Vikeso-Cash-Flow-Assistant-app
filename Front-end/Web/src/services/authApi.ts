@@ -3,9 +3,7 @@
  * Connects directly to VikeSo Backend API
  */
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  'https://vikeso-cash-flow-assistant-app.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export interface LoginPayload {
   email: string;
@@ -94,5 +92,18 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthRespon
       success: false,
       message: err.message || 'Không thể kết nối đến máy chủ Backend.',
     };
+  }
+}
+
+
+/**
+ * Tự động đánh thức máy chủ Backend (Prewarm / Keep-alive)
+ * Giúp tránh độ trễ Cold Start của gói Render Free Tier khi người dùng vừa vào trang hoặc mở modal
+ */
+export function prewarmServer(): void {
+  try {
+    fetch(`${API_BASE_URL}/health`, { method: 'GET' }).catch(() => {});
+  } catch {
+    // ignore
   }
 }

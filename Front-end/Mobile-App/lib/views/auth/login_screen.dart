@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../data/repositories/auth_repository.dart';
+import 'forgot_password_screen.dart';
 
 /// LoginScreen - Dang nhap bang Email/Password hoac Google Sign-In.
 /// Su dung AuthRepository de goi API backend va luu JWT vao SecureStorage.
@@ -97,6 +98,23 @@ class _LoginScreenState extends State<LoginScreen> {
   // =========================================================
   // CHUYEN MAN HINH DASHBOARD (luu userId vao dotenv runtime)
   // =========================================================
+  // =========================================================
+  // QUEN MAT KHAU
+  // =========================================================
+  Future<void> _openForgotPassword() async {
+    final email = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => ForgotPasswordScreen(initialIdentifier: _emailController.text),
+      ),
+    );
+    if (!mounted || email == null) return;
+    setState(() {
+      _emailController.text = email;
+      _passwordController.clear();
+      _errorMessage = null;
+    });
+  }
+
   void _navigateToDashboard(UserInfo user) {
     // Cap nhat USER_ID trong dotenv runtime de cac screen khac dung duoc
     dotenv.env['USER_ID'] = user.id;
@@ -193,20 +211,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                   ],
 
-                  // Email
+                  // Email hoặc SĐT
                   TextFormField(
                     controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
+                    keyboardType: _isRegisterMode ? TextInputType.emailAddress : TextInputType.text,
                     decoration: _inputDecoration(
-                      label: 'Email đăng nhập',
-                      hint: 'VD: cuahang@vikeso.vn',
-                      icon: Icons.email_outlined,
+                      label: _isRegisterMode ? 'Email đăng nhập' : 'Email hoặc Số điện thoại',
+                      hint: _isRegisterMode ? 'VD: cuahang@vikeso.vn' : 'VD: cuahang@vikeso.vn hoặc 0987654321',
+                      icon: _isRegisterMode ? Icons.email_outlined : Icons.person_outline,
                       colorScheme: colorScheme,
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Vui lòng nhập email';
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                        return 'Email không đúng định dạng';
+                      if (value == null || value.trim().isEmpty) {
+                        return _isRegisterMode ? 'Vui lòng nhập email' : 'Vui lòng nhập email hoặc số điện thoại';
+                      }
+                      if (_isRegisterMode) {
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+                          return 'Email không đúng định dạng';
+                        }
                       }
                       return null;
                     },
@@ -240,23 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Quên mật khẩu?', style: TextStyle(fontWeight: FontWeight.bold)),
-                              content: const Text(
-                                'Vui lòng liên hệ quản trị viên hoặc gửi email về support@vikeso.vn để được hỗ trợ cấp lại mật khẩu mới.',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx),
-                                  child: const Text('Đã hiểu'),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                        onPressed: _isLoading ? null : _openForgotPassword,
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 4),
                         ),

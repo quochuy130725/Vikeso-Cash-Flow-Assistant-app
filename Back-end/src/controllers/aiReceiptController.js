@@ -1,7 +1,7 @@
 const sharp = require('sharp');
 const { analyzeReceiptImage } = require('../services/geminiAI');
 const Receipt = require('../models/Receipt');
-const { getIO } = require('../socket');
+const { emitToUser } = require('../socket');
 
 /**
  * POST /api/scan-receipt
@@ -96,15 +96,8 @@ exports.confirmReceipt = async (req, res) => {
     const savedDocs = await Receipt.insertMany(docs);
     console.log(`✅ Đã lưu ${savedDocs.length} giao dịch vào DB.`);
 
-    // Emit sự kiện 'new_transaction' → tất cả Flutter client tự cập nhật chart
-    try {
-      const io = getIO();
-      io.emit('new_transaction', {
-        userId,
-        transactions: savedDocs,
-      });
-      console.log(`📡 Đã broadcast sự kiện new_transaction tới tất cả clients.`);
-    } catch (_) {}
+    // Emit 'new_transaction' chỉ tới thiết bị của chính user → app tự cập nhật
+    emitToUser(userId, 'new_transaction', { transactions: savedDocs });
 
     return res.status(201).json({
       success: true,
