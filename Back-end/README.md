@@ -1,6 +1,6 @@
 # 🚀 Vikeso Backend - Core API & Realtime Services
 
-Hệ thống máy chủ Backend của **Vikeso** (Trợ lý Kế toán & Quản trị Dòng tiền Thông minh cho Hộ kinh doanh SME). Xây dựng trên nền tảng **Node.js, Express, MongoDB Atlas, Socket.IO, Google Gemini AI, Nodemailer và Telegram Bot API**.
+Hệ thống máy chủ Backend của **Vikeso** (Trợ lý Kế toán & Quản trị Dòng tiền Thông minh cho Hộ kinh doanh SME). Xây dựng trên nền tảng **Node.js, Express, MongoDB Atlas, Socket.IO, Google Gemini AI, Nodemailer (Brevo/Resend HTTPS), SePay VietQR và Telegram Bot API**.
 
 ---
 
