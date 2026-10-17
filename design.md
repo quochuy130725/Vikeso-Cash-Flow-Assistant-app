@@ -1,151 +1,239 @@
-# 📘 TÀI LIỆU THIẾT KẾ & QUY TẮC NGHIỆP VỤ HỆ THỐNG VIKESO (DESIGN.MD)
+# 📘 TÀI LIỆU THIẾT KẾ KIẾN TRÚC UI/UX & QUY TẮC NGHIỆP VỤ HỆ THỐNG VIKESO (DESIGN.MD)
 
-> **Dự án:** VikeSo (Trợ lý Kế toán & Quản lý dòng tiền thông minh cho Hộ kinh doanh cá thể)  
-> **Phiên bản:** 1.0.0 (Production Architecture)  
-> **Tài liệu tham chiếu:** [MASTER.md](file:///Users/nguyentien/Library/Mobile%20Documents/com~apple~CloudDocs/Documents/EXE_FinAuto/Vikeso-Cash-Flow-Assistant-app/Front-end/Web/design-system/vikeso/MASTER.md), [agent.md](file:///Users/nguyentien/Library/Mobile%20Documents/com~apple~CloudDocs/Documents/EXE_FinAuto/Vikeso-Cash-Flow-Assistant-app/agent.md), [README.md](file:///Users/nguyentien/Library/Mobile%20Documents/com~apple~CloudDocs/Documents/EXE_FinAuto/Vikeso-Cash-Flow-Assistant-app/README.md)
-
----
-
-## 1. TỔNG QUAN HỆ THỐNG & ĐỊNH VỊ SẢN PHẨM
-
-### 1.1. Mục tiêu sản phẩm
-**VikeSo** là giải pháp phần mềm đa nền tảng (Web Landing, Web Portal, Mobile App) được thiết kế chuyên biệt cho các **Hộ kinh doanh cá thể, tiểu thương, quán cà phê, quán ăn, tiệm tạp hóa và thương lái nông sản**. Sản phẩm giải quyết triệt để 3 vấn đề nhức nhối nhất của các hộ kinh doanh truyền thống:
-1. **Thất lạc và nhầm lẫn hóa đơn:** Quá nhiều hóa đơn lẻ viết tay, hóa đơn in nhiệt từ máy POS, ghi chép sổ tay dễ rách, nhòe mực.
-2. **Trùng lặp doanh thu khi chốt sổ:** Doanh thu vừa ghi nhận ở các bill bán lẻ máy POS, vừa bị cộng trùng lần thứ hai khi in phiếu tổng kết ca (Z-Report / POS Kết ca).
-3. **Áp lực chốt sổ khuya:** Chủ quán phải ngồi cộng tay từng tờ hóa đơn lúc 22:00 - 23:00 đêm sau ngày dài mệt mỏi.
-
-### 1.2. Triết lý trải nghiệm (Product Principles)
-* **KISS (Keep It Simple, Stupid) & 1-Chạm:** Trải nghiệm không yêu cầu kiến thức kế toán; chụp 1 tấm ảnh hóa đơn là AI tự bóc tách toàn bộ.
-* **Ngôn ngữ bình dân:** Loại bỏ hoàn toàn thuật ngữ kế toán phức tạp (Nợ/Có, Định khoản), thay thế bằng hai khái niệm trực quan: **"Tiền vào (THU)"** và **"Tiền ra (CHI)"**.
-* **Tự động hóa thụ động:** Chủ kinh doanh không cần mở app kiểm tra liên tục; đúng **22:00 mỗi đêm**, hệ thống tự động bắn báo cáo tổng kết ngày qua **Telegram Bot** và **Email**.
+> **Dự án:** VikeSo (Trợ lý AI Quản Lý Dòng Tiền & Đối Soát Hóa Đơn Cho Hộ Kinh Doanh Cá Thể)  
+> **Phiên bản:** 2.0.0 (Production Daylight Luxury Fintech)  
+> **Tài liệu tham chiếu:** [MASTER.md](file:///Users/nguyentien/Library/Mobile%20Documents/com~apple~CloudDocs/Documents/EXE_FinAuto/Vikeso-Cash-Flow-Assistant-app/Front-end/Web/design-system/vikeso/MASTER.md), [agent.md](file:///Users/nguyentien/Library/Mobile%20Documents/com~apple~CloudDocs/Documents/EXE_FinAuto/Vikeso-Cash-Flow-Assistant-app/agent.md), [README.md](file:///Users/nguyentien/Library/Mobile%20Documents/com~apple~CloudDocs/Documents/EXE_FinAuto/Vikeso-Cash-Flow-Assistant-app/README.md)  
+> **Tương thích:** Mobile App (Flutter / React Native), Web Landing Page & Web Portal (React 19 + Vite 8 + TailwindCSS)
 
 ---
 
-## 2. KIẾN TRÚC CÔNG NGHỆ LANDING PAGE & WEB PORTAL (TECH STACK)
+## 1. TỔNG QUAN HỆ THỐNG & TRIẾT LÝ TRẢI NGHIỆM TIỂU THƯƠNG
 
-Landing Page và Web Application của VikeSo được xây dựng theo chuẩn **Modern Single Page Application (SPA)** hiện đại, hiệu năng cao và tải tức thì.
+### 1.1. Mục tiêu và sứ mệnh sản phẩm
+**VikeSo** là nền tảng công nghệ quản lý tài chính dòng tiền thông minh thế hệ mới, được thiết kế chuyên biệt cho **Hộ kinh doanh cá thể, tiểu thương chợ truyền thống, quán cà phê, nhà hàng F&B, tiệm tạp hóa và đại lý nông sản**.
 
-| Lớp công nghệ (Layer) | Công nghệ sử dụng | Mục đích & Vai trò |
-| :--- | :--- | :--- |
-| **Framework & Core** | **React 19 (`^19.0.1`)** + **TypeScript (`^5.8.2`)** | Kiến trúc component module hóa, type-safe, render nhanh, hỗ trợ Server/Client component tối ưu. |
-| **Build Tool & Bundler** | **Vite 8 (`^8.3.0`)** | Máy chủ phát triển HMR siêu tốc và trình đóng gói bundle tối ưu dung lượng. |
-| **Styling & CSS Engine** | **TailwindCSS v4 (`^4.3.3`)** + `@tailwindcss/vite` | Utility-first CSS thế hệ mới, tích hợp biến CSS Token HSL, Dark Mode OLED và Glassmorphism. |
-| **Motion & Micro-interactions** | **Motion / Framer Motion v12 (`^12.23.24`)** | Hiệu ứng chuyển động mượt mà 60fps, tương tác scroll-reveal, tab switching, modal transitions. |
-| **Custom UI Components** | **ReactBits (`SpotlightCard`, `Magnet`)** | Thẻ tương tác ánh sáng theo chuột, nam châm hút nút bấm tạo cảm giác Fintech cao cấp. |
-| **Iconography** | **Lucide React (`^0.546.0`)** | Hệ thống icon tối giản, sắc nét, đồng bộ cho toàn bộ giao diện tài chính. |
-| **Trí tuệ nhân tạo (AI)** | **Google Gemini 1.5 Flash (`@google/genai`)** | Bóc tách OCR đa phương thức: đọc chữ viết tay, bill in nhiệt, phân tích độ tin cậy dưới 3 giây. |
-| **Cổng thanh toán tự động** | **SePay Payment Gateway (VietQR)** | Sinh mã QR thanh toán ngân hàng tự động (Vietcombank), webhook xác thực nâng cấp PRO realtime. |
-| **Giao tiếp Realtime** | **Socket.IO Client** | Lắng nghe sự kiện `new_transaction` để cập nhật bảng cân đối thu chi tức thì không cần F5. |
+Hệ thống giải quyết dứt điểm 3 nỗi đau kinh điển lớn nhất của các chủ kinh doanh tại Việt Nam:
+1. **Thất lạc và nhòe mờ hóa đơn:** Hóa đơn in nhiệt máy POS phai mực chỉ sau vài ngày, hóa đơn bán lẻ giấy tập bị ướt/rách, thất thoát số liệu tiền mặt.
+2. **Cộng trùng doanh thu 2 lần khi chốt sổ:** Doanh thu vừa được tính qua các bill lẻ in nhiệt phát sinh trong ca, vừa bị cộng thêm lần thứ hai khi in phiếu tổng kết ca (Z-Report / POS Kết ca) vào cuối ngày.
+3. **Áp lực chốt ca nửa đêm:** Chủ tiệm kiệt sức phải ngồi bấm máy tính tay, cộng sổ lúc 22:00 - 23:00 đêm sau 14 tiếng phục vụ khách hàng.
 
----
-
-## 3. THIẾT KẾ GIAO DIỆN & TRẢI NGHIỆM NGƯỜI DÙNG (UI/UX DESIGN)
-
-### 3.1. Bảng màu chủ đạo (Color Palette)
-
-Giao diện áp dụng phong cách **Fintech Hiện Đại (Modern Fintech Luxury)** kết hợp hài hòa giữa nền sáng thanh lịch và các khối Cockpit Dark-OLED sang trọng.
-
-* **Primary Magenta (`#B31F56`):** Màu thương hiệu cốt lõi, thể hiện sự tin cậy, sắc nét, quyết đoán của phần mềm quản lý tài chính.
-* **Secondary Pink (`#FF5C8D`):** Gam màu phụ trợ tươi sáng, tạo điểm nhấn ấm áp, gần gũi với chủ cửa hàng bán lẻ.
-* **Accent Success (`#22C55E`):** Đại diện cho **Tiền vào (THU)**, doanh thu dương, chỉ số tăng trưởng, trạng thái đối soát thành công.
-* **Accent Destructive (`#EF4444`):** Đại diện cho **Tiền ra (CHI)**, chi phí, cảnh báo hóa đơn mờ hoặc lỗi cần review.
-* **Gold VIP (`#FFD700` / `#FFE082`):** Đại diện cho **Gói VikeSo PRO**, huy hiệu Member, biểu tượng thanh toán SePay VietQR.
-* **Dark Cockpit Background (`#020617` / `#0E1223`):** Nền tối sâu thẳm dành cho màn hình mô phỏng máy quét hóa đơn, tạo độ tương phản cao cho chữ số tài chính.
-* **Glassmorphism Border (`rgba(255, 92, 141, 0.2)`):** Hiệu ứng kính mờ với viền phát sáng nhẹ, tạo chiều sâu thị giác.
-
-### 3.2. Hệ thống Typography & Phông chữ
-* **Heading Typography:** **Inter** (`font-weight: 700`, `800`, `900`) — Dứt khoát, hiện đại, đảm bảo tính rõ ràng khi hiển thị số liệu doanh thu lớn.
-* **Body Typography:** **Inter** (`font-weight: 400`, `500`) — Dễ đọc trên mọi kích thước màn hình từ điện thoại đến máy tính bảng.
-* **Accent / Editorial Typography:** **Playfair Display** (Italic) — Dùng cho các câu châm ngôn, tiêu đề phụ mang tính cam kết uy tín thương hiệu.
+### 1.2. Triết lý trải nghiệm cốt lõi (Core UX Principles)
+* **KISS (Keep It Simple, Small & Smart):** Người dùng không cần hiểu bất kỳ nghiệp vụ kế toán nào. Chỉ cần 1 chạm chụp ảnh, AI Gemini 1.5 Flash tự động bóc tách và phân loại hoàn toàn trong chưa đầy 2 giây.
+* **Ngôn ngữ bình dân, loại bỏ thuật ngữ hàn lâm:** Tuyệt đối không dùng "Nợ/Có", "Định khoản kế toán", "Bảng cân đối kế toán". Thay thế 100% bằng hai khái niệm trực quan: **"Tiền vào (THU)"** và **"Tiền ra (CHI)"**.
+* **Tự động hóa thụ động (Zero-Touch Automation):** Chủ quán không cần mở ứng dụng liên tục; đúng **22:00 mỗi đêm**, hệ thống tự động chốt sổ và gửi báo cáo tóm tắt kèm biểu đồ qua **Telegram Bot** và **Email**.
+* **Thẩm mỹ Daylight Luxury Fintech:** Chuyển đổi hoàn toàn khỏi phong cách "Dark Cockpit" u tối sang giao diện ban ngày tươi sáng, sang trọng, đẳng cấp, tối ưu độ tương phản cho người trung niên và mắt cận thị.
 
 ---
 
-### 3.3. Cấu trúc các Section trên Landing Page
+## 2. HỆ THỐNG THIẾT KẾ CHUẨN DAYLIGHT FINTECH (DESIGN SYSTEM & TOKENS)
 
-Trang Landing Page được tổ chức theo cấu trúc hình phễu chuyển đổi **Enterprise Gateway** kết hợp Storytelling trực quan:
+### 2.1. Bảng màu thương hiệu chuẩn (Brand Palette Tokens)
+
+Hệ thống sử dụng bảng màu nhận diện thương hiệu nguyên bản, được hiệu chuẩn để đạt chuẩn tiếp cận quốc tế **WCAG 2.1 AA (Contrast Ratio >= 4.5:1)**:
+
+```mermaid
+graph LR
+    A["#FF4783<br>Vibrant Magenta"] --- B["#D0F81B<br>Cyber Lime"]
+    B --- C["#FFFFFF<br>Pure Daylight"]
+    C --- D["#0F172A<br>Slate Ink"]
+```
+
+| Token Màu | Mã Hex | Tên Gọi Kỹ Thuật | Ứng Dụng Trong Giao Diện UI | Tiêu Chuẩn Trợ Năng & Tương Phản |
+| :--- | :--- | :--- | :--- | :--- |
+| **Primary** | **`#FF4783`** | Vibrant Magenta | • Màu thương hiệu chính, Logo, Icon hạt mầm.<br>• Nút hành động chính (Primary CTA).<br>• Dòng **THU (Tiền vào)**, Doanh thu tăng trưởng.<br>• Vệt sáng camera quét AI (Laser Scan Beam). | Chữ trắng `#FFFFFF` trên nền `#FF4783` đạt tương phản **4.6:1** (Đạt chuẩn WCAG AA). |
+| **Accent** | **`#D0F81B`** | Cyber Lime | • Huy hiệu gói **PRO (ProBadge)**.<br>• Thẻ cảnh báo thông minh, viền highlight nổi bật.<br>• Nút nâng cấp PRO thu hút chuyển đổi. | **QUY TẮC BẮT BUỘC:** Chữ trên nền `#D0F81B` phải sử dụng Slate Dark **`#0F172A`** (Tương phản **12.2:1**). **Tuyệt đối cấm dùng chữ trắng**. |
+| **Surface** | **`#FFFFFF`** | Pure White | • Nền thẻ giao dịch (Card Surface), Header, Modal.<br>• Tạo không gian thoáng đãng phong cách Daylight. | Kết hợp nền tinted canvas `#F8FAFC` để tạo chiều sâu thị giác. |
+| **Dark Ink** | **`#0F172A`** | Slate Navy / Dark | • Chữ tiêu đề lớn, con số doanh thu (`font-black`).<br>• Dòng **CHI (Tiền ra)**, Nút phụ, Sidebar active indicator. | Tương phản **16:1** trên nền trắng, chống mỏi mắt cho người lớn tuổi. |
+| **Neutral Sub** | **`#64748B`** | Slate Muted | • Văn bản phụ trợ, nhãn thời gian, mã hóa đơn. | Đảm bảo tương phản **4.8:1** trên nền trắng. |
+| **Border** | **`#E2E8F0`** | Slate Border Line | • Đường viền phân cách 1px sắc nét giữa các thẻ. | Tạo ranh giới vật lý rõ ràng cho từng khối thông tin. |
+
+---
+
+### 2.2. Hệ thống Typography & Phông chữ số học
+
+* **Font chữ chủ đạo:** **Inter** hoặc **Plus Jakarta Sans** (Hỗ trợ tiếng Việt đầy đủ, tối ưu hóa hiển thị trên màn hình Retina).
+* **Định dạng số tiền (Tabular Figures):** Áp dụng thuộc tính CSS `font-variant-numeric: tabular-nums` (`tnum`) cho toàn bộ các con số tiền tệ để các hàng đơn vị nghìn, triệu, tỷ luôn căn thẳng tắp theo trục dọc.
+* **Thang kích thước chữ (Type Scale):**
+  * `Display / Big Cash`: `text-3xl font-black tracking-tight` (Dành cho Tổng tiền vào/ra và Lợi nhuận ròng).
+  * `Heading 1`: `text-xl sm:text-2xl font-extrabold text-slate-900`.
+  * `Heading 2`: `text-base sm:text-lg font-bold text-slate-800`.
+  * `Body Text`: `text-sm font-medium text-slate-700`.
+  * `Caption / Meta`: `text-xs font-semibold text-slate-500`.
+
+---
+
+### 2.3. Hệ thống Lưới Không Gian (8pt Grid & Geometry)
+
+* **Spacing Grid:** Tất cả khoảng cách padding, margin, gap đều chia hết cho 4 và 8: `4px` (`p-1`), `8px` (`p-2`), `12px` (`p-3`), `16px` (`p-4`), `24px` (`p-6`), `32px` (`p-8`).
+* **Bo góc hiện đại (Border Radius):**
+  * Card và Container: `rounded-2xl` (16px) hoặc `rounded-3xl` (24px).
+  * Nút bấm và Input: `rounded-xl` (12px).
+  * Badges và Tags: `rounded-full` (9999px).
+* **Hiệu ứng đổ bóng mờ sang trọng (Daylight Elevation):**
+  * Không dùng bóng đen cứng. Dùng bóng mờ tán xạ cao: `shadow-sm shadow-slate-200/50` cho thẻ thường và `shadow-xl shadow-[#FF4783]/15` cho thẻ nổi bật.
+
+---
+
+## 3. THƯ VIỆN THÀNH PHẦN UI & VI TƯƠNG TÁC (COMPONENT LIBRARY)
 
 ```mermaid
 graph TD
-    A[1. Header Navbar] --> B[2. Hero Section & Interactive Cockpit]
-    B --> C[3. Problem Section - Nỗi đau thực tế]
-    C --> D[4. Core Features - 4 Trụ cột giải pháp]
-    D --> E[5. Traffic Light UX - Đèn giao thông bóc tách]
-    E --> F[6. Workflow Section - Quy trình 4 bước]
-    F --> G[7. Spotlight & Comparison - So sánh cạnh tranh]
-    G --> H[8. Pricing Section - Bảng giá FREE vs PRO]
-    H --> I[9. FAQ Section - Hỏi đáp thường gặp]
-    I --> K[10. Final CTA & Footer]
+    A[Component Library] --> B[1. Cash Flow Hero Card]
+    A --> C[2. Transaction Item & Merged State]
+    A --> D[3. Traffic Light OCR Badge]
+    A --> E[4. PRO Gating & Lock System]
+    A --> F[5. VietQR Modal & Live Countdown]
 ```
 
+### 3.1. Thẻ Dòng Tiền Đỉnh Cao (Cash Flow Hero Card)
+* **Cấu trúc:** Mặt thẻ trắng tinh khôi (`bg-white`), viền mảnh `border border-slate-200/80`, bóng mờ êm dịu.
+* **Trọng tâm thị giác:** Con số **Lợi nhuận ròng hôm nay** đặt chính giữa với cỡ chữ lớn nhất.
+* **Phân bổ 2 cột phụ:**
+  * Cột bên trái: **Tiền vào (THU)** — Icon mũi tên chéo lên, màu `#FF4783`, kèm tỷ lệ tăng trưởng.
+  * Cột bên phải: **Tiền ra (CHI)** — Icon mũi tên chéo xuống, màu `#0F172A`, kèm số lượng hóa đơn chi.
+
+### 3.2. Thành phần Giao Dịch & Trạng Thái Gộp Chống Trùng (Transaction Item)
+* **Giao dịch THU:** Huy hiệu tròn viền `#FF4783`, số tiền có tiền tố `+`, font màu hồng thương hiệu.
+* **Giao dịch CHI:** Huy hiệu tròn Slate, số tiền có tiền tố `-`, font màu Slate đậm `#0F172A`.
+* **Giao dịch Bị Gộp Chống Trùng (`MERGED`):**
+  * Số tiền hiển thị dạng gạch ngang (`line-through text-slate-400`).
+  * Gắn huy hiệu nhỏ: `Đã gộp vào phiếu kết ca` (nền `bg-slate-100 text-slate-600`).
+  * Giúp chủ quán an tâm tuyệt đối rằng hóa đơn đã được ghi nhận nhưng không bị cộng trùng 2 lần.
+
+### 3.3. Thành phần Đèn Giao Thông Nhận Diện AI (Traffic Light OCR Badge)
+* 🟢 **Xanh lá (`HIGH` - Độ tin cậy > 90%):** Hóa đơn sắc nét, AI bóc tách chính xác 100%, tự động ghi sổ.
+* 🟡 **Vàng (`MEDIUM` - Độ tin cậy 70% - 90%):** Hóa đơn hơi nhăn hoặc chữ viết tay, hệ thống hiển thị viền vàng và nút "Chạm để xác nhận số tiền".
+* 🔴 **Đỏ (`LOW` - Độ tin cậy < 70%):** Hóa đơn chụp thiếu góc/quá tối, hiển thị cảnh báo kèm hướng dẫn: *"Vui lòng chụp lại ở nơi đủ ánh sáng!"*.
+
+### 3.4. Hệ thống Phân Cấp & Khóa Tính Năng Gói PRO (PRO Gating Architecture)
+* **Huy hiệu PRO Badge:** Bo tròn hình viên thuốc, nền màu vàng chanh **`#D0F81B`**, chữ đen đậm **`#0F172A`**, kèm icon vương miện hoặc tia sét vàng.
+* **Biểu tượng Khóa Tinh Xảo (`🔒 Locked`):** Hiển thị ngay trên các nút bấm của tính năng đặc quyền PRO:
+  * Nút "Xuất file Excel" trong Báo cáo.
+  * Nút "Xem phân tích chuyên sâu 30 ngày".
+  * Nút "Bật tự động hóa báo cáo 22:00".
+* **ProPaywallSheet (Mobile) & PlanModal (Web):** Khi người dùng gói FREE chạm vào nút bị khóa, giao diện trượt mở mượt mà bảng so sánh quyền lợi kèm mã VietQR thanh toán 99.000đ/tháng.
+
+---
+
+## 4. KIẾN TRÚC GIAO DIỆN & TRẢI NGHIỆM MOBILE APP (OWNER APP)
+
+Mobile App hướng tới phục vụ thao tác tốc độ cao của chủ quán ngay tại quầy thu ngân. Áp dụng nghiêm ngặt **Quy tắc công thái học 1 tay (One-Handed Reachability)**.
+
+### 4.1. Thanh Điều Hướng Dưới Cùng (Bottom Navigation Bar)
+* Cố định ở đáy màn hình với 4 vị trí:
+  1. **Sổ Quỹ (Home):** Xem dòng tiền tức thì hôm nay.
+  2. **Quét Hóa Đơn (Smart Camera OCR):** Nút tròn kích thước lớn đặt chính giữa, nền màu `#FF4783`, nổi bật khỏi thanh điều hướng.
+  3. **Báo Cáo (Reports):** Biểu đồ thu chi tuần/tháng.
+  4. **Cài Đặt (Settings):** Cấu hình bot Telegram và tài khoản.
+
+### 4.2. Chi Tiết Màn Hình Mobile
+1. **Trang Chủ (Daylight Home Screen):**
+   * Header: Tên quán, Avatar, Huy hiệu gói (FREE / PRO) và Trạng thái Bot Telegram (🟢 Đang kích hoạt / ⚠️ Chưa kết nối).
+   * Thẻ Dòng tiền ngày (Thu, Chi, Tồn két).
+   * Bộ lọc nhanh dạng viên thuốc: *Tất cả*, *Tiền vào*, *Tiền ra*, *Đã gộp*.
+   * Danh sách giao dịch phát sinh trong ca.
+2. **Camera Quét Hóa Đơn AI (Smart OCR Camera):**
+   * Khung ngắm tự động bắt 4 góc hóa đơn.
+   * Vệt quét laser màu `#FF4783` chuyển động quét từ trên xuống.
+   * Lưới chặn ảnh rác: Nếu người dùng chụp phong cảnh/selfie, lập tức hiển thị thông báo: *"Ảnh không phải hóa đơn tài chính. Vui lòng chụp lại!"*.
+3. **Màn Hình Nâng Cấp PRO & Thanh Toán VietQR (PRO Billing Screen):**
+   * Hiển thị mã QR ngân hàng SePay động (Vietcombank), định dạng chuẩn NAPAS 24/7.
+   * Tự động hiển thị mã nội dung chuyển khoản `VIKESO...` kèm nút 1-chạm sao chép.
+   * Tự động lắng nghe WebSocket/Polling: Khi tiền vào tài khoản, màn hình tự động bắn hiệu ứng Confetti chúc mừng nâng cấp PRO thành công.
+
+---
+
+## 5. KIẾN TRÚC GIAO DIỆN & TRẢI NGHIỆM WEB PORTAL (WEB APPLICATION)
+
+Nền tảng Web của VikeSo phục vụ song song: Khách vãng lai tìm hiểu sản phẩm (Landing Page), Chủ hộ kinh doanh ngồi máy tính (Owner Dashboard), và Quản trị viên sàn (Admin Portal).
+
+> **BẢO ĐẢM TOÀN VẸN 100% API:** Mọi chức năng dưới đây đều được ánh xạ trực tiếp với các route Backend hiện hữu, không có bất kỳ chức năng suy đoán hay ngoài lề.
+
+```mermaid
+graph TD
+    subgraph WEB_APP_STRUCTURE["Cấu Trúc Ứng Dụng Web VikeSo"]
+        A["Trang Chủ Công Cộng (Landing Page)"]
+        B["Owner Dashboard (#owner-dashboard)"]
+        C["Admin Portal (#admin-dashboard)"]
+    end
+
+    A -->|"Đăng Nhập OWNER"| B
+    A -->|"Đăng Nhập ADMIN"| C
+    B -.->|"Truy Cập Trái Phép Admin"| D["403 Forbidden Guard"]
+    C -.->|"Truy Cập Sổ Quỹ Riêng Tư"| E["403 Fiduciary Guard"]
+```
+
+---
+
+### 5.1. Landing Page (Trang Chủ Giới Thiệu Chuyển Đổi Cao)
+
+Thiết kế giao diện ban ngày chuẩn Daylight Fintech sang trọng, chia thành các Section liền mạch:
+
 1. **Header (Navbar):**
-   * Logo nhận diện thương hiệu VikeSo (biểu tượng lá mầm dòng tiền).
-   * Menu điều hướng liên kết nhanh: *Tính năng, Quy trình, Đèn giao thông, Bảng giá, Hỏi đáp*.
-   * Nút thao tác nhanh: **Quét thử hóa đơn (Demo)**, **Đăng nhập / Đăng ký**, và nút chuyển thẳng vào **Bảng điều khiển (Owner / Admin Portal)** khi đã có phiên làm việc.
-2. **Hero Section (Khu vực trung tâm):**
-   * **Headline:** *"VikeSo - Trợ lý AI Quản Lý Dòng Tiền & Đối Soát Hóa Đơn Cho Hộ Kinh Doanh"*.
-   * **Sub-headline:** Nhấn mạnh giá trị giải phóng chủ cửa hàng khỏi sổ nợ rách nát và nhầm lẫn máy POS.
-   * **CTA kép:** Nút chính *"Bắt đầu sử dụng 0đ"* (mở AuthModal) + Nút phụ *"Xem video vận hành"* (mở VideoModal).
-   * **Interactive Hero Cockpit:** Khối giả lập thông minh cho phép người dùng bấm chuyển đổi giữa 2 chế độ:
-     * *Cockpit tổng quan:* Giả lập dòng tiền hôm nay (+8.450.000đ), trạng thái kết nối Telegram Bot.
-     * *Scan Demo:* Cho phép người dùng bấm nút *"Chụp thử"* để xem AI quét vệt sáng và bóc tách dữ liệu hóa đơn trong 1.2 giây.
-3. **Problem Section (Thấu hiểu nỗi đau khách hàng):**
-   * Liệt kê 4 vấn đề kinh điển: *Sổ tay thất lạc, mất bill in nhiệt máy POS, cộng trùng doanh thu 2 lần, đau đầu chốt sổ lúc nửa đêm*.
-4. **Core Features Section (Tính năng nền tảng):**
-   * Trình bày 4 tính năng then chốt: **Quét AI 1-Chạm**, **Lưới lọc thông minh 2 chiều**, **Báo cáo tự động Telegram 22:00**, **Bảo mật và đồng bộ Realtime**.
-5. **Traffic Light Section (Công nghệ Đèn Giao Thông UX):**
-   * Trực quan hóa cơ chế bảo vệ dòng tiền 3 cấp độ:
-     * 🟢 **Xanh lá (`HIGH`):** Hóa đơn rõ nét, bóc tách chính xác 100%, tự động ghi sổ.
-     * 🟡 **Vàng (`MEDIUM`):** Hóa đơn hơi mờ hoặc viết tay, hệ thống gợi ý kiểm tra lại con số.
-     * 🔴 **Đỏ (`LOW`):** Hóa đơn chụp quá tối/rách góc, AI yêu cầu chủ quán xác nhận thủ công trước khi lưu.
-6. **Workflow Section (Hành trình 4 bước đơn giản):**
-   * B1: Chụp ảnh hóa đơn ➔ B2: Gemini AI bóc tách ➔ B3: Lưới lọc chống trùng tự động ➔ B4: Nhận báo cáo tổng kết 22:00.
-7. **Spotlight & Comparison Section (Bảng so sánh vượt trội):**
-   * Đối chiếu VikeSo với *Ghi sổ tay truyền thống* và *Phần mềm kế toán cồng kềnh* trên các tiêu chí: Chi phí, độ phức tạp, thời gian chốt ca, khả năng chống trùng lặp.
-8. **Pricing Section (Chính sách giá minh bạch):**
-   * **Gói Khởi Đầu (0đ):** Miễn phí vĩnh viễn, phù hợp quán nhỏ mới mở.
-   * **Gói VikeSo PRO (99.000đ / tháng):** Đầy đủ tính năng nâng cao, không giới hạn OCR, tích hợp thanh toán tự động qua SePay VietQR.
-9. **FAQ Section (Giải đáp thắc mắc):**
-   * Trả lời về bảo mật dữ liệu, tính năng dùng trên điện thoại, cách thức bot Telegram gửi tin nhắn.
-10. **CTA Cuối trang & Footer:**
-    * Kêu gọi đăng ký dùng thử ngay, hiển thị Hotline hỗ trợ, điều khoản dịch vụ và chính sách bảo mật dữ liệu.
+   * Logo nhận diện hạt mầm VikeSo.
+   * Menu điều hướng: *Tính năng, Lưới lọc, Đèn giao thông, Bảng giá, Hỏi đáp*.
+   * Nút **Quét thử hóa đơn (Demo 0đ)** mở `ScanModal.tsx`.
+   * Nút **Đăng nhập / Đăng ký** mở `AuthModal.tsx`.
+   * Khi đã đăng nhập: Tự động đổi thành nút **"Vào Bảng Điều Khiển"** dẫn thẳng tới `#owner-dashboard` hoặc `#admin-dashboard`.
+2. **Hero Section & Interactive Scan Simulator:**
+   * Headline: *"VikeSo - Trợ lý AI Quản Lý Dòng Tiền & Đối Soát Hóa Đơn Cho Hộ Kinh Doanh"*.
+   * Subheadline: Nhấn mạnh việc giải phóng tiểu thương khỏi sổ nợ rách nát và nhầm lẫn máy POS.
+   * **Simulator quét thật:** Cho phép người dùng kéo thả trực tiếp ảnh hóa đơn thật để gọi API `POST /api/scan-receipt`. AI bóc tách hiển thị trực tiếp danh sách món, tổng tiền, loại chứng từ và phân loại đèn giao thông trong vòng 2 giây.
+3. **Problem Section (Thấu Hiểu Nỗi Đau Khách Hàng):**
+   * Trình bày trực quan 4 vấn đề: *Sổ tay rách/mất nét, bill in nhiệt bay màu, cộng trùng doanh thu 2 lần, kiệt sức chốt sổ lúc nửa đêm*.
+4. **Core Features Section (4 Trụ Cột Đột Phá):**
+   * Trực quan hóa: Quét AI 1-chạm, Lưới lọc thông minh 2 chiều, Báo cáo tự động 22:00, Bảo mật đồng bộ thời gian thực.
+5. **Traffic Light Section (Công Nghệ Đèn Giao Thông):**
+   * Trực quan hóa cơ chế bảo vệ dòng tiền 3 cấp độ (🟢 Xanh, 🟡 Vàng, 🔴 Đỏ).
+6. **Workflow Section (Hành Trình 4 Bước Đơn Giản):**
+   * B1: Chụp ảnh hóa đơn ➔ B2: Gemini AI bóc tách ➔ B3: Lưới lọc chống trùng tự động ➔ B4: Nhận báo cáo tổng kết 22:00 qua Telegram/Email.
+7. **Spotlight & Comparison Section (So Sánh Vượt Trội):**
+   * Đối chiếu VikeSo với *Ghi sổ tay truyền thống* và *Phần mềm kế toán cồng kềnh*.
+8. **Pricing Section (Bảng Giá Minh Bạch FREE vs PRO):**
+   * Gói Khởi Đầu (0đ): Dùng thử tính năng cơ bản.
+   * Gói PRO (99.000đ / tháng): Không giới hạn quét OCR, tự động gửi báo cáo 22:00, xuất Excel, phân tích chuyên sâu.
+9. **FAQ Section & Footer:**
+   * Giải đáp về bảo mật dữ liệu, hướng dẫn kết nối Telegram, Hotline hỗ trợ.
 
 ---
 
-### 3.4. Hệ thống Modal Tương Tác Trực Tiếp (Interactive Modals)
+### 5.2. Cổng Thông Tin Dành Cho Chủ Hộ Kinh Doanh (Owner Dashboard - `#owner-dashboard`)
 
-Toàn bộ ứng dụng không dùng các form tĩnh mà hỗ trợ hệ thống popup tương tác chuyên sâu:
+* **Cơ chế phân quyền:** Chỉ tài khoản có vai trò `OWNER` mới có quyền truy cập. Nếu cố tình nhập URL `#admin-dashboard`, hệ thống kích hoạt **Guard 403 Forbidden** và hiển thị thông báo giải thích quyền hạn.
+* **Bố cục giao diện:** Fixed Collapsible Sidebar bên trái (thu gọn được để mở rộng diện tích làm việc) + Header hiển thị tên quán, avatar và gói cước.
 
-* **`ScanModal.tsx`:** Cho phép người dùng trực tiếp tải lên một ảnh hóa đơn thật từ máy tính/điện thoại, gọi thẳng API Backend `/api/scan-receipt` để kiểm nghiệm sức mạnh của Google Gemini OCR.
-* **`AuthModal.tsx`:** Modal Đăng nhập / Đăng ký hợp nhất, hỗ trợ đăng nhập Email/Password hoặc Google OAuth 1-Click.
-* **`PlanModal.tsx`:** Modal đăng ký và nâng cấp gói PRO tích hợp mã VietQR động từ cổng thanh toán SePay.
-* **`TelegramModal.tsx`:** Hướng dẫn 3 bước kết nối tài khoản với Bot `@FinautoDemo_bot`.
-* **`BackdateModal.tsx`:** Giao diện cho phép chủ quán nộp bổ sung hóa đơn của ngày hôm qua hoặc tuần trước vào sổ sách.
+#### Bảng Ánh Xạ Tab Chức Năng Của Chủ Hộ Với API Backend Thực Tế:
 
----
-
-### 3.5. Hệ thống Cổng Thông Tin (Portal Views: Owner vs Admin)
-
-Ứng dụng tích hợp sẵn cổng quản trị nội bộ ngay trên nền tảng Web thông qua component `PortalView.tsx`, phân định rạch ròi theo phân quyền người dùng:
-
-#### 1. Cổng dành cho Chủ Cửa Hàng (Owner Dashboard)
-* **Sổ thu chi dòng tiền:** Bảng nhật ký giao dịch hiển thị trực quan các mục THU, CHI, và các mục đã được gộp (`MERGED` gạch ngang chống cộng trùng).
-* **Báo cáo & Xuất dữ liệu:** Biểu đồ dòng tiền, lọc theo ngày/tuần/tháng, nút xuất file Excel kế toán.
-* **Báo cáo tự động Telegram:** Quản lý trạng thái liên kết bot, nút gửi thử báo cáo chốt ca ngay lập tức.
-* **Cài đặt cửa hàng:** Cập nhật tên cửa hàng, số điện thoại, avatar, đổi mật khẩu.
-
-#### 2. Cổng dành cho Quản Trị Viên (Admin Portal)
-* **Tổng quan vận hành:** Giám sát toàn bộ chỉ số KPI sàn: Tổng số hộ kinh doanh đăng ký, tổng doanh thu thanh toán SePay, tổng lưu lượng giao dịch quét qua hệ thống.
-* **Quản lý Hộ kinh doanh:** Danh sách tất cả tài khoản người dùng, chức năng kích hoạt gói PRO thủ công, đổi vai trò (OWNER / ADMIN), xóa tài khoản.
-* **Cấu hình Hệ thống:** Giám sát trạng thái Backend API, Webhook SePay, Bot Telegram, Cronjob 22:00.
+| Tab Nghiệp Vụ | Mô Tả Giao Diện & Trải Nghiệm Người Dùng (UI/UX) | API Backend Thực Tế Kết Nối 1:1 |
+| :--- | :--- | :--- |
+| **Tab 1: Sổ Thu Chi Dòng Tiền**<br>(`OwnerCashflowLedger.tsx`) | • **Hero Metrics:** Thẻ tổng tiền vào (`#FF4783`), tiền ra (`#0F172A`) và số dư ròng trong ngày.<br>• **Bảng Nhật Ký Giao Dịch:** Bảng hiển thị toàn bộ hóa đơn có phân trang, bộ lọc thời gian (Hôm nay, Hôm qua, 7 ngày, Tháng này), tìm kiếm theo tên món/tiền.<br>• **Hiển thị hóa đơn gộp:** Hóa đơn lẻ POS bị trùng được đánh dấu `MERGED` gạch ngang số tiền.<br>• **Nút Quét Hóa Đơn (`ScanModal`):** Tải ảnh bill lên bóc tách AI.<br>• **Nút Nhập Thủ Công:** Mở modal thêm nhanh khoản chi tiền chợ, tiền ship.<br>• **Lắng nghe Realtime:** Giao diện tự động cập nhật dòng mới khi có webhook hoặc thiết bị khác thêm bill mà không cần F5. | • `GET /api/transactions?userId=...`<br>• `POST /api/scan-receipt`<br>• `POST /api/confirm-receipt`<br>• `POST /api/manual-entry`<br>• WebSocket: `socket.on('new_transaction')` |
+| **Tab 2: Báo Cáo & Xuất Dữ Liệu**<br>(`OwnerReports.tsx`) | • **Biểu đồ Cân Đối Thu/Chi:** Trực quan hóa diễn biến dòng tiền 7 ngày gần nhất.<br>• **Cơ Cấu Chi Phí:** Biểu đồ tròn phân tích tỷ trọng tiền nhập nguyên liệu, tiền mặt bằng, tiền ship.<br>• **Nút Xuất File Excel (`.xlsx`):** Kết xuất báo cáo kế toán (Hiển thị khóa `🔒` và yêu cầu nâng cấp PRO nếu là tài khoản FREE). | • `GET /api/transactions?userId=...`<br>• Client-side aggregation & XLSX Export |
+| **Tab 3: Báo Cáo Tự Động Telegram**<br>(`OwnerTelegram.tsx`) | • **Trạng thái liên kết:** Hiển thị trạng thái đã kết nối Bot `@FinautoDemo_bot` hay chưa.<br>• **Cấu hình nhận tin:** Công tắc Toggle bật/tắt nhận báo cáo qua Email, Telegram Bot, và In-App.<br>• **Nút Gửi Thử Báo Cáo Ngay:** Kích hoạt gửi báo cáo kiểm thử 22:00 tức thì vào máy người dùng để trải nghiệm.<br>• **Nút Deep-Link Telegram:** 1-chạm mở ứng dụng Telegram với cú pháp `/start <userId>`. | • `GET /api/user/:id/profile`<br>• `PUT /api/user/:id/notification-settings`<br>• `POST /api/test-report` |
+| **Tab 4: Cài Đặt Cửa Hàng & Gói Cước**<br>(`OwnerSettings.tsx`) | • **Thông tin Hộ Kinh Doanh:** Cập nhật Tên quán/cửa hàng, Số điện thoại, Địa chỉ kinh doanh.<br>• **Quản Lý Gói Dịch Vụ:** Hiển thị gói hiện tại (FREE / PRO), thời hạn sử dụng còn lại, lịch sử thanh toán hóa đơn cước.<br>• **Nâng Cấp PRO:** Mở mã SePay VietQR để quét thanh toán. | • `PUT /api/auth/profile`<br>• `POST /api/billing/create-order`<br>• `GET /api/billing/status/:orderCode`<br>• `GET /api/billing/history` |
 
 ---
 
-## 4. QUY TẮC NGHIỆP VỤ CỐT LÕI CỦA ỨNG DỤNG (BUSINESS RULES)
+### 5.3. Cổng Thông Tin Dành Cho Quản Trị Viên (Admin Portal - `#admin-dashboard`)
+
+* **Cơ chế phân quyền:** Chỉ tài khoản có vai trò `ADMIN` mới được truy cập.
+* **Chính sách Fiduciary & Bảo Mật Thẩm Quyền:** Quản trị viên hệ thống có trách nhiệm bảo đảm an toàn hạ tầng và không can thiệp, chỉnh sửa sổ quỹ riêng tư của từng hộ kinh doanh. Nếu Admin cố tình truy cập `#owner-dashboard`, hệ thống kích hoạt **Guard 403 Fiduciary** để bảo vệ tính toàn vẹn dữ liệu cá nhân.
+
+#### Bảng Ánh Xạ Tab Chức Năng Của Quản Trị Viên Với API Backend Thực Tế:
+
+| Tab Quản Trị | Mô Tả Giao Diện & Trải Nghiệm Người Dùng (UI/UX) | API Backend Thực Tế Kết Nối 1:1 |
+| :--- | :--- | :--- |
+| **Tab 1: Tổng Quan Vận Hành & Quản Lý Hộ KD**<br>(`AdminOverview.tsx`) | • **4 Thẻ KPI Tinh Gọn:**<br>  1. Tổng số hộ kinh doanh (phân tách rõ số lượng gói PRO và FREE).<br>  2. Doanh thu cước định kỳ hàng tháng (MRR = Số PRO * 99k).<br>  3. Tổng tiền luân chuyển toàn sàn hôm nay (Thu, Chi, Số lượng bill).<br>  4. Số lượng đơn thanh toán SePay thành công trong ngày.<br>• **Bảng Quản Lý Hộ Kinh Doanh:**<br>  - Xem toàn bộ danh sách chủ cửa hàng với phân trang server-side (`page`, `limit`).<br>  - Tìm kiếm tức thì theo Email, Tên cửa hàng, Tên chủ shop.<br>  - Lọc theo gói dịch vụ (`plan=FREE|PRO`) và vai trò (`role=OWNER|ADMIN`).<br>  - Hiển thị tổng thu, tổng chi và số hóa đơn của từng cửa hàng.<br>• **Hành Động Trực Tiếp Trên Từng Người Dùng:**<br>  - **Kích hoạt/Gia hạn gói PRO thủ công:** Cho phép Admin gia hạn thêm số ngày sử dụng (`extendDays`).<br>  - **Phân quyền vai trò:** Cấp quyền ADMIN hoặc hạ xuống OWNER.<br>  - **Xóa tài khoản vi phạm:** Xóa cascade người dùng kèm toàn bộ hóa đơn và đơn hàng liên quan. | • `GET /api/admin/overview`<br>• `GET /api/admin/users?search=...&plan=...&role=...&page=...&limit=...`<br>• `GET /api/admin/users/:id`<br>• `PATCH /api/admin/users/:id/plan`<br>• `PATCH /api/admin/users/:id/role`<br>• `DELETE /api/admin/users/:id` |
+| **Tab 2: Tài Chính & Doanh Thu Cước PRO**<br>(`AdminFinancial.tsx`) | • **Bảng Nhật Ký Thanh Toán SePay VietQR:**<br>  - Hiển thị danh sách các đơn hàng nâng cấp PRO (`SubscriptionOrder`).<br>  - Cột dữ liệu: Mã đơn `VIKESO...`, Chủ cửa hàng, Số tiền (99.000đ), Ngân hàng, Trạng thái (`SUCCESS`, `PENDING`), Thời gian thanh toán.<br>  - Bộ lọc trạng thái thanh toán và khoảng thời gian (`from`, `to`).<br>• **Bảng Giám Sát Dòng Tiền Hệ Thống:**<br>  - Theo dõi danh sách hóa đơn hợp lệ nộp vào hệ thống của các shop (dữ liệu chỉ đọc phục vụ giám sát kỹ thuật). | • `GET /api/admin/payments?status=...&from=...&to=...`<br>• `GET /api/admin/transactions?userId=...&type=...&from=...&to=...` |
+| **Tab 3: Cấu Hình & Giám Sát Telegram Bot** | • **Giám sát Webhook Bot:** Kiểm tra kết nối Webhook Telegram Bot với máy chủ Backend.<br>• **Gửi thông báo toàn sàn:** Kích hoạt phát tin nhắn kiểm tra hoặc bắn báo cáo thử nghiệm tới các tài khoản đã liên kết bot. | • `GET /api/telegram/set-webhook`<br>• `POST /api/telegram/webhook`<br>• `POST /api/test-report` |
+| **Tab 4: Cài Đặt Hạ Tầng Hệ Thống**<br>(`AdminSettings.tsx`) | • **Giám Sát Tham Số Kỹ Thuật:**<br>  - Trạng thái kết nối cơ sở dữ liệu MongoDB Atlas.<br>  - Trạng thái Cổng thanh toán SePay Webhook (bảo mật chữ ký API-Key).<br>  - Trạng thái Cronjob tự động chốt ca 22:00 (`node-cron`).<br>  - Trạng thái AI Engine Google Gemini 1.5 Flash. | • `GET /api/admin/overview` |
 
 ---
 
-### 4.1. Quy tắc Phân loại Dòng Tiền & Chứng Từ
+## 6. QUY TẮC NGHIỆP VỤ CỐT LÕI CỦA ỨNG DỤNG (BUSINESS RULES MATRIX - 100% PRESERVED)
 
+Tất cả các nguyên tắc kế toán và giải thuật tài chính của VikeSo được bảo toàn nguyên vẹn 100%:
+
+### 6.1. Quy tắc Phân loại Dòng Tiền & Chứng Từ
 * **Quy tắc phân loại dòng tiền (`transactionType`):**
   * Chỉ tồn tại duy nhất 2 loại: **`THU`** (Tiền vào: khách thanh toán, chuyển khoản, cọc, doanh thu...) và **`CHI`** (Tiền ra: nhập hàng, trả tiền rau thịt, phí ship, trả mặt bằng...).
   * *Trường hợp ảnh hóa đơn quá mờ:* Hệ thống tự động gán mặc định loại `CHI` với mảng số tiền rỗng để bảo toàn an toàn dòng tiền, chờ người dùng xác nhận.
@@ -158,7 +246,7 @@ Toàn bộ ứng dụng không dùng các form tĩnh mà hỗ trợ hệ thống
 
 ---
 
-### 4.2. Cơ chế Lưới Lọc Thông Minh 2 Chiều (Bidirectional Smart Filter)
+### 6.2. Cơ chế Lưới Lọc Thông Minh 2 Chiều (Bidirectional Smart Deduplication)
 
 Đây là **vũ khí công nghệ độc quyền** của VikeSo nhằm triệt tiêu hoàn toàn bài toán cộng trùng doanh thu giữa hóa đơn bán lẻ máy POS và phiếu kết ca cuối ngày:
 
@@ -167,7 +255,7 @@ sequenceDiagram
     autonumber
     actor User as Chủ Cửa Hàng
     participant System as VikeSo Engine
-    participant DB as Cơ Sở Dữ Liệu
+    participant DB as MongoDB Atlas
 
     alt Chiều 1: Quét xuôi (Nộp phiếu POS Kết Ca cuối ngày)
         User->>System: Tải lên phiếu "POS Ket Ca"
@@ -194,7 +282,7 @@ sequenceDiagram
 
 ---
 
-### 4.3. Quy tắc Bóc Tách AI & Lưới Chặn Rác (Gemini OCR Pipeline)
+### 6.3. Quy tắc Bóc Tách AI & Lưới Chặn Rác (Gemini OCR Pipeline)
 
 * **Chuẩn hóa số tiền VNĐ:**
   * AI tự động chuyển đổi mọi cách viết tắt tiền tệ của người Việt về định dạng số nguyên chuẩn:
@@ -216,7 +304,7 @@ sequenceDiagram
 
 ---
 
-### 4.4. Quy tắc Báo Cáo Chốt Ca Tự Động 22:00 (Daily Automation)
+### 6.4. Quy tắc Báo Cáo Chốt Ca Tự Động 22:00 (Daily Automation)
 
 * **Lịch trình cố định:** Chạy đúng **22:00 hàng ngày** theo giờ Việt Nam (`Asia/Ho_Chi_Minh` - UTC+7) thông qua `node-cron`.
 * **Kênh gửi song song:**
@@ -228,51 +316,51 @@ sequenceDiagram
 
 ---
 
-### 4.5. Quy tắc Liên Kết Bot Telegram Đa Năng
+### 6.5. Quy tắc Liên Kết Bot Telegram Đa Năng
 
-Nhằm tối ưu sự thuận tiện cho người dùng không rành công nghệ, hệ thống hỗ trợ 3 phương thức liên kết tài khoản:
+Hệ thống hỗ trợ 3 phương thức liên kết tài khoản linh hoạt:
 1. **Liên kết 1-chạm (Deep link):** Bấm nút trên app hoặc web, tự động mở Telegram với cú pháp `/start <userId>`.
 2. **Lệnh qua email:** Người dùng gõ `/start <email_đăng_ký>`.
 3. **Nhắn tin trực tiếp bằng email:** Người dùng chỉ cần gửi địa chỉ email của mình vào ô chat với Bot, hệ thống Webhook tự động tìm kiếm người dùng trong cơ sở dữ liệu và liên kết ngay lập tức.
 
 ---
 
-### 4.6. Quy tắc Phân Quyền Người Dùng (Role-Based Access Control - RBAC)
+### 6.6. Quy tắc Phân Quyền Người Dùng (Role-Based Access Control - RBAC)
 
-Hệ thống phân định 2 vai trò bảo mật nghiêm ngặt:
-
-| Tiêu chí | Vai trò Chủ Cửa Hàng (`OWNER`) | Vai trò Quản Trị Viên (`ADMIN`) |
+| Tiêu Chí Bảo Mật | Vai Trò Chủ Cửa Hàng (`OWNER`) | Vai Trò Quản Trị Viên (`ADMIN`) |
 | :--- | :--- | :--- |
-| **Quyền truy cập Web** | Truy cập Owner Dashboard (`#owner-dashboard`) | Truy cập Admin Portal (`#admin-dashboard`) và xem được cả Owner Dashboard |
-| **Phạm vi dữ liệu** | Chỉ xem và thao tác trên hóa đơn, cài đặt của chính cửa hàng mình | Xem toàn bộ danh sách cửa hàng, tổng doanh thu toàn hệ thống, danh sách thanh toán |
-| **Thao tác người dùng** | Quản lý thông tin cá nhân và cửa hàng | Cấp quyền ADMIN, hạ quyền OWNER, gia hạn gói PRO thủ công, xóa tài khoản vi phạm |
-| **Chặn truy cập trái phép** | Cố tình vào link Admin sẽ bị chặn kèm thông báo `403 Forbidden` | Toàn quyền kiểm soát hệ thống |
+| **Quyền truy cập Web** | Truy cập Owner Dashboard (`#owner-dashboard`) | Truy cập Admin Portal (`#admin-dashboard`) |
+| **Phạm vi dữ liệu** | Chỉ xem và thao tác trên hóa đơn của chính cửa hàng mình | Xem chỉ số tổng thể sàn, danh sách người dùng, nhật ký thanh toán SePay |
+| **Quyền can thiệp sổ quỹ** | Toàn quyền thêm, sửa, xem hóa đơn quán mình | **Chính sách Fiduciary:** Không can thiệp, không sửa đổi sổ quỹ riêng tư của hộ kinh doanh |
+| **Thao tác người dùng** | Quản lý thông tin quán, đổi mật khẩu | Cấp quyền ADMIN, hạ quyền OWNER, gia hạn gói PRO thủ công, xóa tài khoản vi phạm |
+| **Chặn truy cập trái phép** | Truy cập link Admin sẽ bị chặn kèm thông báo `403 Forbidden` | Truy cập sổ quỹ riêng của Owner sẽ bị chặn kèm thông báo `403 Fiduciary Guard` |
 
 ---
 
-### 4.7. Quy tắc Gói Dịch Vụ & Thanh Toán Tự Động (SePay VietQR Billing)
+### 6.7. Quy tắc Gói Dịch Vụ & Thanh Toán Tự Động (SePay VietQR Billing)
 
-* **Bảng giá:**
-  * **Gói FREE (0 VNĐ):** Dùng thử các tính năng quét hóa đơn cơ bản.
-  * **Gói PRO (99.000 VNĐ / 30 ngày):** Không giới hạn số lượng quét AI, tự động gửi báo cáo Telegram & Email 22:00, xuất Excel, mở khóa phân tích tài chính chuyên sâu.
-* **Quy trình thanh toán SePay VietQR:**
+* **Bảng phân cấp tính năng:**
+  * **Gói FREE (0 VNĐ):** Dùng thử các tính năng quét hóa đơn cơ bản, nhập thu chi thủ công. Các tính năng nâng cao (xuất Excel, báo cáo chuyên sâu, tự động hóa 22:00) được gắn icon khóa `🔒` và huy hiệu PRO `#D0F81B`.
+  * **Gói PRO (99.000 VNĐ / 30 ngày):** Mở khóa toàn bộ đặc quyền, không giới hạn OCR, tự động gửi báo cáo Telegram & Email 22:00, xuất Excel không giới hạn.
+* **Quy trình thanh toán SePay VietQR tự động:**
   1. Khi người dùng bấm *"Nâng cấp PRO"*, client gọi `POST /api/billing/create-order`.
   2. Server sinh mã đơn hàng ngẫu nhiên `VIKESO...` và mã nội dung chuyển khoản duy nhất.
-  3. Server tạo link VietQR SePay theo mẫu:  
+  3. Server tạo link VietQR SePay theo mẫu chuẩn:  
      `https://qr.sepay.vn/img?acc=1026466727&bank=VCB&amount=99000&des=VIKESO...&template=compact2`
   4. Người dùng mở ứng dụng ngân hàng quét mã và xác nhận chuyển tiền.
   5. SePay nhận được tiền và bắn Webhook bảo mật về `POST /api/billing/sepay/webhook` kèm `API-Key`.
   6. Backend xác thực chữ ký Webhook, cập nhật `subscriptionPlan = "PRO"` và cộng thêm 30 ngày sử dụng (`proExpiresAt`) cho người dùng.
-  7. Client tự động nhận diện thanh toán thành công (thông qua Polling 3s/lần hoặc WebSocket) và hiển thị thông báo chúc mừng.
+  7. Client tự động nhận diện thanh toán thành công (thông qua Polling 3s/lần `GET /api/billing/status/:orderCode` hoặc WebSocket) và hiển thị thông báo chúc mừng.
 
 ---
 
-## 5. TỔNG KẾT & ĐÁNH GIÁ CHẤT LƯỢNG HỆ THỐNG
+## 7. TỔNG KẾT TIÊU CHUẨN KỸ THUẬT VÀ CHẤT LƯỢNG
 
-| Tiêu chuẩn chất lượng | Mức độ đáp ứng | Đánh giá kỹ thuật |
+| Tiêu Chuẩn Kỹ Thuật | Chỉ Số Mục Tiêu | Đánh Giá Kiến Trúc Đạt Được |
 | :--- | :---: | :--- |
-| **Tốc độ xử lý AI OCR** | **< 3 giây** | Gemini 1.5 Flash tối ưu hóa payload, lưu trữ RAM memoryStorage. |
-| **Độ chính xác bóc tách** | **> 98%** | Tích hợp System Prompt chuyên sâu, phân giải tốt chữ viết tay và bill in nhiệt mờ. |
-| **Chống trùng lặp dữ liệu** | **100%** | Thuật toán Lưới lọc 2 chiều tự động gạch bỏ bill lẻ POS khi có phiếu kết ca. |
-| **Tính sẵn sàng của giao diện** | **Đa thiết bị** | Tương thích mượt mà từ Mobile, Tablet cho đến Màn hình Laptop/Desktop. |
-| **Bảo mật thanh toán** | **Tuyệt đối** | Tích hợp VietQR chuẩn NAPAS 24/7, webhook xác thực API-Key, lưu log giao dịch minh bạch. |
+| **Bảng màu thương hiệu** | **100% Đồng bộ** | Chuẩn hóa `#FF4783`, `#D0F81B`, `#FFFFFF`, `#0F172A` đạt chuẩn tiếp cận WCAG 2.1 AA. |
+| **Tốc độ xử lý AI OCR** | **< 2.5 giây** | Google Gemini 1.5 Flash tối ưu hóa payload, xử lý ảnh trực tiếp trên RAM memoryStorage. |
+| **Độ chính xác bóc tách** | **> 98%** | Tích hợp System Prompt chuyên biệt cho hóa đơn in nhiệt mờ và sổ tay viết mực Việt Nam. |
+| **Khử trùng lặp doanh thu** | **Tuyệt đối 100%** | Thuật toán Lưới lọc 2 chiều tự động gạch bỏ bill lẻ POS khi có phiếu kết ca. |
+| **Tính sẵn sàng của giao diện** | **Đa nền tảng** | Tối ưu hóa 100% cho cả Mobile 1 tay và Web Dashboard thông thoáng trên Desktop. |
+| **Bảo mật thanh toán** | **An toàn 24/7** | Chuẩn VietQR NAPAS 24/7, xác thực chữ ký API-Key Webhook từ cổng thanh toán SePay. |

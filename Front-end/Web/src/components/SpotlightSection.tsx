@@ -127,15 +127,15 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
           <div className="lg:col-span-7 flex flex-col gap-3.5">
             {/* High Confidence (Green) */}
             <div className="p-4 sm:p-5 rounded-2xl bg-white shadow-2xs border border-slate-200 relative overflow-hidden transition-all hover:shadow-md">
-              <div className="absolute left-0 top-0 bottom-0 w-2 bg-emerald-600" />
+              <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#ff4783]" />
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pl-2">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[11px] font-extrabold uppercase border border-emerald-200">
+                    <span className="px-2 py-0.5 rounded bg-[#ff4783]/10 text-[#ff4783] text-[11px] font-extrabold uppercase border border-[#ff4783]/20">
                       TIỀN VÀO (THU)
                     </span>
-                    <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Độ tin cậy 99.8% (Xanh)
+                    <span className="text-xs font-semibold text-slate-800 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#d0f81b]" /> Độ tin cậy 99.8% (Xanh)
                     </span>
                   </div>
                   <div className="text-base font-bold text-slate-900 mt-1">
@@ -153,23 +153,23 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
                         type="number"
                         value={greenValue}
                         onChange={(e) => setGreenValue(Number(e.target.value))}
-                        className="w-28 px-2 py-1 text-sm border rounded bg-slate-50 text-right font-bold font-tabular text-slate-900 border-slate-300 focus:outline-emerald-600"
+                        className="w-28 px-2 py-1 text-sm border rounded bg-slate-50 text-right font-bold font-tabular text-slate-900 border-slate-300 focus:outline-[#ff4783]"
                       />
                       <button
                         onClick={() => setIsEditingGreen(false)}
-                        className="p-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer transition-colors"
+                        className="p-1.5 rounded-lg bg-[#ff4783] text-white hover:bg-[#e0326e] cursor-pointer transition-colors"
                       >
                         <Check className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
-                    <div className="text-2xl font-black text-emerald-600 font-tabular">
+                    <div className="text-2xl font-black text-[#ff4783] font-tabular">
                       +{greenValue.toLocaleString('vi-VN')} đ
                     </div>
                   )}
                   <button
                     onClick={() => setIsEditingGreen(!isEditingGreen)}
-                    className="text-xs text-slate-500 hover:text-emerald-700 font-medium mt-1 underline decoration-dotted cursor-pointer transition-colors"
+                    className="text-xs text-slate-500 hover:text-[#ff4783] font-medium mt-1 underline decoration-dotted cursor-pointer transition-colors"
                   >
                     {isEditingGreen ? 'Lưu con số' : 'Chỉnh sửa 1-chạm'}
                   </button>
@@ -315,10 +315,10 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
               <span className="text-[11px] font-bold text-slate-500">09:30 Sáng</span>
               {posShiftReportScanned ? (
                 <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center gap-1">
-                  <Link2 className="w-3 h-3 text-emerald-600" /> MERGED (ĐÃ GỘP)
+                  <Link2 className="w-3 h-3 text-[#ff4783]" /> MERGED (ĐÃ GỘP)
                 </span>
               ) : (
-                <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
+                <span className="px-2 py-0.5 rounded bg-[#ff4783]/10 text-[#ff4783] text-[10px] font-bold border border-[#ff4783]/20">
                   ĐỘC LẬP
                 </span>
               )}
@@ -332,7 +332,7 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
             </p>
 
             <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between">
-              <span className={`text-base font-black font-tabular ${posShiftReportScanned ? 'line-through text-slate-400' : 'text-emerald-600'}`}>
+              <span className={`text-base font-black font-tabular ${posShiftReportScanned ? 'line-through text-slate-400' : 'text-[#ff4783]'}`}>
                 +250.000 đ
               </span>
               <span className="text-[10px] text-slate-500">
@@ -361,7 +361,7 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
               <span className="text-base font-black text-rose-600 font-tabular">
                 -120.000 đ
               </span>
-              <span className="text-[10px] text-emerald-700 font-bold">
+              <span className="text-[10px] text-slate-900 font-bold">
                 ✓ Luôn bảo tồn 100%
               </span>
             </div>
@@ -370,13 +370,13 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
           {/* Card 3: Tờ Báo Cáo POS Kết Ca Cuối Ngày */}
           <div className={`p-5 rounded-2xl transition-all border ${
             posShiftReportScanned
-              ? 'bg-gradient-to-br from-emerald-50/70 to-white border-emerald-400 shadow-sm ring-2 ring-emerald-500/20'
+              ? 'bg-gradient-to-br from-[#d0f81b]/15 to-white border-[#d0f81b] shadow-sm ring-2 ring-[#d0f81b]/20'
               : 'bg-white border-dashed border-slate-300 opacity-60'
           }`}>
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-bold text-slate-500">21:45 Đêm</span>
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                posShiftReportScanned ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
+                posShiftReportScanned ? 'bg-[#d0f81b] text-slate-950 font-black' : 'bg-slate-200 text-slate-600'
               }`}>
                 POS KẾT CA
               </span>
@@ -392,10 +392,10 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
             </p>
 
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-base font-black text-emerald-600 font-tabular">
+              <span className="text-base font-black text-[#d0f81b] font-tabular">
                 {posShiftReportScanned ? '+2.450.000 đ' : 'Chờ quét'}
               </span>
-              <span className="text-[10px] font-bold text-emerald-700">
+              <span className="text-[10px] font-bold text-slate-900">
                 {posShiftReportScanned ? 'Không trùng 1 xu' : ''}
               </span>
             </div>
@@ -405,7 +405,7 @@ export const SpotlightSection: React.FC<SpotlightSectionProps> = ({ onOpenScan }
         {/* Explanation summary badge */}
         <div className="mt-6 p-4 rounded-2xl bg-white border border-slate-200 text-xs text-slate-600 flex items-center justify-between shadow-2xs">
           <div className="flex items-center gap-2.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <ShieldCheck className="w-4 h-4 text-[#ff4783] shrink-0" />
             <span className="leading-relaxed">
               <strong className="text-slate-900">Nguyên tắc bảo vệ:</strong> Lưới lọc 2 chiều tự động gạch bỏ trạng thái MERGED với các hóa đơn thu POS, nhưng giữ nguyên 100% các hóa đơn chi ngoài POS để lợi nhuận luôn chuẩn xác.
             </span>

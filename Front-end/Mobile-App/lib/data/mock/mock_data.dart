@@ -10,14 +10,14 @@ import '../services/billing_service.dart';
 /// ============================================================================
 class MockData {
   /// 🔘 CỜ BẬT/TẮT MOCK DATA (Thay đổi tại đây hoặc gọi MockData.useMockDemo = false)
-  static bool useMockDemo = true;
+  static bool useMockDemo = false;
 
   // 🏪 Thông tin Cửa hàng Demo
   static const String demoUserId = 'demo_user_bacuong';
   static const String demoShopName = 'Vựa Sầu Riêng Ba Cường';
   static const String demoEmail = 'bacuong.store@gmail.com';
   static const String demoPhone = '0908 123 456';
-  static const String demoRole = 'ADMIN'; // ADMIN để demo được cả trang Quản trị hệ thống
+  static const String demoRole = 'OWNER'; // Ứng dụng di động chuyên biệt dành cho Chủ Cửa Hàng (Owner)
   static const String demoPlan = 'PRO';   // PRO để mở khóa toàn bộ tính năng
 
   // ============================================================================
@@ -534,7 +534,7 @@ class MockData {
       amount: 99000,
       status: 'PENDING',
       transferContent: code,
-      qrUrl: 'https://img.vietqr.io/image/MB-0908123456-compact2.png?amount=99000&addInfo=$code&accountName=VIKESO%20FINTECH',
+      qrUrl: 'https://img.vietqr.io/image/VCB-1026466727-compact2.png?amount=99000&addInfo=$code&accountName=VIKESO',
       expiresAt: now.add(const Duration(minutes: 15)),
       createdAt: now,
     );

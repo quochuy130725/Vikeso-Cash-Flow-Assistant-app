@@ -96,17 +96,20 @@ class _EditableTransactionCardState extends State<EditableTransactionCard> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
+    final isThu = widget.item['transactionType'] == 'THU';
+
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-            color: widget.confidence != 'cao' ? widget.borderColor : Colors.transparent,
-            width: 1.5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: widget.confidence != 'cao' ? widget.borderColor : const Color(0xFFE2E8F0),
+          width: widget.confidence != 'cao' ? 1.5 : 1.0,
+        ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(14.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -118,18 +121,19 @@ class _EditableTransactionCardState extends State<EditableTransactionCard> {
                   height: 36,
                   child: SegmentedButton<String>(
                     style: SegmentedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      selectedBackgroundColor: colorScheme.primaryContainer,
-                      selectedForegroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      selectedBackgroundColor: isThu ? const Color(0xFFFF4783) : const Color(0xFFD0F81B),
+                      selectedForegroundColor: isThu ? Colors.white : const Color(0xFF0F172A),
+                      side: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     segments: const [
                       ButtonSegment<String>(
                         value: 'THU',
-                        label: Text('Tiền vào', style: TextStyle(fontSize: 12)),
+                        label: Text('Tiền vào', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
                       ),
                       ButtonSegment<String>(
                         value: 'CHI',
-                        label: Text('Tiền ra', style: TextStyle(fontSize: 12)),
+                        label: Text('Tiền ra', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
                       ),
                     ],
                     selected: {widget.item['transactionType']},
@@ -139,7 +143,7 @@ class _EditableTransactionCardState extends State<EditableTransactionCard> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFFF4783)),
                   onPressed: widget.onDelete,
                   tooltip: 'Xóa giao dịch này',
                 )
@@ -226,7 +230,7 @@ class _EditableTransactionCardState extends State<EditableTransactionCard> {
                                   borderSide: BorderSide(color: Colors.grey, width: 0.5),
                                 ),
                                 focusedBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: Color(0xFFFF5C8D), width: 1.0),
+                                  borderSide: BorderSide(color: Color(0xFFFF4783), width: 1.0),
                                 ),
                                 hintText: 'Tên mặt hàng',
                               ),
@@ -249,7 +253,7 @@ class _EditableTransactionCardState extends State<EditableTransactionCard> {
                                   borderSide: BorderSide(color: Colors.grey, width: 0.5),
                                 ),
                                 focusedBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: Color(0xFFFF5C8D), width: 1.0),
+                                  borderSide: BorderSide(color: Color(0xFFFF4783), width: 1.0),
                                 ),
                                 suffixText: 'đ',
                               ),

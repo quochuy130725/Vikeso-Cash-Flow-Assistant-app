@@ -46,7 +46,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
                 <span className="text-white/80">Quy trình thực tế tại Vựa Sầu Riêng Ba Cường</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="bg-emerald-500/20 text-emerald-400 text-xs font-semibold px-2 py-0.5 rounded border border-emerald-500/30">
+                <span className="bg-[#d0f81b]/20 text-[#d0f81b] text-xs font-bold px-2 py-0.5 rounded border border-[#d0f81b]/30">
                   HD 1080p
                 </span>
               </div>
@@ -142,8 +142,8 @@ export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
         {/* Footer */}
         <div className="p-4 px-6 border-t border-white/10 bg-[#2e3132]/60 flex items-center justify-between">
           <div className="text-xs text-white/70 flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            Hơn 2.400+ chủ vựa & cửa hàng đang sử dụng hàng ngày
+            <ShieldCheck className="w-4 h-4 text-[#d0f81b]" />
+            Hơn 2.400+ chủ vựa &amp; cửa hàng đang sử dụng hàng ngày
           </div>
           <button
             onClick={onClose}

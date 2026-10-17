@@ -334,13 +334,14 @@ class AuthRepository {
         body['success'] == true) {
       final accessToken = body['accessToken'] as String;
       final userInfo = body['userInfo'] as Map<String, dynamic>;
+      final resolvedUserId = userInfo['id']?.toString() ?? userInfo['_id']?.toString() ?? '';
       final role = userInfo['role']?.toString() ?? 'OWNER';
       final plan = userInfo['subscriptionPlan']?.toString() ?? 'FREE';
       final phone = userInfo['phone']?.toString() ?? '';
 
       await Future.wait([
         _storage.write(key: _kAccessToken, value: accessToken),
-        _storage.write(key: _kUserId, value: userInfo['id']?.toString() ?? ''),
+        _storage.write(key: _kUserId, value: resolvedUserId),
         _storage.write(
             key: _kEmail, value: userInfo['email']?.toString() ?? ''),
         _storage.write(
@@ -355,7 +356,7 @@ class AuthRepository {
       ]);
 
       return AuthResult.success(UserInfo(
-        id: userInfo['id']?.toString() ?? '',
+        id: resolvedUserId,
         email: userInfo['email']?.toString() ?? '',
         shopName: userInfo['shopName']?.toString() ?? '',
         avatar: userInfo['avatar']?.toString(),

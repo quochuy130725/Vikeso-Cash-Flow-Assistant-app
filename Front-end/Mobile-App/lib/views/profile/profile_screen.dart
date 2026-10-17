@@ -5,6 +5,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../shared_widgets/side_drawer.dart';
+import '../shared_widgets/pro_badge.dart';
+import '../shared_widgets/pro_paywall_sheet.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/services/api_service.dart';
 import '../billing/upgrade_pro_screen.dart';
@@ -205,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF4783)),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Đăng xuất', style: TextStyle(color: Colors.white)),
           ),
@@ -222,7 +224,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: isSuccess ? Colors.green : Colors.red,
+      backgroundColor: isSuccess ? const Color(0xFF0F172A) : const Color(0xFFFF4783),
     ));
   }
 
@@ -238,23 +240,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    const primaryPink = Color(0xFFFF5C8D);
     final isPro = _subscriptionPlan.toUpperCase() == 'PRO';
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         leading: Builder(builder: (ctx) => IconButton(
           onPressed: () => Scaffold.of(ctx).openDrawer(),
-          icon: const Icon(Icons.menu, color: Colors.white),
+          icon: const Icon(Icons.menu_rounded, color: Color(0xFF0F172A), size: 24),
         )),
-        backgroundColor: primaryPink,
-        title: const Text('Cá nhân & Cửa hàng', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: const Text(
+          'Cửa Hàng & Cá Nhân',
+          style: TextStyle(
+            color: Color(0xFF0F172A),
+            fontWeight: FontWeight.w800,
+            fontSize: 19,
+            letterSpacing: -0.4,
+          ),
+        ),
         actions: [
           IconButton(
             onPressed: () => _showSnack('Bạn không có thông báo mới', isSuccess: true),
-            icon: const Icon(Icons.notifications_none, color: Colors.white),
+            icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF0F172A), size: 24),
           ),
+          const SizedBox(width: 4),
         ],
       ),
       drawer: const CustomSideDrawer(),
@@ -270,107 +282,152 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Stack(
                           children: [
                             Container(
-                              width: 96, height: 96,
+                              width: 92,
+                              height: 92,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(color: colorScheme.primaryContainer, width: 2.5),
+                                color: const Color(0xFFFFF0F5),
+                                border: Border.all(color: const Color(0xFFFF4783), width: 2.5),
                               ),
                               child: CircleAvatar(
                                 backgroundImage: _avatar != null && _avatar!.startsWith('http')
                                     ? NetworkImage(_avatar!)
                                     : null,
-                                backgroundColor: primaryPink.withValues(alpha: 0.15),
+                                backgroundColor: const Color(0xFFFFF0F5),
                                 child: _avatar == null || !_avatar!.startsWith('http')
                                     ? Text(
                                         _shopName.isNotEmpty ? _shopName[0].toUpperCase() : 'V',
-                                        style: const TextStyle(fontSize: 32, color: primaryPink, fontWeight: FontWeight.bold),
+                                        style: const TextStyle(
+                                          fontSize: 36,
+                                          color: Color(0xFFFF4783),
+                                          fontWeight: FontWeight.w900,
+                                        ),
                                       )
                                     : null,
                               ),
                             ),
                             Positioned(
-                              bottom: 0, right: 0,
+                              bottom: 0,
+                              right: 0,
                               child: GestureDetector(
                                 onTap: _openEditDialog,
                                 child: Container(
-                                  width: 32, height: 32,
+                                  width: 32,
+                                  height: 32,
                                   decoration: BoxDecoration(
-                                    color: colorScheme.primaryContainer,
+                                    color: Colors.white,
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
+                                    border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF0F172A).withValues(alpha: 0.1),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
-                                  child: const Icon(Icons.edit, size: 14, color: Colors.white),
+                                  child: const Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 16,
+                                    color: Color(0xFF0F172A),
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
                         Text(
                           _shopName.isNotEmpty ? _shopName : 'Cửa hàng Vikeso',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 19,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: -0.3,
+                          ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(_email, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                        const SizedBox(height: 3),
+                        Text(
+                          _email,
+                          style: const TextStyle(
+                            color: Color(0xFF64748B),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                         if (_phone.isNotEmpty) ...[
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.phone_outlined, size: 14, color: Colors.grey),
+                              const Icon(Icons.phone_outlined, size: 13, color: Color(0xFF64748B)),
                               const SizedBox(width: 4),
-                              Text(_phone, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                              Text(_phone, style: const TextStyle(color: Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w500)),
                             ],
                           ),
                         ],
+                        Container(
+                          margin: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.verified_rounded, size: 14, color: Color(0xFFFF4783)),
+                              SizedBox(width: 5),
+                              Text(
+                                'Hộ kinh doanh đã kích hoạt',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   // Card Gói Tài Khoản (Subscription Plan)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: isPro
-                          ? const LinearGradient(
-                              colors: [Color(0xFF2C1654), Color(0xFFFF5C8D)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )
-                          : LinearGradient(
-                              colors: [Colors.grey[100]!, Colors.white],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
                       border: Border.all(
-                        color: isPro ? const Color(0xFFFFD700) : Colors.grey[300]!,
-                        width: isPro ? 1.5 : 1,
+                        color: const Color(0xFFE2E8F0),
+                        width: 1.2,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: (isPro ? primaryPink : Colors.black).withValues(alpha: 0.08),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                          color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                          blurRadius: 12,
+                          offset: const Offset(0, 3),
                         ),
                       ],
                     ),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          width: 44,
+                          height: 44,
                           decoration: BoxDecoration(
-                            color: isPro
-                                ? const Color(0xFFFFD700).withValues(alpha: 0.2)
-                                : Colors.grey[200],
+                            color: const Color(0xFFFFF0F5),
                             shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFFFFD6E4)),
                           ),
                           child: Icon(
-                            isPro ? Icons.workspace_premium : Icons.person_outline,
-                            color: isPro ? const Color(0xFFFFD700) : Colors.grey[700],
-                            size: 26,
+                            isPro ? Icons.workspace_premium_rounded : Icons.person_outline_rounded,
+                            color: const Color(0xFFFF4783),
+                            size: 24,
                           ),
                         ),
                         const SizedBox(width: 14),
@@ -379,19 +436,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                isPro ? 'Gói VikeSo PRO' : 'Gói Miễn Phí (FREE)',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: isPro ? Colors.white : Colors.black87,
+                                isPro ? 'Gói VikeSo PRO' : 'Gói Cơ Bản (FREE)',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                  color: Color(0xFF0F172A),
+                                  letterSpacing: -0.2,
                                 ),
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                isPro ? 'Đang mở khóa toàn bộ tính năng cao cấp' : 'Nâng cấp để quét hóa đơn không giới hạn',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isPro ? Colors.white70 : Colors.grey[600],
+                                isPro
+                                    ? 'Đang kích hoạt toàn bộ tính năng đối soát'
+                                    : 'Nâng cấp để quét hóa đơn không giới hạn',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: Color(0xFF64748B),
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
@@ -400,77 +461,149 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         if (!isPro)
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryPink,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              backgroundColor: const Color(0xFFFF4783),
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
                             onPressed: _navigateToUpgradePro,
                             child: const Text('Nâng cấp', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
                           )
                         else
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFD700),
-                              borderRadius: BorderRadius.circular(12),
+                              color: const Color(0xFFD0F81B),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFF0F172A), width: 1),
                             ),
                             child: const Text(
-                              'ACTIVE',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.black87),
+                              'ĐANG BẬT',
+                              style: TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
-                  Material(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(color: Colors.grey[200]!),
-                      borderRadius: BorderRadius.circular(12),
+                  // Menu quản trị tinh gọn
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
                     child: Column(
                       children: [
-                        _menuItem(context, Icons.storefront, 'Thông tin cửa hàng', onTap: _openEditDialog),
-                        _menuItem(context, Icons.edit, 'Sửa thông tin', onTap: _openEditDialog),
-                        _menuItem(context, Icons.workspace_premium, 'Gói dịch vụ PRO & Thanh toán', onTap: _navigateToUpgradePro),
-                        _menuItem(context, Icons.lock_outline, 'Đổi mật khẩu', onTap: () => _showSnack('Tính năng đổi mật khẩu đang cập nhật!')),
-                        _menuItem(context, Icons.settings_outlined, 'Cài đặt hệ thống', onTap: () => _showSnack('Cài đặt hệ thống đang cập nhật!')),
+                        _menuItem(context, Icons.storefront_rounded, 'Cập nhật thông tin cửa hàng', onTap: _openEditDialog),
+                        _menuItem(context, Icons.workspace_premium_rounded, 'Gói dịch vụ PRO & Hóa đơn thanh toán', onTap: _navigateToUpgradePro),
+                        _menuItem(
+                          context,
+                          Icons.send_rounded,
+                          'Liên kết Bot Telegram nhận báo cáo 22:00',
+                          trailing: !isPro
+                              ? const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ProBadge(),
+                                    SizedBox(width: 6),
+                                    Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8), size: 20),
+                                  ],
+                                )
+                              : null,
+                          onTap: () {
+                            if (!isPro) {
+                              ProPaywallSheet.show(
+                                context,
+                                featureTitle: 'Báo Cáo Tự Động Telegram 22:00',
+                                featureDescription:
+                                    'Tính năng tự động tổng kết sổ sách, chốt doanh thu - chi phí và gửi báo cáo trực tiếp qua Bot Telegram hàng đêm lúc 22h00 chỉ dành riêng cho gói VikeSo PRO.',
+                              );
+                              return;
+                            }
+                            _promptConnectTelegram();
+                          },
+                          isLast: true,
+                        ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 22),
 
                   const Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('Cài đặt thông báo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      'Cài đặt nhận thông báo',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  Material(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(color: Colors.grey[200]!),
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 10),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
                     child: Column(
                       children: [
                         SwitchListTile(
-                          title: const Text('Email', style: TextStyle(fontWeight: FontWeight.w500)),
-                          subtitle: const Text('Nhận báo cáo chốt ca (22:00)'),
-                          value: _receiveEmail,
-                          activeThumbColor: primaryPink,
-                          onChanged: (val) => _updateSetting('receiveEmail', val),
-                        ),
-                        const Divider(height: 1),
-                        SwitchListTile(
-                          title: const Text('Telegram', style: TextStyle(fontWeight: FontWeight.w500)),
-                          subtitle: const Text('Thông báo qua bot Telegram'),
-                          value: _receiveTelegram,
-                          activeThumbColor: primaryPink,
+                          title: Row(
+                            children: [
+                              const Text('Email báo cáo', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFF0F172A))),
+                              if (!isPro) ...[
+                                const SizedBox(width: 8),
+                                const ProBadge(fontSize: 9),
+                              ],
+                            ],
+                          ),
+                          subtitle: const Text('Bảng sao kê chốt sổ hàng ngày (22:00)', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                          value: isPro ? _receiveEmail : false,
+                          activeThumbColor: const Color(0xFFFF4783),
                           onChanged: (val) {
+                            if (!isPro) {
+                              ProPaywallSheet.show(
+                                context,
+                                featureTitle: 'Email Báo Cáo 22:00',
+                                featureDescription:
+                                    'Tự động gửi email sao kê chốt sổ doanh thu - chi phí cuối ngày lúc 22:00 là tính năng độc quyền của gói VikeSo PRO.',
+                              );
+                              return;
+                            }
+                            _updateSetting('receiveEmail', val);
+                          },
+                        ),
+                        const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                        SwitchListTile(
+                          title: Row(
+                            children: [
+                              const Text('Telegram Bot', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFF0F172A))),
+                              if (!isPro) ...[
+                                const SizedBox(width: 8),
+                                const ProBadge(fontSize: 9),
+                              ],
+                            ],
+                          ),
+                          subtitle: const Text('Tin nhắn tóm tắt dòng tiền vào/ra tức thì', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                          value: isPro ? _receiveTelegram : false,
+                          activeThumbColor: const Color(0xFFFF4783),
+                          onChanged: (val) {
+                            if (!isPro) {
+                              ProPaywallSheet.show(
+                                context,
+                                featureTitle: 'Báo Cáo Telegram Bot',
+                                featureDescription:
+                                    'Nhận tin nhắn thông báo dòng tiền tức thì và báo cáo chốt sổ lúc 22:00 qua Telegram Bot là tính năng độc quyền của gói VikeSo PRO.',
+                              );
+                              return;
+                            }
                             if (val && !_hasTelegram) {
                               _promptConnectTelegram();
                               return;
@@ -478,30 +611,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             _updateSetting('receiveTelegram', val);
                           },
                         ),
-                        const Divider(height: 1),
+                        const Divider(height: 1, color: Color(0xFFF1F5F9)),
                         SwitchListTile(
-                          title: const Text('Thông báo ứng dụng', style: TextStyle(fontWeight: FontWeight.w500)),
-                          subtitle: const Text('Thông báo đẩy trên thiết bị'),
+                          title: const Text('Thông báo ứng dụng', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFF0F172A))),
+                          subtitle: const Text('Cảnh báo nợ gối đầu & nhắc đối soát', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
                           value: _receiveInApp,
-                          activeThumbColor: primaryPink,
+                          activeThumbColor: const Color(0xFFFF4783),
                           onChanged: (val) => _updateSetting('receiveInApp', val),
                         ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
 
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: _handleLogout,
-                      icon: const Icon(Icons.logout, color: Colors.red),
-                      label: const Text('Đăng xuất', style: TextStyle(color: Colors.red, fontSize: 16)),
+                      icon: const Icon(Icons.logout_rounded, color: Color(0xFFFF4783), size: 20),
+                      label: const Text('Đăng xuất tài khoản', style: TextStyle(color: Color(0xFFFF4783), fontSize: 15, fontWeight: FontWeight.w700)),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: const BorderSide(color: Color(0xFFE2E8F0)),
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
                       ),
                     ),
                   ),
@@ -511,17 +646,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _menuItem(BuildContext context, IconData icon, String text, {VoidCallback? onTap}) {
+  Widget _menuItem(
+    BuildContext context,
+    IconData icon,
+    String text, {
+    VoidCallback? onTap,
+    bool isLast = false,
+    Widget? trailing,
+  }) {
     return Container(
-      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey[100]!))),
+      decoration: BoxDecoration(
+        border: isLast ? null : const Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
+      ),
       child: ListTile(
         leading: Container(
-          width: 36, height: 36,
-          decoration: BoxDecoration(color: Colors.grey[100], shape: BoxShape.circle),
-          child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 18),
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: const Color(0xFF0F172A), size: 19),
         ),
-        title: Text(text, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+        title: Text(
+          text,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFF0F172A)),
+        ),
+        trailing: trailing ?? const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8), size: 20),
         onTap: onTap,
       ),
     );
@@ -536,7 +687,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0088CC)),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF4783)),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Kết nối', style: TextStyle(color: Colors.white)),
           ),

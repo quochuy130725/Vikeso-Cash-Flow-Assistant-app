@@ -181,7 +181,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
             <Magnet padding={20} magnetStrength={0.2}>
               <button
                 onClick={onSelectPro}
-                className="w-full py-3.5 px-6 rounded-2xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 text-sm font-black flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#d0f81b]/25 hover:shadow-[#d0f81b]/40 cursor-pointer active:scale-95 group"
+                className="w-full py-3.5 px-6 rounded-2xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-sm font-black flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#ff4783]/30 hover:shadow-[#ff4783]/50 cursor-pointer active:scale-95 group"
               >
                 <span>Nâng Cấp Pro Ngay</span>
                 <ArrowRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" />

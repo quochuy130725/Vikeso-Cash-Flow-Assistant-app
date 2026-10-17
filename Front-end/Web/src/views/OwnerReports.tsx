@@ -154,16 +154,16 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 Tổng Tiền Vào Trong Kỳ
               </span>
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#059669] flex items-center justify-center border border-emerald-100">
+              <div className="w-9 h-9 rounded-xl bg-[#ff4783]/10 text-[#ff4783] flex items-center justify-center border border-[#ff4783]/20 shadow-xs">
                 <span className="material-symbols-outlined text-[18px]">arrow_downward</span>
               </div>
             </div>
             <div className="space-y-1">
-              <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
-                384.500.000 <span className="text-xs font-semibold text-slate-400">đ</span>
+              <div className="text-2xl sm:text-3xl font-extrabold text-[#ff4783] font-mono font-tabular tracking-tight">
+                384.500.000 <span className="text-xs font-semibold text-[#ff4783]">đ</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#d0f81b] text-slate-950 text-xs font-black border border-[#bde412]">
                   <span className="material-symbols-outlined text-[13px]">trending_up</span>
                   +14.2%
                 </span>
@@ -173,7 +173,7 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
           </div>
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <span>328 lượt giao dịch thu</span>
-            <span className="font-semibold text-emerald-700">Hóa đơn tự động: 99.4%</span>
+            <span className="font-semibold text-slate-800">Hóa đơn tự động: 99.4%</span>
           </div>
         </div>
 
@@ -184,7 +184,7 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 Tổng Tiền Ra Trong Kỳ
               </span>
-              <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100">
+              <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200 shadow-xs">
                 <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
               </div>
             </div>
@@ -193,10 +193,10 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
                 298.150.000 <span className="text-xs font-semibold text-slate-400">đ</span>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 text-xs font-bold border border-rose-100">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 text-xs font-bold border border-slate-200">
                   Chiếm 77.5% tổng thu
                 </span>
-                <span className="text-xs font-medium text-emerald-700">Kiểm soát tốt hàng nhập</span>
+                <span className="text-xs font-medium text-slate-600">Kiểm soát tốt hàng nhập</span>
               </div>
             </div>
           </div>
@@ -213,16 +213,16 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 Dòng Tiền Ròng Tích Lũy
               </span>
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+              <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200 shadow-xs">
                 <span className="material-symbols-outlined text-[18px]">account_balance</span>
               </div>
             </div>
             <div className="space-y-1">
-              <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600 font-mono font-tabular tracking-tight">
+              <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
                 +86.350.000 <span className="text-xs font-semibold text-slate-400">đ</span>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#d0f81b] text-slate-950 text-xs font-black border border-[#bde412]">
                   Biên lợi nhuận ~22.5%
                 </span>
                 <span className="text-xs text-slate-400 font-medium">Tiền mặt an toàn</span>
@@ -231,7 +231,7 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
           </div>
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <span>Tỷ lệ tích lũy: Đạt KH</span>
-            <span className="font-bold text-emerald-600">Khả năng tái vốn tốt</span>
+            <span className="font-bold text-[#ff4783]">Khả năng tái vốn tốt</span>
           </div>
         </div>
       </section>
@@ -246,7 +246,7 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
                   Xu Hướng Tiền Vào vs Tiền Ra (4 Tuần)
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#d0f81b] text-slate-950 border border-[#bde412] shadow-2xs">
                   Thặng dư +86.35M
                 </span>
               </div>
@@ -256,11 +256,11 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-[#059669]"></span>
-                <span className="text-xs font-semibold text-slate-700">Tiền vào</span>
+                <span className="w-3 h-3 rounded bg-[#ff4783]"></span>
+                <span className="text-xs font-bold text-slate-900">Tiền vào</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-rose-500"></span>
+                <span className="w-3 h-3 rounded bg-[#0f172a]"></span>
                 <span className="text-xs font-semibold text-slate-700">Tiền ra</span>
               </div>
             </div>
@@ -270,12 +270,12 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-center">
             <div className="flex flex-col">
               <span className="text-[10px] font-semibold text-slate-400">Tuần 1 (01-07)</span>
-              <span className="text-xs font-bold text-emerald-700">+17.0M</span>
+              <span className="text-xs font-bold text-slate-800">+17.0M</span>
               <span className="text-[9px] text-slate-500">Tỷ lệ chi: 80.0%</span>
             </div>
             <div className="flex flex-col">
               <span className="text-[10px] font-semibold text-slate-400">Tuần 2 (08-14)</span>
-              <span className="text-xs font-bold text-emerald-700">+18.0M</span>
+              <span className="text-xs font-bold text-slate-800">+18.0M</span>
               <span className="text-[9px] text-slate-500">Tỷ lệ chi: 80.4%</span>
             </div>
             <div className="flex flex-col bg-amber-50/80 rounded-lg p-1 border border-amber-200/60">
@@ -283,10 +283,10 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               <span className="text-xs font-extrabold text-amber-700">+23.0M</span>
               <span className="text-[9px] text-amber-800 font-semibold">Chi đỉnh: 81.0M</span>
             </div>
-            <div className="flex flex-col bg-emerald-50/80 rounded-lg p-1 border border-emerald-200/60">
-              <span className="text-[10px] font-bold text-emerald-800">Tuần 4 (22-31) 🏆</span>
-              <span className="text-xs font-extrabold text-emerald-700">+28.35M</span>
-              <span className="text-[9px] text-emerald-800 font-semibold">Tối ưu nhất: 72.6%</span>
+            <div className="flex flex-col bg-[#d0f81b]/30 rounded-lg p-1 border border-[#bde412]">
+              <span className="text-[10px] font-bold text-slate-950">Tuần 4 (22-31) 🏆</span>
+              <span className="text-xs font-black text-[#ff4783]">+28.35M</span>
+              <span className="text-[9px] text-slate-800 font-semibold">Tối ưu nhất: 72.6%</span>
             </div>
           </div>
 
@@ -306,51 +306,51 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
               <text fill="#94a3b8" fontSize="10" fontWeight="500" textAnchor="end" x="34" y="174">0</text>
 
               {/* Week 1: In 85M (y=63), Out 68M (y=85) */}
-              <rect fill="#059669" height="107" rx="4" width="34" x="90" y="63" className="transition-all hover:opacity-90 cursor-pointer">
+              <rect fill="#ff4783" height="107" rx="4" width="34" x="90" y="63" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 1 Tiền vào: 85.000.000 đ</title>
               </rect>
-              <text fill="#059669" fontSize="10" fontWeight="700" textAnchor="middle" x="107" y="55">85M</text>
+              <text fill="#ff4783" fontSize="10" fontWeight="700" textAnchor="middle" x="107" y="55">85M</text>
 
-              <rect fill="#ef4444" height="85" rx="4" width="34" x="130" y="85" className="transition-all hover:opacity-90 cursor-pointer">
+              <rect fill="#0f172a" height="85" rx="4" width="34" x="130" y="85" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 1 Tiền ra: 68.000.000 đ</title>
               </rect>
-              <text fill="#ef4444" fontSize="10" fontWeight="700" textAnchor="middle" x="147" y="78">68M</text>
+              <text fill="#0f172a" fontSize="10" fontWeight="700" textAnchor="middle" x="147" y="78">68M</text>
               <text fill="#475569" fontSize="11" fontWeight="600" textAnchor="middle" x="127" y="188">Tuần 1</text>
 
               {/* Week 2: In 92M (y=55), Out 74M (y=77) */}
-              <rect fill="#059669" height="115" rx="4" width="34" x="220" y="55" className="transition-all hover:opacity-90 cursor-pointer">
+              <rect fill="#ff4783" height="115" rx="4" width="34" x="220" y="55" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 2 Tiền vào: 92.000.000 đ</title>
               </rect>
-              <text fill="#059669" fontSize="10" fontWeight="700" textAnchor="middle" x="237" y="47">92M</text>
+              <text fill="#ff4783" fontSize="10" fontWeight="700" textAnchor="middle" x="237" y="47">92M</text>
 
-              <rect fill="#ef4444" height="93" rx="4" width="34" x="260" y="77" className="transition-all hover:opacity-90 cursor-pointer">
+              <rect fill="#0f172a" height="93" rx="4" width="34" x="260" y="77" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 2 Tiền ra: 74.000.000 đ</title>
               </rect>
-              <text fill="#ef4444" fontSize="10" fontWeight="700" textAnchor="middle" x="277" y="70">74M</text>
+              <text fill="#0f172a" fontSize="10" fontWeight="700" textAnchor="middle" x="277" y="70">74M</text>
               <text fill="#475569" fontSize="11" fontWeight="600" textAnchor="middle" x="257" y="188">Tuần 2</text>
 
               {/* Week 3: In 104M (y=40), Out 81M (y=69) */}
-              <rect fill="#059669" height="130" rx="4" width="34" x="350" y="40" className="transition-all hover:opacity-90 cursor-pointer">
+              <rect fill="#ff4783" height="130" rx="4" width="34" x="350" y="40" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 3 Tiền vào: 104.000.000 đ</title>
               </rect>
-              <text fill="#059669" fontSize="10" fontWeight="700" textAnchor="middle" x="367" y="32">104M</text>
+              <text fill="#ff4783" fontSize="10" fontWeight="700" textAnchor="middle" x="367" y="32">104M</text>
 
-              <rect fill="#ef4444" height="101" rx="4" width="34" x="390" y="69" className="transition-all hover:opacity-90 cursor-pointer">
+              <rect fill="#0f172a" height="101" rx="4" width="34" x="390" y="69" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 3 Tiền ra: 81.000.000 đ</title>
               </rect>
-              <text fill="#ef4444" fontSize="10" fontWeight="700" textAnchor="middle" x="407" y="61">81M</text>
+              <text fill="#0f172a" fontSize="10" fontWeight="700" textAnchor="middle" x="407" y="61">81M</text>
               <text fill="#475569" fontSize="11" fontWeight="600" textAnchor="middle" x="387" y="188">Tuần 3</text>
 
               {/* Week 4: In 103.5M (y=41), Out 75.15M (y=76) */}
-              <rect fill="#059669" height="129" rx="4" width="34" x="480" y="41" className="transition-all hover:opacity-90 cursor-pointer">
+              <rect fill="#ff4783" height="129" rx="4" width="34" x="480" y="41" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 4 Tiền vào: 103.500.000 đ</title>
               </rect>
-              <text fill="#059669" fontSize="10" fontWeight="700" textAnchor="middle" x="497" y="33">103.5M</text>
+              <text fill="#ff4783" fontSize="10" fontWeight="700" textAnchor="middle" x="497" y="33">103.5M</text>
 
-              <rect fill="#ef4444" height="94" rx="4" width="34" x="520" y="76" className="transition-all hover:opacity-90 cursor-pointer">
+              <rect fill="#0f172a" height="94" rx="4" width="34" x="520" y="76" className="transition-all hover:opacity-90 cursor-pointer">
                 <title>Tuần 4 Tiền ra: 75.150.000 đ</title>
               </rect>
-              <text fill="#ef4444" fontSize="10" fontWeight="700" textAnchor="middle" x="537" y="68">75.15M</text>
+              <text fill="#0f172a" fontSize="10" fontWeight="700" textAnchor="middle" x="537" y="68">75.15M</text>
               <text fill="#475569" fontSize="11" fontWeight="600" textAnchor="middle" x="517" y="188">Tuần 4</text>
             </svg>
           </div>
@@ -505,8 +505,8 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
             </p>
           </div>
 
-          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200/80 shadow-xs shrink-0">
-            <span className="material-symbols-outlined text-[18px] text-emerald-600">verified</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#d0f81b]/25 text-slate-950 text-xs font-black border border-[#bde412] shadow-xs shrink-0">
+            <span className="material-symbols-outlined text-[18px] text-slate-950">verified</span>
             <span>Đầy đủ chứng từ chứng minh hợp lệ (348 hóa đơn đã kiểm tra)</span>
           </div>
         </div>
@@ -548,8 +548,8 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
                   4.037.250 đ
                 </td>
                 <td className="py-4 px-6 text-center">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 text-xs font-bold border border-slate-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
                     Chuẩn hóa
                   </span>
                 </td>
@@ -578,8 +578,8 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
                   1.153.500 đ
                 </td>
                 <td className="py-4 px-6 text-center">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 text-xs font-bold border border-slate-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
                     Chuẩn hóa
                   </span>
                 </td>
@@ -590,7 +590,7 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
                 <td colSpan={3} className="py-4 px-6 text-slate-900 font-bold text-sm">
                   Tổng Cộng Doanh Thu &amp; Thuế Tạm Tính Toàn Cửa Hàng
                 </td>
-                <td className="py-4 px-6 text-right font-mono font-tabular font-extrabold text-emerald-600 text-base">
+                <td className="py-4 px-6 text-right font-mono font-tabular font-extrabold text-[#ff4783] text-base">
                   384.500.000 đ
                 </td>
                 <td className="py-4 px-6 text-right font-mono font-tabular font-extrabold text-rose-600 text-base">
@@ -629,11 +629,11 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
             className="p-4 rounded-xl bg-slate-50 hover:bg-slate-100/80 transition-all flex flex-col justify-between space-y-3 group cursor-pointer border border-slate-200/80 shadow-xs hover:shadow-sm"
           >
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#059669] flex items-center justify-center shrink-0 border border-emerald-100 group-hover:bg-[#059669] group-hover:text-white transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-[#d0f81b]/30 text-slate-950 flex items-center justify-center shrink-0 border border-[#bde412] group-hover:bg-[#ff4783] group-hover:text-white transition-colors">
                 <span className="material-symbols-outlined text-[20px]">description</span>
               </div>
               <div className="space-y-0.5">
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#059669] transition-colors">
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#ff4783] transition-colors">
                   Bảng Kê Thu Chi Hàng Ngày (Excel)
                 </h3>
                 <p className="text-xs text-slate-500 leading-relaxed">
@@ -643,7 +643,7 @@ export const OwnerReports: React.FC<OwnerReportsProps> = ({
             </div>
             <div className="flex items-center justify-between pt-2.5 text-xs text-slate-400 border-t border-slate-200/60 font-medium">
               <span>1.2 MB (.xlsx)</span>
-              <span className="inline-flex items-center gap-1 text-[#059669] font-bold group-hover:underline">
+              <span className="inline-flex items-center gap-1 text-[#ff4783] font-bold group-hover:underline">
                 Tải file <span className="material-symbols-outlined text-[15px]">download</span>
               </span>
             </div>

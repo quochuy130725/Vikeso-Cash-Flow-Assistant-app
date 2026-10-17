@@ -224,7 +224,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
             >
               <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
                 <span>Dòng bóc tách chi tiết</span>
-                <span className="text-emerald-400 flex items-center gap-1">
+                <span className="text-[#d0f81b] flex items-center gap-1 font-bold">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Xử lý hoàn tất trong 1.8s
                 </span>
               </div>
@@ -239,9 +239,9 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
                       <div className="text-sm font-bold text-white flex items-center gap-2">
                         {item.label}
                         <span
-                          className={`text-[10px] px-2 py-0.5 rounded font-extrabold ${
+                          className={`text-[10px] px-2 py-0.5 rounded font-black ${
                             item.confidence > 95
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              ? 'bg-[#d0f81b]/20 text-[#d0f81b] border border-[#d0f81b]/30'
                               : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                           }`}
                         >
@@ -255,9 +255,9 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
                     <div
                       className={`font-black text-sm font-tabular ${
                         item.type === 'thu'
-                          ? 'text-emerald-400'
+                          ? 'text-[#d0f81b]'
                           : item.type === 'chi'
-                          ? 'text-rose-400'
+                          ? 'text-[#ff4783]'
                           : 'text-slate-500 line-through'
                       }`}
                     >
@@ -268,9 +268,9 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
                 ))}
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-800 border border-emerald-500/40 flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-slate-800 border border-[#d0f81b]/40 flex items-center justify-between">
                 <span className="text-xs text-slate-300 font-medium">Tổng thực thu ghi nhận sổ quỹ:</span>
-                <span className="text-base font-black text-emerald-400 font-tabular">
+                <span className="text-base font-black text-[#d0f81b] font-tabular">
                   +{currentData.total.toLocaleString('vi-VN')} đ
                 </span>
               </div>
@@ -291,9 +291,9 @@ export const ScanModal: React.FC<ScanModalProps> = ({ isOpen, onClose, onSuccess
               if (onSuccessResult) onSuccessResult(currentData);
               onClose();
             }}
-            className="px-5 py-2.5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 text-xs font-black transition-all shadow-md flex items-center gap-1.5 cursor-pointer border border-[#bde412]"
+            className="px-5 py-2.5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black transition-all shadow-md shadow-[#ff4783]/25 flex items-center gap-1.5 cursor-pointer border border-[#ff4783]"
           >
-            <CheckCircle2 className="w-4 h-4 text-slate-950" /> Đồng ý &amp; Lưu Sổ Quỹ
+            <CheckCircle2 className="w-4 h-4 text-white" /> Đồng ý &amp; Lưu Sổ Quỹ
           </button>
         </div>
       </motion.div>

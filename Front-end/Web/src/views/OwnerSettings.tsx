@@ -61,11 +61,11 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
       {/* Top Header with Embedded Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80">
         <div>
-          <div className="flex items-center gap-1.5 text-[#059669] font-bold text-xs uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-1.5 text-[#ff4783] font-bold text-xs uppercase tracking-wider mb-1">
             <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
             <span>Thiết Lập Hệ Thống</span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-200 ml-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#ff4783]/10 text-[#ff4783] text-[11px] font-semibold border border-[#ff4783]/20 ml-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783] animate-pulse"></span>
               Đang đồng bộ máy chủ POS
             </span>
           </div>
@@ -103,12 +103,12 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
       </div>
 
       {/* Plan Banner - Sleek and Compact */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-900 text-white shadow-md p-5 sm:p-6 border border-emerald-900/40">
-        <div className="absolute right-0 top-0 w-80 h-full bg-emerald-600/10 blur-3xl pointer-events-none"></div>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0f172a] via-slate-900 to-[#12180c] text-white shadow-md p-5 sm:p-6 border border-slate-800">
+        <div className="absolute right-0 top-0 w-80 h-full bg-[#ff4783]/10 blur-3xl pointer-events-none"></div>
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30 flex items-center gap-1">
+              <span className="px-3 py-1 rounded-full bg-[#d0f81b] text-slate-950 text-xs font-black shadow-xs flex items-center gap-1">
                 <span className="material-symbols-outlined text-[14px]">verified</span>
                 {currentUser?.subscriptionPlan === 'FREE' ? 'Gói Miễn Phí (FREE)' : (currentUser?.subscriptionPlan || 'Gói Chuyên Nghiệp (PRO)')}
               </span>
@@ -122,25 +122,25 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs text-slate-300">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-emerald-400 text-[16px]">all_inclusive</span>
+                <span className="material-symbols-outlined text-[#d0f81b] text-[16px]">all_inclusive</span>
                 <span>Không giới hạn hóa đơn AI</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-emerald-400 text-[16px]">schedule_send</span>
+                <span className="material-symbols-outlined text-[#d0f81b] text-[16px]">schedule_send</span>
                 <span>Báo cáo Telegram 22h00</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-emerald-400 text-[16px]">sync_alt</span>
+                <span className="material-symbols-outlined text-[#d0f81b] text-[16px]">sync_alt</span>
                 <span>Đối soát ngân hàng 2 chiều</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-emerald-400 text-[16px]">description</span>
+                <span className="material-symbols-outlined text-[#d0f81b] text-[16px]">description</span>
                 <span>Xuất file TT88 chuẩn thuế</span>
               </div>
             </div>
 
             <div className="flex items-center gap-1.5 text-xs text-slate-400">
-              <span className="material-symbols-outlined text-emerald-400 text-[16px]">event_available</span>
+              <span className="material-symbols-outlined text-[#d0f81b] text-[16px]">event_available</span>
               <span>Hạn sử dụng: <strong className="text-white">28/11/2025</strong> (Còn 274 ngày)</span>
             </div>
           </div>
@@ -151,12 +151,12 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
               className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1 border border-white/20 cursor-pointer"
               type="button"
             >
-              <span className="material-symbols-outlined text-emerald-400 text-[16px]">upgrade</span>
+              <span className="material-symbols-outlined text-[#d0f81b] text-[16px]">upgrade</span>
               <span>Nâng Cấp Hàng Năm</span>
             </button>
             <button
               onClick={() => alert('Quản lý phương thức thanh toán thẻ và lịch sử cước...')}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-sm"
+              className="px-4 py-2 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-sm"
               type="button"
             >
               <span className="material-symbols-outlined text-[16px]">credit_card</span>
@@ -174,7 +174,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#059669]">
+                <div className="w-8 h-8 rounded-lg bg-[#ff4783]/10 flex items-center justify-center text-[#ff4783]">
                   <span className="material-symbols-outlined text-[20px]">badge</span>
                 </div>
                 <div>
@@ -186,7 +186,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                   </p>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 text-[#059669] text-xs bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-bold">
+              <span className="inline-flex items-center gap-1 text-slate-900 text-xs bg-[#d0f81b] px-2.5 py-1 rounded-full font-black shadow-xs">
                 <span className="material-symbols-outlined text-[14px]">check_circle</span>
                 Đã xác thực CCCD
               </span>
@@ -207,7 +207,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                       type="text"
                       value={storeName}
                       onChange={(e) => setStoreName(e.target.value)}
-                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#059669]/20 focus:border-[#059669] border border-slate-200 transition-all font-medium"
+                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-medium"
                     />
                   </div>
                 </div>
@@ -225,7 +225,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                       type="text"
                       value={ownerName}
                       onChange={(e) => setOwnerName(e.target.value)}
-                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#059669]/20 focus:border-[#059669] border border-slate-200 transition-all font-medium"
+                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-medium"
                     />
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#059669]/20 focus:border-[#059669] border border-slate-200 transition-all font-mono"
+                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-mono"
                     />
                   </div>
                 </div>
@@ -263,7 +263,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                       type="text"
                       value={taxCode}
                       onChange={(e) => setTaxCode(e.target.value)}
-                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm font-mono tracking-wider focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#059669]/20 focus:border-[#059669] border border-slate-200 transition-all font-bold"
+                      className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm font-mono tracking-wider focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-bold"
                     />
                   </div>
                 </div>
@@ -282,7 +282,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                     type="text"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#059669]/20 focus:border-[#059669] border border-slate-200 transition-all font-medium"
+                    className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-medium"
                   />
                 </div>
               </div>
@@ -299,7 +299,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                     id="business_sector"
                     value={sector}
                     onChange={(e) => setSector(e.target.value)}
-                    className="w-full h-10 pl-9 pr-9 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#059669]/20 focus:border-[#059669] border border-slate-200 transition-all appearance-none cursor-pointer font-medium"
+                    className="w-full h-10 pl-9 pr-9 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all appearance-none cursor-pointer font-medium"
                   >
                     <option value="retail_grocery">Bán lẻ hàng tạp hóa &amp; tiêu dùng gia đình</option>
                     <option value="fb_restaurant">Dịch vụ ăn uống, nhà hàng, giải khát</option>
@@ -318,7 +318,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           {/* Card 2: Cấu Hình Máy Tính Tiền & Thiết Bị Đồng Bộ */}
           <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-[#059669]">
+              <div className="w-8 h-8 rounded-lg bg-[#ff4783]/10 flex items-center justify-center text-[#ff4783]">
                 <span className="material-symbols-outlined text-[20px]">hub</span>
               </div>
               <div>
@@ -335,7 +335,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
               {/* Device 1 */}
               <div className="p-3.5 rounded-xl bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-slate-200/70">
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center text-[#059669] shadow-xs shrink-0 border border-slate-200">
+                  <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center text-[#ff4783] shadow-xs shrink-0 border border-slate-200">
                     <span className="material-symbols-outlined text-[20px]">point_of_sale</span>
                   </div>
                   <div>
@@ -343,8 +343,8 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                       <span className="text-xs sm:text-sm font-bold text-slate-900">
                         Máy In Bill &amp; POS Quầy Ca
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#d0f81b] text-slate-950 text-[10px] font-black shadow-xs">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-pulse"></span>
                         Trực tuyến
                       </span>
                     </div>
@@ -403,7 +403,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                       onChange={(e) => setAutoMerge(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#059669]"></div>
+                    <div className="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#ff4783]"></div>
                   </label>
                 </div>
               </div>
@@ -423,7 +423,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                     </p>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-[#059669] px-2.5 py-1 rounded bg-emerald-50 border border-emerald-200">
+                <span className="text-xs font-black text-slate-950 px-2.5 py-1 rounded bg-[#d0f81b] shadow-xs">
                   BẬT
                 </span>
               </div>
@@ -436,7 +436,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           {/* Card 1: Cơ Sở Hoạt Động */}
           <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-4">
             <div className="flex items-center gap-2 text-slate-900 pb-2 border-b border-slate-100">
-              <span className="material-symbols-outlined text-[#059669] text-[20px]">store</span>
+              <span className="material-symbols-outlined text-[#ff4783] text-[20px]">store</span>
               <h3 className="text-base font-bold">Cơ Sở Hoạt Động</h3>
             </div>
 
@@ -451,7 +451,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                 <span className="text-xs font-bold truncate">
                   {storeName}
                 </span>
-                <span className="text-[11px] bg-emerald-600/90 px-2 py-0.5 rounded text-white font-bold">
+                <span className="text-[11px] bg-[#ff4783] px-2 py-0.5 rounded text-white font-bold">
                   Quận 1, HCM
                 </span>
               </div>
@@ -464,7 +464,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
               </div>
               <div className="flex justify-between pt-2">
                 <span className="text-slate-500">Tổng số hóa đơn tháng:</span>
-                <span className="font-bold text-[#059669] font-mono">1.482 đơn</span>
+                <span className="font-bold text-[#ff4783] font-mono">1.482 đơn</span>
               </div>
               <div className="flex justify-between pt-2">
                 <span className="text-slate-500">Cán bộ phụ trách thuế:</span>
@@ -483,7 +483,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
             <div className="space-y-2.5">
               <div className="p-3 rounded-xl bg-slate-50 flex items-center justify-between border border-slate-200/70">
                 <div className="flex items-center gap-2.5">
-                  <span className="material-symbols-outlined text-[#059669] text-[18px]">
+                  <span className="material-symbols-outlined text-[#ff4783] text-[18px]">
                     phone_android
                   </span>
                   <div className="flex flex-col">
@@ -495,7 +495,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                     </span>
                   </div>
                 </div>
-                <span className="text-[11px] text-[#059669] font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                <span className="text-[11px] text-slate-950 font-black bg-[#d0f81b] px-2 py-0.5 rounded shadow-xs">
                   Thiết bị chính
                 </span>
               </div>
@@ -514,13 +514,13 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                     </span>
                   </div>
                 </div>
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span className="w-2 h-2 rounded-full bg-[#d0f81b]"></span>
               </div>
             </div>
 
             <button
               onClick={() => alert('Mở popup đổi mật khẩu quản trị bảo mật 2 lớp...')}
-              className="w-full text-center text-xs font-bold text-[#059669] hover:underline pt-1 cursor-pointer"
+              className="w-full text-center text-xs font-bold text-[#ff4783] hover:underline pt-1 cursor-pointer"
               type="button"
             >
               Đổi mật khẩu cổng quản trị
@@ -541,7 +541,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
       {/* In-flow Bottom Action Card (Natural layout, completely non-blocking) */}
       <div className="rounded-2xl bg-white p-4 sm:p-5 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
         <div className="flex items-center gap-2 text-xs text-slate-600">
-          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span className="w-2 h-2 rounded-full bg-[#ff4783]"></span>
           <span>
             Thông tin đã được đồng bộ với cơ sở dữ liệu sổ kế toán đám mây.
           </span>

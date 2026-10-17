@@ -64,18 +64,18 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-200/80">
             <div className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff4783] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ff4783]"></span>
             </div>
             <div className="flex items-center gap-1.5 text-xs">
               <span className="text-slate-400 font-medium">OCR Engine:</span>
-              <span className="text-emerald-700 font-bold">99.8% ổn định</span>
+              <span className="text-slate-900 font-black">99.8% ổn định</span>
             </div>
           </div>
 
           <button
             onClick={() => alert('Xuất file nhật ký dòng tiền toàn nền tảng Excel (.xlsx)...')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer shadow-indigo-600/20"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer"
             type="button"
           >
             <span className="material-symbols-outlined text-[16px]">download</span>
@@ -92,7 +92,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold">
               Tổng số hộ kinh doanh
             </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100">
+            <div className="w-7 h-7 rounded-lg bg-[#d0f81b]/30 flex items-center justify-center text-slate-950 border border-[#bde412]">
               <span className="material-symbols-outlined text-[17px]">storefront</span>
             </div>
           </div>
@@ -105,13 +105,13 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                 hộ
               </span>
             </div>
-            <div className="mt-1 inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-bold border border-emerald-100">
-              <span className="material-symbols-outlined text-[12px]">trending_up</span>
+            <div className="mt-1 inline-flex items-center gap-1 text-[10px] text-slate-950 bg-[#d0f81b]/35 px-1.5 py-0.5 rounded font-black border border-[#bde412]">
+              <span className="material-symbols-outlined text-[12px] text-[#ff4783]">trending_up</span>
               <span>+18.4% tháng này</span>
             </div>
           </div>
           <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
-            <div className="bg-indigo-600 h-full rounded-full" style={{ width: '78%' }}></div>
+            <div className="bg-[#ff4783] h-full rounded-full" style={{ width: '78%' }}></div>
           </div>
         </div>
 
@@ -135,7 +135,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
               </span>
             </div>
             <div className="mt-1 inline-flex items-center gap-1 text-[10px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-medium border border-slate-200">
-              <span className="material-symbols-outlined text-[12px] text-emerald-600">check_circle</span>
+              <span className="material-symbols-outlined text-[12px] text-[#ff4783]">check_circle</span>
               <span>Tỷ lệ hoàn tất 92%</span>
             </div>
           </div>
@@ -187,7 +187,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
               <span className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-mono font-tabular">
                 68.0%
               </span>
-              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded">
+              <span className="text-[10px] text-slate-950 font-black bg-[#d0f81b] px-1.5 py-0.2 rounded border border-[#bde412]">
                 Đạt mục tiêu
               </span>
             </div>
@@ -212,7 +212,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                 <span className="text-base font-bold text-slate-900 tracking-tight">
                   Khối Lượng Bóc Tách Hóa Đơn (OCR Pipeline)
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#d0f81b] text-slate-950 border border-[#bde412]">
                   AI Realtime
                 </span>
               </div>
@@ -472,17 +472,17 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             </div>
 
             {/* Upsell Opportunity Box */}
-            <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 space-y-1">
+            <div className="p-2 rounded-lg bg-[#d0f81b]/20 border border-[#bde412] space-y-1">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 text-emerald-900 font-bold text-xs">
-                  <span className="material-symbols-outlined text-[14px] text-emerald-600">trending_up</span>
+                <div className="flex items-center gap-1 text-slate-950 font-black text-xs">
+                  <span className="material-symbols-outlined text-[14px] text-[#ff4783]">trending_up</span>
                   142 hộ Free chạm 25+ bill
                 </div>
-                <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-1.5 py-0.2 rounded">
+                <span className="text-[10px] font-bold text-slate-900 bg-[#d0f81b] px-1.5 py-0.2 rounded border border-[#bde412]">
                   Tiềm năng cao
                 </span>
               </div>
-              <p className="text-[10px] text-indigo-900 leading-tight">
+              <p className="text-[10px] text-slate-700 leading-tight">
                 Giao dịch đều đặn, sẵn sàng nâng cấp 99k/tháng.
               </p>
               <button
@@ -605,9 +605,9 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
 
                   <td className="py-2.5 px-4 sm:px-5">
                     {hh.plan === 'pro' ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] text-purple-700 bg-purple-50 px-2 py-0.5 rounded font-bold border border-purple-100">
-                        <span className="material-symbols-outlined text-[12px]">star</span>
-                        Chuyên Nghiệp
+                      <span className="inline-flex items-center gap-1 text-[10px] text-slate-950 bg-[#d0f81b] px-2 py-0.5 rounded font-black border border-[#bde412]">
+                        <span className="material-symbols-outlined text-[12px] text-slate-950">workspace_premium</span>
+                        PRO
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-[10px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded font-medium border border-slate-200">
@@ -618,8 +618,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
 
                   <td className="py-2.5 px-4 sm:px-5">
                     {hh.telegramStatus === 'active' && (
-                      <span className="inline-flex items-center gap-1 text-xs text-emerald-700 font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      <span className="inline-flex items-center gap-1 text-xs text-slate-900 font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
                         Đã Kích Hoạt
                       </span>
                     )}
@@ -649,16 +649,16 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
 
                       {hh.plan === 'pro' ? (
                         <button
-                          onClick={() => alert(`Gia hạn gói Chuyên Nghiệp cho ${hh.storeName}`)}
-                          className="px-2 py-0.5 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition-colors cursor-pointer border border-emerald-200"
+                          onClick={() => alert(`Gia hạn gói PRO cho ${hh.storeName}`)}
+                          className="px-2 py-0.5 rounded-md bg-[#d0f81b] hover:bg-[#bde412] text-slate-950 text-xs font-black transition-colors cursor-pointer border border-[#bde412]"
                           type="button"
                         >
                           Gia hạn
                         </button>
                       ) : (
                         <button
-                          onClick={() => alert(`Nâng cấp gói Chuyên Nghiệp cho ${hh.storeName}`)}
-                          className="px-2 py-0.5 rounded-md bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                          onClick={() => alert(`Nâng cấp gói PRO cho ${hh.storeName}`)}
+                          className="px-2 py-0.5 rounded-md bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black shadow-xs transition-colors cursor-pointer"
                           type="button"
                         >
                           Nâng cấp

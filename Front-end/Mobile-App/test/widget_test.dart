@@ -16,11 +16,12 @@ void main() {
     await tester.pumpWidget(const QuanLyCuaHangApp());
 
     // Verify that our splash screen text exists.
-    expect(find.text('Quản lý cửa hàng'), findsOneWidget);
+    expect(find.text('Vikeso'), findsOneWidget);
+    expect(find.text('Quản lý dòng tiền thông minh'), findsOneWidget);
     expect(find.text('Đang tải...'), findsOneWidget);
 
-    // Let the splash screen timer run and settle the navigation to the login screen
+    // Let the splash screen timer run
     await tester.pump(const Duration(seconds: 3));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
   });
 }

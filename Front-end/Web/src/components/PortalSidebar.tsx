@@ -345,7 +345,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             {portal === 'owner' ? (
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-[#ff4783]/15 text-[#ff4783] flex items-center justify-center shrink-0">
                     <CheckCircle className="w-4 h-4" />
                   </div>
                   <div className="flex flex-col min-w-0">
@@ -403,7 +403,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             {portal === 'owner' ? (
               <div
                 title={`${storeName} • Gói ${subscriptionPlan || 'FREE'}`}
-                className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center cursor-help"
+                className="w-10 h-10 rounded-xl bg-[#ff4783]/10 text-[#ff4783] border border-[#ff4783]/20 flex items-center justify-center cursor-help"
               >
                 <Store className="w-5 h-5" />
               </div>

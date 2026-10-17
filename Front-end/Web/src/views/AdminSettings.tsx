@@ -25,16 +25,16 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-xl shadow-xs border border-slate-200/80">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-bold border border-emerald-200 uppercase tracking-wider">
+            <span className="text-[10px] text-slate-950 bg-[#d0f81b] px-2 py-0.5 rounded-md font-black border border-[#bde412] uppercase tracking-wider shadow-xs">
               Hạ tầng phân tán • VikeSo Core v4.2
             </span>
             <span className="inline-flex items-center gap-1 text-[10px] text-slate-500 font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783] animate-pulse"></span>
               Cụm GPU AI Online
             </span>
             <span className="text-slate-300 hidden sm:inline">•</span>
             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700">
-              <span className="material-symbols-outlined text-[15px] text-purple-600">manage_accounts</span>
+              <span className="material-symbols-outlined text-[15px] text-[#ff4783]">manage_accounts</span>
               <span>{currentUser?.name || 'Admin'}</span>
               <span className="text-slate-400">({currentUser?.email || 'test@example.com'})</span>
             </span>
@@ -59,7 +59,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
 
           <button
             onClick={() => showToast('Cấu hình vận hành AI & Telegram đã lưu thành công!')}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-xs hover:shadow transition-all text-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#ff4783] hover:bg-[#e0326e] text-white font-bold shadow-xs hover:shadow transition-all text-xs cursor-pointer"
             type="button"
           >
             <span className="material-symbols-outlined text-[15px]">save</span>
@@ -97,7 +97,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
             <div className="space-y-2 p-3.5 rounded-lg bg-slate-50 border border-slate-200/60">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#059669]"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#d0f81b] border border-[#bde412]"></span>
                   <span className="text-xs sm:text-sm font-bold text-slate-900">
                     Ngưỡng tin cậy đèn xanh (Auto-Post)
                   </span>
@@ -106,7 +106,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                   <span className="text-xs text-slate-500">
                     Tự động ghi sổ:
                   </span>
-                  <span className="text-sm font-bold text-[#059669] font-mono">
+                  <span className="text-sm font-black text-slate-950 font-mono bg-[#d0f81b] px-2 py-0.5 rounded">
                     &gt; {sliderVal}%
                   </span>
                 </div>
@@ -124,11 +124,11 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                   value={sliderVal}
                   onChange={(e) => setSliderVal(Number(e.target.value))}
                   aria-label="Ngưỡng tin cậy đèn xanh"
-                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#059669]"
+                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#ff4783]"
                 />
                 <div className="flex justify-between text-[10px] text-slate-400 pt-1 font-medium">
                   <span>85% (Rộng)</span>
-                  <span className="font-bold text-[#059669]">95% (Chuẩn vận hành)</span>
+                  <span className="font-bold text-[#ff4783]">95% (Chuẩn vận hành)</span>
                   <span>99% (Khắt khe)</span>
                 </div>
               </div>
@@ -284,7 +284,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                   Giám Sát Tài Nguyên Hệ Thống
                 </h2>
               </div>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black bg-[#d0f81b] text-slate-950 border border-[#bde412] shadow-xs">
                 LIVE
               </span>
             </div>
@@ -296,7 +296,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                   <span className="text-[10px] text-slate-500 uppercase font-semibold">
                     Máy chủ OCR
                   </span>
-                  <span className="text-[10px] text-emerald-700 font-bold">
+                  <span className="text-[10px] text-slate-950 font-bold bg-[#d0f81b] px-1.5 py-0.2 rounded">
                     99.8% Online
                   </span>
                 </div>
@@ -309,7 +309,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                   </span>
                 </div>
                 <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-indigo-600 h-full rounded-full" style={{ width: '24%' }}></div>
+                  <div className="bg-[#ff4783] h-full rounded-full" style={{ width: '24%' }}></div>
                 </div>
               </div>
 
@@ -332,7 +332,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                   </span>
                 </div>
                 <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-purple-600 h-full rounded-full" style={{ width: '8.5%' }}></div>
+                  <div className="bg-[#0f172a] h-full rounded-full" style={{ width: '8.5%' }}></div>
                 </div>
               </div>
             </div>
@@ -345,11 +345,11 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                 <div className="p-2 rounded-lg bg-slate-50 border border-slate-200/60 flex items-center justify-between">
                   <span className="text-slate-800 font-medium text-xs">Node GPU T4</span>
-                  <span className="text-[10px] text-emerald-700 font-bold">ONLINE</span>
+                  <span className="text-[10px] text-[#ff4783] font-bold">ONLINE</span>
                 </div>
                 <div className="p-2 rounded-lg bg-slate-50 border border-slate-200/60 flex items-center justify-between">
                   <span className="text-slate-800 font-medium text-xs">Workers Edge</span>
-                  <span className="text-[10px] text-emerald-700 font-bold">READY</span>
+                  <span className="text-[10px] text-slate-900 font-bold">READY</span>
                 </div>
                 <div className="p-2 rounded-lg bg-slate-50 border border-slate-200/60 flex items-center justify-between">
                   <span className="text-slate-800 font-medium text-xs">Kho S3 WebP</span>
@@ -364,7 +364,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
       {/* Floating notify */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-slate-900 text-white shadow-xl animate-in fade-in slide-in-from-bottom-2 text-xs font-semibold">
-          <span className="material-symbols-outlined text-emerald-400 text-[18px]">
+          <span className="material-symbols-outlined text-[#d0f81b] text-[18px]">
             check_circle
           </span>
           <span>{toastMessage}</span>

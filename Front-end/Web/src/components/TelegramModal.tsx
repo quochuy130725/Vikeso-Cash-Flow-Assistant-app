@@ -74,7 +74,7 @@ export const TelegramModal: React.FC<TelegramModalProps> = ({ isOpen, onClose })
                     onClick={() => {
                       if (phoneNumber.trim()) setIsLinked(true);
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-[#d0f81b] text-slate-950 text-xs font-black hover:bg-[#c2ea14] transition-colors shadow-sm cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black transition-all shadow-md shadow-[#ff4783]/25 cursor-pointer border border-[#ff4783]"
                   >
                     Kết Nối
                   </button>

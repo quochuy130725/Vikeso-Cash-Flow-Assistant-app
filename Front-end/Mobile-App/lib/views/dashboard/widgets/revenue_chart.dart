@@ -9,9 +9,6 @@ class RevenueChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     final double maxVal = weeklyRevenue.isEmpty
         ? 0.0
         : weeklyRevenue.reduce((a, b) => a > b ? a : b);
@@ -19,28 +16,49 @@ class RevenueChart extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.surfaceContainerHighest),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
-            offset: const Offset(0, 2),
+            offset: const Offset(0, 3),
           )
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Doanh thu theo ngày (7 ngày gần nhất)',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontSize: 16,
-              color: colorScheme.onSurfaceVariant,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Xu hướng doanh thu 7 ngày',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF4783).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Đơn vị: Triệu đ',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFFF4783),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 24),
           SizedBox(
@@ -57,11 +75,12 @@ class RevenueChart extends StatelessWidget {
                     tooltipMargin: 4,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       return BarTooltipItem(
-                        '${rod.toY.toStringAsFixed(1)} Tr',
-                        TextStyle(
-                            color: Colors.grey[800],
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold),
+                        rod.toY > 0 ? '${rod.toY.toStringAsFixed(1)}Tr' : '',
+                        const TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
                       );
                     },
                   ),
@@ -75,6 +94,21 @@ class RevenueChart extends StatelessWidget {
                         final int index = value.toInt();
                         if (index < 0 || index >= 7) return const SizedBox();
                         
+                        final isToday = index == 6;
+                        if (isToday) {
+                          return SideTitleWidget(
+                            meta: meta,
+                            child: const Text(
+                              'Hôm nay',
+                              style: TextStyle(
+                                color: Color(0xFFFF4783),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          );
+                        }
+
                         // Tính toán ngày cách đây (6 - index) ngày
                         final now = DateTime.now();
                         final targetDay = now.subtract(Duration(days: 6 - index));
@@ -82,9 +116,14 @@ class RevenueChart extends StatelessWidget {
 
                         return SideTitleWidget(
                           meta: meta,
-                          child: Text(title,
-                              style: const TextStyle(
-                                  color: Colors.grey, fontSize: 10, fontWeight: FontWeight.w500)),
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -100,10 +139,10 @@ class RevenueChart extends StatelessWidget {
                   show: true,
                   drawVerticalLine: false,
                   horizontalInterval: computedMaxY / 2,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.withValues(alpha: 0.2),
+                  getDrawingHorizontalLine: (value) => const FlLine(
+                    color: Color(0xFFE2E8F0),
                     strokeWidth: 1,
-                    dashArray: [5, 5],
+                    dashArray: [4, 4],
                   ),
                 ),
                 borderData: FlBorderData(show: false),
@@ -120,18 +159,15 @@ class RevenueChart extends StatelessWidget {
   }
 
   BarChartGroupData _buildFlBarGroup(int x, double y) {
+    final isToday = x == 6;
     return BarChartGroupData(
       x: x,
-      showingTooltipIndicators: [0],
+      showingTooltipIndicators: const [0],
       barRods: [
         BarChartRodData(
           toY: y,
-          width: 14,
-          gradient: const LinearGradient(
-            colors: [Color(0xFFB31F56), Color(0xFFFF5C8D)],
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-          ),
+          width: 18,
+          color: isToday ? const Color(0xFFFF4783) : const Color(0xFF0F172A),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
         ),
       ],

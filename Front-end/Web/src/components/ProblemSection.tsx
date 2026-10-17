@@ -99,10 +99,10 @@ export const ProblemSection: React.FC<{ onOpenScan: () => void }> = ({ onOpenSca
 
         <button
           onClick={onOpenScan}
-          className="px-6 py-3.5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 text-xs font-black transition-all shadow-md shadow-[#d0f81b]/25 border border-[#bde412] flex items-center gap-2 shrink-0 active:scale-95 cursor-pointer"
+          className="px-6 py-3.5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black transition-all shadow-lg shadow-[#ff4783]/30 border border-[#ff4783] flex items-center gap-2 shrink-0 active:scale-95 cursor-pointer"
         >
           <span>Xem Giải Pháp Tức Thì</span>
-          <ArrowRight className="w-4 h-4 text-slate-950" />
+          <ArrowRight className="w-4 h-4 text-white" />
         </button>
       </div>
     </section>

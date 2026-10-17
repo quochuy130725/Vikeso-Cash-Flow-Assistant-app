@@ -58,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-2xl tracking-tight text-slate-900">
-                  Vike<span className="text-[#84a900]">So</span>
+                  Vike<span className="text-[#ff4783]">So</span>
                 </span>
                 <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-[#d0f81b]/25 text-[#243505] border border-[#d0f81b] inline-flex items-center gap-1 shadow-2xs">
                   <Sparkles className="w-2.5 h-2.5 text-[#557800]" />
@@ -98,14 +98,14 @@ export const Header: React.FC<HeaderProps> = ({
                   className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-xs font-bold active:scale-95 transition-all shadow-sm cursor-pointer ${
                     currentUser.role === 'ADMIN'
                       ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'
-                      : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/25'
+                      : 'bg-[#ff4783] hover:bg-[#e0326e] shadow-[#ff4783]/25'
                   }`}
                   title={currentUser.role === 'ADMIN' ? 'Mở Bảng Quản Trị Hệ Thống' : 'Mở Sổ Thu Chi & Dòng Tiền'}
                 >
                   {currentUser.role === 'ADMIN' ? (
                     <ShieldCheck className="w-4 h-4 text-indigo-100" />
                   ) : (
-                    <Wallet className="w-4 h-4 text-emerald-100" />
+                    <Wallet className="w-4 h-4 text-white" />
                   )}
                   <span>{currentUser.role === 'ADMIN' ? 'Bảng Quản Trị' : 'Sổ Thu Chi'}</span>
                 </button>
@@ -114,14 +114,14 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 className={`flex items-center gap-2.5 pl-3 pr-2.5 py-1.5 rounded-full bg-white border border-slate-200 transition-all shadow-xs cursor-pointer ${
-                  currentUser.role === 'ADMIN' ? 'hover:border-indigo-500' : 'hover:border-emerald-500'
+                  currentUser.role === 'ADMIN' ? 'hover:border-indigo-500' : 'hover:border-[#ff4783]'
                 }`}
               >
                 <div
                   className={`w-7 h-7 rounded-full text-white flex items-center justify-center font-bold text-xs shadow-2xs ${
                     currentUser.role === 'ADMIN'
                       ? 'bg-gradient-to-br from-indigo-600 to-indigo-800'
-                      : 'bg-gradient-to-br from-emerald-600 to-teal-700'
+                      : 'bg-gradient-to-br from-[#ff4783] to-[#e0326e]'
                   }`}
                 >
                   {((currentUser?.name || currentUser?.email || 'U').charAt(0)).toUpperCase()}
@@ -146,7 +146,7 @@ export const Header: React.FC<HeaderProps> = ({
                         className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
                           currentUser.role === 'ADMIN'
                             ? 'bg-indigo-50 text-indigo-700 border-indigo-200/80'
-                            : 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+                            : 'bg-[#ff4783]/10 text-[#ff4783] border-[#ff4783]/20'
                         }`}
                       >
                         {currentUser.role || 'OWNER'}
@@ -164,13 +164,13 @@ export const Header: React.FC<HeaderProps> = ({
                       className={`w-full px-3 py-2 text-left text-xs font-bold rounded-xl flex items-center gap-2 mt-1 cursor-pointer transition-colors ${
                         currentUser.role === 'ADMIN'
                           ? 'text-indigo-700 hover:bg-indigo-50'
-                          : 'text-emerald-700 hover:bg-emerald-50'
+                          : 'text-[#ff4783] hover:bg-[#ff4783]/10'
                       }`}
                     >
                       {currentUser.role === 'ADMIN' ? (
                         <ShieldCheck className="w-4 h-4 text-indigo-600" />
                       ) : (
-                        <Wallet className="w-4 h-4 text-emerald-600" />
+                        <Wallet className="w-4 h-4 text-[#ff4783]" />
                       )}
                       <span>
                         {currentUser.role === 'ADMIN' ? 'Vào Bảng Quản Trị Hệ Thống' : 'Vào Sổ Thu Chi & Dòng Tiền'}
@@ -224,7 +224,7 @@ export const Header: React.FC<HeaderProps> = ({
               <Magnet padding={20} magnetStrength={0.25}>
                 <button
                   onClick={() => onOpenAuth('register')}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-xs font-black text-[#0a0f06] border border-[#bde412] active:scale-95 transition-all shadow-md shadow-[#d0f81b]/35 hover:shadow-lg hover:shadow-[#d0f81b]/50 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-xs font-black text-white border border-[#ff4783] active:scale-95 transition-all shadow-md shadow-[#ff4783]/35 hover:shadow-lg hover:shadow-[#ff4783]/50 cursor-pointer"
                 >
                   <span>Dùng thử miễn phí</span>
                   <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />

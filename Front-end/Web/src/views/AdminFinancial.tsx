@@ -126,7 +126,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
             </span>
             <span className="text-slate-300 hidden sm:inline">•</span>
             <span className="inline-flex items-center gap-1 font-bold text-slate-800 text-xs">
-              <span className="material-symbols-outlined text-[15px] text-emerald-600">badge</span>
+              <span className="material-symbols-outlined text-[15px] text-[#ff4783]">badge</span>
               <span>{currentUser?.name || 'Admin'}</span>
               <span className="text-[10px] px-1.5 py-0.2 rounded font-extrabold bg-purple-50 text-purple-700 border border-purple-200">
                 {currentUser?.role || 'ADMIN'}
@@ -210,8 +210,8 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
               84.051.000 <span className="text-xs font-semibold text-slate-400">đ</span>
             </div>
             <div className="flex items-center justify-between pt-1 mt-1 border-t border-slate-100">
-              <div className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-100">
-                <span className="material-symbols-outlined text-[12px]">trending_up</span>
+              <div className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-[#d0f81b] text-slate-950 text-[11px] font-black border border-[#bde412]">
+                <span className="material-symbols-outlined text-[12px] text-slate-950">trending_up</span>
                 +22.4%
               </div>
               <span className="text-[11px] text-slate-400">so tháng trước</span>
@@ -225,7 +225,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
             <span className="text-[11px] uppercase tracking-wider font-semibold">
               Tổng Hộ KD Trả Phí
             </span>
-            <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100">
+            <div className="w-7 h-7 rounded-lg bg-[#ff4783]/10 text-[#ff4783] flex items-center justify-center border border-[#ff4783]/20">
               <span className="material-symbols-outlined text-[17px]">storefront</span>
             </div>
           </div>
@@ -234,7 +234,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
               849 <span className="text-xs font-semibold text-slate-400">hộ</span>
             </div>
             <div className="flex items-center justify-between pt-1 mt-1 border-t border-slate-100">
-              <div className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-purple-50 text-purple-700 text-[11px] font-bold border border-purple-100">
+              <div className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-[#ff4783]/10 text-[#ff4783] text-[11px] font-bold border border-[#ff4783]/20">
                 <span className="material-symbols-outlined text-[12px]">pie_chart</span>
                 Chiếm 68%
               </div>
@@ -258,8 +258,8 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
               6.820.000 <span className="text-xs font-semibold text-slate-400">đ</span>
             </div>
             <div className="flex items-center justify-between pt-1 mt-1 border-t border-slate-100">
-              <div className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-100">
-                <span className="material-symbols-outlined text-[12px]">shield</span>
+              <div className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-[#d0f81b] text-slate-950 text-[11px] font-black border border-[#bde412]">
+                <span className="material-symbols-outlined text-[12px] text-slate-950">shield</span>
                 Biên LN: 91.8%
               </div>
               <span className="text-[11px] text-slate-400">Tối ưu chi phí</span>
@@ -301,8 +301,8 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
               <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
                 Tăng Trưởng MRR &amp; Đơn Vị Kinh Tế (Unit Economics)
               </h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-[#d0f81b] text-slate-950 border border-[#bde412] flex items-center gap-1 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783] animate-pulse"></span>
                 Biên LN Gộp: 91.8%
               </span>
             </div>
@@ -353,20 +353,20 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
               <span className="text-xs text-slate-300">|</span>
               <div className="flex items-center gap-1 text-xs">
                 <span className="text-slate-500">Lãi gộp:</span>
-                <span className="font-bold text-emerald-700 font-mono">
+                <span className="font-black text-[#ff4783] font-mono">
                   +{monthlyUnitEconomics[activeMonthIdx].grossProfit.toLocaleString('vi-VN')}M VNĐ
                 </span>
-                <span className="text-[11px] font-semibold text-emerald-600">
+                <span className="text-[11px] font-black text-slate-950 bg-[#d0f81b] px-1 rounded border border-[#bde412]">
                   ({monthlyUnitEconomics[activeMonthIdx].margin}%)
                 </span>
               </div>
             </div>
 
             {monthlyUnitEconomics[activeMonthIdx].badge ? (
-              <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded border ${
+              <span className={`inline-flex items-center gap-1 text-[11px] font-black px-2 py-0.5 rounded border shadow-2xs ${
                 monthlyUnitEconomics[activeMonthIdx].badge?.color === 'purple'
                   ? 'bg-purple-50 text-purple-700 border-purple-200'
-                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-[#d0f81b] text-slate-950 border-[#bde412]'
               }`}>
                 {monthlyUnitEconomics[activeMonthIdx].badge?.text}
               </span>
@@ -619,17 +619,17 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
                   onClick={() => setActiveMonthIdx(idx)}
                   className={`p-2 sm:p-2.5 rounded-lg text-left transition-all cursor-pointer border ${
                     isActive
-                      ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-500/20 shadow-xs'
+                      ? 'bg-[#d0f81b]/30 border-[#bde412] ring-2 ring-[#d0f81b]/40 shadow-xs'
                       : 'bg-white hover:bg-slate-50 border-slate-200/90'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className={`text-[11px] font-bold ${isActive ? 'text-emerald-900' : 'text-slate-800'}`}>
+                    <span className={`text-[11px] font-black ${isActive ? 'text-slate-950' : 'text-slate-800'}`}>
                       {m.shortMonth}
                     </span>
                     {m.badge && (
                       <span className={`w-1.5 h-1.5 rounded-full ${
-                        m.badge.color === 'purple' ? 'bg-purple-600' : 'bg-emerald-600'
+                        m.badge.color === 'purple' ? 'bg-purple-600' : 'bg-[#ff4783]'
                       }`}></span>
                     )}
                   </div>
@@ -641,7 +641,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
 
                   <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1 pt-1 border-t border-slate-100">
                     <span>Lãi gộp:</span>
-                    <span className="font-semibold text-emerald-700">{m.margin}%</span>
+                    <span className="font-bold text-slate-900">{m.margin}%</span>
                   </div>
                 </button>
               );
@@ -649,9 +649,9 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
           </div>
 
           {/* AI Financial & Unit Economics Diagnostics Banner - Compact */}
-          <div className="mt-3 p-3 rounded-lg bg-gradient-to-r from-emerald-50/70 via-blue-50/40 to-slate-50 border border-emerald-200/70 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="mt-3 p-3 rounded-lg bg-gradient-to-r from-[#d0f81b]/20 via-slate-50 to-white border border-[#bde412]/60 grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="flex items-start gap-2">
-              <span className="material-symbols-outlined text-[16px] text-emerald-600 mt-0.5">verified</span>
+              <span className="material-symbols-outlined text-[16px] text-[#ff4783] mt-0.5">verified</span>
               <div className="flex flex-col text-xs">
                 <span className="font-bold text-slate-900 text-xs">Chi Phí OCR Tối Ưu Cực Đại</span>
                 <span className="text-slate-600 mt-0.5 text-[11px]">
@@ -776,8 +776,8 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
                   </td>
 
                   <td className="py-2.5 px-4 sm:px-5 text-right">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-100">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#d0f81b]/35 text-slate-950 text-[11px] font-black border border-[#bde412]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
                       Thành công
                     </span>
                   </td>
@@ -848,7 +848,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
       {/* Floating Notification Toast */}
       {toastVisible && (
         <div className="fixed bottom-6 right-6 p-4 rounded-xl bg-slate-900 text-white shadow-xl flex items-center gap-3 z-50">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white">
+          <div className="w-8 h-8 rounded-lg bg-[#d0f81b] text-slate-950 flex items-center justify-center font-bold">
             <span className="material-symbols-outlined text-[20px]">check_circle</span>
           </div>
           <div className="flex flex-col">
