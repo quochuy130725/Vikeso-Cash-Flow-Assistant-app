@@ -129,6 +129,7 @@ export function mapReceiptToTransaction(r: any): Transaction {
     id: String(r._id || r.id || Math.random()),
     time,
     dateLabel,
+    rawDate: dateObj.toISOString(),
     title: r.reason || (isThu ? 'Khách thanh toán mua hàng' : 'Chi phí vận hành cửa hàng'),
     category,
     details,
@@ -297,6 +298,7 @@ export interface TelegramDispatchLog {
   net: string;
   file: string;
   status: string;
+  receiptCount?: number;
 }
 
 export const defaultTelegramHistory: TelegramDispatchLog[] = [
@@ -307,46 +309,382 @@ export const defaultTelegramHistory: TelegramDispatchLog[] = [
     outflow: '-4.200.000 đ',
     net: '+11.250.000 đ',
     file: 'BangKe_24102024.xlsx',
-    status: 'Thành công (200 OK)'
+    status: 'Thành công (200 OK)',
   },
-  {
-    sendTime: '23/10/2024 22:00:02',
-    shift: 'Ca Ngày 23/10/2024',
-    inflow: '+18.120.000 đ',
-    outflow: '-6.850.000 đ',
-    net: '+11.270.000 đ',
-    file: 'BangKe_23102024.xlsx',
-    status: 'Thành công (200 OK)'
-  },
-  {
-    sendTime: '22/10/2024 22:00:02',
-    shift: 'Ca Ngày 22/10/2024',
-    inflow: '+12.980.000 đ',
-    outflow: '-2.100.000 đ',
-    net: '+10.880.000 đ',
-    file: 'BangKe_22102024.xlsx',
-    status: 'Thành công (200 OK)'
-  },
-  {
-    sendTime: '21/10/2024 22:00:02',
-    shift: 'Ca Ngày 21/10/2024',
-    inflow: '+16.740.000 đ',
-    outflow: '-5.900.000 đ',
-    net: '+10.840.000 đ',
-    file: 'BangKe_21102024.xlsx',
-    status: 'Thành công (200 OK)'
-  },
-  {
-    sendTime: '20/10/2024 22:00:02',
-    shift: 'Ca Ngày 20/10/2024',
-    inflow: '+21.350.000 đ',
-    outflow: '-8.420.000 đ',
-    net: '+12.930.000 đ',
-    file: 'BangKe_20102024.xlsx',
-    status: 'Thành công (200 OK)'
-  }
 ];
 
-export async function fetchTelegramHistory(): Promise<TelegramDispatchLog[]> {
-  return defaultTelegramHistory;
+/**
+ * Fetch real telegram dispatch history from receipts
+ * GET /api/telegram/history?userId=...
+ */
+export async function fetchTelegramHistory(userId?: string): Promise<TelegramDispatchLog[]> {
+  try {
+    let targetUserId = userId;
+    if (!targetUserId) {
+      const saved = getSavedUser();
+      targetUserId = saved?.id || saved?._id;
+    }
+    if (!targetUserId) {
+      return defaultTelegramHistory;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/telegram/history?userId=${targetUserId}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+      return data.data;
+    }
+    return defaultTelegramHistory;
+  } catch (err) {
+    console.error('Lỗi khi fetchTelegramHistory:', err);
+    return defaultTelegramHistory;
+  }
+}
+
+/**
+ * Create a manual cash in/out entry
+ * POST /api/manual-entry
+ */
+export async function createManualTransaction(payload: {
+  userId?: string;
+  category: string;
+  transactionType: 'THU' | 'CHI';
+  totalAmount: number;
+  reason: string;
+  transactionDate?: string;
+}): Promise<{ success: boolean; data?: any; message?: string }> {
+  try {
+    let targetUserId = payload.userId;
+    if (!targetUserId) {
+      const saved = getSavedUser();
+      targetUserId = saved?.id || saved?._id;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/manual-entry`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        ...payload,
+        userId: targetUserId,
+      }),
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error('Lỗi khi createManualTransaction:', err);
+    return { success: false, message: err.message || 'Lỗi kết nối máy chủ' };
+  }
+}
+
+/**
+ * Fetch user profile & telegram link status
+ * GET /api/user/:id/profile
+ */
+export async function fetchUserProfile(userId: string): Promise<{
+  success: boolean;
+  hasTelegram: boolean;
+  settings: {
+    receiveEmail: boolean;
+    receiveTelegram: boolean;
+    receiveInApp: boolean;
+  };
+}> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/user/${userId}/profile`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error('Lỗi khi fetchUserProfile:', err);
+    return {
+      success: false,
+      hasTelegram: false,
+      settings: { receiveEmail: true, receiveTelegram: true, receiveInApp: true },
+    };
+  }
+}
+
+/**
+ * Update user notification settings
+ * PUT /api/user/:id/notification-settings
+ */
+export async function updateNotificationSettings(
+  userId: string,
+  settings: {
+    receiveEmail?: boolean;
+    receiveTelegram?: boolean;
+    receiveInApp?: boolean;
+  }
+): Promise<{ success: boolean; message?: string; settings?: any }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/user/${userId}/notification-settings`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(settings),
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error('Lỗi khi updateNotificationSettings:', err);
+    return { success: false, message: err.message || 'Lỗi cập nhật' };
+  }
+}
+
+/**
+ * Trigger manual test daily report
+ * POST /api/test-report
+ */
+export async function triggerTestReport(payload?: {
+  email?: string;
+  sendZeroReports?: boolean;
+}): Promise<{ success: boolean; message: string; result?: any }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/test-report`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload || { sendZeroReports: true }),
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error('Lỗi khi triggerTestReport:', err);
+    return { success: false, message: err.message || 'Lỗi gửi báo cáo' };
+  }
+}
+
+/**
+ * Update authenticated user's shop profile
+ * PUT /api/auth/profile
+ */
+export async function updateUserProfile(payload: {
+  name?: string;
+  shopName?: string;
+  phone?: string;
+  avatar?: string;
+}): Promise<{ success: boolean; message?: string; user?: any }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/profile`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (data.success && data.user) {
+      // Update local storage
+      const saved = getSavedUser() || {};
+      localStorage.setItem('vikeso_user', JSON.stringify({ ...saved, ...data.user }));
+    }
+    return data;
+  } catch (err: any) {
+    console.error('Lỗi khi updateUserProfile:', err);
+    return { success: false, message: err.message || 'Lỗi kết nối máy chủ' };
+  }
+}
+
+/**
+ * Change authenticated user's password
+ * PUT /api/auth/change-password
+ */
+export async function changeUserPassword(payload: {
+  oldPassword?: string;
+  newPassword?: string;
+}): Promise<{ success: boolean; message: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/change-password`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error('Lỗi khi changeUserPassword:', err);
+    return { success: false, message: err.message || 'Lỗi đổi mật khẩu' };
+  }
+}
+
+/**
+ * Create a billing order for VietQR SePay upgrade
+ * POST /api/billing/create-order
+ */
+export async function createBillingOrder(payload: {
+  userId?: string;
+  plan?: string;
+}): Promise<{ success: boolean; data?: any; message?: string }> {
+  try {
+    let targetUserId = payload.userId;
+    if (!targetUserId) {
+      const saved = getSavedUser();
+      targetUserId = saved?.id || saved?._id;
+    }
+    const res = await fetch(`${API_BASE_URL}/billing/create-order`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        userId: targetUserId,
+        plan: payload.plan || 'PRO',
+      }),
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error('Lỗi khi createBillingOrder:', err);
+    return { success: false, message: err.message || 'Lỗi tạo đơn thanh toán' };
+  }
+}
+
+// ==================== ADMIN ENDPOINTS ====================
+
+/**
+ * Admin: Create a new user account
+ * POST /api/admin/users
+ */
+export async function createAdminUser(payload: {
+  email: string;
+  password?: string;
+  name?: string;
+  shopName?: string;
+  phone?: string;
+  role?: 'OWNER' | 'ADMIN';
+  subscriptionPlan?: 'FREE' | 'PRO';
+}): Promise<{ success: boolean; data?: any; message?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/users`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error('Lỗi khi createAdminUser:', err);
+    return { success: false, message: err.message || 'Lỗi tạo tài khoản' };
+  }
+}
+
+/**
+ * Admin: Update user subscription plan
+ * PATCH /api/admin/users/:id/plan
+ */
+export async function updateAdminUserPlan(
+  userId: string,
+  plan: 'FREE' | 'PRO'
+): Promise<{ success: boolean; data?: any; message?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/plan`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ plan }),
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error('Lỗi khi updateAdminUserPlan:', err);
+    return { success: false, message: err.message || 'Lỗi cập nhật gói' };
+  }
+}
+
+/**
+ * Admin: Update user role
+ * PATCH /api/admin/users/:id/role
+ */
+export async function updateAdminUserRole(
+  userId: string,
+  role: 'OWNER' | 'ADMIN'
+): Promise<{ success: boolean; data?: any; message?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ role }),
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error('Lỗi khi updateAdminUserRole:', err);
+    return { success: false, message: err.message || 'Lỗi cập nhật vai trò' };
+  }
+}
+
+/**
+ * Admin: Delete a user
+ * DELETE /api/admin/users/:id
+ */
+export async function deleteAdminUser(
+  userId: string
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error('Lỗi khi deleteAdminUser:', err);
+    return { success: false, message: err.message || 'Lỗi xóa tài khoản' };
+  }
+}
+
+/**
+ * Admin: Update a payment status (Manual Approval)
+ * PATCH /api/admin/payments/:id
+ */
+export async function updateAdminPaymentStatus(
+  paymentId: string,
+  status: 'SUCCESS' | 'PENDING' | 'FAILED' | 'EXPIRED'
+): Promise<{ success: boolean; data?: any; message?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/payments/${paymentId}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ status }),
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error('Lỗi khi updateAdminPaymentStatus:', err);
+    return { success: false, message: err.message || 'Lỗi cập nhật đơn' };
+  }
+}
+
+/**
+ * Admin: Delete a payment record
+ * DELETE /api/admin/payments/:id
+ */
+export async function deleteAdminPayment(
+  paymentId: string
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/payments/${paymentId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error('Lỗi khi deleteAdminPayment:', err);
+    return { success: false, message: err.message || 'Lỗi xóa đơn' };
+  }
+}
+
+/**
+ * Server health check & latency measurement
+ * GET /api/health
+ */
+export async function fetchServerHealth(): Promise<{
+  status: string;
+  latencyMs: number;
+  time: number;
+}> {
+  const start = performance.now();
+  try {
+    const res = await fetch(`${API_BASE_URL}/health`);
+    const data = await res.json();
+    const latencyMs = Math.round(performance.now() - start);
+    return {
+      status: data.status || 'ok',
+      latencyMs,
+      time: data.time || Date.now(),
+    };
+  } catch (err) {
+    const latencyMs = Math.round(performance.now() - start);
+    return {
+      status: 'error',
+      latencyMs,
+      time: Date.now(),
+    };
+  }
 }

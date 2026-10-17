@@ -216,7 +216,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             {/* Tab 4 */}
             <button
               onClick={() => setOwnerTab('cai-dat-cua-hang')}
-              title={isCollapsed ? 'Cài đặt cửa hàng & POS' : undefined}
+              title={isCollapsed ? 'Cài đặt cửa hàng & Tài khoản' : undefined}
               className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
                 isCollapsed
                   ? 'justify-center p-3'
@@ -228,11 +228,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <Store className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="truncate">Cài đặt cửa hàng &amp; POS</span>}
+              {!isCollapsed && <span className="truncate">Cài đặt cửa hàng &amp; Tài khoản</span>}
 
               {isCollapsed && (
                 <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  Cài đặt cửa hàng &amp; POS
+                  Cài đặt cửa hàng &amp; Tài khoản
                 </span>
               )}
             </button>
@@ -242,7 +242,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             {/* Admin Tab 1 */}
             <button
               onClick={() => setAdminTab('tong-quan-van-hanh')}
-              title={isCollapsed ? 'Tổng quan vận hành' : undefined}
+              title={isCollapsed ? 'Tổng quan người dùng & Vận hành' : undefined}
               className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
                 isCollapsed
                   ? 'justify-center p-3'
@@ -254,11 +254,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <LayoutDashboard className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="truncate">Tổng quan vận hành</span>}
+              {!isCollapsed && <span className="truncate">Người dùng &amp; Vận hành</span>}
 
               {isCollapsed && (
                 <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  Tổng quan vận hành
+                  Người dùng &amp; Vận hành
                 </span>
               )}
             </button>
@@ -266,7 +266,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             {/* Admin Tab 2 */}
             <button
               onClick={() => setAdminTab('bao-cao-tai-chinh-doanh-thu')}
-              title={isCollapsed ? 'Báo cáo tài chính & MRR' : undefined}
+              title={isCollapsed ? 'Quản lý thanh toán & Doanh thu' : undefined}
               className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
                 isCollapsed
                   ? 'justify-center p-3'
@@ -278,11 +278,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <CircleDollarSign className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="truncate">Báo cáo tài chính &amp; MRR</span>}
+              {!isCollapsed && <span className="truncate">Thanh toán &amp; Doanh thu</span>}
 
               {isCollapsed && (
                 <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  Báo cáo tài chính &amp; MRR
+                  Thanh toán &amp; Doanh thu
                 </span>
               )}
             </button>
@@ -290,7 +290,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             {/* Admin Tab 3 */}
             <button
               onClick={() => setAdminTab('cau-hinh-telegram-bot')}
-              title={isCollapsed ? 'Cấu hình Telegram Bot' : undefined}
+              title={isCollapsed ? 'Báo cáo tự động Telegram' : undefined}
               className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
                 isCollapsed
                   ? 'justify-center p-3'
@@ -302,11 +302,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <Bot className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="truncate">Cấu hình Telegram Bot</span>}
+              {!isCollapsed && <span className="truncate">Báo cáo tự động Telegram</span>}
 
               {isCollapsed && (
                 <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  Cấu hình Telegram Bot
+                  Báo cáo tự động Telegram
                 </span>
               )}
             </button>
@@ -314,7 +314,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             {/* Admin Tab 4 */}
             <button
               onClick={() => setAdminTab('cai-dat-he-thong')}
-              title={isCollapsed ? 'Cài đặt hệ thống & Máy chủ AI' : undefined}
+              title={isCollapsed ? 'Hạ tầng máy chủ & Cài đặt' : undefined}
               className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
                 isCollapsed
                   ? 'justify-center p-3'
@@ -326,11 +326,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <Settings2 className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="truncate">Cài đặt hệ thống &amp; Máy chủ AI</span>}
+              {!isCollapsed && <span className="truncate">Hạ tầng &amp; Cài đặt hệ thống</span>}
 
               {isCollapsed && (
                 <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  Cài đặt hệ thống &amp; Máy chủ AI
+                  Hạ tầng &amp; Cài đặt hệ thống
                 </span>
               )}
             </button>
