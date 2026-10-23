@@ -223,9 +223,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               Tổng doanh thu đã thu
             </span>
-            <div className="w-8 h-8 rounded-lg bg-[#d0f81b]/30 text-slate-950 flex items-center justify-center border border-[#bde412]">
-              <span className="material-symbols-outlined text-[18px]">payments</span>
-            </div>
+            <span className="w-2 h-2 rounded-full bg-[#d0f81b]"></span>
           </div>
           <div>
             <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
@@ -243,9 +241,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               Lợi Nhuận Ròng (80%)
             </span>
-            <div className="w-8 h-8 rounded-lg bg-pink-50 text-[#ff4783] flex items-center justify-center border border-pink-200">
-              <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
-            </div>
+            <span className="w-2 h-2 rounded-full bg-[#ff4783]"></span>
           </div>
           <div>
             <div className="text-2xl font-extrabold text-[#ff4783] font-mono font-tabular tracking-tight">
@@ -263,9 +259,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               Đơn hoàn tất (PRO)
             </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200">
-              <span className="material-symbols-outlined text-[18px]">verified</span>
-            </div>
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
           </div>
           <div>
             <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
@@ -283,9 +277,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               Giá Gói Chuyên Nghiệp (PRO)
             </span>
-            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
-              <span className="material-symbols-outlined text-[18px]">sell</span>
-            </div>
+            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
           </div>
           <div>
             <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
@@ -572,9 +564,8 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
                       </td>
 
                       <td className="py-2.5 px-3 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-pink-50 text-[#ff4783] text-[11px] font-bold border border-pink-200 whitespace-nowrap">
-                          <span className="material-symbols-outlined text-[13px]">workspace_premium</span>
-                          <span>{planText}</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-pink-50 text-[#ff4783] text-[11px] font-bold border border-pink-200 whitespace-nowrap">
+                          {planText}
                         </span>
                       </td>
 
@@ -585,9 +576,8 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
                       </td>
 
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold border border-slate-200 whitespace-nowrap">
-                          <span className="material-symbols-outlined text-[13px] text-blue-600">qr_code_2</span>
-                          <span>{cleanMethod}</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold border border-slate-200 whitespace-nowrap">
+                          {cleanMethod}
                         </span>
                       </td>
 

@@ -2,7 +2,6 @@ import React from 'react';
 import { Check, Flame, ArrowRight, Coffee, Sparkles } from 'lucide-react';
 import { SpotlightCard } from './reactbits/SpotlightCard';
 import { Magnet } from './reactbits/Magnet';
-import { ShinyText } from './reactbits/ShinyText';
 
 interface PricingSectionProps {
   onSelectStarter: () => void;
@@ -11,17 +10,17 @@ interface PricingSectionProps {
 
 export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter, onSelectPro }) => {
   return (
-    <section id="bang-gia" className="w-full py-20 px-4 md:px-8 max-w-7xl mx-auto">
+    <section id="bang-gia" className="scroll-mt-24 w-full py-20 px-4 md:px-8 max-w-7xl mx-auto">
       {/* Section Header */}
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <span className="text-xs font-bold text-slate-950 uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-[#d0f81b]/25 border border-[#d0f81b]/50 inline-flex items-center gap-1.5 shadow-2xs">
+        <span className="text-xs font-black text-slate-950 uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-[#d0f81b] border border-[#bde412] inline-flex items-center gap-1.5 shadow-2xs">
           <Sparkles className="w-3.5 h-3.5 text-slate-950" />
           Chi phí tối ưu cho mọi vựa &amp; tiểu thương
         </span>
-        <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-4 tracking-tight max-w-2xl mx-auto">
+        <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-950 mt-4 tracking-tight max-w-2xl mx-auto [text-shadow:_0_1px_8px_rgba(255,255,255,0.85)]">
           Bảng Giá Minh Bạch — Đầu Tư Nhỏ, Lợi Ích Lớn
         </h2>
-        <p className="text-sm sm:text-base text-slate-600 mt-2.5 leading-relaxed">
+        <p className="text-sm sm:text-base text-slate-950 font-bold mt-2.5 leading-relaxed [text-shadow:_0_1px_6px_rgba(255,255,255,0.85)]">
           Bắt đầu hoàn toàn miễn phí. Chỉ nâng cấp khi hoạt động buôn bán của bạn mở rộng quy mô.
         </p>
       </div>
@@ -104,7 +103,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
           {/* Top Pill Highlight */}
           <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-[#d0f81b] text-slate-950 text-[11px] font-black tracking-wider uppercase shadow-md shadow-[#d0f81b]/30 border border-[#bde412] flex items-center gap-1.5 whitespace-nowrap">
             <Flame className="w-3.5 h-3.5 text-slate-950 fill-slate-950" />
-            <ShinyText text="PHỔ BIẾN / KHUYÊN DÙNG" className="text-slate-950 font-black" />
+            <span className="text-slate-950 font-black tracking-wider">PHỔ BIẾN / KHUYÊN DÙNG</span>
           </div>
 
           <div>
@@ -157,7 +156,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
                 <span>
-                  <strong>Lưới lọc 2 chiều</strong> tự động gạch trùng POS
+                  <strong>Tự động chống cộng trùng</strong> tiền máy cà thẻ POS
                 </span>
               </li>
               <li className="flex items-center gap-3">
@@ -172,21 +171,24 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
                 <div className="w-5 h-5 rounded-full bg-[#d0f81b]/20 text-[#d0f81b] flex items-center justify-center shrink-0 border border-[#d0f81b]/30">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
-                <span>Ưu tiên đường truyền bóc tách AI siêu tốc (&lt; 1.2s)</span>
+                <span>Xử lý hóa đơn tức thì — chụp xong vào sổ ngay không cần đợi</span>
               </li>
             </ul>
           </div>
 
-          <div className="mt-8">
-            <Magnet padding={20} magnetStrength={0.2}>
+          <div className="mt-8 flex flex-col items-center gap-2">
+            <Magnet padding={20} magnetStrength={0.2} className="w-full">
               <button
                 onClick={onSelectPro}
                 className="w-full py-3.5 px-6 rounded-2xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-sm font-black flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#ff4783]/30 hover:shadow-[#ff4783]/50 cursor-pointer active:scale-95 group"
               >
-                <span>Nâng Cấp Pro Ngay</span>
+                <span>Trải Nghiệm Gói PRO Ngay</span>
                 <ArrowRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" />
               </button>
             </Magnet>
+            <p className="text-[11px] text-slate-400 text-center">
+              Dùng thử miễn phí • Nâng cấp thanh toán trong trang quản trị
+            </p>
           </div>
         </div>
       </div>

@@ -41,6 +41,9 @@ export interface BusinessHousehold {
   joinDate: string;
   plan: 'pro' | 'free';
   telegramStatus: 'active' | 'waiting' | 'error';
+  proExpiresAt?: string;
+  proExpiresAtRaw?: string;
+  role?: 'ADMIN' | 'OWNER';
 }
 
 export interface SubscriptionPayment {

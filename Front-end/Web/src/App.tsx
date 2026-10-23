@@ -6,21 +6,15 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
-import { ProblemSection } from './components/ProblemSection';
-import { CoreFeaturesSection } from './components/CoreFeaturesSection';
-import { WorkflowSection } from './components/WorkflowSection';
-import { SpotlightSection } from './components/SpotlightSection';
+import { BentoFeaturesSection } from './components/BentoFeaturesSection';
 import { PricingSection } from './components/PricingSection';
 import { FaqSection } from './components/FaqSection';
 import { CtaSection } from './components/CtaSection';
 import { Footer } from './components/Footer';
 
 import { ScanModal } from './components/ScanModal';
-import { VideoModal } from './components/VideoModal';
 import { TelegramModal } from './components/TelegramModal';
-import { PlanModal } from './components/PlanModal';
 import { AuthModal, UserAccount } from './components/AuthModal';
-import { BackdateModal } from './components/BackdateModal';
 import { PortalView } from './components/PortalView';
 import { prewarmServer } from './services/authApi';
 import { PortalType } from './types';
@@ -28,10 +22,7 @@ import { CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [scanModalOpen, setScanModalOpen] = useState(false);
-  const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [telegramModalOpen, setTelegramModalOpen] = useState(false);
-  const [backdateModalOpen, setBackdateModalOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<'starter' | 'pro' | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Authentication & Portal View states
@@ -47,12 +38,13 @@ export default function App() {
         if (u) {
           if (u.shopName && !u.storeName) u.storeName = u.shopName;
           if (u.storeName && !u.shopName) u.shopName = u.storeName;
-          if (u.role === 'ADMIN' && (u.email === 'test@example.com' || (u.name && u.name.toLowerCase() === 'admin'))) {
-            u.name = u.name || 'Admin';
-            u.shopName = u.shopName || 'Admin Quản Trị';
-            u.storeName = u.storeName || 'Admin Quản Trị';
-            u.role = 'ADMIN';
-            u.subscriptionPlan = u.subscriptionPlan || 'FREE';
+          if (u.role === 'ADMIN') {
+            if (u.email === 'test@example.com' || (u.name && u.name.toLowerCase() === 'admin')) {
+              u.name = u.name || 'Admin';
+              u.shopName = u.shopName || 'Admin Quản Trị';
+              u.storeName = u.storeName || 'Admin Quản Trị';
+            }
+            u.subscriptionPlan = undefined;
           }
           return u;
         }
@@ -68,9 +60,24 @@ export default function App() {
   const [portalType, setPortalType] = useState<PortalType>(() => {
     return initialUser?.role === 'ADMIN' ? 'admin' : 'owner';
   });
+  const isLandingHash = (h: string) => {
+    return (
+      h === '#landing' ||
+      h === '#noi-dau' ||
+      h === '#tinh-nang' ||
+      h === '#features' ||
+      h === '#cach-hoat-dong' ||
+      h === '#boc-tach-ai' ||
+      h === '#vu-khi-bi-mat' ||
+      h === '#bang-gia' ||
+      h === '#faq' ||
+      h === '#hero'
+    );
+  };
+
   const [viewMode, setViewMode] = useState<'landing' | 'portal'>(() => {
-    // If user is already logged in, enter directly into Owner or Admin portal unless explicitly requested #landing
-    if (initialUser && window.location.hash !== '#landing') {
+    // If user is already logged in, enter directly into Owner or Admin portal unless explicitly requested landing page or landing section
+    if (initialUser && !isLandingHash(window.location.hash)) {
       return 'portal';
     }
     return 'landing';
@@ -84,8 +91,8 @@ export default function App() {
       const saved = localStorage.getItem('vikeso_user');
       const user: UserAccount | null = saved ? JSON.parse(saved) : currentUser;
 
-      // If user explicitly chose to view the landing page from inside the portal
-      if (hash === '#landing') {
+      // If viewing landing page or any landing section anchor
+      if (isLandingHash(hash)) {
         setViewMode('landing');
         return;
       }
@@ -184,7 +191,15 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-[#191c1d] flex flex-col font-sans selection:bg-[#ff4783]/20 selection:text-[#ff4783]">
+    <div className="min-h-screen text-[#191c1d] flex flex-col font-sans selection:bg-[#ff4783]/20 selection:text-[#ff4783] relative overflow-x-hidden">
+      {/* Visual Retail Store Background (Option 2) */}
+      <div
+        className="fixed inset-0 pointer-events-none -z-20 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url('/retail_store_bg.jpg')` }}
+      />
+      {/* Light Clean Scrim Overlay (0 blur) to keep the store crisp & vivid */}
+      <div className="fixed inset-0 pointer-events-none -z-10 bg-gradient-to-b from-white/60 via-white/40 to-white/65" />
+
       {/* Sticky Header with Glassmorphism */}
       <Header
         currentUser={currentUser}
@@ -192,7 +207,6 @@ export default function App() {
         onLogout={handleLogout}
         onOpenScan={() => setScanModalOpen(true)}
         onOpenTelegram={() => setTelegramModalOpen(true)}
-        onOpenVideo={() => setVideoModalOpen(true)}
         onOpenPortal={() => {
           setPortalType(currentUser?.role === 'ADMIN' ? 'admin' : 'owner');
           setViewMode('portal');
@@ -204,30 +218,13 @@ export default function App() {
         {/* Section 1: Hero Section */}
         <HeroSection
           onOpenScan={() => setScanModalOpen(true)}
-          onOpenVideo={() => setVideoModalOpen(true)}
           onOpenTelegram={() => setTelegramModalOpen(true)}
         />
 
-        {/* Section 2: Problem & Agitation */}
-        <ProblemSection
-          onOpenScan={() => setScanModalOpen(true)}
-        />
-
-        {/* Section 3: Core Features Showcase */}
-        <CoreFeaturesSection
+        {/* Section 2: Streamlined Bento Grid Core Features */}
+        <BentoFeaturesSection
           onOpenScan={() => setScanModalOpen(true)}
           onOpenTelegram={() => setTelegramModalOpen(true)}
-          onOpenBackdate={() => setBackdateModalOpen(true)}
-        />
-
-        {/* Section 4: How It Works & Value Comparison Table */}
-        <WorkflowSection
-          onOpenScan={() => setScanModalOpen(true)}
-        />
-
-        {/* Section 5: Interactive Feature Spotlight (Split-Screen & 2-Way Deduplication) */}
-        <SpotlightSection
-          onOpenScan={() => setScanModalOpen(true)}
         />
 
         {/* Section 6: Pricing Plans */}
@@ -236,14 +233,18 @@ export default function App() {
             if (!currentUser) {
               handleOpenAuth('register');
             } else {
-              setSelectedPlan('starter');
+              setPortalType(currentUser.role === 'ADMIN' ? 'admin' : 'owner');
+              setViewMode('portal');
+              window.location.hash = '#so-quy';
             }
           }}
           onSelectPro={() => {
             if (!currentUser) {
               handleOpenAuth('register');
             } else {
-              setSelectedPlan('pro');
+              setPortalType('owner');
+              setViewMode('portal');
+              window.location.hash = '#cai-dat-cua-hang';
             }
           }}
         />
@@ -288,30 +289,9 @@ export default function App() {
         }}
       />
 
-      <VideoModal
-        isOpen={videoModalOpen}
-        onClose={() => setVideoModalOpen(false)}
-      />
-
       <TelegramModal
         isOpen={telegramModalOpen}
         onClose={() => setTelegramModalOpen(false)}
-      />
-
-      <BackdateModal
-        isOpen={backdateModalOpen}
-        onClose={() => setBackdateModalOpen(false)}
-        onSuccess={(data) => {
-          showToast(`Đã lưu giao dịch ${data.type === 'thu' ? 'thu' : 'chi'} ${data.amount.toLocaleString('vi-VN')}đ vào ngày ${data.date}.`);
-        }}
-      />
-
-      <PlanModal
-        plan={selectedPlan}
-        onClose={() => setSelectedPlan(null)}
-        onSuccess={() => {
-          showToast(`Chúc mừng bạn đã kích hoạt thành công Gói ${selectedPlan?.toUpperCase()}!`);
-        }}
       />
 
       {/* Floating Notification Toast */}

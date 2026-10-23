@@ -8,19 +8,19 @@ export const FaqSection: React.FC = () => {
   const faqs = [
     {
       q: 'Chữ viết tay của tôi rất xấu, app VikeSo có đọc được không?',
-      a: 'Có, hoàn toàn đọc được. Nhờ mô hình thị giác trí tuệ nhân tạo thế hệ mới (Google Gemini Multimodal Vision) được tối ưu riêng cho thói quen ghi chép buôn bán tại Việt Nam, hệ thống nhận diện cực tốt cả nét chữ viết ngoáy, viết vội, mực bút bi nhòe, tiếng lóng thương lái và giấy than carbon nhàu nát.',
+      a: 'Hoàn toàn đọc được. Kể cả nét chữ viết ngoáy, viết vội lúc đông khách, giấy than bị nhăn hay mực bút bi lem mờ ngoài chợ, ứng dụng đều nhận diện chính xác tên hàng và số tiền.',
     },
     {
       q: 'Tôi quét tờ POS Kết Ca thì có bị cộng trùng với bill lẻ ban ngày không?',
-      a: 'Hoàn toàn không. Đây chính là giải thuật độc quyền Lưới Lọc 2 Chiều (Bidirectional Filter) của VikeSo. Khi bạn quét tờ báo cáo "POS Kết Ca" cuối ngày, hệ thống tự động nhận diện và gạch bỏ (chuyển trạng thái sang MERGED) toàn bộ các hóa đơn lẻ POS đã lưu trong ngày. Đồng thời, toàn bộ hóa đơn CHI thực (tiền nước đá, bao bì, xăng xe) vẫn được giữ nguyên 100%.',
+      a: 'Chắc chắn không. Khi bạn chụp phiếu "Tổng kết ca POS" cuối ngày, hệ thống sẽ tự động đối chiếu và loại bỏ các hóa đơn cà thẻ lẻ đã quét trong ngày để không bị tính đúp. Các khoản chi thực tế bằng tiền mặt (như tiền nước đá, bao bì, xăng xe) vẫn được giữ nguyên đầy đủ.',
     },
     {
       q: 'Nếu tôi quên quét hóa đơn hôm qua hoặc tuần trước thì sao?',
-      a: 'Bạn hoàn toàn có thể dùng tính năng "Nhập Thủ Công Lùi Ngày" bất kỳ lúc nào. Bộ chọn ngày thông minh cho phép bạn lùi về ngày hôm qua hoặc tuần trước, đồng thời có cơ chế khóa ngày tương lai để chống nhập nhầm ngày mai. Dữ liệu lùi ngày chỉ cập nhật vào đúng ngày phát sinh và tổng kết tháng, tuyệt đối không làm sai lệch báo cáo dòng tiền hôm nay.',
+      a: 'Bạn hoàn toàn có thể dùng tính năng "Nhập Lùi Ngày" bất kỳ lúc nào. Bạn có thể chọn ngày hôm qua hoặc tuần trước để bù chứng từ, hệ thống sẽ tự cập nhật vào đúng ngày phát sinh và tổng kết tháng mà không làm lệch tiền của hôm nay.',
     },
     {
       q: 'Dữ liệu kinh doanh của tôi có an toàn và bảo mật không?',
-      a: 'Tuyệt đối an toàn. Toàn bộ thông tin tài chính của cửa hàng được mã hóa riêng biệt chuẩn SSL 256-bit ngân hàng và xác thực phân quyền qua JWT. Dữ liệu được lưu trữ an toàn trên hạ tầng đám mây MongoDB Atlas Cloud chuẩn doanh nghiệp quốc tế. VikeSo cam kết không chia sẻ dữ liệu cho bên thứ ba và bạn toàn quyền xuất file Excel hoặc xóa sổ quỹ bất cứ lúc nào.',
+      a: 'Tuyệt đối an toàn. Dữ liệu kinh doanh và doanh thu của bạn được bảo mật nghiêm ngặt như tài khoản ngân hàng. Chỉ duy nhất một mình bạn mới có quyền xem sổ quỹ của cửa hàng. VikeSo cam kết không chia sẻ dữ liệu cho bất kỳ bên thứ ba nào và bạn toàn quyền xuất file Excel bất cứ lúc nào.',
     },
     {
       q: 'Tôi không rành công nghệ, có cần mua thêm máy tính hay máy móc phụ trợ gì không?',
@@ -33,17 +33,17 @@ export const FaqSection: React.FC = () => {
   ];
 
   return (
-    <section id="faq" className="w-full py-20 px-4 md:px-8 max-w-4xl mx-auto">
+    <section id="faq" className="scroll-mt-24 w-full py-20 px-4 md:px-8 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="text-center mb-14">
-        <span className="text-xs font-bold text-slate-950 uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-[#d0f81b]/25 border border-[#d0f81b]/50 inline-flex items-center gap-1.5 shadow-2xs">
+      <div className="text-center mb-14 max-w-3xl mx-auto">
+        <span className="text-xs font-black text-slate-950 uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-[#d0f81b] border border-[#bde412] inline-flex items-center gap-1.5 shadow-2xs">
           <HelpCircle className="w-3.5 h-3.5 text-slate-950" />
           Giải Đáp Thắc Mắc (FAQ)
         </span>
-        <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-3 tracking-tight">
+        <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-950 mt-3 tracking-tight [text-shadow:_0_1px_8px_rgba(255,255,255,0.85)]">
           Câu Hỏi Thường Gặp Về VikeSo
         </h2>
-        <p className="text-sm sm:text-base text-slate-600 mt-2.5">
+        <p className="text-sm sm:text-base text-slate-950 font-bold mt-2.5 [text-shadow:_0_1px_6px_rgba(255,255,255,0.85)]">
           Mọi điều bạn cần biết trước khi bắt đầu sử dụng VikeSo cho cửa hàng của mình.
         </p>
       </div>

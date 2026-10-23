@@ -7,12 +7,14 @@ interface OwnerCashflowLedgerProps {
   currentUser?: UserAccount | null;
   onDownloadExcel: () => void;
   onPrintReport: () => void;
+  onNavigateToSettings?: () => void;
 }
 
 export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
   currentUser,
   onDownloadExcel,
   onPrintReport,
+  onNavigateToSettings,
 }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -106,6 +108,17 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
       inRatio: ratio,
     };
   }, [transactions]);
+
+  // Compute PRO Subscription Expiration status
+  const proExpiresAt = currentUser?.proExpiresAt;
+  const isPro = (currentUser?.subscriptionPlan || '').toUpperCase() === 'PRO';
+  const diffDays = useMemo(() => {
+    if (!proExpiresAt) return null;
+    const expiryTime = new Date(proExpiresAt).getTime();
+    if (isNaN(expiryTime)) return null;
+    const diffTime = expiryTime - Date.now();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }, [proExpiresAt]);
 
   // 1. Calculate Daily Cashflow (Last 7 days timeline)
   const dailyCashflowData = useMemo(() => {
@@ -350,7 +363,6 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
             </span>
           </div>
           <p className="text-sm text-slate-600 flex items-center gap-2 flex-wrap">
-            <span className="material-symbols-outlined text-[18px] text-[#ff4783]">storefront</span>
             <span className="font-bold text-slate-900">
               {currentUser?.shopName || currentUser?.storeName || 'Cửa Hàng Hộ Kinh Doanh'}
             </span>
@@ -402,6 +414,43 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
         </div>
       </div>
 
+      {/* Expiry Warning Banner (<= 2 days) */}
+      {isPro && diffDays !== null && diffDays <= 2 && diffDays > 0 && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm animate-in fade-in">
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined text-amber-600 text-2xl shrink-0 mt-0.5">
+              warning
+            </span>
+            <div>
+              <h3 className="text-sm font-bold text-amber-900">
+                Gói PRO của bạn sắp hết hạn sau {diffDays === 1 ? '1 ngày' : `${diffDays} ngày`} ({new Date(proExpiresAt!).toLocaleDateString('vi-VN')})
+              </h3>
+              <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                Vui lòng gia hạn để duy trì kết nối đối soát tự động & nhận báo cáo tổng kết kinh doanh mỗi tối 22:00.
+              </p>
+            </div>
+          </div>
+          {onNavigateToSettings ? (
+            <button
+              onClick={onNavigateToSettings}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-xs transition-colors shrink-0 cursor-pointer text-center"
+              type="button"
+            >
+              <span>Gia Hạn Ngay</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          ) : (
+            <a
+              href="#cai-dat-cua-hang"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-xs transition-colors shrink-0 cursor-pointer text-center"
+            >
+              <span>Gia Hạn Ngay</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </a>
+          )}
+        </div>
+      )}
+
       {/* 2. Three Real High-Contrast Cashflow KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Card 1: Tiền Vào (Inflow) */}
@@ -410,9 +459,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Tổng tiền vào (Thu)
             </span>
-            <div className="w-10 h-10 rounded-xl bg-[#ff4783]/10 flex items-center justify-center text-[#ff4783] border border-[#ff4783]/20">
-              <span className="material-symbols-outlined text-[22px]">arrow_upward</span>
-            </div>
+            <span className="w-2 h-2 rounded-full bg-[#ff4783]"></span>
           </div>
           <div>
             <div className="text-3xl font-extrabold text-[#ff4783] tracking-tight font-tabular">
@@ -436,9 +483,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Tổng tiền ra (Chi)
             </span>
-            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 border border-slate-200">
-              <span className="material-symbols-outlined text-[22px]">arrow_downward</span>
-            </div>
+            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
           </div>
           <div>
             <div className="text-3xl font-extrabold text-slate-900 tracking-tight font-tabular">
@@ -465,9 +510,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Dòng tiền thực thu (Tồn quỹ)
             </span>
-            <div className="w-10 h-10 rounded-xl bg-[#d0f81b]/30 flex items-center justify-center text-slate-950 border border-[#bde412]">
-              <span className="material-symbols-outlined text-[22px]">account_balance_wallet</span>
-            </div>
+            <span className="w-2 h-2 rounded-full bg-[#d0f81b]"></span>
           </div>
           <div>
             <div className="text-3xl font-extrabold text-slate-900 tracking-tight font-tabular">
@@ -548,8 +591,8 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                     {/* Deficit Alert Tag if Outflow > Inflow */}
                     {hasDeficit && (
                       <div className="absolute -top-3 z-10">
-                        <span className="text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1 py-0.5 rounded shadow-2xs whitespace-nowrap">
-                          ⚠️ -{formatShortAmount(day.deficit)}
+                        <span className="text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded shadow-2xs whitespace-nowrap">
+                          -{formatShortAmount(day.deficit)}
                         </span>
                       </div>
                     )}
@@ -997,12 +1040,9 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
 
                       {/* Method */}
                       <td className="py-3.5 px-4 sm:px-5 align-top whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-slate-700">
-                          <div className="w-6 h-6 rounded flex items-center justify-center shrink-0 bg-slate-100 text-slate-600 border border-slate-200">
-                            <span className="material-symbols-outlined text-[15px]">{tx.methodIcon || 'payments'}</span>
-                          </div>
-                          <span className="text-xs font-medium">{tx.method || 'Nhập thủ công'}</span>
-                        </div>
+                        <span className="text-xs text-slate-700 font-medium">
+                          {tx.method || 'Nhập thủ công'}
+                        </span>
                       </td>
 
                       {/* Amount */}
@@ -1023,13 +1063,13 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                       {/* Reconcile Status */}
                       <td className="py-3.5 px-4 sm:px-5 align-top text-center whitespace-nowrap">
                         {tx.type === 'merged' ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold border border-purple-200">
-                            <span className="material-symbols-outlined text-[13px]">call_merge</span>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold border border-purple-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
                             <span>Đã gộp POS</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#d0f81b]/35 text-slate-950 text-xs font-black border border-[#bde412]">
-                            <span className="material-symbols-outlined text-[13px] text-slate-950">check_circle</span>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                             <span>Đã đối soát</span>
                           </span>
                         )}

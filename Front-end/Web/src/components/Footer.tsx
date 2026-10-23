@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Mail, Send, Phone, ShieldCheck, Heart } from 'lucide-react';
+import { Check, Mail, Send, Phone, ShieldCheck, Heart, X } from 'lucide-react';
 
 interface FooterProps {
   onOpenTelegram: () => void;
@@ -10,6 +10,7 @@ interface FooterProps {
 export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOpenAuth }) => {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [infoModal, setInfoModal] = useState<{ title: string; content: string } | null>(null);
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +22,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
   };
 
   return (
-    <footer className="w-full bg-slate-50 border-t border-slate-200/90">
+    <footer className="w-full bg-white/75 backdrop-blur-xl border-t border-white/50">
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-14 flex flex-col gap-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand Col */}
@@ -40,7 +41,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
             </div>
 
             <p className="text-xs text-slate-600 max-w-sm leading-relaxed">
-              <strong>VikeSo</strong> — Giải pháp công nghệ tài chính (FinTech) tinh gọn ứng dụng Google Gemini AI dành riêng cho Hộ kinh doanh vừa &amp; nhỏ (SME), cửa hàng bán lẻ và Thương lái Nông sản đầu mối.
+              <strong>VikeSo</strong> — Sổ thu chi thông minh giúp hộ kinh doanh, tiệm buôn bán và chủ vựa nông sản quản lý tiền bạc nhẹ nhàng, thảnh thơi ngủ ngon mỗi tối.
             </p>
 
             <p className="text-xs text-slate-950 font-bold italic">
@@ -49,13 +50,13 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
 
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="px-2.5 py-1 rounded-lg bg-[#d0f81b]/25 text-slate-950 border border-[#d0f81b]/50 text-[11px] font-black">
-                Mã hóa SSL 256-bit
+                Bảo mật thông tin 100%
               </span>
               <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 border border-slate-200 text-[11px] font-bold">
-                Gemini Vision OCR
+                Đọc hóa đơn tự động
               </span>
               <span className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-600 text-[11px] font-semibold">
-                SME Certified
+                Dễ dùng cho tiểu thương
               </span>
             </div>
           </div>
@@ -63,29 +64,29 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
           {/* Col 2: Tính năng & Sản phẩm */}
           <div className="flex flex-col gap-3">
             <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-              Tính Năng Nổi Bật
+              Tiện Ích Nổi Bật
             </h4>
             <nav className="flex flex-col gap-2">
               <a href="#tinh-nang" className="text-xs text-slate-600 hover:text-slate-950 transition-colors">
-                Giao diện 1-chạm (Zero-Friction)
+                Chụp hình tự động vào sổ
               </a>
-              <a href="#vu-khi-bi-mat" className="text-xs text-slate-600 hover:text-slate-950 transition-colors">
-                Cơ chế Đèn Giao Thông UX
+              <a href="#tinh-nang" className="text-xs text-slate-600 hover:text-slate-950 transition-colors">
+                Phân loại Thu - Chi rõ ràng
               </a>
-              <a href="#vu-khi-bi-mat" className="text-xs text-slate-600 hover:text-slate-950 transition-colors">
-                Lưới lọc 2 chiều chống trùng POS
+              <a href="#cach-hoat-dong" className="text-xs text-slate-600 hover:text-slate-950 transition-colors">
+                Tự động chống cộng trùng bill POS
               </a>
               <button
                 onClick={onOpenScan}
                 className="text-xs text-left text-slate-600 hover:text-slate-950 transition-colors cursor-pointer"
               >
-                Nhập lùi ngày linh hoạt
+                Nhập bù ngày đã qua
               </button>
               <button
                 onClick={onOpenTelegram}
                 className="text-xs text-left text-slate-600 hover:text-slate-950 transition-colors cursor-pointer"
               >
-                Bot Telegram Báo Cáo 22h00
+                Báo cáo tối 22h00 (Telegram)
               </button>
             </nav>
           </div>
@@ -106,7 +107,10 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  alert('Chính sách bảo mật: Dữ liệu tài chính của bạn được mã hóa riêng biệt chuẩn SSL 256-bit trên MongoDB Atlas Cloud và không chia sẻ cho bên thứ ba.');
+                  setInfoModal({
+                    title: 'Chính Sách Bảo Mật Dữ Liệu',
+                    content: 'Dữ liệu sổ sách và hóa đơn tài chính của hộ kinh doanh được mã hóa riêng biệt chuẩn SSL 256-bit trên hạ tầng MongoDB Atlas Cloud. VikeSo cam kết không chia sẻ dữ liệu kinh doanh của bạn cho bất kỳ bên thứ ba nào dưới mọi hình thức.',
+                  });
                 }}
                 className="text-xs text-slate-600 hover:text-slate-950 transition-colors"
               >
@@ -116,7 +120,10 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  alert('Điều khoản dịch vụ: Cam kết hoàn tiền và bảo vệ quyền sở hữu dữ liệu 100% cho chủ kinh doanh.');
+                  setInfoModal({
+                    title: 'Điều Khoản Dịch Vụ',
+                    content: 'VikeSo cam kết bảo vệ toàn vẹn quyền sở hữu dữ liệu 100% cho chủ kinh doanh. Bạn có thể xuất dữ liệu bảng kê Excel bất cứ lúc nào hoặc xóa tài khoản vĩnh viễn theo yêu cầu.',
+                  });
                 }}
                 className="text-xs text-slate-600 hover:text-slate-950 transition-colors"
               >
@@ -191,15 +198,43 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
         {/* Bottom bar */}
         <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div>
-            © 2024–2026 VikeSo FinTech Inc. Mọi quyền được bảo lưu.
+            © 2024–2026 VikeSo. Mọi quyền được bảo lưu.
           </div>
           <div className="flex items-center gap-1">
-            <span>Thiết kế vì người buôn bán Việt Nam với</span>
+            <span>Thiết kế vì người buôn bán Việt Nam</span>
             <span className="inline-block w-2 h-2 rounded-full bg-[#d0f81b] mx-1" />
-            <span>và Gemini AI</span>
+            <span>Đơn giản • Tin cậy • Rõ ràng</span>
           </div>
         </div>
       </div>
+
+      {/* Info Dialog Modal */}
+      {infoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-[#191c1d] border border-white/10 rounded-3xl p-6 shadow-2xl text-white">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+              <h3 className="font-extrabold text-sm text-[#d0f81b]">{infoModal.title}</h3>
+              <button
+                onClick={() => setInfoModal(null)}
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed mb-6">
+              {infoModal.content}
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setInfoModal(null)}
+                className="px-5 py-2 rounded-xl bg-[#d0f81b] hover:bg-[#bde412] text-slate-950 font-bold text-xs transition-colors cursor-pointer"
+              >
+                Đã Hiểu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </footer>
   );
 };

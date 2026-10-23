@@ -5,6 +5,7 @@ import { PortalHeader } from './PortalHeader';
 import { MobileAppModal, NotificationModal } from './PortalModals';
 import { UserAccount } from './AuthModal';
 import { CheckCircle2, AlertTriangle, X } from 'lucide-react';
+import { exportTransactionsToExcel, printFinancialReport } from '../utils/exportExcel';
 
 // Views
 import { OwnerCashflowLedger } from '../views/OwnerCashflowLedger';
@@ -79,12 +80,19 @@ export const PortalView: React.FC<PortalViewProps> = ({
     }, 3500);
   };
 
-  const handleDownloadExcel = () => {
-    showToast('Đang kết xuất bảng kê Excel (.xlsx) theo chuẩn tài chính...', 'info');
+  const handleDownloadExcel = async () => {
+    showToast('Đang kết xuất bảng kê Excel từ dữ liệu MongoDB...', 'info');
+    const res = await exportTransactionsToExcel(activeUser?.id, activeUser?.storeName || activeUser?.shopName);
+    if (res.success) {
+      showToast(`Đã xuất bảng kê ${res.count} chứng từ vào file ${res.filename} thành công!`, 'success');
+    } else {
+      showToast('Xuất file thất bại, vui lòng thử lại.', 'error');
+    }
   };
 
   const handlePrintReport = () => {
-    window.print();
+    showToast('Đang khởi tạo bản in A4 / PDF chuẩn kế toán thuế...', 'info');
+    printFinancialReport(`Bang_Ke_Thu_Chi_${activeUser?.storeName || 'VikeSo'}`);
   };
 
   // Guard 1: 403 screen if an OWNER attempts to access admin
@@ -97,7 +105,7 @@ export const PortalView: React.FC<PortalViewProps> = ({
           </div>
           <h2 className="text-xl font-bold text-slate-900">403 - Quyền Truy Cập Bị Từ Chối</h2>
           <p className="text-sm text-slate-600 leading-relaxed">
-            Tài khoản của bạn ({currentUser?.email}) mang quyền <strong>CHỦ HỘ KINH DOANH (OWNER)</strong>. Bạn không có quyền truy cập trung tâm điều hành FINITY System Cockpit của Quản trị viên.
+            Tài khoản của bạn ({currentUser?.email}) mang quyền <strong>CHỦ HỘ KINH DOANH (OWNER)</strong>. Bạn không có quyền truy cập trung tâm điều hành VikeSo System Cockpit của Quản trị viên.
           </p>
           <div className="pt-2 flex gap-3 justify-center">
             <button
@@ -146,7 +154,6 @@ export const PortalView: React.FC<PortalViewProps> = ({
     shopName: 'Admin Quản Trị',
     phone: '',
     role: 'ADMIN',
-    subscriptionPlan: 'FREE',
   } : {
     name: 'Chủ Hộ Kinh Doanh',
     email: 'owner@example.com',
@@ -160,7 +167,7 @@ export const PortalView: React.FC<PortalViewProps> = ({
   const displayName = activeUser.name || (activeUser.email ? activeUser.email.split('@')[0] : (isRoleAdmin ? 'Admin' : 'Chủ Hộ'));
   const displayStoreName = activeUser.shopName || activeUser.storeName || (isRoleAdmin ? 'Admin Quản Trị' : 'Cửa Hàng Hộ Kinh Doanh');
   const displayEmail = activeUser.email || (isRoleAdmin ? 'test@example.com' : 'owner@example.com');
-  const displayPlan = activeUser.subscriptionPlan || 'FREE';
+  const displayPlan = isRoleAdmin ? undefined : (activeUser.subscriptionPlan || 'FREE');
 
   return (
     <div className={`min-h-screen bg-slate-50 text-slate-900 antialiased font-sans ${
@@ -212,6 +219,7 @@ export const PortalView: React.FC<PortalViewProps> = ({
                   currentUser={activeUser}
                   onDownloadExcel={handleDownloadExcel}
                   onPrintReport={handlePrintReport}
+                  onNavigateToSettings={() => setOwnerTab('cai-dat-cua-hang')}
                 />
               )}
 
@@ -219,7 +227,7 @@ export const PortalView: React.FC<PortalViewProps> = ({
               {ownerTab === 'bao-cao-xuat-du-lieu' && (
                 <OwnerReports
                   currentUser={activeUser}
-                  onExportPdf={() => showToast('Đang tải file PDF báo cáo tài chính...', 'info')}
+                  onExportPdf={handlePrintReport}
                   onExportExcel={handleDownloadExcel}
                 />
               )}
@@ -259,6 +267,9 @@ export const PortalView: React.FC<PortalViewProps> = ({
         onClose={() => setNotificationModalOpen(false)}
         storeName={displayStoreName}
         subscriptionPlan={displayPlan}
+        userId={activeUser?.id}
+        proExpiresAt={activeUser?.proExpiresAt}
+        userRole={userRole}
       />
 
       {/* Modern High-End Floating Toast */}
