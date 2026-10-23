@@ -8,7 +8,8 @@ const API_BASE_URL =
   'https://vikeso-cash-flow-assistant-app.onrender.com/api';
 
 export interface LoginPayload {
-  email: string;
+  identifier?: string;
+  email?: string;
   password: string;
 }
 
@@ -17,7 +18,15 @@ export interface RegisterPayload {
   password: string;
   name: string;
   shopName: string;
+  phone?: string;
   role?: string;
+}
+
+export interface UpdateProfilePayload {
+  name?: string;
+  shopName?: string;
+  phone?: string;
+  avatar?: string;
 }
 
 export interface UserInfo {
@@ -30,6 +39,7 @@ export interface UserInfo {
   subscriptionPlan?: string;
   authProvider?: string;
   role?: string;
+  phone?: string;
 }
 
 export interface AuthResponse {
@@ -41,18 +51,20 @@ export interface AuthResponse {
 }
 
 /**
- * Đăng nhập tài khoản bằng Email & Mật khẩu
+ * Đăng nhập tài khoản bằng Email hoặc Số điện thoại & Mật khẩu
  * Endpoint: POST /api/auth/login
  */
 export async function loginUser(payload: LoginPayload): Promise<AuthResponse> {
   try {
+    const identifier = (payload.identifier || payload.email || '').trim();
     const res = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        email: payload.email.trim(),
+        email: identifier,
+        identifier: identifier,
         password: payload.password,
       }),
     });
@@ -83,7 +95,7 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthRespon
         password: payload.password,
         name: payload.name.trim(),
         shopName: payload.shopName.trim(),
-        role: payload.role || (payload.email.toLowerCase().includes('admin') || payload.email.toLowerCase().includes('finity') ? 'ADMIN' : 'OWNER'),
+        role: payload.role || (payload.email.toLowerCase().includes('admin') ? 'ADMIN' : 'OWNER'),
       }),
     });
 
@@ -97,6 +109,33 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthRespon
   }
 }
 
+/**
+ * Cập nhật thông tin cá nhân (SĐT, Tên, Cửa hàng) bằng Bearer token
+ * Endpoint: PUT /api/auth/profile
+ */
+export async function updateProfile(
+  payload: UpdateProfilePayload,
+  token: string
+): Promise<AuthResponse> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    return data;
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err.message || 'Không thể cập nhật thông tin cá nhân.',
+    };
+  }
+}
 
 /**
  * Tự động đánh thức máy chủ Backend (Prewarm / Keep-alive)

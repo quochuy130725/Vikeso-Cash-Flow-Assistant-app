@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchUserTransactions } from '../services/api';
 
 interface MobileModalProps {
   isOpen: boolean;
@@ -7,6 +8,9 @@ interface MobileModalProps {
 
 export const MobileAppModal: React.FC<MobileModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
+
+  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://vikeso.vn';
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentOrigin)}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
@@ -21,7 +25,7 @@ export const MobileAppModal: React.FC<MobileModalProps> = ({ isOpen, onClose }) 
                 Ứng Dụng VikeSo Di Động
               </h3>
               <p className="font-body-sm text-body-sm text-on-surface-variant">
-                Quét mã để chụp ảnh hóa đơn &amp; sổ tay AI
+                Quét mã để truy cập webapp PWA trên điện thoại
               </p>
             </div>
           </div>
@@ -34,22 +38,24 @@ export const MobileAppModal: React.FC<MobileModalProps> = ({ isOpen, onClose }) 
         </div>
 
         <div className="flex flex-col items-center justify-center p-space-md bg-surface-container-low rounded-xl border border-surface-container text-center space-y-space-sm">
-          <div className="w-48 h-48 bg-white p-3 rounded-xl shadow-xs border border-surface-container flex items-center justify-center">
-            {/* Real SVG QR code representation */}
-            <svg className="w-full h-full text-on-surface" viewBox="0 0 100 100" fill="currentColor">
-              <path d="M0 0h30v30H0zm5 5h20v20H5zM10 10h10v10H10zM70 0h30v30H70zm5 5h20v20H75zM80 10h10v10H80zM0 70h30v30H0zm5 5h20v20H5zM10 80h10v10H10zM35 10h10v10H35zM50 10h10v10H50zM35 25h10v10H35zM50 35h10v10H50zM65 35h10v10H65zM20 35h10v10H20zM35 50h30v10H35zM10 50h10v10H10zM70 50h20v10H70zM50 65h10v10H50zM65 70h10v20H65zM80 70h10v10H80zM35 80h20v10H35zM80 85h20v15H80zM35 90h10v10H35z" />
-            </svg>
+          <div className="w-48 h-48 bg-white p-2 rounded-xl shadow-xs border border-surface-container flex items-center justify-center overflow-hidden">
+            <img
+              src={qrUrl}
+              alt="Mã QR mở VikeSo WebApp"
+              className="w-full h-full object-contain"
+              loading="lazy"
+            />
           </div>
           <p className="font-body-sm text-body-sm text-on-surface font-semibold">
-            Quét bằng camera điện thoại iPhone hoặc Android
+            Mở camera iPhone hoặc Android để quét mã
           </p>
           <span className="font-label-sm text-label-sm text-outline">
-            Tự động nhận diện chữ viết tay &amp; biên lai trong 2 giây
+            Tự động mở ứng dụng VikeSo trên điện thoại, đồng bộ thời gian thực
           </span>
         </div>
 
         <div className="flex items-center justify-between text-on-surface-variant font-label-md text-label-md pt-space-xs">
-          <span>Phiên bản: 2.4.1 (Mobile Pro)</span>
+          <span>Phiên bản: 2.4.1 (PWA Live)</span>
           <button
             onClick={onClose}
             className="px-space-md py-1.5 rounded-lg bg-primary text-on-primary font-bold shadow-xs hover:bg-primary-container transition-colors cursor-pointer"
@@ -67,6 +73,9 @@ interface NotificationModalProps {
   onClose: () => void;
   storeName?: string;
   subscriptionPlan?: string;
+  userId?: string;
+  proExpiresAt?: string;
+  userRole?: string;
 }
 
 export const NotificationModal: React.FC<NotificationModalProps> = ({
@@ -74,42 +83,110 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   onClose,
   storeName,
   subscriptionPlan,
+  userId,
+  proExpiresAt,
+  userRole,
 }) => {
-  if (!isOpen) return null;
+  const [allRead, setAllRead] = useState(false);
+  const [recentEvents, setRecentEvents] = useState<
+    { id: string; title: string; time: string; desc: string; unread: boolean; icon: string; color: string }[]
+  >([]);
 
-  const notifications = [
-    {
-      id: 'n-1',
-      title: 'Đã hoàn tất đối soát ca trưa tự động',
-      time: '12:30 hôm nay',
-      desc: '23 hóa đơn bán lẻ đã được gộp thành công vào doanh thu kết ca quầy POS, khớp 100%.',
-      unread: true,
-      icon: 'done_all',
-      color: 'text-primary bg-primary/10',
-    },
-    {
-      id: 'n-2',
-      title: `Gói cước ${subscriptionPlan || 'FREE'} đang kích hoạt`,
-      time: '09:00 hôm nay',
-      desc: `Thời hạn bản quyền gói ${subscriptionPlan || 'FREE'} của ${storeName || 'Admin Quản Trị'} được duy trì ổn định.`,
-      unread: false,
-      icon: 'verified',
-      color: 'text-secondary bg-secondary/10',
-    },
-    {
-      id: 'n-3',
-      title: 'Telegram Bot đã sẵn sàng chốt ca 22:00',
-      time: 'Hôm qua',
-      desc: `Kênh Telegram "Ban Quản Lý ${storeName || 'Admin Quản Trị'}" đã kết nối thông suốt WebHook 2.4.`,
-      unread: false,
-      icon: 'send',
-      color: 'text-primary bg-primary/10',
-    },
-  ];
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let isMounted = true;
+    const loadEvents = async () => {
+      try {
+        const txs = await fetchUserTransactions(userId);
+        if (!isMounted) return;
+
+        const dynamicEvents = [];
+
+        // Check for expiring PRO package (<= 2 days) - only for Owner
+        if (userRole !== 'ADMIN' && proExpiresAt && (subscriptionPlan || '').toUpperCase() === 'PRO') {
+          const expiryTime = new Date(proExpiresAt).getTime();
+          if (!isNaN(expiryTime)) {
+            const diffDays = Math.ceil((expiryTime - Date.now()) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 2 && diffDays > 0) {
+              dynamicEvents.push({
+                id: 'sys-pro-expiring',
+                title: `Gói PRO sắp hết hạn (còn ${diffDays} ngày)`,
+                time: 'Cần chú ý',
+                desc: `Gói PRO của cửa hàng sẽ hết hạn vào ${new Date(proExpiresAt).toLocaleDateString('vi-VN')}. Vui lòng quét mã VietQR trong Cài Đặt Shop để gia hạn, duy trì đối soát tự động & báo cáo Telegram.`,
+                unread: true,
+                icon: 'warning',
+                color: 'text-amber-700 bg-amber-100',
+              });
+            }
+          }
+        }
+
+        if (txs && txs.length > 0) {
+          const latest = txs[0];
+          const isThu = latest.type === 'in' || latest.amount > 0;
+          dynamicEvents.push({
+            id: latest.id,
+            title: `Biến động dòng tiền: ${isThu ? 'Thu +' : 'Chi -'}${Math.abs(latest.amount).toLocaleString('vi-VN')} đ`,
+            time: latest.time || 'Vừa xong',
+            desc: `${latest.title} (${latest.category}) - ${latest.details || 'Đã ghi nhận vào sổ quỹ'}`,
+            unread: true,
+            icon: isThu ? 'arrow_downward' : 'arrow_upward',
+            color: isThu ? 'text-primary bg-primary/10' : 'text-[#ff4783] bg-[#ff4783]/10',
+          });
+        }
+
+        if (userRole !== 'ADMIN' && subscriptionPlan) {
+          dynamicEvents.push({
+            id: 'sys-plan',
+            title: `Gói dịch vụ ${subscriptionPlan} đang hoạt động`,
+            time: 'Hôm nay',
+            desc: `Tài khoản cửa hàng ${storeName || 'VikeSo'} được kết nối hệ thống đối soát thời gian thực.`,
+            unread: false,
+            icon: 'verified',
+            color: 'text-secondary bg-secondary/10',
+          });
+        }
+
+        if (userRole === 'ADMIN') {
+          dynamicEvents.push({
+            id: 'sys-admin-role',
+            title: 'Tài khoản Quản Trị Viên (ADMIN)',
+            time: 'Hôm nay',
+            desc: 'Bạn đang quản trị hệ thống VikeSo với toàn bộ đặc quyền giám sát và vận hành.',
+            unread: false,
+            icon: 'verified',
+            color: 'text-indigo-600 bg-indigo-50',
+          });
+        }
+
+        dynamicEvents.push({
+          id: 'sys-bot',
+          title: 'Trợ lý Telegram chốt ca tự động 22:00',
+          time: 'Hằng ngày',
+          desc: 'Kênh Telegram đã đồng bộ WebHook nhận bảng kê tổng kết ca kinh doanh mỗi đêm.',
+          unread: false,
+          icon: 'send',
+          color: 'text-primary bg-primary/10',
+        });
+
+        setRecentEvents(dynamicEvents);
+      } catch {
+        // Fallback
+      }
+    };
+
+    loadEvents();
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, userId, storeName, subscriptionPlan, proExpiresAt, userRole]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-      <div className="bg-surface-container-lowest rounded-2xl max-w-lg w-full p-space-lg shadow-2xl border border-surface-container space-y-space-md">
+      <div className="bg-surface-container-lowest rounded-2xl max-w-lg w-full p-space-lg shadow-2xl border border-surface-container space-y-space-md animate-scaleIn">
         <div className="flex items-center justify-between pb-space-xs border-b border-surface-container">
           <div className="flex items-center gap-space-sm">
             <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
@@ -120,7 +197,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                 Thông Báo Hệ Thống
               </h3>
               <p className="font-body-sm text-body-sm text-on-surface-variant">
-                Nhật ký sự kiện thời gian thực VikeSo
+                Nhật ký biến động dòng tiền &amp; sự kiện thời gian thực
               </p>
             </div>
           </div>
@@ -133,11 +210,11 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
         </div>
 
         <div className="divide-y divide-surface-container max-h-96 overflow-y-auto">
-          {notifications.map((n) => (
+          {recentEvents.map((n) => (
             <div
               key={n.id}
               className={`p-space-md flex items-start gap-space-md hover:bg-surface-container-low transition-colors ${
-                n.unread ? 'bg-surface-container-low/40' : ''
+                n.unread && !allRead ? 'bg-surface-container-low/60' : ''
               }`}
             >
               <div
@@ -152,7 +229,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                   </h4>
                   <span className="font-label-sm text-[11px] text-outline">{n.time}</span>
                 </div>
-                <p className="font-body-sm text-body-sm text-on-surface-variant">{n.desc}</p>
+                <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">{n.desc}</p>
               </div>
             </div>
           ))}
@@ -160,10 +237,10 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 
         <div className="flex items-center justify-between pt-space-xs border-t border-surface-container">
           <button
-            onClick={() => alert('Đã đánh dấu đọc tất cả')}
+            onClick={() => setAllRead(true)}
             className="text-primary font-label-md text-label-md font-semibold hover:underline cursor-pointer"
           >
-            Đánh dấu đã đọc
+            {allRead ? '✓ Đã đánh dấu đọc tất cả' : 'Đánh dấu đã đọc'}
           </button>
           <button
             onClick={onClose}

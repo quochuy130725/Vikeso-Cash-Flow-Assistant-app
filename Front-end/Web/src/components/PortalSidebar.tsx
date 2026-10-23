@@ -45,7 +45,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
   userRole = 'ADMIN',
   storeName = 'Admin Quản Trị',
   userEmail = 'test@example.com',
-  subscriptionPlan = 'FREE',
+  subscriptionPlan,
   onLogout,
   onBackToLanding,
   isCollapsed = false,
@@ -75,7 +75,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                     Vike<span className={portal === 'owner' ? 'text-slate-950 bg-[#d0f81b] px-1 py-0.5 rounded font-black' : 'text-indigo-600'}>So</span>
                   </span>
                   <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-1 truncate">
-                    {portal === 'owner' ? 'Trợ lý dòng tiền' : 'FINITY System Cockpit'}
+                    {portal === 'owner' ? 'Trợ lý dòng tiền' : 'VikeSo System Cockpit'}
                   </span>
                 </div>
               </div>
@@ -353,9 +353,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                     <span className="text-[10px] text-slate-500 truncate">{userEmail}</span>
                   </div>
                 </div>
-                <span className="text-[10px] font-black text-slate-950 bg-[#d0f81b] px-2 py-0.5 rounded border border-[#bde412] uppercase">
-                  {subscriptionPlan || 'FREE'}
-                </span>
+                {userRole !== 'ADMIN' && subscriptionPlan && (
+                  <span className="text-[10px] font-black text-slate-950 bg-[#d0f81b] px-2 py-0.5 rounded border border-[#bde412] uppercase">
+                    {subscriptionPlan}
+                  </span>
+                )}
               </div>
             ) : (
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
@@ -402,14 +404,14 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             {/* Collapsed Store / Admin Indicator */}
             {portal === 'owner' ? (
               <div
-                title={`${storeName} • Gói ${subscriptionPlan || 'FREE'}`}
+                title={userRole === 'ADMIN' ? storeName : `${storeName} • Gói ${subscriptionPlan || 'FREE'}`}
                 className="w-10 h-10 rounded-xl bg-[#ff4783]/10 text-[#ff4783] border border-[#ff4783]/20 flex items-center justify-center cursor-help"
               >
                 <Store className="w-5 h-5" />
               </div>
             ) : (
               <div
-                title="Hệ Thống FINITY • Cụm Máy Chủ Trực Tuyến 99.8%"
+                title="Quản Trị Viên Hệ Thống • VikeSo Admin"
                 className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center cursor-help"
               >
                 <ShieldCheck className="w-5 h-5" />

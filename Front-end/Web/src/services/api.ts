@@ -227,6 +227,7 @@ export async function fetchAdminUsers(params?: {
         const joinDate = u.createdAt
           ? new Date(u.createdAt).toLocaleDateString('vi-VN')
           : '14/10/2024';
+        const role = (u.role || 'OWNER').toUpperCase() as 'ADMIN' | 'OWNER';
         const plan = (u.subscriptionPlan || 'FREE').toLowerCase() === 'pro' ? 'pro' : 'free';
         const telegramStatus = u.telegramChatId ? 'active' : 'waiting';
 
@@ -234,11 +235,14 @@ export async function fetchAdminUsers(params?: {
           id: String(u._id || u.id),
           ownerName: u.name || (u.email ? u.email.split('@')[0] : 'Chủ hộ kinh doanh'),
           phone: u.phone || '0912.845.221',
-          storeName: u.shopName || u.storeName || 'Cửa hàng tạp hóa',
-          businessType: u.businessType || 'Hộ kinh doanh bán lẻ',
+          storeName: u.shopName || u.storeName || (role === 'ADMIN' ? 'Hệ Thống Quản Trị' : 'Cửa hàng tạp hóa'),
+          businessType: u.businessType || (role === 'ADMIN' ? 'Quản trị viên hệ thống' : 'Hộ kinh doanh bán lẻ'),
           joinDate,
           plan,
           telegramStatus,
+          proExpiresAt: u.proExpiresAt ? new Date(u.proExpiresAt).toLocaleDateString('vi-VN') : undefined,
+          proExpiresAtRaw: u.proExpiresAt,
+          role,
         } as BusinessHousehold;
       });
     }

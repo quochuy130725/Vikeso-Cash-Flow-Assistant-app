@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Menu, X, ArrowRight, LogOut, Wallet, ShieldCheck, Sparkles, Send, Scan, ChevronDown } from 'lucide-react';
 import { Magnet } from './reactbits/Magnet';
 import { UserAccount } from './AuthModal';
@@ -9,7 +9,6 @@ interface HeaderProps {
   onLogout: () => void;
   onOpenScan: () => void;
   onOpenTelegram: () => void;
-  onOpenVideo: () => void;
   onOpenPortal?: () => void;
 }
 
@@ -24,23 +23,88 @@ export const Header: React.FC<HeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [activeNav, setActiveNav] = useState('hero');
+  const isScrollingRef = useRef(false);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Streamlined 4 core sections: Non-overlapping, crystal-clear navigation
   const navItems = [
-    { label: 'Nỗi đau', href: '#noi-dau', id: 'noi-dau' },
     { label: 'Tính năng', href: '#tinh-nang', id: 'tinh-nang' },
     { label: 'Cách hoạt động', href: '#cach-hoat-dong', id: 'cach-hoat-dong' },
-    { label: 'Bóc tách AI', href: '#vu-khi-bi-mat', id: 'vu-khi-bi-mat' },
     { label: 'Bảng giá', href: '#bang-gia', id: 'bang-gia' },
     { label: 'Hỏi đáp (FAQ)', href: '#faq', id: 'faq' },
   ];
 
+  // Scroll spy to highlight active section on navbar (disabled during click animation to prevent flickering)
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isScrollingRef.current) return;
+
+      const scrollPos = window.scrollY + 180;
+      const sectionIds = ['faq', 'bang-gia', 'cach-hoat-dong', 'tinh-nang'];
+      for (const id of sectionIds) {
+        const el = document.getElementById(id);
+        if (el) {
+          const top = el.getBoundingClientRect().top + window.pageYOffset;
+          if (scrollPos >= top) {
+            setActiveNav(id);
+            return;
+          }
+        }
+      }
+      if (window.scrollY < 200) {
+        setActiveNav('hero');
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
+  }, []);
+
+  const scrollToSection = (e: React.MouseEvent, targetId: string) => {
+    e.preventDefault();
+    setActiveNav(targetId);
+    setMobileMenuOpen(false);
+
+    // Lock scroll spy during smooth scroll transition
+    isScrollingRef.current = true;
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 850);
+
+    if (targetId === 'hero' || targetId === '') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const element =
+      document.getElementById(targetId) ||
+      (targetId === 'boc-tach-ai' || targetId === 'noi-dau' || targetId === 'features' || targetId === 'vu-khi-bi-mat'
+        ? document.getElementById('tinh-nang')
+        : null);
+
+    if (element) {
+      const headerOffset = 90;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: 'smooth',
+      });
+    }
+  };
+
   return (
-    <header className="fixed top-0 left-0 w-full z-40 bg-white/85 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_1px_15px_rgba(0,0,0,0.03)] transition-all">
+    <header className="fixed top-0 left-0 w-full z-40 bg-white/70 backdrop-blur-xl border-b border-white/50 shadow-[0_1px_15px_rgba(0,0,0,0.03)] transition-all">
       <div className="max-w-7xl h-20 mx-auto px-4 md:px-8 flex items-center justify-between gap-6">
         {/* Brand */}
         <div className="flex items-center gap-8">
           <a
-            href="#"
+            href="#landing"
             onClick={(e) => {
               e.preventDefault();
               window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -57,12 +121,12 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-2xl tracking-tight text-slate-900">
+                <span className="font-extrabold text-2xl tracking-tight text-slate-950">
                   Vike<span className="text-[#ff4783]">So</span>
                 </span>
                 <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-[#d0f81b]/25 text-[#243505] border border-[#d0f81b] inline-flex items-center gap-1 shadow-2xs">
                   <Sparkles className="w-2.5 h-2.5 text-[#557800]" />
-                  <span>AI Cashflow</span>
+                  <span>Sổ Quỹ Thông Minh</span>
                 </span>
               </div>
             </div>
@@ -74,7 +138,7 @@ export const Header: React.FC<HeaderProps> = ({
               <a
                 key={item.id}
                 href={item.href}
-                onClick={() => setActiveNav(item.id)}
+                onClick={(e) => scrollToSection(e, item.id)}
                 className={`text-xs font-semibold transition-all py-1.5 px-3 rounded-xl cursor-pointer ${
                   activeNav === item.id
                     ? 'text-slate-950 bg-white shadow-xs font-bold ring-1 ring-[#d0f81b]'
@@ -185,7 +249,7 @@ export const Header: React.FC<HeaderProps> = ({
                     className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 rounded-xl flex items-center gap-2 mt-0.5 cursor-pointer transition-colors"
                   >
                     <Scan className="w-4 h-4 text-slate-950" />
-                    <span>Quét chứng từ 1-chạm</span>
+                    <span>Chụp hóa đơn vào sổ</span>
                   </button>
                   <button
                     onClick={() => {
@@ -195,7 +259,7 @@ export const Header: React.FC<HeaderProps> = ({
                     className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
                   >
                     <Send className="w-4 h-4 text-indigo-600" />
-                    <span>Báo cáo Telegram 22h00</span>
+                    <span>Báo cáo cuối ngày (Telegram)</span>
                   </button>
                   <div className="border-t border-slate-100 my-1" />
                   <button
@@ -251,11 +315,12 @@ export const Header: React.FC<HeaderProps> = ({
             <a
               key={item.id}
               href={item.href}
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setActiveNav(item.id);
-              }}
-              className="block py-2 text-sm font-semibold text-slate-700 hover:text-slate-950 transition-colors"
+              onClick={(e) => scrollToSection(e, item.id)}
+              className={`block py-2 text-sm font-semibold transition-colors cursor-pointer rounded-xl px-2 ${
+                activeNav === item.id
+                  ? 'text-slate-950 font-bold bg-[#d0f81b]/25 border border-[#d0f81b]/50'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-slate-50'
+              }`}
             >
               {item.label}
             </a>

@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { PortalType } from '../types';
 import {
   Menu,
   Store,
-  Calendar,
   ChevronDown,
   Bell,
   LogOut,
@@ -11,7 +10,6 @@ import {
   Shield,
   Layers,
   ArrowRightLeft,
-  Server,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -38,13 +36,11 @@ export const PortalHeader: React.FC<HeaderProps> = ({
   storeName = 'Admin Quản Trị',
   userName = 'Admin',
   userEmail = 'test@example.com',
-  subscriptionPlan = 'FREE',
+  subscriptionPlan,
   onLogout,
   sidebarCollapsed = false,
   onToggleSidebar,
 }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState('Tháng này (Tháng 5/2024)');
-
   return (
     <header
       className={`fixed top-0 right-0 h-16 bg-white/90 backdrop-blur-xl z-40 shadow-[0_1px_3px_rgba(0,0,0,0.03)] border-b border-slate-200/80 transition-all duration-300 ease-in-out ${
@@ -72,27 +68,12 @@ export const PortalHeader: React.FC<HeaderProps> = ({
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 hover:bg-slate-200/70 cursor-pointer transition-colors border border-slate-200/70 text-slate-800 text-xs font-semibold">
                 <Store className="w-4 h-4 text-slate-950" />
                 <span className="truncate max-w-[150px] sm:max-w-none">{storeName}</span>
-                <span className="text-[10px] bg-[#d0f81b] text-slate-950 px-1.5 py-0.5 rounded-md font-black uppercase border border-[#bde412]">
-                  {subscriptionPlan}
-                </span>
+                {subscriptionPlan && userRole !== 'ADMIN' && (
+                  <span className="text-[10px] bg-[#d0f81b] text-slate-950 px-1.5 py-0.5 rounded-md font-black uppercase border border-[#bde412]">
+                    {subscriptionPlan}
+                  </span>
+                )}
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-              </div>
-
-              {/* Period Selector */}
-              <div className="hidden md:flex items-center gap-1.5 bg-slate-100/90 px-3 py-1.5 rounded-xl border border-slate-200/70 text-xs text-slate-600">
-                <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                <span className="text-slate-500 font-medium">Kỳ:</span>
-                <select
-                  value={selectedPeriod}
-                  onChange={(e) => setSelectedPeriod(e.target.value)}
-                  aria-label="Kỳ báo cáo"
-                  className="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer pr-1"
-                >
-                  <option value="Hôm nay">Hôm nay</option>
-                  <option value="Tháng này (Tháng 5/2024)">Tháng 5/2024</option>
-                  <option value="Quý 2/2024">Quý 2/2024</option>
-                  <option value="Năm 2024">Năm 2024</option>
-                </select>
               </div>
 
               {/* Realtime Bank Sync Badge */}
@@ -103,15 +84,7 @@ export const PortalHeader: React.FC<HeaderProps> = ({
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 border border-slate-200/70 text-xs">
-                <Server className="w-3.5 h-3.5 text-slate-500" />
-                <span className="text-slate-500">Cụm máy chủ:</span>
-                <span className="font-bold text-slate-800">
-                  Hà Nội (VN-01)
-                </span>
-              </div>
-
-              <div className="hidden md:flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200/80 font-semibold">
+              <div className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200/80 font-semibold">
                 <Shield className="w-3.5 h-3.5 text-indigo-600" />
                 <span>{storeName || 'Admin Quản Trị'}</span>
               </div>

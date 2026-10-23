@@ -3,7 +3,6 @@ import {
   fetchAdminOverview,
   fetchAdminUsers,
   createAdminUser,
-  updateAdminUserPlan,
   updateAdminUserRole,
   deleteAdminUser,
 } from '../services/api';
@@ -22,6 +21,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
 
   // Filters & Search
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'OWNER' | 'ADMIN'>('all');
   const [planFilter, setPlanFilter] = useState<'all' | 'pro' | 'free'>('all');
 
   // Create User Modal
@@ -67,7 +67,14 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
   // Filtered User List
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
-      if (planFilter !== 'all' && u.plan !== planFilter) return false;
+      if (roleFilter !== 'all') {
+        const uRole = u.role || 'OWNER';
+        if (uRole !== roleFilter) return false;
+      }
+      if (planFilter !== 'all') {
+        if (u.role === 'ADMIN') return false;
+        if (u.plan !== planFilter) return false;
+      }
       if (searchTerm.trim() !== '') {
         const query = searchTerm.toLowerCase();
         const matchesName = u.ownerName?.toLowerCase().includes(query);
@@ -77,23 +84,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
       }
       return true;
     });
-  }, [users, planFilter, searchTerm]);
-
-  // Handle Plan Toggle
-  const handleTogglePlan = async (user: BusinessHousehold) => {
-    const newPlan: 'FREE' | 'PRO' = user.plan === 'pro' ? 'FREE' : 'PRO';
-    try {
-      const res = await updateAdminUserPlan(user.id, newPlan);
-      if (res.success) {
-        showToast(`Đã chuyển gói người dùng "${user.ownerName}" sang ${newPlan}!`);
-        loadData(true);
-      } else {
-        showToast(res.message || 'Lỗi cập nhật gói', 'error');
-      }
-    } catch (err: any) {
-      showToast(err.message || 'Lỗi gửi yêu cầu', 'error');
-    }
-  };
+  }, [users, roleFilter, planFilter, searchTerm]);
 
   // Handle Delete User
   const handleDeleteUser = async (user: BusinessHousehold) => {
@@ -129,9 +120,9 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
         password: createPassword || undefined,
         name: createName.trim() || undefined,
         shopName: createShopName.trim() || undefined,
-        phone: createPhone.trim() || undefined,
+        phone: createRole === 'ADMIN' ? undefined : (createPhone.trim() || undefined),
         role: createRole,
-        subscriptionPlan: createPlan,
+        subscriptionPlan: createRole === 'ADMIN' ? undefined : createPlan,
       });
 
       if (res.success) {
@@ -154,8 +145,10 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
   };
 
   const totalUsers = overview?.totalUsers ?? users.length;
-  const totalPRO = overview?.totalPRO ?? users.filter((u) => u.plan === 'pro').length;
-  const totalFREE = overview?.totalFREE ?? users.filter((u) => u.plan === 'free').length;
+  const totalAdmins = users.filter((u) => u.role === 'ADMIN').length;
+  const totalOwners = users.filter((u) => u.role !== 'ADMIN').length;
+  const totalPRO = overview?.totalPRO ?? users.filter((u) => u.plan === 'pro' && u.role !== 'ADMIN').length;
+  const totalFREE = overview?.totalFREE ?? users.filter((u) => u.plan === 'free' && u.role !== 'ADMIN').length;
   const mrr = overview?.mrr ?? totalPRO * 99000;
   const todayReceipts = overview?.todayReceipts ?? 0;
   const todayOrders = overview?.todayOrders ?? 0;
@@ -222,9 +215,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               Tổng số hộ kinh doanh
             </span>
-            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
-              <span className="material-symbols-outlined text-[18px]">group</span>
-            </div>
+            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
           </div>
           <div>
             <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
@@ -242,9 +233,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               Tài khoản Gói PRO
             </span>
-            <div className="w-8 h-8 rounded-lg bg-[#d0f81b]/30 text-slate-950 flex items-center justify-center border border-[#bde412]">
-              <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
-            </div>
+            <span className="w-2 h-2 rounded-full bg-[#d0f81b]"></span>
           </div>
           <div>
             <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
@@ -265,9 +254,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               Doanh thu MRR dự kiến
             </span>
-            <div className="w-8 h-8 rounded-lg bg-[#ff4783]/10 text-[#ff4783] flex items-center justify-center border border-[#ff4783]/20">
-              <span className="material-symbols-outlined text-[18px]">payments</span>
-            </div>
+            <span className="w-2 h-2 rounded-full bg-[#ff4783]"></span>
           </div>
           <div>
             <div className="text-2xl font-extrabold text-[#ff4783] font-mono font-tabular tracking-tight">
@@ -285,9 +272,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               Hoạt động hôm nay
             </span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-200">
-              <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-            </div>
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
           </div>
           <div>
             <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
@@ -312,7 +297,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
               </h2>
             </div>
             <p className="text-xs text-slate-500">
-              Quản trị toàn bộ tài khoản chủ hộ, phân quyền và nâng/hạ gói cước dịch vụ PRO.
+              Quản trị toàn bộ tài khoản chủ hộ, theo dõi thời hạn gói PRO tự động kích hoạt qua VietQR.
             </p>
           </div>
           <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -346,37 +331,85 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPlanFilter('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                planFilter === 'all'
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              Tất cả ({users.length})
-            </button>
-            <button
-              onClick={() => setPlanFilter('pro')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                planFilter === 'pro'
-                  ? 'bg-[#d0f81b] text-slate-950 border border-[#bde412] shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              Gói PRO ({totalPRO})
-            </button>
-            <button
-              onClick={() => setPlanFilter('free')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                planFilter === 'free'
-                  ? 'bg-slate-700 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              Gói FREE ({totalFREE})
-            </button>
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Role Filter Tabs */}
+            <div className="flex items-center bg-slate-200/70 p-0.5 rounded-xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setRoleFilter('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  roleFilter === 'all'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Tất cả ({users.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setRoleFilter('OWNER')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  roleFilter === 'OWNER'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Chủ Hộ ({totalOwners})
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setRoleFilter('ADMIN');
+                  setPlanFilter('all');
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  roleFilter === 'ADMIN'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-indigo-700'
+                }`}
+              >
+                Quản Trị ({totalAdmins})
+              </button>
+            </div>
+
+            {/* Plan Filter (only shown if not filtering exclusively by Admin) */}
+            {roleFilter !== 'ADMIN' && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setPlanFilter('all')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    planFilter === 'all'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  Tất cả gói
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPlanFilter('pro')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    planFilter === 'pro'
+                      ? 'bg-[#d0f81b] text-slate-950 border border-[#bde412] shadow-xs'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  Gói PRO ({totalPRO})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPlanFilter('free')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    planFilter === 'free'
+                      ? 'bg-slate-700 text-white shadow-xs'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  Gói FREE ({totalFREE})
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -390,7 +423,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                 <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap min-w-[140px]">Ngày Tham Gia</th>
                 <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap min-w-[130px]">Gói Dịch Vụ</th>
                 <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-center min-w-[140px]">Trạng Thái Bot</th>
-                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-right min-w-[150px] pr-6">Thao Tác Admin</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-right min-w-[100px] pr-6">Thao Tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-800">
@@ -431,54 +464,58 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                     </td>
 
                     <td className="py-3.5 px-4 sm:px-5 whitespace-nowrap">
-                      {u.plan === 'pro' ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-slate-950 bg-[#d0f81b] px-2.5 py-0.5 rounded-md font-black border border-[#bde412]">
-                          <span className="material-symbols-outlined text-[13px] text-slate-950">workspace_premium</span>
-                          PRO (99k)
-                        </span>
+                      {u.role === 'ADMIN' ? (
+                        <div className="flex flex-col">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 w-fit">
+                            QUẢN TRỊ VIÊN
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-medium mt-0.5">
+                            Đặc quyền hệ thống
+                          </span>
+                        </div>
+                      ) : u.plan === 'pro' ? (
+                        <div className="flex flex-col">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black text-slate-950 bg-[#d0f81b] border border-[#bde412] w-fit">
+                            PRO
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-medium mt-0.5">
+                            {u.proExpiresAt ? `Hạn: ${u.proExpiresAt}` : 'Gói 30 ngày'}
+                          </span>
+                        </div>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded font-semibold border border-slate-200">
-                          MIỄN PHÍ
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 w-fit">
+                            MIỄN PHÍ
+                          </span>
+                          <span className="text-[10px] text-slate-400 mt-0.5">
+                            Gói Cơ Bản
+                          </span>
+                        </div>
                       )}
                     </td>
 
-                    <td className="py-3.5 px-4 sm:px-5 whitespace-nowrap">
+                    <td className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-center">
                       {u.telegramStatus === 'active' ? (
-                        <span className="inline-flex items-center gap-1 text-xs text-slate-900 font-bold">
+                        <span className="inline-flex items-center gap-1.5 text-xs text-slate-900 font-bold">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
                           Đã Kết Nối
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-xs text-slate-400 font-medium">
+                        <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 font-medium">
                           <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
                           Chưa Kết Nối
                         </span>
                       )}
                     </td>
 
-                    <td className="py-3.5 px-4 sm:px-5 text-right whitespace-nowrap">
-                      <div className="inline-flex items-center gap-1.5">
-                        {/* Toggle Plan */}
-                        <button
-                          onClick={() => handleTogglePlan(u)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
-                            u.plan === 'pro'
-                              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
-                              : 'bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 border-[#bde412]'
-                          }`}
-                          type="button"
-                          title="Chuyển đổi gói dịch vụ PRO / FREE"
-                        >
-                          {u.plan === 'pro' ? 'Hạ về FREE' : 'Nâng PRO'}
-                        </button>
-
+                    <td className="py-3.5 px-4 sm:px-5 text-right whitespace-nowrap pr-6">
+                      <div className="inline-flex items-center justify-end">
                         {/* Delete User */}
                         <button
                           onClick={() => handleDeleteUser(u)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border border-transparent hover:border-rose-200"
                           type="button"
-                          title="Xóa người dùng"
+                          title="Xóa tài khoản người dùng"
                         >
                           <span className="material-symbols-outlined text-[18px]">delete</span>
                         </button>
@@ -554,37 +591,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_name">
-                    Tên chủ hộ
-                  </label>
-                  <input
-                    id="create_name"
-                    type="text"
-                    value={createName}
-                    onChange={(e) => setCreateName(e.target.value)}
-                    placeholder="Nguyễn Văn A"
-                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_shop">
-                    Tên cửa hàng
-                  </label>
-                  <input
-                    id="create_shop"
-                    type="text"
-                    value={createShopName}
-                    onChange={(e) => setCreateShopName(e.target.value)}
-                    placeholder="Tạp Hóa X"
-                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-medium"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
+                <div className={createRole === 'ADMIN' ? 'col-span-2' : ''}>
                   <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_role">
                     Vai trò (Role)
                   </label>
@@ -599,21 +606,61 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_plan">
-                    Gói dịch vụ
-                  </label>
-                  <select
-                    id="create_plan"
-                    value={createPlan}
-                    onChange={(e) => setCreatePlan(e.target.value as any)}
-                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs text-slate-900 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all cursor-pointer"
-                  >
-                    <option value="FREE">Miễn phí (FREE)</option>
-                    <option value="PRO">Chuyên nghiệp (PRO)</option>
-                  </select>
-                </div>
+                {createRole === 'OWNER' && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_plan">
+                      Gói dịch vụ
+                    </label>
+                    <select
+                      id="create_plan"
+                      value={createPlan}
+                      onChange={(e) => setCreatePlan(e.target.value as any)}
+                      className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs text-slate-900 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all cursor-pointer"
+                    >
+                      <option value="FREE">Miễn phí (FREE)</option>
+                      <option value="PRO">Chuyên nghiệp (PRO)</option>
+                    </select>
+                  </div>
+                )}
               </div>
+
+              {createRole === 'OWNER' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_name">
+                      Tên chủ hộ
+                    </label>
+                    <input
+                      id="create_name"
+                      type="text"
+                      value={createName}
+                      onChange={(e) => setCreateName(e.target.value)}
+                      placeholder="Nguyễn Văn A"
+                      className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_shop">
+                      Tên cửa hàng
+                    </label>
+                    <input
+                      id="create_shop"
+                      type="text"
+                      value={createShopName}
+                      onChange={(e) => setCreateShopName(e.target.value)}
+                      placeholder="Tạp Hóa X"
+                      className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-medium"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {createRole === 'ADMIN' && (
+                <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl text-[11px] text-indigo-700">
+                  <span className="font-semibold">Lưu ý:</span> Tài khoản Quản trị viên (ADMIN) không áp dụng thông tin cửa hàng và các gói cước dịch vụ (PRO/FREE).
+                </div>
+              )}
 
               <div className="pt-2 flex justify-end gap-2.5">
                 <button
