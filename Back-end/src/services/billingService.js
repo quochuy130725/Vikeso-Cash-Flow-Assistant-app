@@ -5,8 +5,8 @@ const User = require('../models/User');
 const { emitToUser } = require('../socket');
 
 /**
- * Billing service — nơi DUY NHẤT chạm DB cho thanh toán.
- * Controller chỉ gọi các hàm này, không query Model trực tiếp.
+ * Billing service — Quản lý gói PRO cố định 99.000đ/tháng (30 ngày)
+ * Sinh mã VietQR động chuẩn hóa.
  */
 
 const createOrder = async (userId) => {
@@ -18,13 +18,17 @@ const createOrder = async (userId) => {
   }
 
   const existing = await SubscriptionOrder.findOne({
-    userId, status: 'PENDING', expiresAt: { $gt: new Date() },
+    userId,
+    status: 'PENDING',
+    expiresAt: { $gt: new Date() },
   }).sort({ createdAt: -1 });
+
   if (existing) {
     const obj = existing.toObject();
     obj.bankCode = existing.bankCode || sepayConfig.bankCode;
     obj.bankAccount = existing.bankAccount || sepayConfig.bankAccount;
     obj.accountName = existing.accountName || sepayConfig.accountName;
+    obj.qrImageUrl = obj.qrUrl || sepayConfig.buildQrUrl({ amount: sepayConfig.proPrice, content: obj.transferContent });
     return obj;
   }
 
@@ -34,16 +38,24 @@ const createOrder = async (userId) => {
   const expiresAt = new Date(Date.now() + sepayConfig.qrExpireMinutes * 60 * 1000);
 
   const created = await SubscriptionOrder.create({
-    userId, orderCode, plan: 'PRO', amount: sepayConfig.proPrice,
-    status: 'PENDING', transferContent, qrUrl, expiresAt,
+    userId,
+    orderCode,
+    plan: 'PRO',
+    amount: sepayConfig.proPrice,
+    status: 'PENDING',
+    transferContent,
+    qrUrl,
+    expiresAt,
     bankCode: sepayConfig.bankCode,
     bankAccount: sepayConfig.bankAccount,
     accountName: sepayConfig.accountName,
   });
+
   const obj = created.toObject();
   obj.bankCode = sepayConfig.bankCode;
   obj.bankAccount = sepayConfig.bankAccount;
   obj.accountName = sepayConfig.accountName;
+  obj.qrImageUrl = qrUrl;
   return obj;
 };
 
@@ -62,6 +74,7 @@ const getOrderStatus = async (orderCode) => {
   obj.bankCode = order.bankCode || sepayConfig.bankCode;
   obj.bankAccount = order.bankAccount || sepayConfig.bankAccount;
   obj.accountName = order.accountName || sepayConfig.accountName;
+  obj.qrImageUrl = obj.qrUrl || sepayConfig.buildQrUrl({ amount: obj.amount, content: obj.transferContent });
   return obj;
 };
 
@@ -70,7 +83,6 @@ const getHistory = async (userId) =>
 
 /**
  * Xử lý payload webhook SePay. Idempotent theo sepayTransactionId.
- * Payload mẫu: { id, gateway, transferType, transferAmount, content, code }
  */
 const handleSepayWebhook = async (payload) => {
   if (!payload || payload.transferType !== 'in') {
@@ -150,6 +162,10 @@ const downgradeExpiredPro = async () =>
   );
 
 module.exports = {
-  createOrder, getOrderStatus, getHistory,
-  handleSepayWebhook, expireOverdueOrders, downgradeExpiredPro,
+  createOrder,
+  getOrderStatus,
+  getHistory,
+  handleSepayWebhook,
+  expireOverdueOrders,
+  downgradeExpiredPro,
 };

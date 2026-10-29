@@ -58,3 +58,14 @@ exports.updatePayment = async (req, res) => {
 exports.deletePayment = async (req, res) => {
   try { return ok(res, await adminService.deletePayment(req.params.id)); } catch (e) { return fail(res, e); }
 };
+
+// ── Quản lý duyệt chi nhánh thứ 2+ (Multi-shop) ──
+exports.listShopRequests = async (req, res) => {
+  try { return ok(res, await adminService.listShopRequests(req.query)); } catch (e) { return fail(res, e); }
+};
+exports.reviewShopRequest = async (req, res) => {
+  try {
+    const adminId = req.user?.userId || req.user?.id;
+    return ok(res, { data: await adminService.reviewShopRequest(req.params.id, req.body, adminId) });
+  } catch (e) { return fail(res, e); }
+};

@@ -1,31 +1,33 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 
 // Middleware
 const upload = require('../middlewares/upload');
+const { optionalToken } = require('../middlewares/verifyToken');
+const { blockStaff } = require('../middlewares/rbac');
 
 // Controllers
 const manualEntryController = require('../controllers/manualEntryController');
 const aiReceiptController = require('../controllers/aiReceiptController');
+const analyticsController = require('../controllers/analyticsController');
 const telegramController = require('../controllers/telegramController');
 const User = require('../models/User');
 const Receipt = require('../models/Receipt');
-const { runDailyReport } = require('../services/cronService')
+const { runDailyReport } = require('../services/cronService');
 
 // ---------------------------------------------------------
-// API 1: LƯU DỮ LIỆU - Lưới lọc 2 chiều & Telegram Bot
+// API 1: LƯU DỮ LIỆU THỦ CÔNG - Lưới lọc 2 chiều & WebSocket
 // POST /api/manual-entry
 // ---------------------------------------------------------
-router.post('/manual-entry', manualEntryController.saveManualEntry);
+router.post('/manual-entry', optionalToken, manualEntryController.saveManualEntry);
 
 // ---------------------------------------------------------
-// API 2: SCAN HÓA ĐƠN - Upload ảnh & Gemini OCR
+// API 2: SCAN HÓA ĐƠN - Upload 1 ảnh (FREE) hoặc tối đa 3 ảnh (PRO)
 // POST /api/scan-receipt
 // ---------------------------------------------------------
-// Dùng callback pattern thay vì middleware trực tiếp
-// để bắt lỗi từ multer/busboy (tương thích Express v5)
-router.post('/scan-receipt', (req, res, next) => {
-  upload.single('image')(req, res, (err) => {
+router.post('/scan-receipt', optionalToken, (req, res, next) => {
+  upload.any()(req, res, (err) => {
     if (err) {
       return res.status(400).json({
         success: false,
@@ -37,13 +39,13 @@ router.post('/scan-receipt', (req, res, next) => {
 }, aiReceiptController.scanReceipt);
 
 // ---------------------------------------------------------
-// API 3: XÁC NHẬN & LƯU HÓA ĐƠN (Sau khi user review SplitScreen)
-// POST /api/confirm-receipt  →  lưu DB + emit WebSocket 'new_transaction'
+// API 3: XÁC NHẬN & LƯU HÓA ĐƠN (Sau SplitScreen Review)
+// POST /api/confirm-receipt  -> lưu DB + Lưới lọc + WebSocket
 // ---------------------------------------------------------
-router.post('/confirm-receipt', aiReceiptController.confirmReceipt);
+router.post('/confirm-receipt', optionalToken, aiReceiptController.confirmReceipt);
 
 // ---------------------------------------------------------
-// API 4: ĐĂNG NHẬP
+// API 4: ĐĂNG NHẬP (Hỗ trợ tương thích ngược cho client cũ)
 // POST /api/login
 // ---------------------------------------------------------
 router.post('/login', async (req, res) => {
@@ -60,8 +62,22 @@ router.post('/login', async (req, res) => {
         { phone: identifier }
       ]
     });
-    if (!user || user.password !== password) {
+    if (!user || !user.password) {
       return res.status(400).json({ success: false, message: 'Email/Số điện thoại hoặc mật khẩu không đúng' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password).catch(() => false);
+    const isPlainMatch = user.password === password; // fallback cho tài khoản test cũ chưa hash
+    if (!isMatch && !isPlainMatch) {
+      return res.status(400).json({ success: false, message: 'Email/Số điện thoại hoặc mật khẩu không đúng' });
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        code: 'ACCOUNT_LOCKED',
+        message: 'Tài khoản của bạn đã bị khóa bởi chủ cửa hàng.',
+      });
     }
 
     return res.status(200).json({
@@ -70,6 +86,8 @@ router.post('/login', async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
+        name: user.name,
+        role: user.role || 'OWNER',
         shopName: user.shopName,
         telegramChatId: user.telegramChatId,
         subscriptionPlan: user.subscriptionPlan,
@@ -83,21 +101,57 @@ router.post('/login', async (req, res) => {
 });
 
 // ---------------------------------------------------------
-// API 4: LẤY DANH SÁCH GIAO DỊCH (Analytics)
-// GET /api/transactions?userId=...
+// API 5: BIẾN ĐỘNG THU - CHI ĐA KỲ & SO SÁNH CÙNG KỲ (Chặn STAFF)
+// GET /api/transactions/analytics
 // ---------------------------------------------------------
-router.get('/transactions', async (req, res) => {
+router.get('/transactions/analytics', optionalToken, blockStaff, analyticsController.getAnalytics);
+
+// ---------------------------------------------------------
+// API 6: LẤY DANH SÁCH GIAO DỊCH
+// GET /api/transactions?userId=...&month=...&year=...
+// ---------------------------------------------------------
+router.get('/transactions', optionalToken, async (req, res) => {
   try {
-    const { userId } = req.query;
-    if (!userId) {
+    const effectiveUserId = req.user?.employerId || req.user?.userId || req.user?.id || req.query.userId;
+    if (!effectiveUserId) {
       return res.status(400).json({ success: false, message: 'Thiếu userId' });
     }
 
-    const filter = { userId };
+    const filter = { userId: effectiveUserId };
+
+    // 1. Phân quyền STAFF: Thu ngân chỉ thấy hóa đơn do chính mình tạo
+    if (req.user?.role === 'STAFF') {
+      filter.createdBy = req.user.userId;
+    }
+
+    // 2. Lọc theo trạng thái
     if (req.query.status) {
       filter.status = req.query.status;
     }
-    const receipts = await Receipt.find(filter).sort({ transactionDate: -1 });
+
+    // 3. Lọc theo cửa hàng (nếu có)
+    if (req.query.shopId) {
+      filter.shopId = req.query.shopId;
+    }
+
+    // 4. Lọc theo tháng/năm trên accountingDate
+    const vnOffset = 7 * 60 * 60 * 1000;
+    if (req.query.month && req.query.year) {
+      const m = Number(req.query.month) - 1;
+      const y = Number(req.query.year);
+      const start = new Date(Date.UTC(y, m, 1, 0, 0, 0, 0) - vnOffset);
+      const end = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59, 999) - vnOffset);
+      filter.accountingDate = { $gte: start, $lte: end };
+    } else if (req.query.fromDate || req.query.toDate) {
+      filter.accountingDate = {};
+      if (req.query.fromDate) filter.accountingDate.$gte = new Date(req.query.fromDate);
+      if (req.query.toDate) filter.accountingDate.$lte = new Date(req.query.toDate);
+    }
+
+    const receipts = await Receipt.find(filter)
+      .populate('createdBy', 'name email role')
+      .populate('shopId', 'shopName')
+      .sort({ accountingDate: -1, transactionDate: -1 });
 
     return res.status(200).json({
       success: true,
@@ -110,7 +164,7 @@ router.get('/transactions', async (req, res) => {
 });
 
 // ---------------------------------------------------------
-// API 5: LẤY THÔNG TIN CÁ NHÂN & CÀI ĐẶT
+// API 7: LẤY THÔNG TIN CÁ NHÂN & CÀI ĐẶT
 // GET /api/user/:id/profile
 // ---------------------------------------------------------
 router.get('/user/:id/profile', async (req, res) => {
@@ -130,7 +184,7 @@ router.get('/user/:id/profile', async (req, res) => {
 });
 
 // ---------------------------------------------------------
-// API 6: CẬP NHẬT CÀI ĐẶT THÔNG BÁO
+// API 8: CẬP NHẬT CÀI ĐẶT THÔNG BÁO
 // PUT /api/user/:id/notification-settings
 // ---------------------------------------------------------
 router.put('/user/:id/notification-settings', async (req, res) => {
@@ -143,7 +197,6 @@ router.put('/user/:id/notification-settings', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng' });
     }
 
-    // Khởi tạo nếu chưa có
     if (!user.notificationSettings) {
       user.notificationSettings = { receiveEmail: true, receiveTelegram: true, receiveInApp: true };
     }
@@ -167,7 +220,7 @@ router.put('/user/:id/notification-settings', async (req, res) => {
 });
 
 // ---------------------------------------------------------
-// API TEST: Trigger báo cáo cuối ngày ngay lập tức (CHỈ DÙNG KHI TEST)
+// API TEST: Trigger báo cáo cuối ngày ngay lập tức
 // POST /api/test-report
 // ---------------------------------------------------------
 router.post('/test-report', async (req, res) => {
@@ -188,16 +241,13 @@ router.post('/test-report', async (req, res) => {
 });
 
 // ---------------------------------------------------------
-// TELEGRAM BOT — Webhook nhận update từ Telegram
-// POST /api/telegram/webhook  (Telegram gọi tự động)
-// GET  /api/telegram/set-webhook  (gọi 1 lần để đăng ký)
+// TELEGRAM BOT Webhook
 // ---------------------------------------------------------
 router.post('/telegram/webhook', telegramController.handleWebhook);
 router.get('/telegram/set-webhook', telegramController.setWebhook);
 
 // ---------------------------------------------------------
-// TELEGRAM BOT — Lịch sử gửi báo cáo kết ca thực tế của User
-// GET /api/telegram/history?userId=...
+// TELEGRAM BOT Lịch sử kết ca
 // ---------------------------------------------------------
 router.get('/telegram/history', async (req, res) => {
   try {
@@ -206,14 +256,16 @@ router.get('/telegram/history', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Thiếu userId' });
     }
 
-    const receipts = await Receipt.find({ userId }).sort({ transactionDate: -1 }).lean();
+    const receipts = await Receipt.find({ userId }).sort({ accountingDate: -1, transactionDate: -1 }).lean();
 
     const groups = {};
     receipts.forEach((r) => {
-      const d = r.transactionDate ? new Date(r.transactionDate) : new Date(r.createdAt || Date.now());
-      const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const d = r.accountingDate ? new Date(r.accountingDate) : (r.transactionDate ? new Date(r.transactionDate) : new Date());
+      const vnOffset = 7 * 60 * 60 * 1000;
+      const vn = new Date(d.getTime() + vnOffset);
+      const dayKey = `${vn.getUTCFullYear()}-${String(vn.getUTCMonth() + 1).padStart(2, '0')}-${String(vn.getUTCDate()).padStart(2, '0')}`;
       if (!groups[dayKey]) {
-        groups[dayKey] = { date: d, thu: 0, chi: 0, count: 0 };
+        groups[dayKey] = { date: vn, thu: 0, chi: 0, count: 0 };
       }
       groups[dayKey].count += 1;
       if (r.transactionType === 'THU') {
@@ -226,9 +278,9 @@ router.get('/telegram/history', async (req, res) => {
     const history = Object.keys(groups).sort().reverse().map((key) => {
       const g = groups[key];
       const d = g.date;
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const year = d.getUTCFullYear();
       const dateStr = `${day}/${month}/${year}`;
       const dateCompact = `${day}${month}${year}`;
       const net = g.thu - g.chi;
