@@ -314,38 +314,38 @@ export const ThreeCashflowCanvas: React.FC<ThreeCashflowCanvasProps> = ({ classN
       className={`relative w-full h-full min-h-[460px] flex items-center justify-center cursor-grab active:cursor-grabbing select-none overflow-hidden ${className}`}
     >
       {/* Top Left Badge: Tiền Vào (Doanh thu) */}
-      <div className="absolute top-4 left-4 z-20 px-3.5 py-2.5 rounded-2xl bg-slate-950/90 backdrop-blur-md border border-[#d0f81b]/50 shadow-xl text-left pointer-events-none">
-        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
+      <div className="absolute top-4 left-4 z-20 px-3.5 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-[#bde412] shadow-lg text-left pointer-events-none">
+        <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">
           TIỀN VÀO (DOANH THU)
         </span>
-        <div className="text-base sm:text-lg font-black text-[#d0f81b] tracking-tight">
+        <div className="text-base sm:text-lg font-black text-emerald-700 tracking-tight">
           +18.500.000 đ
         </div>
-        <span className="text-[10px] text-slate-300 font-semibold">
+        <span className="text-[10px] text-slate-600 font-semibold">
           Chiếm 76% dòng tiền
         </span>
       </div>
 
       {/* Top Right Badge: Tiền Ra (Chi phí) */}
-      <div className="absolute top-4 right-4 z-20 px-3.5 py-2.5 rounded-2xl bg-slate-950/90 backdrop-blur-md border border-[#ff4783]/50 shadow-xl text-right pointer-events-none">
-        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
+      <div className="absolute top-4 right-4 z-20 px-3.5 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-[#ffd6e4] shadow-lg text-right pointer-events-none">
+        <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">
           TIỀN RA (CHI PHÍ)
         </span>
         <div className="text-base sm:text-lg font-black text-[#ff4783] tracking-tight">
           -4.200.000 đ
         </div>
-        <span className="text-[10px] text-slate-300 font-semibold">
+        <span className="text-[10px] text-slate-600 font-semibold">
           Chiếm 24% dòng tiền
         </span>
       </div>
 
       {/* Bottom Center Badge: Tiền Lời Ròng */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-2xl bg-slate-950/95 backdrop-blur-md border border-emerald-500/40 shadow-2xl flex items-center gap-2.5 whitespace-nowrap pointer-events-none">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <div className="text-xs text-white">
-          <span className="text-slate-300">Tiền lời ròng: </span>
-          <strong className="text-emerald-400 font-black">+14.300.000 đ</strong>
-          <span className="text-slate-400 text-[11px] ml-1.5">(Tỷ suất 76% an toàn)</span>
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-2xl bg-white/95 backdrop-blur-md border border-emerald-200 shadow-xl flex items-center gap-2.5 whitespace-nowrap pointer-events-none">
+        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <div className="text-xs text-slate-900">
+          <span className="text-slate-600">Tiền lời ròng: </span>
+          <strong className="text-emerald-700 font-black">+14.300.000 đ</strong>
+          <span className="text-slate-500 text-[11px] ml-1.5">(Tỷ suất 76% an toàn)</span>
         </div>
       </div>
     </div>

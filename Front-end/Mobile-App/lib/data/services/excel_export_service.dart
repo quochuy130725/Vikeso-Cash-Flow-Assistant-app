@@ -66,6 +66,7 @@ class ExcelExportService {
         'Ngày giờ',
         'Loại',
         'Danh mục',
+        'Hình thức thanh toán',
         'Lý do',
         'Số tiền (đ)',
       ];
@@ -97,6 +98,7 @@ class ExcelExportService {
         final type = tx['transactionType'] ?? '';
         final amount = (tx['totalAmount'] as num?)?.toDouble() ?? 0.0;
         final category = _formatCategory(tx['category'] ?? '');
+        final paymentMethod = _resolvePaymentMethod(tx);
         final reason = tx['reason'] ?? '';
         final tDate = _parseDate(tx['transactionDate']);
         final dateStr = tDate != null
@@ -114,11 +116,12 @@ class ExcelExportService {
             TextCellValue(type == 'THU' ? '↑ Thu' : '↓ Chi'),
             style: amountStyle);
         _setCell(sheet, rowIndex, 3, TextCellValue(category));
-        _setCell(sheet, rowIndex, 4, TextCellValue(reason));
+        _setCell(sheet, rowIndex, 4, TextCellValue(paymentMethod));
+        _setCell(sheet, rowIndex, 5, TextCellValue(reason));
         _setCell(
           sheet,
           rowIndex,
-          5,
+          6,
           TextCellValue(
               '${type == 'THU' ? '+' : '-'}${_currencyFormat.format(amount)}'),
           style: amountStyle,
@@ -236,8 +239,32 @@ class ExcelExportService {
         return 'POS kết ca';
       case 'So Tay':
         return 'Sổ tay';
+      case 'Chuyen Khoan':
+        return 'Chuyển khoản';
       default:
         return raw.isEmpty ? 'Khác' : raw;
     }
+  }
+
+  static String _resolvePaymentMethod(Map<String, dynamic> tx) {
+    final explicit = (tx['paymentMethodLabel'] ?? tx['paymentMethod'] ?? '').toString().trim();
+    if (explicit.toUpperCase() == 'TRANSFER' || explicit.toLowerCase().contains('chuyển khoản')) {
+      return 'Chuyển khoản VietQR';
+    }
+    if (explicit.toUpperCase() == 'POS' || explicit.toLowerCase().contains('pos')) {
+      return 'Thẻ POS';
+    }
+    if (explicit.toUpperCase() == 'CASH' || explicit.toLowerCase().contains('tiền mặt')) {
+      return 'Tiền mặt';
+    }
+    final cat = (tx['category'] ?? '').toString();
+    final reason = (tx['reason'] ?? '').toString().toLowerCase();
+    if (cat == 'Chuyen Khoan' || reason.contains('ck') || reason.contains('vietqr') || reason.contains('unc')) {
+      return 'Chuyển khoản VietQR';
+    }
+    if (cat == 'POS Ket Ca' || reason.contains('pos') || reason.contains('quẹt thẻ')) {
+      return 'Thẻ POS';
+    }
+    return 'Tiền mặt';
   }
 }

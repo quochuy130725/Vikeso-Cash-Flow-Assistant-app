@@ -124,7 +124,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="font-extrabold text-2xl tracking-tight text-slate-950">
                   Vike<span className="text-[#ff4783]">So</span>
                 </span>
-                <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-[#d0f81b]/25 text-[#243505] border border-[#d0f81b] inline-flex items-center gap-1 shadow-2xs">
+                <span className="text-[11px] font-black tracking-wide px-2 py-0.5 rounded-full bg-[#d0f81b]/25 text-[#243505] border border-[#d0f81b] inline-flex items-center gap-1 shadow-2xs">
                   <Sparkles className="w-2.5 h-2.5 text-[#557800]" />
                   <span>Sổ Quỹ Thông Minh</span>
                 </span>

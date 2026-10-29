@@ -25,6 +25,7 @@ class _CameraScreenState extends State<CameraScreen> {
   bool _isLoading = false;
   bool _isPro = false;
   int _monthlyScans = 0;
+  final List<File> _batchFiles = [];
 
   final _apiService = ApiService();
   // TODO: Sau khi có login, lấy userId từ Session/SecureStorage
@@ -163,11 +164,11 @@ class _CameraScreenState extends State<CameraScreen> {
                           const SizedBox(width: 7),
                           Text(
                             _isPro
-                                ? 'PRO • Quét không giới hạn'
-                                : 'Lượt quét AI: $_monthlyScans/30 tháng này',
+                                ? 'PRO • Quét gộp tối đa 3 ảnh/lần (${_batchFiles.length}/3)'
+                                : 'FREE • 1 ảnh/lần (Lượt: $_monthlyScans/30)',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 12.5,
+                              fontSize: 12,
                               fontWeight: _isPro ? FontWeight.w800 : FontWeight.w600,
                               letterSpacing: 0.2,
                             ),
@@ -176,17 +177,127 @@ class _CameraScreenState extends State<CameraScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black45,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Text(
-                        'Hướng khung hình vào hoá đơn/biên lai',
-                        style: TextStyle(color: Colors.white70, fontSize: 12.5),
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: _showReceiptGuideDialog,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.white24),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFFD0F81B)),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Quy chuẩn ảnh hợp lệ',
+                                  style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (!_isPro) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              ProPaywallSheet.show(
+                                context,
+                                featureTitle: 'Quét Gộp 3 Ảnh Hóa Đơn / Lần (Batch OCR)',
+                                featureDescription:
+                                    'Gói FREE giới hạn tải/chụp 1 ảnh hóa đơn mỗi lần. Nâng cấp VikeSo PRO để chọn hoặc chụp gộp tối đa 3 ảnh hóa đơn cùng lúc, AI sẽ bóc tách toàn bộ trong 1 lần duy nhất!',
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFD0F81B),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.layers_rounded, size: 13, color: Color(0xFF0F172A)),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Gộp 3 ảnh (PRO)',
+                                    style: TextStyle(color: Color(0xFF0F172A), fontSize: 11, fontWeight: FontWeight.w900),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
+                    if (_batchFiles.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F172A).withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFD0F81B)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ...List.generate(_batchFiles.length, (i) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 6),
+                                child: Stack(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.file(
+                                        _batchFiles[i],
+                                        width: 42,
+                                        height: 42,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: -2,
+                                      right: -2,
+                                      child: GestureDetector(
+                                        onTap: () => setState(() => _batchFiles.removeAt(i)),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(2),
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFFFF4783),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(Icons.close, size: 11, color: Colors.white),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                            const SizedBox(width: 6),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFD0F81B),
+                                foregroundColor: const Color(0xFF0F172A),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                minimumSize: Size.zero,
+                              ),
+                              onPressed: () => _handleScannedBatch(List<File>.from(_batchFiles)),
+                              child: Text(
+                                'Phân tích ${_batchFiles.length} ảnh',
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -206,17 +317,17 @@ class _CameraScreenState extends State<CameraScreen> {
                     TextButton(
                       onPressed: _isLoading ? null : _processImageFromGallery,
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.white54,
+                        foregroundColor: Colors.white70,
                       ),
-                      child: const Column(
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.photo_library_outlined, size: 24),
-                          SizedBox(height: 4),
+                          const Icon(Icons.photo_library_outlined, size: 24),
+                          const SizedBox(height: 4),
                           Text(
-                            'Thư viện\n(Ảnh có sẵn)',
+                            _isPro ? 'Thư viện\n(Tối đa 3 ảnh)' : 'Thư viện\n(1 ảnh/lần)',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 11),
+                            style: const TextStyle(fontSize: 11),
                           ),
                         ],
                       ),
@@ -237,11 +348,15 @@ class _CameraScreenState extends State<CameraScreen> {
                           ),
                           elevation: 8,
                         ),
-                        icon: const Icon(Icons.camera_alt_outlined, size: 28),
-                        label: const Text(
-                          'Chụp & Quét Chứng Từ',
-                          style: TextStyle(
-                            fontSize: 16,
+                        icon: const Icon(Icons.camera_alt_outlined, size: 26),
+                        label: Text(
+                          _isPro
+                              ? (_batchFiles.isEmpty
+                                  ? 'Chụp Hóa Đơn (1–3 ảnh)'
+                                  : 'Chụp thêm (${_batchFiles.length}/3)')
+                              : 'Chụp & Quét (1 ảnh)',
+                          style: const TextStyle(
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -286,13 +401,59 @@ class _CameraScreenState extends State<CameraScreen> {
     return true;
   }
 
+  void _showReceiptGuideDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Quy chuẩn ảnh hóa đơn AI OCR', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('✓ HỢP LỆ (AI nhận diện chính xác):', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF0F172A), fontSize: 13)),
+            SizedBox(height: 4),
+            Text('• Hóa đơn in nhiệt máy POS, phiếu tính tiền siêu thị/quán ăn.\n• Sổ tay ghi chép thu chi rõ chữ số.\n• Ảnh chụp màn hình biên lai chuyển khoản ngân hàng (UNC).', style: TextStyle(fontSize: 12.5, height: 1.4)),
+            SizedBox(height: 12),
+            Text('✕ TỪ CHỐI (Hệ thống tự động chặn):', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFFF4783), fontSize: 13)),
+            SizedBox(height: 4),
+            Text('• Ảnh chân dung, phong cảnh, đồ vật không chứa số liệu thu chi.\n• Ảnh bị mờ nhòe, lóa sáng mất chữ số tổng tiền.', style: TextStyle(fontSize: 12.5, height: 1.4)),
+            SizedBox(height: 12),
+            Text('💡 Gói FREE: Tối đa 1 ảnh/lần.\n⚡ Gói PRO: Quét gộp tối đa 3 ảnh hóa đơn/lần (Batch OCR).', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF4783)),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Đã hiểu', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _takePicture() async {
     final allowed = await _checkScanPermission();
     if (!allowed) return;
 
     try {
       final XFile image = await _controller!.takePicture();
-      await _handleScannedImage(File(image.path));
+      if (!mounted) return;
+      final file = File(image.path);
+      if (_isPro) {
+        if (_batchFiles.length >= 3) {
+          UIHelpers.showWarningToast(context, 'Gói PRO quét gộp tối đa 3 ảnh/lần!');
+          return;
+        }
+        setState(() {
+          _batchFiles.add(file);
+        });
+        if (_batchFiles.length == 3) {
+          await _handleScannedBatch(List<File>.from(_batchFiles));
+        }
+      } else {
+        await _handleScannedBatch([file]);
+      }
     } catch (e) {
       if (mounted) {
         UIHelpers.showInfoDialog(context, 'Lỗi', 'Lỗi khi chụp ảnh: $e');
@@ -306,9 +467,24 @@ class _CameraScreenState extends State<CameraScreen> {
 
     try {
       final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      if (image == null) return;
-      await _handleScannedImage(File(image.path));
+      if (_isPro) {
+        final List<XFile> picked = await picker.pickMultiImage();
+        if (picked.isEmpty) return;
+        if (picked.length > 3) {
+          if (mounted) {
+            UIHelpers.showWarningToast(
+              context,
+              'Gói PRO hỗ trợ quét gộp tối đa 3 ảnh/lần. Đã lấy 3 ảnh đầu tiên!',
+            );
+          }
+        }
+        final files = picked.take(3).map((x) => File(x.path)).toList();
+        await _handleScannedBatch(files);
+      } else {
+        final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+        if (image == null) return;
+        await _handleScannedBatch([File(image.path)]);
+      }
     } catch (e) {
       if (mounted) {
         UIHelpers.showInfoDialog(context, 'Lỗi', 'Không thể mở Thư viện: $e');
@@ -316,63 +492,73 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  Future<void> _handleScannedImage(File imageFile) async {
-    if (!mounted) return;
+  Future<void> _handleScannedBatch(List<File> files) async {
+    if (!mounted || files.isEmpty) return;
 
     setState(() => _isLoading = true);
 
-    // 🚀 GỌI API THẬT - Gửi ảnh lên Gemini AI
     final resolvedUserId = await AuthRepository().getUserId() ?? _userId;
-    final result = await _apiService.uploadReceipt(
-      imageFile: imageFile,
-      userId: resolvedUserId,
-    );
+    final List<Map<String, dynamic>> aggregatedItems = [];
+    String lastErrorType = '';
+    String lastErrorMessage = '';
+
+    for (final imageFile in files) {
+      final result = await _apiService.uploadReceipt(
+        imageFile: imageFile,
+        userId: resolvedUserId,
+      );
+      final List items = (result['items'] as List?) ?? [];
+      if (items.isNotEmpty) {
+        aggregatedItems.addAll(items.cast<Map<String, dynamic>>());
+      } else {
+        lastErrorType = result['error_type'] as String? ?? '';
+        lastErrorMessage = result['message'] as String? ?? '';
+      }
+    }
 
     if (!mounted) return;
-    setState(() => _isLoading = false);
+    setState(() {
+      _isLoading = false;
+      _batchFiles.clear();
+    });
 
-    final List items = (result['items'] as List?) ?? [];
-    final String errorType = result['error_type'] as String? ?? '';
-
-    // Xử lý lỗi ảnh (Chặn rác + Ảnh mờ)
-    if (items.isEmpty) {
+    if (aggregatedItems.isEmpty) {
       String title = 'Không tìm thấy hóa đơn';
       String message = 'Không nhận diện được dữ liệu tài chính trong ảnh này.';
 
-      if (errorType == 'JUNK_IMAGE') {
+      if (lastErrorType == 'JUNK_IMAGE') {
         title = '📷 Ảnh không hợp lệ';
         message =
             'Ảnh này không liên quan đến tài chính. Vui lòng chụp hóa đơn hoặc sổ tay!';
-      } else if (errorType == 'BLURRY_IMAGE') {
+      } else if (lastErrorType == 'BLURRY_IMAGE') {
         title = '🌫️ Ảnh quá mờ';
         message =
             'Ảnh quá mờ hoặc lóa sáng! Vui lòng đặt lại camera và chụp rõ hơn.';
-      } else if (errorType == 'NETWORK_ERROR') {
+      } else if (lastErrorType == 'NETWORK_ERROR') {
         title = '📡 Lỗi kết nối';
-        message = result['message'] ?? 'Không thể kết nối đến máy chủ!';
-      } else if (errorType == 'SERVER_ERROR') {
+        message = lastErrorMessage.isNotEmpty ? lastErrorMessage : 'Không thể kết nối đến máy chủ!';
+      } else if (lastErrorType == 'SERVER_ERROR') {
         title = '⚠️ Lỗi máy chủ';
-        message =
-            result['message'] ?? 'Máy chủ đang gặp sự cố, vui lòng thử lại.';
+        message = lastErrorMessage.isNotEmpty
+            ? lastErrorMessage
+            : 'Máy chủ đang gặp sự cố, vui lòng thử lại.';
       }
 
       UIHelpers.showInfoDialog(context, title, message);
       return;
     }
 
-    // Ghi nhận 1 lượt quét AI thành công vào bộ đếm tháng
     await SubscriptionService().recordScan();
     _loadSubscriptionInfo();
 
-    // Thành công: Chuyển sang SplitScreen và truyền dữ liệu
     if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => SplitScreen(
-          items: items.cast<Map<String, dynamic>>(),
+          items: aggregatedItems,
           userId: resolvedUserId,
-          imageFile: imageFile,
+          imageFile: files.first,
         ),
       ),
     );

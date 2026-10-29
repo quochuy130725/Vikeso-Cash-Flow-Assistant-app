@@ -23,22 +23,21 @@ export const BentoFeaturesSection: React.FC<BentoFeaturesSectionProps> = ({
   onOpenTelegram,
 }) => {
   return (
-    <section id="tinh-nang" className="scroll-mt-24 py-16 sm:py-20 bg-white/15 border-y border-slate-200/60 relative overflow-hidden">
+    <section id="tinh-nang" className="scroll-mt-24 py-16 sm:py-20 relative overflow-hidden">
       <div id="features" className="absolute top-0 left-0 pointer-events-none" />
       <div id="noi-dau" className="absolute top-0 left-0 pointer-events-none" />
-      <div id="boc-tach-ai" className="absolute top-0 left-0 pointer-events-none" />
       <div id="vu-khi-bi-mat" className="absolute top-0 left-0 pointer-events-none" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-bold text-white shadow-2xs mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-[#d0f81b]" />
-            <span>TIỆN ÍCH DÀNH CHO TIỂU THƯƠNG</span>
+          <div className="inline-flex items-center gap-2 text-sm font-extrabold text-[#b01755] mb-3">
+            <Sparkles className="w-4 h-4 text-[#ff4783]" />
+            <span>Tiện ích dành cho tiểu thương</span>
           </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-950 tracking-tight [text-shadow:_0_1px_8px_rgba(255,255,255,0.85)]">
             Tạm Biệt Nỗi Lo Tính Sổ Mỗi Đêm
           </h2>
-          <p className="text-sm sm:text-base text-slate-950 font-bold mt-3 leading-relaxed [text-shadow:_0_1px_6px_rgba(255,255,255,0.85)]">
+          <p className="text-sm sm:text-base text-slate-950 font-bold mt-3 max-w-xl mx-auto leading-relaxed [text-shadow:_0_1px_6px_rgba(255,255,255,0.85)]">
             4 tiện ích thực tế được thiết kế riêng cho các chủ vựa, cửa hàng bán lẻ và quán ăn tại Việt Nam.
           </p>
         </div>
@@ -77,24 +76,24 @@ export const BentoFeaturesSection: React.FC<BentoFeaturesSectionProps> = ({
 
             {/* Interactive Visual Card inside Cell 1 */}
             <div className="mt-6 pt-5 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0">
+              <div className="p-4 flex items-center gap-3">
+                <div className="w-10 h-10 flex items-center justify-center shrink-0">
                   <FileText className="w-5 h-5 text-slate-600" />
                 </div>
                 <div className="min-w-0">
                   <div className="text-xs font-bold text-slate-900 truncate">Hóa đơn nhập rau củ #892</div>
-                  <div className="text-[11px] text-slate-400">Ảnh chụp camera • Viết tay</div>
+                  <div className="text-xs text-slate-600">Ảnh chụp camera • Viết tay</div>
                 </div>
               </div>
 
-              <div className="bg-slate-900 text-white p-4 rounded-2xl border border-slate-800 flex items-center justify-between shadow-xs">
+              <div className="text-slate-900 p-4 flex items-center justify-between sm:border-l sm:border-[#ffd6e4]">
                 <div>
-                  <div className="text-[10px] text-slate-400 font-semibold uppercase">ĐÃ VÀO SỔ QUỸ</div>
-                  <div className="text-sm font-extrabold text-[#d0f81b] font-mono">1.250.000 đ</div>
+                  <div className="text-[11px] text-[#b01755] font-bold">Đã vào sổ quỹ</div>
+                  <div className="text-sm font-extrabold text-slate-900 font-mono">1.250.000 đ</div>
                 </div>
                 <button
                   onClick={onOpenScan}
-                  className="px-3 py-1.5 rounded-lg bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 text-xs font-black transition-all cursor-pointer shadow-xs flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black transition-all cursor-pointer shadow-xs flex items-center gap-1"
                   type="button"
                 >
                   <span>Chụp Thử</span>
@@ -117,7 +116,7 @@ export const BentoFeaturesSection: React.FC<BentoFeaturesSectionProps> = ({
                 <div className="w-10 h-10 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-200">
                   <Send className="w-5 h-5" />
                 </div>
-                <span className="text-[11px] font-bold text-slate-400 font-mono">ĐÚNG 22:00</span>
+                <span className="text-xs font-bold text-slate-600 font-mono">Đúng 22:00</span>
               </div>
 
               <h3 className="text-base sm:text-lg font-extrabold text-slate-900 mb-2">
@@ -128,17 +127,17 @@ export const BentoFeaturesSection: React.FC<BentoFeaturesSectionProps> = ({
               </p>
             </div>
 
-            <div className="mt-5 p-3.5 bg-sky-50/70 rounded-2xl border border-sky-100 text-xs space-y-1.5">
+            <div className="mt-5 text-xs space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-sky-950 text-[11px]">VikeSo Assistant Bot</span>
-                <span className="text-[10px] text-sky-600 font-semibold">22:00</span>
+                <span className="text-[11px] text-sky-800 font-semibold">22:00</span>
               </div>
-              <p className="text-[11px] text-sky-900 leading-tight">
+              <p className="text-xs text-sky-900 leading-relaxed">
                 📊 <strong>Chốt sổ hôm nay:</strong> Doanh thu <strong>4.850.000 đ</strong> • Lời ròng <strong>1.150.000 đ (24%)</strong>. Đã khớp 12 đơn.
               </p>
               <button
                 onClick={onOpenTelegram}
-                className="text-[11px] font-black text-sky-700 hover:text-sky-900 underline pt-1 cursor-pointer"
+                className="text-xs font-black text-sky-700 hover:text-sky-900 underline pt-1 cursor-pointer"
                 type="button"
               >
                 Bấm để nhận báo cáo mẫu qua Telegram &rarr;
@@ -173,26 +172,26 @@ export const BentoFeaturesSection: React.FC<BentoFeaturesSectionProps> = ({
             </div>
 
             {/* Visual Mini Chart */}
-            <div className="mt-5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-end justify-between gap-2 h-24">
+            <div className="mt-5 flex items-end justify-between gap-2 h-28">
               <div className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
                 <div className="w-full bg-[#d0f81b] rounded-t-sm h-[55%] border border-[#bde412]"></div>
-                <span className="text-[9px] font-mono text-slate-400">T2</span>
+                <span className="text-[11px] font-mono text-slate-600">T2</span>
               </div>
               <div className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
                 <div className="w-full bg-[#ff4783] rounded-t-sm h-[75%]"></div>
-                <span className="text-[9px] font-mono text-slate-400">T3</span>
+                <span className="text-[11px] font-mono text-slate-600">T3</span>
               </div>
               <div className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
                 <div className="w-full bg-[#d0f81b] rounded-t-sm h-[90%] border border-[#bde412]"></div>
-                <span className="text-[9px] font-mono text-slate-400">T4</span>
+                <span className="text-[11px] font-mono text-slate-600">T4</span>
               </div>
               <div className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
                 <div className="w-full bg-[#ff4783] rounded-t-sm h-[65%]"></div>
-                <span className="text-[9px] font-mono text-slate-400">T5</span>
+                <span className="text-[11px] font-mono text-slate-600">T5</span>
               </div>
               <div className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
                 <div className="w-full bg-[#d0f81b] rounded-t-sm h-[100%] border border-[#bde412]"></div>
-                <span className="text-[9px] font-mono text-slate-400 font-bold text-slate-900">H.Nay</span>
+                <span className="text-[11px] font-mono font-bold text-slate-900">H.Nay</span>
               </div>
             </div>
           </motion.div>
@@ -231,17 +230,17 @@ export const BentoFeaturesSection: React.FC<BentoFeaturesSectionProps> = ({
 
             {/* Visual Deduplication Flow */}
             <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 w-full sm:w-auto">
+              <div className="flex items-center gap-2 py-2.5 text-slate-700 w-full sm:w-auto">
                 <Receipt className="w-4 h-4 text-slate-500" />
                 <span>5 hóa đơn lẻ POS (1.200.000 đ)</span>
               </div>
               <span className="text-slate-400 font-black text-sm">&rarr;</span>
-              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold w-full sm:w-auto">
+              <div className="flex items-center gap-2 py-2.5 text-emerald-800 font-bold w-full sm:w-auto">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 <span>Chụp Báo Cáo POS Kết Ca</span>
               </div>
               <span className="text-slate-400 font-black text-sm">&rarr;</span>
-              <div className="p-2.5 rounded-xl bg-slate-900 text-[#d0f81b] font-mono font-black text-xs w-full sm:w-auto text-center">
+              <div className="py-1 text-slate-950 font-mono font-black text-xs w-full sm:w-auto text-center underline decoration-[#d0f81b] decoration-4 underline-offset-4">
                 Tự Gạch Trùng Bill (KHÔNG BỊ TÍNH ĐÚP)
               </div>
             </div>

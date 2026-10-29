@@ -63,9 +63,9 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
 
           {/* Col 2: Tính năng & Sản phẩm */}
           <div className="flex flex-col gap-3">
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
               Tiện Ích Nổi Bật
-            </h4>
+            </h3>
             <nav className="flex flex-col gap-2">
               <a href="#tinh-nang" className="text-xs text-slate-600 hover:text-slate-950 transition-colors">
                 Chụp hình tự động vào sổ
@@ -93,9 +93,9 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
 
           {/* Col 3: Hỗ trợ & Pháp lý */}
           <div className="flex flex-col gap-3">
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
               Hỗ Trợ &amp; Pháp Lý
-            </h4>
+            </h3>
             <nav className="flex flex-col gap-2">
               <a
                 href="#faq"
@@ -144,9 +144,9 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
 
           {/* Col 4: Cộng đồng & Đăng ký bản tin */}
           <div className="flex flex-col gap-3">
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
               Kết Nối &amp; Tin Tức
-            </h4>
+            </h3>
             <p className="text-xs text-slate-600 leading-relaxed">
               Nhận mẹo quản trị dòng tiền và cập nhật giá nông sản chợ đầu mối hàng tuần.
             </p>
@@ -163,7 +163,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
                 />
                 <button
                   type="submit"
-                  className="absolute right-1 top-1 bottom-1 px-3 bg-[#ff4783] hover:bg-[#e0326e] text-white rounded-lg text-xs font-black transition-colors border border-[#ff4783] cursor-pointer shadow-xs"
+                  className="absolute right-1 top-1 bottom-1 px-3 bg-[#ff4783] hover:bg-[#e0326e] text-slate-950 rounded-lg text-xs font-black transition-colors border border-[#ff4783] cursor-pointer shadow-xs"
                 >
                   Gửi
                 </button>
@@ -210,24 +210,24 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
 
       {/* Info Dialog Modal */}
       {infoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-[#191c1d] border border-white/10 rounded-3xl p-6 shadow-2xl text-white">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
-              <h3 className="font-extrabold text-sm text-[#d0f81b]">{infoModal.title}</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl text-slate-900">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <h3 className="font-extrabold text-sm text-[#ff4783]">{infoModal.title}</h3>
               <button
                 onClick={() => setInfoModal(null)}
-                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed mb-6">
+            <p className="text-xs text-slate-600 leading-relaxed mb-6">
               {infoModal.content}
             </p>
             <div className="flex justify-end">
               <button
                 onClick={() => setInfoModal(null)}
-                className="px-5 py-2 rounded-xl bg-[#d0f81b] hover:bg-[#bde412] text-slate-950 font-bold text-xs transition-colors cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white font-bold text-xs transition-colors cursor-pointer"
               >
                 Đã Hiểu
               </button>

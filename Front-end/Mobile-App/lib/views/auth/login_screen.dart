@@ -16,19 +16,27 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey        = GlobalKey<FormState>();
   final _emailController    = TextEditingController();
   final _passwordController = TextEditingController();
+  final _fullNameController = TextEditingController();
+  final _otpController      = TextEditingController();
   final _shopNameController = TextEditingController();
+  final _shopAddressController = TextEditingController();
   final _authRepo = AuthRepository();
 
   bool _obscurePassword = true;
   bool _isLoading       = false;
   bool _isRegisterMode  = false; // Toggle giua Dang nhap / Dang ky
+  int _registerStep     = 1; // 1: Thông tin cá nhân, 2: OTP 6 số, 3: Onboarding cửa hàng đầu tiên
+  String _selectedBusinessType = 'Bán lẻ / Tạp hóa';
   String? _errorMessage;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _fullNameController.dispose();
+    _otpController.dispose();
     _shopNameController.dispose();
+    _shopAddressController.dispose();
     super.dispose();
   }
 
@@ -55,16 +63,47 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // =========================================================
-  // DANG KY EMAIL MOI
+  // DANG KY 3 BUOC (THONG TIN CA NHAN -> OTP -> ONBOARDING CUA HANG)
   // =========================================================
   Future<void> _handleRegister() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_registerStep == 1) {
+      if (!_formKey.currentState!.validate()) return;
+      setState(() {
+        _errorMessage = null;
+        _registerStep = 2;
+      });
+      return;
+    }
+
+    if (_registerStep == 2) {
+      final otp = _otpController.text.trim();
+      if (otp.length != 6) {
+        setState(() {
+          _errorMessage = 'Vui lòng nhập đủ mã OTP 6 chữ số (Demo: 123456)';
+        });
+        return;
+      }
+      setState(() {
+        _errorMessage = null;
+        _registerStep = 3;
+      });
+      return;
+    }
+
+    // Bước 3: Onboarding cửa hàng đầu tiên & gọi API đăng ký
+    if (_shopNameController.text.trim().isEmpty) {
+      setState(() {
+        _errorMessage = 'Vui lòng nhập tên cửa hàng đầu tiên của bạn';
+      });
+      return;
+    }
+
     setState(() { _isLoading = true; _errorMessage = null; });
 
     final result = await _authRepo.register(
       email: _emailController.text,
       password: _passwordController.text,
-      shopName: _shopNameController.text,
+      shopName: _shopNameController.text.trim(),
     );
 
     if (!mounted) return;
@@ -198,66 +237,166 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                   ],
 
-                  // Ten cua hang (chi hien khi dang ky)
+                  // Stepper 3 bước khi ở chế độ Đăng ký
                   if (_isRegisterMode) ...[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 18),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildStepBadge(1, 'Tài khoản'),
+                          const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF94A3B8)),
+                          _buildStepBadge(2, 'OTP Email'),
+                          const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF94A3B8)),
+                          _buildStepBadge(3, 'Mở cửa hàng'),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  if (_isRegisterMode && _registerStep == 2) ...[
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF0F5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFFD6E4)),
+                      ),
+                      child: Text(
+                        'Mã xác thực OTP 6 chữ số đã được gửi tới ${_emailController.text.trim()}.\n(Mã Demo trải nghiệm: 123456)',
+                        style: const TextStyle(fontSize: 12.5, color: Color(0xFF0F172A), fontWeight: FontWeight.w600, height: 1.4),
+                      ),
+                    ),
+                    TextFormField(
+                      controller: _otpController,
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: 8, color: Color(0xFF0F172A)),
+                      decoration: _inputDecoration(
+                        label: 'Nhập mã OTP 6 chữ số',
+                        hint: '123456',
+                        icon: Icons.verified_user_outlined,
+                        colorScheme: colorScheme,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () => setState(() => _registerStep = 1),
+                        icon: const Icon(Icons.arrow_back_rounded, size: 16),
+                        label: const Text('Quay lại sửa Email'),
+                      ),
+                    ),
+                  ] else if (_isRegisterMode && _registerStep == 3) ...[
                     TextFormField(
                       controller: _shopNameController,
                       decoration: _inputDecoration(
-                        label: 'Tên cửa hàng / Hộ kinh doanh',
+                        label: 'Tên cửa hàng / Hộ kinh doanh đầu tiên',
+                        hint: 'VD: Tạp hóa Cô Ba',
                         icon: Icons.storefront_outlined,
                         colorScheme: colorScheme,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // Email hoặc SĐT
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: _isRegisterMode ? TextInputType.emailAddress : TextInputType.text,
-                    decoration: _inputDecoration(
-                      label: _isRegisterMode ? 'Email đăng nhập' : 'Email hoặc Số điện thoại',
-                      hint: _isRegisterMode ? 'VD: cuahang@vikeso.vn' : 'VD: cuahang@vikeso.vn hoặc 0987654321',
-                      icon: _isRegisterMode ? Icons.email_outlined : Icons.person_outline,
-                      colorScheme: colorScheme,
+                    const SizedBox(height: 14),
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedBusinessType,
+                      decoration: _inputDecoration(
+                        label: 'Loại hình kinh doanh',
+                        icon: Icons.category_outlined,
+                        colorScheme: colorScheme,
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'Bán lẻ / Tạp hóa', child: Text('Bán lẻ / Tạp hóa')),
+                        DropdownMenuItem(value: 'F&B / Quán ăn / Cà phê', child: Text('F&B / Quán ăn / Cà phê')),
+                        DropdownMenuItem(value: 'Thời trang / Phụ kiện', child: Text('Thời trang / Phụ kiện')),
+                        DropdownMenuItem(value: 'Dịch vụ / Spa / Tiệm tóc', child: Text('Dịch vụ / Spa / Tiệm tóc')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) setState(() => _selectedBusinessType = v);
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return _isRegisterMode ? 'Vui lòng nhập email' : 'Vui lòng nhập email hoặc số điện thoại';
-                      }
-                      if (_isRegisterMode) {
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
-                          return 'Email không đúng định dạng';
-                        }
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Password
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: _inputDecoration(
-                      label: 'Mật khẩu',
-                      icon: Icons.lock_outline,
-                      colorScheme: colorScheme,
-                    ).copyWith(
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                          color: const Color(0xFF64748B),
-                        ),
-                        onPressed: () => setState(() { _obscurePassword = !_obscurePassword; }),
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _shopAddressController,
+                      decoration: _inputDecoration(
+                        label: 'Địa chỉ cửa hàng (Tùy chọn)',
+                        hint: 'VD: 123 Nguyễn Trãi, Quận 1',
+                        icon: Icons.location_on_outlined,
+                        colorScheme: colorScheme,
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Vui lòng nhập mật khẩu';
-                      if (_isRegisterMode && value.length < 6) return 'Mật khẩu ít nhất 6 ký tự';
-                      return null;
-                    },
-                  ),
+                    const SizedBox(height: 16),
+                  ] else ...[
+                    if (_isRegisterMode) ...[
+                      TextFormField(
+                        controller: _fullNameController,
+                        decoration: _inputDecoration(
+                          label: 'Họ và tên chủ hộ kinh doanh',
+                          hint: 'VD: Nguyễn Văn A',
+                          icon: Icons.badge_outlined,
+                          colorScheme: colorScheme,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // Email hoặc SĐT
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: _isRegisterMode ? TextInputType.emailAddress : TextInputType.text,
+                      decoration: _inputDecoration(
+                        label: _isRegisterMode ? 'Email đăng nhập (Nhận OTP)' : 'Email hoặc Số điện thoại',
+                        hint: _isRegisterMode ? 'VD: cuahang@vikeso.vn' : 'VD: cuahang@vikeso.vn hoặc 0987654321',
+                        icon: _isRegisterMode ? Icons.email_outlined : Icons.person_outline,
+                        colorScheme: colorScheme,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return _isRegisterMode ? 'Vui lòng nhập email' : 'Vui lòng nhập email hoặc số điện thoại';
+                        }
+                        if (_isRegisterMode) {
+                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+                            return 'Email không đúng định dạng';
+                          }
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Password
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: _inputDecoration(
+                        label: 'Mật khẩu',
+                        icon: Icons.lock_outline,
+                        colorScheme: colorScheme,
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                            color: const Color(0xFF64748B),
+                          ),
+                          onPressed: () => setState(() { _obscurePassword = !_obscurePassword; }),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return 'Vui lòng nhập mật khẩu';
+                        if (_isRegisterMode && value.length < 6) return 'Mật khẩu ít nhất 6 ký tự';
+                        return null;
+                      },
+                    ),
+                  ],
                   if (!_isRegisterMode) ...[
                     Align(
                       alignment: Alignment.centerRight,
@@ -300,7 +439,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                             )
                           : Text(
-                              _isRegisterMode ? 'Đăng Ký Tài Khoản' : 'Đăng Nhập',
+                              _isRegisterMode
+                                  ? (_registerStep == 1
+                                      ? 'Tiếp Tục & Nhận Mã OTP'
+                                      : (_registerStep == 2
+                                          ? 'Xác Thực OTP'
+                                          : 'Hoàn Tất & Mở Cửa Hàng'))
+                                  : 'Đăng Nhập',
                               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: -0.2),
                             ),
                     ),
@@ -348,6 +493,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: TextButton(
                       onPressed: () => setState(() {
                         _isRegisterMode = !_isRegisterMode;
+                        _registerStep = 1;
                         _errorMessage = null;
                         _formKey.currentState?.reset();
                       }),
@@ -371,6 +517,46 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildStepBadge(int step, String title) {
+    final active = _registerStep == step;
+    final done = _registerStep > step;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: done
+                ? const Color(0xFFD0F81B)
+                : (active ? const Color(0xFFFF4783) : const Color(0xFFE2E8F0)),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            done ? '✓' : '$step',
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w900,
+              color: done
+                  ? const Color(0xFF0F172A)
+                  : (active ? Colors.white : const Color(0xFF64748B)),
+            ),
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+            color: active ? const Color(0xFF0F172A) : const Color(0xFF64748B),
+          ),
+        ),
+      ],
     );
   }
 

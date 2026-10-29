@@ -162,9 +162,9 @@ class ProPaywallSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _buildBenefitItem('Quét hóa đơn AI không giới hạn (Gemini Vision OCR)'),
+          _buildBenefitItem('Quét gộp tối đa 3 ảnh hóa đơn / lần (Batch OCR) không giới hạn'),
           _buildBenefitItem('Tự động chốt sổ gửi Telegram/Email mỗi đêm 22:00'),
-          _buildBenefitItem('Xuất toàn bộ dữ liệu ra Excel chuẩn kế toán thuế'),
+          _buildBenefitItem('Xuất toàn bộ dữ liệu & hình thức thanh toán ra Excel'),
           _buildBenefitItem('Lưới lọc 2 chiều chống trùng tiền hóa đơn máy POS'),
 
           const SizedBox(height: 24),

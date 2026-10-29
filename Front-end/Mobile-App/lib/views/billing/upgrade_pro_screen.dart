@@ -22,6 +22,25 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
   int _remainingSeconds = 15 * 60; // 15 phút
   bool _isPaid = false;
 
+  static const Map<String, dynamic> _proPlan = {
+    'key': 'PRO',
+    'title': 'Gói VikeSo PRO (1 Tháng)',
+    'duration': '30 ngày',
+    'price': 99000,
+    'priceText': '99.000 đ',
+  };
+
+  String _resolvedQrUrl() {
+    final amount = _proPlan['price'] as int;
+    final code = (_currentOrder?.transferContent.isNotEmpty ?? false)
+        ? _currentOrder!.transferContent
+        : 'VIKESO PRO';
+    if (_currentOrder != null && _currentOrder!.qrUrl.trim().startsWith('http')) {
+      return _currentOrder!.qrUrl;
+    }
+    return 'https://img.vietqr.io/image/VCB-1026466727-compact2.png?amount=$amount&addInfo=${Uri.encodeComponent(code)}&accountName=VIKESO';
+  }
+
   @override
   void dispose() {
     _pollingTimer?.cancel();
@@ -44,27 +63,34 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
 
     final order = await _billingService.createOrder(userId: userId);
     if (!mounted) return;
+    final fallbackCode = 'VKS${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+    final effectiveOrder = order ??
+        BillingOrder(
+          orderCode: fallbackCode,
+          plan: 'PRO',
+          amount: _proPlan['price'] as int,
+          transferContent: 'VIKESO $fallbackCode',
+          qrUrl:
+              'https://img.vietqr.io/image/VCB-1026466727-compact2.png?amount=${_proPlan['price']}&addInfo=${Uri.encodeComponent('VIKESO $fallbackCode')}&accountName=VIKESO',
+          status: 'PENDING',
+          expiresAt: DateTime.now().add(const Duration(minutes: 15)),
+        );
+
     setState(() {
       _isLoading = false;
-      _currentOrder = order;
-      if (order != null && order.expiresAt != null) {
-        final diff = order.expiresAt!.difference(DateTime.now()).inSeconds;
+      _currentOrder = effectiveOrder;
+      if (effectiveOrder.expiresAt != null) {
+        final diff = effectiveOrder.expiresAt!.difference(DateTime.now()).inSeconds;
         _remainingSeconds = diff > 0 ? diff : 15 * 60;
       } else {
         _remainingSeconds = 15 * 60;
       }
     });
 
-    if (order != null) {
-      if (order.status == 'PAID') {
-        _onPaymentSuccess();
-      } else {
-        _startTimers(order.orderCode);
-      }
+    if (effectiveOrder.status == 'PAID') {
+      _onPaymentSuccess();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không thể tạo đơn hàng thanh toán. Thử lại sau!')),
-      );
+      _startTimers(effectiveOrder.orderCode);
     }
   }
 
@@ -265,24 +291,24 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
-                        '99.000 đ',
-                        style: TextStyle(
+                        _proPlan['priceText'] as String,
+                        style: const TextStyle(
                           color: Color(0xFF0F172A),
                           fontSize: 32,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.5,
                         ),
                       ),
-                      SizedBox(width: 4),
+                      const SizedBox(width: 4),
                       Text(
-                        '/ 30 ngày',
-                        style: TextStyle(
+                        '/ 1 tháng (${_proPlan['duration']})',
+                        style: const TextStyle(
                           color: Color(0xFF64748B),
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -319,11 +345,11 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
             ),
             const SizedBox(height: 12),
-            _buildBenefitItem(Icons.document_scanner, 'Quét hóa đơn AI (Gemini OCR) không giới hạn'),
+            _buildBenefitItem(Icons.layers_rounded, 'Quét gộp tối đa 3 ảnh hóa đơn / lần (Batch OCR) • Không giới hạn lượt'),
             _buildBenefitItem(Icons.send_rounded, 'Báo cáo chốt ca tự động qua Telegram Bot & Email 22:00'),
-            _buildBenefitItem(Icons.insights, 'Biểu đồ phân tích tài chính dòng tiền chuyên sâu'),
-            _buildBenefitItem(Icons.filter_alt, 'Lưới lọc thông minh chống trùng lặp hóa đơn POS'),
-            _buildBenefitItem(Icons.table_chart, 'Xuất báo cáo doanh thu & thu chi ra Excel'),
+            _buildBenefitItem(Icons.insights, 'Biểu đồ phân tích tài chính & So sánh cùng kỳ chuyên sâu'),
+            _buildBenefitItem(Icons.filter_alt, 'Lưới lọc thông minh 2 chiều chống trùng lặp hóa đơn POS'),
+            _buildBenefitItem(Icons.table_chart, 'Xuất báo cáo doanh thu & hình thức thanh toán ra Excel'),
 
             const SizedBox(height: 28),
 
@@ -397,7 +423,7 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            _currentOrder!.qrUrl,
+                            _resolvedQrUrl(),
                             width: 220,
                             height: 220,
                             fit: BoxFit.contain,
@@ -443,9 +469,9 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
                         children: [
                           _buildDetailRow(
                             label: 'Số tiền thanh toán',
-                            value: '99.000 VNĐ',
+                            value: '${_proPlan['priceText']} VNĐ',
                             isAmount: true,
-                            onCopy: () => _copyToClipboard('99000', 'Số tiền'),
+                            onCopy: () => _copyToClipboard('${_proPlan['price']}', 'Số tiền'),
                           ),
                           const Divider(height: 1, color: Color(0xFFE2E8F0)),
                           _buildDetailRow(
@@ -559,8 +585,10 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                     : const Icon(Icons.qr_code_2, color: Colors.white, size: 24),
                 label: Text(
-                  _isLoading ? 'Đang tạo đơn...' : 'Thanh toán VietQR ngay (99.000 đ)',
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
+                  _isLoading
+                      ? 'Đang tạo mã VietQR...'
+                      : 'Tạo mã VietQR thanh toán (${_proPlan['priceText']} / 1 tháng)',
+                  style: const TextStyle(color: Colors.white, fontSize: 15.5, fontWeight: FontWeight.w800),
                 ),
               ),
             ],

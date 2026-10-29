@@ -22,6 +22,7 @@ class SocketService {
   final _profileCtrl = StreamController<Map<String, dynamic>>.broadcast();
   final _subscriptionCtrl = StreamController<Map<String, dynamic>>.broadcast();
   final _connectionCtrl = StreamController<bool>.broadcast();
+  final _forceLogoutCtrl = StreamController<Map<String, dynamic>>.broadcast();
 
   /// Giao dịch thêm/sửa/xoá → Dashboard, Thu Chi, Báo cáo tải lại.
   Stream<Map<String, dynamic>> get onTransactionChanged => _transactionCtrl.stream;
@@ -34,6 +35,9 @@ class SocketService {
 
   /// Trạng thái kết nối (true = đang kết nối).
   Stream<bool> get onConnectionChanged => _connectionCtrl.stream;
+
+  /// Khóa tài khoản nhân viên tức thì (< 1 giây) từ Chủ cửa hàng / Admin.
+  Stream<Map<String, dynamic>> get onForceLogout => _forceLogoutCtrl.stream;
 
   bool get isConnected => _socket?.connected ?? false;
 
@@ -92,6 +96,11 @@ class SocketService {
       final map = _asMap(data);
       _subscriptionCtrl.add(map);
       _profileCtrl.add({...map, 'reason': 'subscription_upgraded'});
+    });
+    socket.on('force_logout', (data) async {
+      final map = _asMap(data);
+      await AuthRepository().logout();
+      _forceLogoutCtrl.add(map);
     });
 
     _socket = socket;

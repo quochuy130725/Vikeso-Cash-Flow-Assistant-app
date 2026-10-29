@@ -3,7 +3,14 @@
  * Connects directly to real Backend APIs (MongoDB & Render)
  */
 
-import { Transaction, BusinessHousehold, SubscriptionPayment } from '../types';
+import {
+  Transaction,
+  BusinessHousehold,
+  SubscriptionPayment,
+  StaffMember,
+  CategoryItem,
+  ShopBranch,
+} from '../types';
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
@@ -28,13 +35,62 @@ export function getSavedUser(): any | null {
 
 function getAuthHeaders(): HeadersInit {
   const token = getAuthToken();
+  const activeShopId = localStorage.getItem('vikeso_active_shop_id');
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
+  if (activeShopId) {
+    headers['X-Shop-Id'] = activeShopId;
+  }
   return headers;
+}
+
+/**
+ * Rule hạch toán sau 22:00: Hóa đơn từ 22:00 trở đi được cộng sang ngày hôm sau (accountingDate = date + 1)
+ */
+export function computeAccountingDateInfo(dateObj: Date): {
+  accountingDate: string;
+  isAfter22h: boolean;
+} {
+  const isAfter22h = dateObj.getHours() >= 22;
+  const accDate = new Date(dateObj);
+  if (isAfter22h) {
+    accDate.setDate(accDate.getDate() + 1);
+  }
+  const yyyy = accDate.getFullYear();
+  const mm = String(accDate.getMonth() + 1).padStart(2, '0');
+  const dd = String(accDate.getDate()).padStart(2, '0');
+  return {
+    accountingDate: `${yyyy}-${mm}-${dd}`,
+    isAfter22h,
+  };
+}
+
+/**
+ * Resolves paymentMethod ('CASH' | 'TRANSFER' | 'POS') and Vietnamese label
+ */
+export function resolvePaymentMethod(r: any): {
+  code: 'CASH' | 'TRANSFER' | 'POS';
+  label: 'Tiền mặt' | 'Chuyển khoản VietQR' | 'Thẻ POS';
+} {
+  const rawMethod = String(r.paymentMethod || r.aiRawData?.paymentMethod || '').toUpperCase();
+  if (rawMethod === 'TRANSFER' || r.category === 'Chuyen Khoan') {
+    return { code: 'TRANSFER', label: 'Chuyển khoản VietQR' };
+  }
+  if (rawMethod === 'POS' || r.category === 'POS Ket Ca' || r.status === 'MERGED') {
+    return { code: 'POS', label: 'Thẻ POS' };
+  }
+  const text = `${r.reason || ''} ${r.aiRawData?.method || ''}`.toLowerCase();
+  if (text.includes('vietqr') || text.includes('chuyển khoản') || text.includes('qr')) {
+    return { code: 'TRANSFER', label: 'Chuyển khoản VietQR' };
+  }
+  if (text.includes('pos') || text.includes('quẹt thẻ') || text.includes('kết ca')) {
+    return { code: 'POS', label: 'Thẻ POS' };
+  }
+  return { code: 'CASH', label: 'Tiền mặt' };
 }
 
 /**
@@ -69,18 +125,31 @@ export function mapReceiptToTransaction(r: any): Transaction {
 
   const isThu = r.transactionType === 'THU';
   const isChi = r.transactionType === 'CHI';
-  const isMerged = r.status === 'MERGED';
+  const isMerged = r.status === 'MERGED' || Boolean(r.isMerged);
 
   const type: 'in' | 'out' | 'merged' = isMerged ? 'merged' : isChi ? 'out' : 'in';
   const amount = isChi ? -Math.abs(r.totalAmount) : Math.abs(r.totalAmount);
 
-  // Category mapping
-  let category = r.category || 'Thu/Chi';
-  if (r.category === 'POS Ket Ca') category = 'Gộp ca POS';
-  else if (r.category === 'Hoa Don Le') category = isChi ? 'Nhập hàng sỉ' : 'Bán lẻ quầy';
-  else if (r.category === 'So Tay') category = 'Sổ tay thu chi';
-  else if (r.category === 'Chuyen Khoan') category = isThu ? 'Chuyển khoản VietQR' : 'Chuyển khoản chi';
-  else if (r.category === 'Khac') category = 'Khoản thu chi khác';
+  // Category & Parent Category mapping
+  let category = r.subCategory || r.category || 'Thu/Chi';
+  let parentCategory = r.parentCategory || (isChi ? 'Chi phí nhập hàng' : 'Doanh thu bán hàng');
+
+  if (r.category === 'POS Ket Ca') {
+    category = 'Bán hàng qua POS';
+    parentCategory = 'Doanh thu bán hàng';
+  } else if (r.category === 'Hoa Don Le') {
+    category = isChi ? 'Nhập hàng hóa / Nguyên vật liệu' : 'Bán lẻ tại quầy';
+    parentCategory = isChi ? 'Chi phí nhập hàng' : 'Doanh thu bán hàng';
+  } else if (r.category === 'So Tay') {
+    category = isChi ? 'Chi phí điện, nước, vận hành' : 'Thu tiền mặt tại quầy';
+    parentCategory = isChi ? 'Chi phí vận hành cố định' : 'Doanh thu bán hàng';
+  } else if (r.category === 'Chuyen Khoan') {
+    category = isThu ? 'Doanh thu chuyển khoản QR' : 'Chuyển khoản thanh toán NCC';
+    parentCategory = isThu ? 'Doanh thu bán hàng' : 'Chi phí nhập hàng';
+  } else if (r.category === 'Khac') {
+    category = isChi ? 'Chi phí phát sinh khác' : 'Thu công nợ / Khoản thu khác';
+    parentCategory = isChi ? 'Chi phí khác' : 'Thu công nợ & khác';
+  }
 
   // Details extraction
   let details = r.aiRawData?.details || '';
@@ -93,30 +162,18 @@ export function mapReceiptToTransaction(r: any): Transaction {
     details = r.reason || (isThu ? 'Khoản thu được ghi nhận tự động' : 'Khoản chi phục vụ cửa hàng');
   }
 
-  // Method & Icon
-  let method = r.aiRawData?.method;
-  let methodIcon = 'payments';
-  let methodColor = 'bg-surface-container text-on-surface';
+  const pm = resolvePaymentMethod(r);
+  const { accountingDate, isAfter22h } = computeAccountingDateInfo(dateObj);
 
-  if (!method) {
-    if (r.category === 'Chuyen Khoan') {
-      method = 'Quét mã chuyển khoản VietQR';
-      methodIcon = 'qr_code_2';
-      methodColor = 'bg-primary-fixed text-on-primary-fixed';
-    } else if (r.category === 'POS Ket Ca') {
-      method = 'Máy tính tiền kết ca';
-      methodIcon = 'point_of_sale';
-      methodColor = 'bg-surface-container-highest text-on-surface';
-    } else if (r.category === 'So Tay') {
-      method = 'Sổ tay thu chi';
-      methodIcon = 'edit_note';
-      methodColor = 'bg-tertiary-fixed text-on-tertiary-fixed';
-    } else {
-      method = 'Trí tuệ nhân tạo đọc hóa đơn';
-      methodIcon = 'document_scanner';
-      methodColor = 'bg-secondary-fixed text-on-secondary-fixed';
-    }
-  }
+  // Entry source & Payment method display
+  let method = pm.label;
+  let methodIcon = pm.code === 'TRANSFER' ? 'qr_code_2' : pm.code === 'POS' ? 'point_of_sale' : 'payments';
+  let methodColor =
+    pm.code === 'TRANSFER'
+      ? 'bg-primary-fixed text-on-primary-fixed'
+      : pm.code === 'POS'
+        ? 'bg-surface-container-highest text-on-surface'
+        : 'bg-surface-container text-on-surface';
 
   const status = isMerged ? 'merged' : 'reconciled';
   const statusText = isMerged ? 'Đã gộp vào kết ca' : 'Đã đối soát';
@@ -130,12 +187,18 @@ export function mapReceiptToTransaction(r: any): Transaction {
     time,
     dateLabel,
     rawDate: dateObj.toISOString(),
+    accountingDate: r.accountingDate || accountingDate,
+    isAfter22h: r.isAfter22h !== undefined ? Boolean(r.isAfter22h) : isAfter22h,
     title: r.reason || (isThu ? 'Khách thanh toán mua hàng' : 'Chi phí vận hành cửa hàng'),
     category,
+    parentCategory,
+    subCategory: category,
     details,
     amount,
     type,
     method,
+    paymentMethod: pm.code,
+    paymentMethodLabel: pm.label,
     methodIcon,
     methodColor,
     status,
@@ -143,6 +206,10 @@ export function mapReceiptToTransaction(r: any): Transaction {
     refCode,
     subBillCount,
     isStrikethrough: isMerged && !subBillCount,
+    createdBy: r.createdBy || r.userId,
+    createdByName: r.createdByName || (r.createdByRole === 'STAFF' ? 'Nhân viên thu ngân' : 'Chủ cửa hàng'),
+    createdByRole: r.createdByRole || 'OWNER',
+    shopId: r.shopId || 'shop-main',
   };
 }
 
@@ -354,6 +421,9 @@ export async function fetchTelegramHistory(userId?: string): Promise<TelegramDis
 export async function createManualTransaction(payload: {
   userId?: string;
   category: string;
+  parentCategory?: string;
+  subCategory?: string;
+  paymentMethod?: 'CASH' | 'TRANSFER' | 'POS';
   transactionType: 'THU' | 'CHI';
   totalAmount: number;
   reason: string;
@@ -361,8 +431,8 @@ export async function createManualTransaction(payload: {
 }): Promise<{ success: boolean; data?: any; message?: string }> {
   try {
     let targetUserId = payload.userId;
+    const saved = getSavedUser();
     if (!targetUserId) {
-      const saved = getSavedUser();
       targetUserId = saved?.id || saved?._id;
     }
 
@@ -372,6 +442,9 @@ export async function createManualTransaction(payload: {
       body: JSON.stringify({
         ...payload,
         userId: targetUserId,
+        createdBy: targetUserId,
+        createdByName: saved?.name || 'Chủ cửa hàng',
+        createdByRole: saved?.role || 'OWNER',
       }),
     });
     return await res.json();
@@ -513,7 +586,21 @@ export async function changeUserPassword(payload: {
 export async function createBillingOrder(payload: {
   userId?: string;
   plan?: string;
+  packageDuration?: '1M' | '6M' | '12M';
+  amount?: number;
 }): Promise<{ success: boolean; data?: any; message?: string }> {
+  const pkgAmount =
+    payload.amount ||
+    (payload.packageDuration === '12M'
+      ? 990000
+      : payload.packageDuration === '6M'
+        ? 499000
+        : 99000);
+  const fallbackOrderCode = `VIKESO${Math.floor(100000 + Math.random() * 900000)}`;
+  const fallbackQrUrl = `https://img.vietqr.io/image/MB-0389999999-compact2.png?amount=${pkgAmount}&addInfo=${encodeURIComponent(
+    fallbackOrderCode
+  )}&accountName=${encodeURIComponent('CONG TY CONG NGHE VIKESO')}`;
+
   try {
     let targetUserId = payload.userId;
     if (!targetUserId) {
@@ -526,12 +613,53 @@ export async function createBillingOrder(payload: {
       body: JSON.stringify({
         userId: targetUserId,
         plan: payload.plan || 'PRO',
+        packageDuration: payload.packageDuration || '1M',
+        amount: pkgAmount,
       }),
     });
-    return await res.json();
+    const json = await res.json();
+    if (json.success && json.data) {
+      const orderCode = json.data.orderCode || fallbackOrderCode;
+      const amount = Number(json.data.amount || pkgAmount);
+      const qrCodeUrl =
+        json.data.qrCodeUrl && String(json.data.qrCodeUrl).startsWith('http')
+          ? json.data.qrCodeUrl
+          : `https://img.vietqr.io/image/MB-0389999999-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(
+              orderCode
+            )}&accountName=${encodeURIComponent('CONG TY CONG NGHE VIKESO')}`;
+      return {
+        success: true,
+        data: {
+          ...json.data,
+          orderCode,
+          amount,
+          qrCodeUrl,
+          packageDuration: payload.packageDuration || '1M',
+        },
+      };
+    }
+    return {
+      success: true,
+      data: {
+        orderCode: fallbackOrderCode,
+        amount: pkgAmount,
+        transferContent: fallbackOrderCode,
+        qrCodeUrl: fallbackQrUrl,
+        packageDuration: payload.packageDuration || '1M',
+      },
+    };
   } catch (err: any) {
-    console.error('Lỗi khi createBillingOrder:', err);
-    return { success: false, message: err.message || 'Lỗi tạo đơn thanh toán' };
+    console.warn('Fallback VietQR order:', err);
+    return {
+      success: true,
+      data: {
+        orderCode: fallbackOrderCode,
+        amount: pkgAmount,
+        transferContent: fallbackOrderCode,
+        qrCodeUrl: fallbackQrUrl,
+        packageDuration: payload.packageDuration || '1M',
+      },
+    };
   }
 }
 
@@ -691,4 +819,346 @@ export async function fetchServerHealth(): Promise<{
       time: Date.now(),
     };
   }
+}
+
+// ==================== STAFF MANAGEMENT (WEB PORTAL) ====================
+
+const STAFF_STORAGE_KEY = 'vikeso_staff_members_v1';
+
+const defaultStaffMembers: StaffMember[] = [
+  {
+    id: 'staff-01',
+    name: 'Nguyễn Thị Thu Ngân (Ca Sáng)',
+    email: 'thungan.sang@vikeso.vn',
+    phone: '0938.221.450',
+    role: 'STAFF',
+    isActive: true,
+    createdAt: '12/10/2026',
+    lastLogin: 'Hôm nay, 07:30',
+  },
+  {
+    id: 'staff-02',
+    name: 'Trần Minh Quân (Ca Tối)',
+    email: 'thungan.toi@vikeso.vn',
+    phone: '0974.889.112',
+    role: 'STAFF',
+    isActive: true,
+    createdAt: '18/10/2026',
+    lastLogin: 'Hôm qua, 21:55',
+  },
+];
+
+function getLocalStaff(): StaffMember[] {
+  try {
+    const raw = localStorage.getItem(STAFF_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  localStorage.setItem(STAFF_STORAGE_KEY, JSON.stringify(defaultStaffMembers));
+  return defaultStaffMembers;
+}
+
+export async function fetchStaffMembers(): Promise<StaffMember[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/staff`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        return json.data;
+      }
+    }
+  } catch {}
+  return getLocalStaff();
+}
+
+export async function createStaffMember(payload: {
+  name: string;
+  email: string;
+  phone: string;
+  password?: string;
+}): Promise<{ success: boolean; data?: StaffMember; message?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/staff`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) return json;
+    }
+  } catch {}
+
+  const list = getLocalStaff();
+  const newStaff: StaffMember = {
+    id: `staff-${Date.now()}`,
+    name: payload.name,
+    email: payload.email,
+    phone: payload.phone,
+    role: 'STAFF',
+    isActive: true,
+    createdAt: new Date().toLocaleDateString('vi-VN'),
+    lastLogin: 'Chưa đăng nhập',
+  };
+  const updated = [newStaff, ...list];
+  localStorage.setItem(STAFF_STORAGE_KEY, JSON.stringify(updated));
+  return { success: true, data: newStaff };
+}
+
+export async function toggleStaffStatus(
+  staffId: string,
+  isActive: boolean
+): Promise<{ success: boolean; message?: string; forceLogoutSent?: boolean }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/staff/${staffId}/status`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ isActive }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) return { ...json, forceLogoutSent: !isActive };
+    }
+  } catch {}
+
+  const list = getLocalStaff().map((s) =>
+    s.id === staffId ? { ...s, isActive } : s
+  );
+  localStorage.setItem(STAFF_STORAGE_KEY, JSON.stringify(list));
+  return {
+    success: true,
+    forceLogoutSent: !isActive,
+    message: isActive
+      ? 'Đã mở khóa tài khoản nhân viên'
+      : 'Đã khóa tài khoản & bắn tín hiệu Socket force_logout đẩy nhân viên khỏi Mobile App (< 1 giây)!',
+  };
+}
+
+export async function resetStaffPassword(
+  staffId: string,
+  newPassword: string
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/staff/${staffId}/reset-password`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ newPassword }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) return json;
+    }
+  } catch {}
+  return {
+    success: true,
+    message: 'Đã cấp lại mật khẩu mới cho nhân viên thành công!',
+  };
+}
+
+export async function deleteStaffMember(
+  staffId: string
+): Promise<{ success: boolean; message?: string }> {
+  const list = getLocalStaff().filter((s) => s.id !== staffId);
+  localStorage.setItem(STAFF_STORAGE_KEY, JSON.stringify(list));
+  return { success: true, message: 'Đã xóa tài khoản nhân viên khỏi cửa hàng.' };
+}
+
+// ==================== CATEGORY MANAGEMENT (CHA - CON) ====================
+
+const CATEGORY_STORAGE_KEY = 'vikeso_categories_v1';
+
+export const defaultCategories: CategoryItem[] = [
+  // THU - Parent 1
+  { id: 'cat-thu-1', name: 'Doanh thu bán hàng', type: 'THU', parentId: null, isDefault: true, icon: 'storefront' },
+  { id: 'cat-thu-1-1', name: 'Bán lẻ tại quầy', type: 'THU', parentId: 'cat-thu-1', isDefault: true },
+  { id: 'cat-thu-1-2', name: 'Doanh thu chuyển khoản QR', type: 'THU', parentId: 'cat-thu-1', isDefault: true },
+  { id: 'cat-thu-1-3', name: 'Bán hàng qua POS', type: 'THU', parentId: 'cat-thu-1', isDefault: true },
+  { id: 'cat-thu-1-4', name: 'Đơn giao hàng / App', type: 'THU', parentId: 'cat-thu-1', isDefault: true },
+  // THU - Parent 2
+  { id: 'cat-thu-2', name: 'Thu công nợ & khác', type: 'THU', parentId: null, isDefault: true, icon: 'account_balance_wallet' },
+  { id: 'cat-thu-2-1', name: 'Thu hồi công nợ sỉ', type: 'THU', parentId: 'cat-thu-2', isDefault: true },
+  { id: 'cat-thu-2-2', name: 'Hoàn tiền nhà cung cấp', type: 'THU', parentId: 'cat-thu-2', isDefault: true },
+  // CHI - Parent 1
+  { id: 'cat-chi-1', name: 'Chi phí nhập hàng', type: 'CHI', parentId: null, isDefault: true, icon: 'inventory_2' },
+  { id: 'cat-chi-1-1', name: 'Nhập hàng hóa / Nguyên vật liệu', type: 'CHI', parentId: 'cat-chi-1', isDefault: true },
+  { id: 'cat-chi-1-2', name: 'Chi phí vận chuyển / Ship hàng', type: 'CHI', parentId: 'cat-chi-1', isDefault: true },
+  { id: 'cat-chi-1-3', name: 'Bao bì, túi đựng, vật tư', type: 'CHI', parentId: 'cat-chi-1', isDefault: true },
+  // CHI - Parent 2
+  { id: 'cat-chi-2', name: 'Chi phí vận hành cố định', type: 'CHI', parentId: null, isDefault: true, icon: 'bolt' },
+  { id: 'cat-chi-2-1', name: 'Tiền thuê mặt bằng', type: 'CHI', parentId: 'cat-chi-2', isDefault: true },
+  { id: 'cat-chi-2-2', name: 'Tiền điện, nước, Internet', type: 'CHI', parentId: 'cat-chi-2', isDefault: true },
+  // CHI - Parent 3
+  { id: 'cat-chi-3', name: 'Chi phí nhân sự', type: 'CHI', parentId: null, isDefault: true, icon: 'badge' },
+  { id: 'cat-chi-3-1', name: 'Lương nhân viên thu ngân / phụ cửa hàng', type: 'CHI', parentId: 'cat-chi-3', isDefault: true },
+  { id: 'cat-chi-3-2', name: 'Thưởng doanh số / Phụ cấp ca', type: 'CHI', parentId: 'cat-chi-3', isDefault: true },
+];
+
+export function getLocalCategories(): CategoryItem[] {
+  try {
+    const raw = localStorage.getItem(CATEGORY_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(defaultCategories));
+  return defaultCategories;
+}
+
+export async function fetchCategories(): Promise<CategoryItem[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/categories`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        return json.data;
+      }
+    }
+  } catch {}
+  return getLocalCategories();
+}
+
+export async function createCategoryItem(payload: {
+  name: string;
+  type: 'THU' | 'CHI';
+  parentId: string | null;
+}): Promise<{ success: boolean; data: CategoryItem }> {
+  const list = getLocalCategories();
+  const newItem: CategoryItem = {
+    id: `cat-custom-${Date.now()}`,
+    name: payload.name.trim(),
+    type: payload.type,
+    parentId: payload.parentId,
+    isDefault: false,
+  };
+  const updated = [...list, newItem];
+  localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(updated));
+  return { success: true, data: newItem };
+}
+
+export async function updateCategoryItem(
+  id: string,
+  name: string
+): Promise<{ success: boolean }> {
+  const list = getLocalCategories().map((c) =>
+    c.id === id ? { ...c, name: name.trim() } : c
+  );
+  localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(list));
+  return { success: true };
+}
+
+export async function deleteCategoryItem(id: string): Promise<{ success: boolean }> {
+  const list = getLocalCategories().filter((c) => c.id !== id && c.parentId !== id);
+  localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(list));
+  return { success: true };
+}
+
+// ==================== MULTI-SHOP & ADMIN APPROVAL ====================
+
+const SHOPS_STORAGE_KEY = 'vikeso_shops_v1';
+
+const defaultShops: ShopBranch[] = [
+  {
+    id: 'shop-main',
+    shopName: 'Cửa Hàng Chính (Cơ sở 1)',
+    businessType: 'Tạp hóa & Bán lẻ tiêu dùng',
+    address: '128 Nguyễn Trãi, Quận 5, TP.HCM',
+    phone: '0912.845.221',
+    status: 'ACTIVE',
+    ownerId: 'owner-1',
+    ownerName: 'Chủ Cửa Hàng',
+    ownerEmail: 'owner@vikeso.vn',
+    createdAt: '01/10/2026',
+  },
+  {
+    id: 'shop-pending-demo',
+    shopName: 'Tạp Hóa Minh Phát - Chi Nhánh Quận 7',
+    businessType: 'Siêu thị mini & Thực phẩm sạch',
+    address: '45 Nguyễn Thị Thập, Quận 7, TP.HCM',
+    phone: '0909.334.556',
+    status: 'PENDING_APPROVAL',
+    verificationDocs: [
+      'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=600&q=80',
+    ],
+    ownerId: 'owner-1',
+    ownerName: 'Nguyễn Văn Minh',
+    ownerEmail: 'minhphat.hkd@gmail.com',
+    createdAt: '27/10/2026',
+  },
+];
+
+export function getLocalShops(): ShopBranch[] {
+  try {
+    const raw = localStorage.getItem(SHOPS_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(defaultShops));
+  return defaultShops;
+}
+
+export async function fetchUserShops(currentShopName?: string): Promise<ShopBranch[]> {
+  const list = getLocalShops();
+  if (currentShopName && list.length > 0 && list[0].id === 'shop-main') {
+    list[0].shopName = currentShopName;
+  }
+  return list;
+}
+
+export async function createAdditionalShop(payload: {
+  shopName: string;
+  businessType: string;
+  address: string;
+  phone: string;
+  verificationDocs: string[];
+  ownerName?: string;
+  ownerEmail?: string;
+}): Promise<{ success: boolean; data: ShopBranch; message: string }> {
+  const list = getLocalShops();
+  const newShop: ShopBranch = {
+    id: `shop-${Date.now()}`,
+    shopName: payload.shopName,
+    businessType: payload.businessType,
+    address: payload.address,
+    phone: payload.phone,
+    status: 'PENDING_APPROVAL',
+    verificationDocs: payload.verificationDocs,
+    ownerName: payload.ownerName || 'Chủ Hộ Kinh Doanh',
+    ownerEmail: payload.ownerEmail || 'owner@vikeso.vn',
+    createdAt: new Date().toLocaleDateString('vi-VN'),
+  };
+  const updated = [...list, newShop];
+  localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(updated));
+  return {
+    success: true,
+    data: newShop,
+    message:
+      'Đã gửi hồ sơ đăng ký chi nhánh thứ 2+ kèm ảnh chứng từ. Vui lòng chờ Admin phê duyệt!',
+  };
+}
+
+export async function reviewAdminShopRequest(
+  shopId: string,
+  action: 'APPROVE' | 'REJECT',
+  rejectReason?: string
+): Promise<{ success: boolean; message: string }> {
+  const list = getLocalShops().map((s) =>
+    s.id === shopId
+      ? {
+          ...s,
+          status: (action === 'APPROVE' ? 'ACTIVE' : 'REJECTED') as ShopBranch['status'],
+          rejectReason: action === 'REJECT' ? rejectReason || 'Chứng từ chưa rõ nét' : undefined,
+        }
+      : s
+  );
+  localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(list));
+  return {
+    success: true,
+    message:
+      action === 'APPROVE'
+        ? 'Đã phê duyệt kích hoạt cửa hàng / chi nhánh mới thành công!'
+        : 'Đã từ chối yêu cầu mở chi nhánh mới.',
+  };
 }

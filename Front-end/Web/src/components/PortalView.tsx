@@ -12,6 +12,8 @@ import { OwnerCashflowLedger } from '../views/OwnerCashflowLedger';
 import { OwnerReports } from '../views/OwnerReports';
 import { OwnerTelegram } from '../views/OwnerTelegram';
 import { OwnerSettings } from '../views/OwnerSettings';
+import { OwnerCategoryManagement } from '../views/OwnerCategoryManagement';
+import { OwnerStaffManagement } from '../views/OwnerStaffManagement';
 import { AdminOverview } from '../views/AdminOverview';
 import { AdminFinancial } from '../views/AdminFinancial';
 import { AdminSettings } from '../views/AdminSettings';
@@ -110,7 +112,7 @@ export const PortalView: React.FC<PortalViewProps> = ({
           <div className="pt-2 flex gap-3 justify-center">
             <button
               onClick={onBackToLanding}
-              className="px-5 py-2.5 bg-[#ff4783] text-white text-xs font-bold rounded-xl hover:bg-[#e0326e] transition-colors cursor-pointer shadow-sm shadow-[#ff4783]/20"
+              className="px-5 py-2.5 bg-[#d6155f] text-white text-xs font-bold rounded-xl hover:bg-[#b01755] transition-colors cursor-pointer shadow-xs"
             >
               Về Trang Chủ VikeSo
             </button>
@@ -123,19 +125,19 @@ export const PortalView: React.FC<PortalViewProps> = ({
   // Guard 2: 403 screen if an ADMIN attempts to access owner private ledger
   if (initialPortal === 'owner' && userRole === 'ADMIN') {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-center text-white">
-        <div className="max-w-md p-8 bg-slate-800/90 rounded-3xl shadow-2xl border border-indigo-500/30 space-y-4 backdrop-blur-md">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shadow-xs">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center text-slate-900">
+        <div className="max-w-md p-8 bg-white rounded-3xl shadow-xl border border-[#ffd6e4] space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-[#fff0f5] text-[#b01755] border border-[#ffd6e4] flex items-center justify-center shadow-xs">
             <span className="material-symbols-outlined text-[32px]">security</span>
           </div>
-          <h2 className="text-xl font-bold text-white">403 - Giới Hạn Thẩm Quyền Quản Trị</h2>
-          <p className="text-sm text-slate-300 leading-relaxed">
+          <h2 className="text-xl font-bold text-slate-900">403 - Giới Hạn Thẩm Quyền Quản Trị</h2>
+          <p className="text-sm text-slate-600 leading-relaxed">
             Tài khoản <strong>ADMIN QUẢN TRỊ ({currentUser?.email})</strong> chỉ có thẩm quyền điều phối hạ tầng, thanh toán cước và theo dõi tổng tải. Nhằm tuân thủ chuẩn mực bảo mật Fiduciary, Admin không can thiệp trực tiếp vào sổ quỹ cá nhân của từng hộ kinh doanh.
           </p>
           <div className="pt-2 flex gap-3 justify-center">
             <button
               onClick={onBackToLanding}
-              className="px-5 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-500 transition-colors cursor-pointer shadow-md shadow-indigo-600/30"
+              className="px-5 py-2.5 bg-[#d6155f] text-white text-xs font-bold rounded-xl hover:bg-[#b01755] transition-colors cursor-pointer shadow-xs"
             >
               Về Trang Chủ VikeSo
             </button>
@@ -171,7 +173,7 @@ export const PortalView: React.FC<PortalViewProps> = ({
 
   return (
     <div className={`min-h-screen bg-slate-50 text-slate-900 antialiased font-sans ${
-      portal === 'owner' ? 'selection:bg-[#ff4783]/20 selection:text-[#ff4783]' : 'selection:bg-indigo-100 selection:text-indigo-800'
+      portal === 'owner' ? 'selection:bg-[#ff4783]/20 selection:text-[#ff4783]' : 'selection:bg-[#fff0f5] selection:text-[#b01755]'
     }`}>
       {/* Animated Fixed Sidebar */}
       <PortalSidebar
@@ -224,7 +226,7 @@ export const PortalView: React.FC<PortalViewProps> = ({
               )}
 
               {/* Financial & Tax Compliance Reporting */}
-              {ownerTab === 'bao-cao-xuat-du-lieu' && (
+              {ownerTab === 'bao-cao-xuat-du-lieu' && userRole !== 'STAFF' && (
                 <OwnerReports
                   currentUser={activeUser}
                   onExportPdf={handlePrintReport}
@@ -232,11 +234,25 @@ export const PortalView: React.FC<PortalViewProps> = ({
                 />
               )}
 
+              {/* Business Parent-Child Category Management */}
+              {ownerTab === 'quan-ly-danh-muc' && userRole !== 'STAFF' && (
+                <OwnerCategoryManagement currentUser={activeUser} />
+              )}
+
+              {/* Staff Management & Instant Lock */}
+              {ownerTab === 'quan-ly-nhan-vien' && userRole !== 'STAFF' && (
+                <OwnerStaffManagement currentUser={activeUser} />
+              )}
+
               {/* Automated Telegram Bot Dispatch & Live Simulator */}
-              {ownerTab === 'bao-cao-tu-dong-telegram' && <OwnerTelegram currentUser={activeUser} />}
+              {ownerTab === 'bao-cao-tu-dong-telegram' && userRole !== 'STAFF' && (
+                <OwnerTelegram currentUser={activeUser} />
+              )}
 
               {/* Store & Hardware POS Settings */}
-              {ownerTab === 'cai-dat-cua-hang' && <OwnerSettings currentUser={activeUser} onLogout={onLogout} />}
+              {ownerTab === 'cai-dat-cua-hang' && userRole !== 'STAFF' && (
+                <OwnerSettings currentUser={activeUser} onLogout={onLogout} />
+              )}
             </>
           ) : (
             <>
@@ -245,9 +261,6 @@ export const PortalView: React.FC<PortalViewProps> = ({
 
               {/* Financial & Subscription MRR Growth */}
               {adminTab === 'bao-cao-tai-chinh-doanh-thu' && <AdminFinancial currentUser={activeUser} />}
-
-              {/* Telegram Engine & Channel Dispatch */}
-              {adminTab === 'cau-hinh-telegram-bot' && <OwnerTelegram currentUser={activeUser} />}
 
               {/* System & AI Server Parameters */}
               {adminTab === 'cai-dat-he-thong' && <AdminSettings currentUser={activeUser} />}
@@ -274,16 +287,16 @@ export const PortalView: React.FC<PortalViewProps> = ({
 
       {/* Modern High-End Floating Toast */}
       {globalToast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900/95 text-white shadow-2xl border border-slate-700 backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl bg-white text-slate-900 shadow-2xl border-2 border-[#ff4783]/30 backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 duration-200">
           {globalToast.type === 'error' ? (
-            <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+            <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0" />
           ) : (
-            <CheckCircle2 className="w-5 h-5 text-[#d0f81b] shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-[#ff4783] shrink-0" />
           )}
-          <span className="font-semibold text-xs leading-snug">{globalToast.message}</span>
+          <span className="font-bold text-xs leading-snug text-slate-900">{globalToast.message}</span>
           <button
             onClick={() => setGlobalToast(null)}
-            className="p-1 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+            className="p-1 text-slate-400 hover:text-slate-900 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
