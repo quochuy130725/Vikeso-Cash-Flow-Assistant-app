@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { fetchUserTransactions, createManualTransaction } from '../services/api';
-import { Transaction } from '../types';
+import { fetchUserTransactions, createManualTransaction, getLocalCategories } from '../services/api';
+import { Transaction, CategoryItem } from '../types';
 import { UserAccount } from '../components/AuthModal';
 
 interface OwnerCashflowLedgerProps {
@@ -18,12 +18,15 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
 }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [customCategories, setCustomCategories] = useState<CategoryItem[]>(() => getLocalCategories());
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'in' | 'out' | 'merged'>('all');
   const [timeChip, setTimeChip] = useState<'all' | 'today' | 'yesterday' | '7days' | 'month'>('all');
+  const [selectedMonth, setSelectedMonth] = useState<number>(() => new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
+  const [filterByMonthPicker, setFilterByMonthPicker] = useState<boolean>(false);
   const [selectedChartDate, setSelectedChartDate] = useState<string | null>(null);
   const [selectedChartCategory, setSelectedChartCategory] = useState<string | null>(null);
 
@@ -34,7 +37,8 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
   // Manual Entry Modal
   const [manualModalOpen, setManualModalOpen] = useState(false);
   const [manualType, setManualType] = useState<'THU' | 'CHI'>('THU');
-  const [manualCategory, setManualCategory] = useState('Hoa Don Le');
+  const [manualPaymentMethod, setManualPaymentMethod] = useState<'CASH' | 'TRANSFER' | 'POS'>('CASH');
+  const [manualCategory, setManualCategory] = useState('Bán lẻ tại quầy');
   const [manualAmount, setManualAmount] = useState('');
   const [manualReason, setManualReason] = useState('');
   const [manualSubmitting, setManualSubmitting] = useState(false);
@@ -63,11 +67,11 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
     try {
       const data = await fetchUserTransactions(currentUser?.id);
       setTransactions(data);
+      setCustomCategories(getLocalCategories());
     } catch (err) {
       console.error('Lỗi tải giao dịch:', err);
     } finally {
       setIsLoading(false);
-      setIsRefreshing(false);
     }
   };
 
@@ -259,6 +263,19 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
   // Filtered dataset
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => {
+      // Role isolation: STAFF only sees their own shift transactions
+      if (currentUser?.role === 'STAFF' && tx.createdBy && currentUser?.id && tx.createdBy !== currentUser.id) {
+        return false;
+      }
+
+      // Month/Year Picker Filter (MoMo style)
+      if (filterByMonthPicker && tx.rawDate) {
+        const d = new Date(tx.rawDate);
+        if (d.getMonth() + 1 !== selectedMonth || d.getFullYear() !== selectedYear) {
+          return false;
+        }
+      }
+
       // Type Filter
       if (typeFilter !== 'all') {
         if (typeFilter === 'in' && tx.type !== 'in') return false;
@@ -296,7 +313,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
 
       return true;
     });
-  }, [transactions, typeFilter, timeChip, selectedChartDate, selectedChartCategory, searchTerm]);
+  }, [transactions, currentUser, filterByMonthPicker, selectedMonth, selectedYear, typeFilter, timeChip, selectedChartDate, selectedChartCategory, searchTerm]);
 
   // Paginated list
   const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / pageSize));
@@ -320,9 +337,17 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
 
     setManualSubmitting(true);
     try {
+      const selectedCatObj = customCategories.find((c) => c.name === manualCategory);
+      const parentCatObj = selectedCatObj?.parentId
+        ? customCategories.find((p) => p.id === selectedCatObj.parentId)
+        : null;
+
       const res = await createManualTransaction({
         userId: currentUser?.id,
-        category: manualCategory,
+        category: manualPaymentMethod === 'TRANSFER' ? 'Chuyen Khoan' : manualPaymentMethod === 'POS' ? 'POS Ket Ca' : 'Hoa Don Le',
+        parentCategory: parentCatObj?.name || (manualType === 'THU' ? 'Doanh thu bán hàng' : 'Chi phí nhập hàng'),
+        subCategory: manualCategory,
+        paymentMethod: manualPaymentMethod,
         transactionType: manualType,
         totalAmount: numAmount,
         reason: manualReason.trim(),
@@ -336,7 +361,6 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
         setManualAmount('');
         setManualReason('');
         setManualModalOpen(false);
-        // Refresh list
         loadData(true);
       } else {
         showToast(res.message || 'Không thể ghi nhận giao dịch', 'error');
@@ -355,11 +379,15 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Sổ Quỹ Thu Chi &amp; Dòng Tiền
+              {currentUser?.role === 'STAFF' ? 'Sổ Thu Chi Ca Làm Việc' : 'Sổ Quỹ Thu Chi & Dòng Tiền'}
             </h1>
             <span className="bg-[#d0f81b] text-slate-950 text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5 border border-[#bde412] shadow-2xs uppercase">
-              <span className="w-2 h-2 rounded-full bg-[#ff4783] animate-pulse"></span>
-              {currentUser?.subscriptionPlan === 'PRO' ? 'Gói Chuyên Nghiệp (PRO)' : 'Gói Cơ Bản (FREE)'}
+              <span className="w-2 h-2 rounded-full bg-[#ff4783]"></span>
+              {currentUser?.role === 'STAFF'
+                ? 'Nhân Viên Thu Ngân (STAFF)'
+                : currentUser?.subscriptionPlan === 'PRO'
+                  ? 'Gói Chuyên Nghiệp (PRO)'
+                  : 'Gói Cơ Bản (FREE)'}
             </span>
           </div>
           <p className="text-sm text-slate-600 flex items-center gap-2 flex-wrap">
@@ -367,45 +395,79 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
               {currentUser?.shopName || currentUser?.storeName || 'Cửa Hàng Hộ Kinh Doanh'}
             </span>
             <span className="text-slate-300">•</span>
-            <span className="text-slate-500 text-xs">Chủ hộ: {currentUser?.name || 'Chủ Cửa Hàng'}</span>
+            <span className="text-slate-500 text-xs">
+              {currentUser?.role === 'STAFF' ? 'Thu ngân:' : 'Chủ hộ:'} {currentUser?.name || 'Chủ Cửa Hàng'}
+            </span>
             <span className="text-slate-300">•</span>
-            <span className="text-emerald-700 font-semibold text-xs flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              Đồng bộ dữ liệu thời gian thực
+            <span className="text-slate-700 font-semibold text-xs flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#d0f81b] border border-slate-900"></span>
+              Đồng bộ tự động thời gian thực (Chốt sổ 22:00)
             </span>
           </p>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons (Manual Refresh button removed per FE-WEB-03) */}
         <div className="flex items-center gap-2.5 self-start lg:self-auto flex-wrap">
-          <button
-            onClick={() => {
-              setIsRefreshing(true);
-              loadData(true);
-            }}
-            disabled={isRefreshing}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-200 shadow-xs transition-all cursor-pointer disabled:opacity-50"
-            type="button"
-            title="Làm mới sổ quỹ"
-          >
-            <span className={`material-symbols-outlined text-[16px] text-slate-500 ${isRefreshing ? 'animate-spin' : ''}`}>
-              refresh
-            </span>
-            <span>Làm mới</span>
-          </button>
+          {/* MoMo-style Month/Year Selector (FE-WEB-10) */}
+          <div className="inline-flex items-center gap-1 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 shadow-xs text-xs font-bold text-slate-800">
+            <button
+              type="button"
+              onClick={() => {
+                setFilterByMonthPicker(true);
+                if (selectedMonth === 1) {
+                  setSelectedMonth(12);
+                  setSelectedYear((y) => y - 1);
+                } else {
+                  setSelectedMonth((m) => m - 1);
+                }
+              }}
+              className="p-0.5 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-900 cursor-pointer"
+              title="Tháng trước"
+            >
+              <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterByMonthPicker((v) => !v)}
+              className={`px-2 py-0.5 rounded-lg transition-colors cursor-pointer ${
+                filterByMonthPicker ? 'bg-[#d6155f] text-white' : 'hover:bg-slate-100 text-slate-800'
+              }`}
+              title="Bấm để bật/tắt lọc theo tháng"
+            >
+              Tháng {String(selectedMonth).padStart(2, '0')}/{selectedYear}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFilterByMonthPicker(true);
+                if (selectedMonth === 12) {
+                  setSelectedMonth(1);
+                  setSelectedYear((y) => y + 1);
+                } else {
+                  setSelectedMonth((m) => m + 1);
+                }
+              }}
+              className="p-0.5 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-900 cursor-pointer"
+              title="Tháng sau"
+            >
+              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+            </button>
+          </div>
 
-          <button
-            onClick={onDownloadExcel}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-200 shadow-xs transition-all cursor-pointer"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[16px] text-emerald-600">file_download</span>
-            <span>Xuất Excel TT88</span>
-          </button>
+          {currentUser?.role !== 'STAFF' && (
+            <button
+              onClick={onDownloadExcel}
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold border border-slate-200 shadow-xs transition-all cursor-pointer"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[16px] text-[#0f172a]">file_download</span>
+              <span>Xuất Excel TT88</span>
+            </button>
+          )}
 
           <button
             onClick={() => setManualModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black shadow-sm shadow-[#ff4783]/20 hover:shadow transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black shadow-xs transition-all cursor-pointer"
             type="button"
           >
             <span className="material-symbols-outlined text-[18px]">add_circle</span>
@@ -454,19 +516,19 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
       {/* 2. Three Real High-Contrast Cashflow KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Card 1: Tiền Vào (Inflow) */}
-        <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 flex flex-col justify-between gap-4">
+        <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col justify-between gap-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               Tổng tiền vào (Thu)
             </span>
-            <span className="w-2 h-2 rounded-full bg-[#ff4783]"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ff4783]"></span>
           </div>
           <div>
-            <div className="text-3xl font-extrabold text-[#ff4783] tracking-tight font-tabular">
+            <div className="text-3xl font-extrabold text-[#ff4783] tracking-tight font-mono tabular-nums">
               +{totalIn.toLocaleString('vi-VN')} <span className="text-sm font-semibold text-[#ff4783]">đ</span>
             </div>
             <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
-              <span className="font-bold text-slate-900 bg-pink-50 text-[#ff4783] px-2 py-0.5 rounded-md border border-pink-200">
+              <span className="font-bold text-[#ff4783] bg-[#ff4783]/10 px-2 py-0.5 rounded-md border border-[#ff4783]/20 tabular-nums">
                 {countIn} lượt thu
               </span>
               <span>Bán lẻ, chuyển khoản VietQR</span>
@@ -478,19 +540,19 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
         </div>
 
         {/* Card 2: Tiền Ra (Outflow) */}
-        <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 flex flex-col justify-between gap-4">
+        <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col justify-between gap-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               Tổng tiền ra (Chi)
             </span>
-            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
           </div>
           <div>
-            <div className="text-3xl font-extrabold text-slate-900 tracking-tight font-tabular">
+            <div className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono tabular-nums">
               -{totalOut.toLocaleString('vi-VN')} <span className="text-sm font-semibold text-slate-500">đ</span>
             </div>
             <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
-              <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+              <span className="font-bold text-[#b01755] bg-[#fff0f5] px-2 py-0.5 rounded-md border border-[#ffd6e4] tabular-nums">
                 {countOut} lượt chi
               </span>
               <span>Tiền hàng sỉ, vận hành, điện nước</span>
@@ -498,27 +560,27 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
           </div>
           <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
             <div
-              className="bg-slate-700 h-full rounded-full"
+              className="bg-rose-400 h-full rounded-full"
               style={{ width: totalIn > 0 ? `${Math.min(100, Math.round((totalOut / totalIn) * 100))}%` : '0%' }}
             ></div>
           </div>
         </div>
 
         {/* Card 3: Dòng Tiền Ròng / Tồn Quỹ (Net Surplus) */}
-        <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 flex flex-col justify-between gap-4">
+        <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col justify-between gap-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               Dòng tiền thực thu (Tồn quỹ)
             </span>
-            <span className="w-2 h-2 rounded-full bg-[#d0f81b]"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#d0f81b] border border-[#bde412]"></span>
           </div>
           <div>
-            <div className="text-3xl font-extrabold text-slate-900 tracking-tight font-tabular">
+            <div className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono tabular-nums">
               {netCashflow >= 0 ? '+' : '-'}{Math.abs(netCashflow).toLocaleString('vi-VN')}{' '}
               <span className="text-sm font-semibold text-slate-500">đ</span>
             </div>
             <div className="flex items-center gap-2 mt-2 flex-wrap text-xs">
-              <span className="bg-[#d0f81b] text-slate-950 px-2 py-0.5 rounded-md font-black border border-[#bde412]">
+              <span className="bg-[#d0f81b] text-slate-950 px-2 py-0.5 rounded-md font-black border border-[#bde412] tabular-nums">
                 Tỷ lệ ròng: {inRatio}%
               </span>
               <span className="text-slate-600 font-semibold">
@@ -528,7 +590,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
           </div>
           <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
             <div
-              className="bg-[#0f172a] h-full rounded-full"
+              className="bg-[#d0f81b] h-full rounded-full"
               style={{ width: `${Math.max(0, Math.min(100, inRatio))}%` }}
             ></div>
           </div>
@@ -544,7 +606,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
             <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
               <div>
                 <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[20px] text-slate-700">bar_chart</span>
+                  <span className="material-symbols-outlined text-[20px] text-[#ff4783]">bar_chart</span>
                   <span>Thu &amp; Chi Theo Ngày</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -559,7 +621,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                   <span>Thu</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-slate-700">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-slate-900"></span>
+                  <span className="w-2.5 h-2.5 rounded-sm bg-[#ffd6e4] border border-[#ff4783]/40"></span>
                   <span>Chi</span>
                 </span>
               </div>
@@ -584,14 +646,14 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                     title={`${day.label}: Thu +${day.inflow.toLocaleString('vi-VN')} đ | Chi -${day.outflow.toLocaleString('vi-VN')} đ`}
                     className={`flex-1 flex flex-col items-center justify-end h-full p-1 rounded-xl transition-all cursor-pointer relative group ${
                       isSelected
-                        ? 'bg-slate-100 ring-2 ring-slate-900'
+                        ? 'bg-[#fff0f5] ring-2 ring-[#ff4783]'
                         : 'hover:bg-slate-50'
                     }`}
                   >
                     {/* Deficit Alert Tag if Outflow > Inflow */}
                     {hasDeficit && (
-                      <div className="absolute -top-3 z-10">
-                        <span className="text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded shadow-2xs whitespace-nowrap">
+                      <div className="absolute -top-3.5 z-10">
+                        <span className="text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded shadow-2xs whitespace-nowrap">
                           -{formatShortAmount(day.deficit)}
                         </span>
                       </div>
@@ -613,16 +675,16 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                       <div className="w-1/2 max-w-[14px] flex flex-col justify-end h-full">
                         <div
                           style={{ height: `${outHeight}%` }}
-                          className={`w-full bg-slate-900 rounded-t-sm transition-all duration-300 ${
-                            outHeight === 0 ? 'opacity-0' : 'opacity-100 group-hover:bg-slate-800'
+                          className={`w-full bg-[#ffd6e4] border border-[#ff4783]/30 rounded-t-sm transition-all duration-300 ${
+                            outHeight === 0 ? 'opacity-0' : 'opacity-100 group-hover:bg-pink-200'
                           }`}
                         ></div>
                       </div>
                     </div>
 
                     {/* Day label */}
-                    <span className={`text-[11px] font-bold mt-2 truncate max-w-full ${
-                      isSelected ? 'text-slate-950 font-black' : 'text-slate-600'
+                    <span className={`text-xs font-bold mt-2 truncate max-w-full ${
+                      isSelected ? 'text-[#b01755] font-black' : 'text-slate-600'
                     }`}>
                       {day.label}
                     </span>
@@ -635,8 +697,8 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
           {/* Footer Status */}
           <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
             {dailyCashflowData.deficitDaysCount > 0 ? (
-              <span className="text-rose-600 font-bold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+              <span className="text-rose-700 font-bold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-600"></span>
                 <span>Có {dailyCashflowData.deficitDaysCount} ngày Chi vượt Thu (lớn nhất -{dailyCashflowData.maxDeficit.toLocaleString('vi-VN')} đ)</span>
               </span>
             ) : (
@@ -667,7 +729,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
             <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
               <div>
                 <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[20px] text-slate-700">pie_chart</span>
+                  <span className="material-symbols-outlined text-[20px] text-[#ff4783]">pie_chart</span>
                   <span>Cơ Cấu Tiền Chi Ra</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -675,7 +737,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                 </p>
               </div>
 
-              <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 text-xs font-bold font-mono">
+              <span className="px-2.5 py-1 rounded-lg bg-[#fff0f5] text-[#b01755] border border-[#ffd6e4] text-xs font-bold font-mono">
                 Tổng: -{topExpensesData.totalExpenseSum.toLocaleString('vi-VN')} đ
               </span>
             </div>
@@ -700,14 +762,14 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                       }}
                       className={`p-2 rounded-xl transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-slate-100 ring-2 ring-slate-900'
+                          ? 'bg-[#fff0f5] ring-2 ring-[#ff4783]'
                           : 'hover:bg-slate-50'
                       }`}
                     >
                       <div className="flex items-center justify-between text-xs mb-1.5">
                         <span className="font-bold text-slate-900 flex items-center gap-2">
-                          <span className={`w-4 h-4 rounded text-[10px] font-black flex items-center justify-center ${
-                            idx === 0 ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-700'
+                          <span className={`w-5 h-5 rounded text-xs font-black flex items-center justify-center shrink-0 ${
+                            idx === 0 ? 'bg-[#d6155f] text-white' : 'bg-[#fff0f5] text-[#b01755] border border-[#ffd6e4]'
                           }`}>
                             {idx + 1}
                           </span>
@@ -715,7 +777,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                         </span>
                         <div className="flex items-center gap-2 font-mono">
                           <span className="font-extrabold text-slate-900">{item.percent}%</span>
-                          <span className="text-slate-400 text-[11px]">
+                          <span className="text-slate-500 text-xs">
                             (-{item.amount.toLocaleString('vi-VN')} đ)
                           </span>
                         </div>
@@ -726,7 +788,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                         <div
                           style={{ width: `${Math.max(3, item.percent)}%` }}
                           className={`h-full rounded-full transition-all duration-500 ${
-                            idx === 0 ? 'bg-slate-900' : 'bg-slate-600'
+                            idx === 0 ? 'bg-[#ff4783]' : 'bg-rose-300'
                           }`}
                         ></div>
                       </div>
@@ -767,44 +829,43 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
       </div>
 
       {/* 3. Master Ledger Table Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
-        {/* Table Title Header */}
-        <div className="p-5 sm:p-6 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ff4783]"></span>
-              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
-                Nhật Ký Giao Dịch Sổ Quỹ Tiền Mặt
-              </h2>
+      <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 overflow-hidden">
+        {/* Table Title Header & Toolbar unified flat layout */}
+        <div className="p-5 sm:p-6 pb-4 border-b border-slate-100 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ff4783]"></span>
+                <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
+                  Nhật Ký Giao Dịch Sổ Quỹ Tiền Mặt
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 max-w-sm">
+                Chi tiết các khoản tiền vào, tiền ra và biên lai thanh toán đã đối soát.
+              </p>
             </div>
-            <p className="text-xs text-slate-500">
-              Chi tiết các khoản tiền vào, tiền ra và biên lai thanh toán đã được đối soát thực tế.
-            </p>
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#fff0f5] text-[#b01755] text-xs font-bold border border-[#ffd6e4]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
+                {filteredTransactions.length} giao dịch hiển thị
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
-              {filteredTransactions.length} giao dịch hiển thị
-            </span>
-          </div>
-        </div>
 
-        {/* Table Filter & Search Toolbar */}
-        <div className="p-4 sm:p-5 bg-slate-50/70 border-b border-slate-200/60 space-y-3.5">
           {/* Active Chart Filter Banner */}
           {(selectedChartDate || selectedChartCategory) && (
-            <div className="flex items-center gap-2 px-3.5 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold shadow-xs flex-wrap">
-              <span className="text-slate-400 flex items-center gap-1">
-                <span className="material-symbols-outlined text-[16px] text-[#d0f81b]">filter_alt</span>
+            <div className="flex items-center gap-2 px-3.5 py-2 bg-[#fff0f5] text-slate-900 border border-[#ffd6e4] rounded-xl text-xs font-semibold shadow-xs flex-wrap">
+              <span className="text-[#b01755] flex items-center gap-1 font-bold">
+                <span className="material-symbols-outlined text-[16px] text-[#ff4783]">filter_alt</span>
                 Đang lọc từ biểu đồ:
               </span>
               {selectedChartDate && (
-                <span className="bg-white/20 px-2 py-0.5 rounded font-bold">
+                <span className="bg-white border border-[#ffd6e4] text-slate-900 px-2 py-0.5 rounded font-bold">
                   Ngày: {selectedChartDate}
                 </span>
               )}
               {selectedChartCategory && (
-                <span className="bg-white/20 px-2 py-0.5 rounded font-bold">
+                <span className="bg-white border border-[#ffd6e4] text-slate-900 px-2 py-0.5 rounded font-bold">
                   Hạng mục: {selectedChartCategory}
                 </span>
               )}
@@ -814,7 +875,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                   setSelectedChartCategory(null);
                   setCurrentPage(1);
                 }}
-                className="ml-auto text-[#d0f81b] hover:underline font-bold cursor-pointer"
+                className="ml-auto text-[#b01755] hover:underline font-bold cursor-pointer"
               >
                 ✕ Xóa lọc biểu đồ
               </button>
@@ -850,7 +911,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                 onClick={() => { setTimeChip('all'); setCurrentPage(1); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                   timeChip === 'all'
-                    ? 'bg-slate-900 text-white font-bold shadow-xs'
+                    ? 'bg-[#d6155f] text-white font-bold shadow-xs'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
                 type="button"
@@ -861,7 +922,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                 onClick={() => { setTimeChip('today'); setCurrentPage(1); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                   timeChip === 'today'
-                    ? 'bg-slate-900 text-white font-bold shadow-xs'
+                    ? 'bg-[#d6155f] text-white font-bold shadow-xs'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
                 type="button"
@@ -872,7 +933,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                 onClick={() => { setTimeChip('yesterday'); setCurrentPage(1); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                   timeChip === 'yesterday'
-                    ? 'bg-slate-900 text-white font-bold shadow-xs'
+                    ? 'bg-[#d6155f] text-white font-bold shadow-xs'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
                 type="button"
@@ -883,13 +944,13 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
           </div>
 
           {/* Type Filter Pills & Fast Counter */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2 border-t border-slate-200/60">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => { setTypeFilter('all'); setCurrentPage(1); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   typeFilter === 'all'
-                    ? 'bg-slate-900 text-white font-bold shadow-xs'
+                    ? 'bg-[#fff0f5] text-[#b01755] border border-[#ffd6e4] font-bold shadow-xs'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
                 type="button"
@@ -901,7 +962,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                 onClick={() => { setTypeFilter('in'); setCurrentPage(1); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                   typeFilter === 'in'
-                    ? 'bg-[#ff4783] text-white font-black shadow-xs'
+                    ? 'bg-[#d6155f] text-white font-black shadow-xs'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
                 type="button"
@@ -914,12 +975,12 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                 onClick={() => { setTypeFilter('out'); setCurrentPage(1); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                   typeFilter === 'out'
-                    ? 'bg-[#0f172a] text-white font-bold shadow-xs'
+                    ? 'bg-rose-50 text-rose-700 border border-rose-200 font-bold shadow-xs'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
                 type="button"
               >
-                <span className="w-2 h-2 rounded-full bg-slate-300"></span>
+                <span className="w-2 h-2 rounded-full bg-rose-400"></span>
                 <span>Tiền Ra (-{countOut})</span>
               </button>
 
@@ -928,7 +989,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                   onClick={() => { setTypeFilter('merged'); setCurrentPage(1); }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                     typeFilter === 'merged'
-                      ? 'bg-purple-900 text-white font-bold shadow-xs'
+                      ? 'bg-purple-50 text-purple-700 border border-purple-200 font-bold shadow-xs'
                       : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                   }`}
                   type="button"
@@ -1006,7 +1067,15 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                           <span className={`text-xs font-bold ${tx.isStrikethrough ? 'line-through text-slate-400' : 'text-slate-900'}`}>
                             {tx.time}
                           </span>
-                          <span className="text-[11px] text-slate-400">{tx.dateLabel}</span>
+                          <span className="text-xs text-slate-500">{tx.dateLabel}</span>
+                          {tx.isAfter22h && (
+                            <span
+                              className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold w-fit"
+                              title={`Hóa đơn phát sinh sau 22:00 được hạch toán sang ngày ${tx.accountingDate}`}
+                            >
+                              <span>Sau 22h → {tx.accountingDate?.slice(5)}</span>
+                            </span>
+                          )}
                         </div>
                       </td>
 
@@ -1017,13 +1086,18 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                             <span className={`font-semibold text-xs sm:text-sm ${tx.isStrikethrough ? 'line-through text-slate-400' : 'text-slate-900'}`}>
                               {tx.title}
                             </span>
+                            {tx.parentCategory && (
+                              <span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold">
+                                {tx.parentCategory}
+                              </span>
+                            )}
                             <span
-                              className={`text-[10px] px-2 py-0.5 rounded font-bold ${
+                              className={`text-xs px-2 py-0.5 rounded font-bold ${
                                 tx.type === 'out'
                                   ? 'bg-slate-100 text-slate-800 border border-slate-200'
                                   : tx.type === 'merged'
                                   ? 'bg-purple-50 text-purple-700 border border-purple-100'
-                                  : 'bg-[#ff4783]/10 text-[#ff4783] border border-[#ff4783]/20'
+                                  : 'bg-[#fff0f5] text-[#b01755] border border-[#ffd6e4]'
                               }`}
                             >
                               {tx.category}
@@ -1032,27 +1106,36 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                           {tx.details && tx.details !== tx.title && (
                             <span className="text-xs text-slate-500 line-clamp-1">{tx.details}</span>
                           )}
-                          {tx.refCode && (
-                            <span className="text-[10px] text-slate-400 font-mono">Mã: {tx.refCode}</span>
-                          )}
+                          <div className="flex items-center gap-2 text-xs text-slate-500 font-mono">
+                            {tx.refCode && <span>Mã: {tx.refCode}</span>}
+                            {tx.createdByName && <span>• Tạo bởi: {tx.createdByName}</span>}
+                          </div>
                         </div>
                       </td>
 
-                      {/* Method */}
+                       {/* Method */}
                       <td className="py-3.5 px-4 sm:px-5 align-top whitespace-nowrap">
-                        <span className="text-xs text-slate-700 font-medium">
-                          {tx.method || 'Nhập thủ công'}
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border ${
+                            tx.paymentMethod === 'TRANSFER'
+                              ? 'bg-[#fff0f5] text-[#b01755] border-[#ffd6e4]'
+                              : tx.paymentMethod === 'POS'
+                                ? 'bg-[#f7fee7] text-slate-900 border-[#bde412]'
+                                : 'bg-slate-100 text-slate-800 border-slate-200'
+                          }`}
+                        >
+                          <span>{tx.paymentMethodLabel || tx.method || 'Tiền mặt'}</span>
                         </span>
                       </td>
 
                       {/* Amount */}
                       <td className="py-3.5 px-4 sm:px-5 align-top text-right whitespace-nowrap">
                         <span
-                          className={`text-sm font-extrabold font-tabular ${
+                          className={`text-sm font-extrabold font-mono tabular-nums ${
                             tx.isStrikethrough
                               ? 'text-slate-400 line-through'
                               : isPositive
-                              ? 'text-[#ff4783]'
+                              ? 'text-[#b01755]'
                               : 'text-slate-900'
                           }`}
                         >
@@ -1063,13 +1146,13 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                       {/* Reconcile Status */}
                       <td className="py-3.5 px-4 sm:px-5 align-top text-center whitespace-nowrap">
                         {tx.type === 'merged' ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold border border-purple-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-                            <span>Đã gộp POS</span>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#fff0f5] text-[#b01755] text-xs font-bold border border-[#ffd6e4]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
+                            <span>Đã gộp POS 2 chiều</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold border border-emerald-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#d0f81b]/35 text-slate-950 text-xs font-black border border-[#bde412]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
                             <span>Đã đối soát</span>
                           </span>
                         )}
@@ -1084,7 +1167,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
 
         {/* Pagination Toolbar */}
         {totalPages > 1 && (
-          <div className="p-3.5 px-5 bg-slate-50/70 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
+          <div className="p-3.5 px-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <span>
               Trang <strong className="text-slate-900">{currentPage}</strong> / {totalPages}
             </span>
@@ -1156,7 +1239,7 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                     onClick={() => setManualType('CHI')}
                     className={`py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer border ${
                       manualType === 'CHI'
-                        ? 'bg-[#0f172a] text-white border-slate-900 shadow-xs'
+                        ? 'bg-rose-50 text-rose-700 border-rose-300 shadow-xs'
                         : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-200'
                     }`}
                   >
@@ -1190,10 +1273,37 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                 </div>
               </div>
 
-              {/* Category */}
+              {/* Payment Method */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Hình thức thanh toán *
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { code: 'CASH' as const, label: 'Tiền mặt' },
+                    { code: 'TRANSFER' as const, label: 'Chuyển khoản QR' },
+                    { code: 'POS' as const, label: 'Thẻ POS' },
+                  ].map((pm) => (
+                    <button
+                      key={pm.code}
+                      type="button"
+                      onClick={() => setManualPaymentMethod(pm.code)}
+                      className={`py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                        manualPaymentMethod === pm.code
+                          ? 'bg-[#d0f81b] text-slate-950 border-[#bde412] font-black shadow-2xs'
+                          : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-200'
+                      }`}
+                    >
+                      {pm.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category (Parent - Child from Category Management) */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="manual_category">
-                  Danh mục phân loại *
+                  Danh mục kinh doanh (Cha – Con) *
                 </label>
                 <select
                   id="manual_category"
@@ -1201,11 +1311,19 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
                   onChange={(e) => setManualCategory(e.target.value)}
                   className="w-full h-10 px-3 bg-slate-50 rounded-xl text-slate-900 text-xs font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all cursor-pointer"
                 >
-                  <option value="Hoa Don Le">Bán lẻ quầy / Hóa đơn bán lẻ</option>
-                  <option value="Chuyen Khoan">Chuyển khoản VietQR</option>
-                  <option value="POS Ket Ca">Kết ca máy tính tiền POS</option>
-                  <option value="So Tay">Sổ tay thu chi viết tay</option>
-                  <option value="Khac">Khoản thu chi khác</option>
+                  {customCategories
+                    .filter((p) => p.type === manualType && !p.parentId)
+                    .map((parent) => (
+                      <optgroup key={parent.id} label={`📁 ${parent.name}`}>
+                        {customCategories
+                          .filter((c) => c.parentId === parent.id)
+                          .map((child) => (
+                            <option key={child.id} value={child.name}>
+                              {child.name}
+                            </option>
+                          ))}
+                      </optgroup>
+                    ))}
                 </select>
               </div>
 
@@ -1252,13 +1370,13 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
         <div
           className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-bottom-2 ${
             toastMessage.type === 'error'
-              ? 'bg-rose-900 text-white border border-rose-700'
-              : 'bg-slate-900 text-white border border-slate-700'
+              ? 'bg-rose-50 text-rose-800 border-2 border-rose-200'
+              : 'bg-white text-slate-900 border-2 border-[#ffd6e4]'
           }`}
         >
           <span
             className={`material-symbols-outlined text-[18px] ${
-              toastMessage.type === 'error' ? 'text-rose-400' : 'text-[#d0f81b]'
+              toastMessage.type === 'error' ? 'text-rose-500' : 'text-[#ff4783]'
             }`}
           >
             {toastMessage.type === 'error' ? 'error' : 'check_circle'}

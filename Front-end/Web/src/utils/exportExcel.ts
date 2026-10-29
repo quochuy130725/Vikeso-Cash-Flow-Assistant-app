@@ -55,16 +55,38 @@ export async function exportTransactionsToExcel(
       totalIn += thuAmount;
       totalOut += chiAmount;
 
+      // Chuẩn hóa cột Hình Thức Thanh Toán: Chỉ hiển thị phương thức thanh toán thực tế (Tiền mặt, Chuyển khoản VietQR, Thẻ POS)
+      let paymentMethodText = t.paymentMethodLabel || '';
+      if (!paymentMethodText) {
+        const rawMethod = (t.paymentMethod || t.method || t.category || '').toLowerCase();
+        if (
+          rawMethod.includes('chuyen_khoan') ||
+          rawMethod.includes('chuyển khoản') ||
+          rawMethod.includes('vietqr') ||
+          rawMethod.includes('bank')
+        ) {
+          paymentMethodText = 'Chuyển khoản VietQR';
+        } else if (
+          rawMethod.includes('the_pos') ||
+          rawMethod.includes('pos') ||
+          rawMethod.includes('thẻ')
+        ) {
+          paymentMethodText = 'Thẻ POS';
+        } else {
+          paymentMethodText = 'Tiền mặt';
+        }
+      }
+
       return [
         index + 1,
         `"${t.id || t.refCode || ''}"`,
-        `"${t.dateLabel || t.rawDate || ''}"`,
+        `"${t.accountingDate || t.dateLabel || t.rawDate || ''}"`,
         `"${t.time || ''}"`,
         `"${(t.title || '').replace(/"/g, '""')} - ${(t.details || '').replace(/"/g, '""')}"`,
         `"${isThu ? 'Thu (Vào)' : isChi ? 'Chi (Ra)' : 'Gộp ca'}"`,
         thuAmount,
         chiAmount,
-        `"${(t.method || '').replace(/"/g, '""')}"`,
+        `"${paymentMethodText.replace(/"/g, '""')}"`,
         `"${(t.category || '').replace(/"/g, '""')}"`,
         `"${(t.statusText || t.status || '').replace(/"/g, '""')}"`,
       ].join(',');

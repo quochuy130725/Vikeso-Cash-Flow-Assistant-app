@@ -7,15 +7,15 @@ import {
   Store,
   LayoutDashboard,
   CircleDollarSign,
-  Bot,
   Settings2,
   Home,
   LogOut,
-  ArrowRightLeft,
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
   CheckCircle,
+  Users,
+  FolderTree,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -72,10 +72,10 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-base font-extrabold text-slate-900 leading-none tracking-tight truncate">
-                    Vike<span className={portal === 'owner' ? 'text-slate-950 bg-[#d0f81b] px-1 py-0.5 rounded font-black' : 'text-indigo-600'}>So</span>
+                    Vike<span className="text-slate-950 bg-[#d0f81b] px-1 py-0.5 rounded font-black border border-slate-900/15">So</span>
                   </span>
-                  <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-1 truncate">
-                    {portal === 'owner' ? 'Trợ lý dòng tiền' : 'VikeSo System Cockpit'}
+                  <span className="text-xs text-slate-600 font-bold tracking-wider uppercase mt-1 truncate">
+                    {portal === 'owner' ? 'Trợ lý dòng tiền' : 'Quản trị hệ thống'}
                   </span>
                 </div>
               </div>
@@ -111,27 +111,28 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
         {/* Space indicator / Current Workspace Label */}
         <div className={`pt-3 pb-2 transition-all ${isCollapsed ? 'px-2 flex justify-center' : 'px-4'}`}>
           {!isCollapsed ? (
-            <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/60">
+            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/80">
               <div className="flex items-center gap-2">
                 <span
                   className={`w-2.5 h-2.5 rounded-full ${
-                    portal === 'owner' ? 'bg-[#d0f81b] border border-slate-900/20 animate-pulse' : 'bg-indigo-600'
+                    portal === 'owner'
+                      ? 'bg-emerald-600 border border-emerald-700/30'
+                      : 'bg-[#ff4783]'
                   }`}
                 ></span>
-                <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
                   {portal === 'owner' ? 'Không gian Chủ Hộ' : 'Không gian Quản Trị'}
                 </span>
               </div>
-              <span className="text-[10px] text-slate-400 font-medium">v4.2</span>
             </div>
           ) : (
             <div
-              title={portal === 'owner' ? 'Không gian Chủ Hộ (v4.2)' : 'Không gian Quản Trị (v4.2)'}
-              className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-center cursor-help"
+              title={portal === 'owner' ? 'Không gian Chủ Hộ' : 'Không gian Quản Trị'}
+              className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center cursor-help"
             >
               <span
                 className={`w-2.5 h-2.5 rounded-full ${
-                  portal === 'owner' ? 'bg-[#d0f81b] animate-pulse' : 'bg-indigo-600'
+                  portal === 'owner' ? 'bg-emerald-600' : 'bg-[#ff4783]'
                 }`}
               ></span>
             </div>
@@ -139,9 +140,9 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Navigation list */}
-        {portal === 'owner' ? (
+        {portal === 'owner' || portal === 'staff' ? (
           <nav className={`flex-1 py-2 space-y-1.5 transition-all ${isCollapsed ? 'px-2' : 'px-4'}`}>
-            {/* Tab 1 */}
+            {/* Tab 1: Sổ thu chi & Dòng tiền (Available for both OWNER & STAFF) */}
             <button
               onClick={() => setOwnerTab('so-thu-chi-dong-tien')}
               title={isCollapsed ? 'Sổ thu chi & Dòng tiền' : undefined}
@@ -156,86 +157,142 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <TrendingUp className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="truncate">Sổ thu chi &amp; Dòng tiền</span>}
+              {!isCollapsed && (
+                <span className="truncate">
+                  {userRole === 'STAFF' ? 'Sổ thu chi ca làm việc' : 'Sổ thu chi & Dòng tiền'}
+                </span>
+              )}
 
               {isCollapsed && (
-                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                   Sổ thu chi &amp; Dòng tiền
                 </span>
               )}
             </button>
 
-            {/* Tab 2 */}
-            <button
-              onClick={() => setOwnerTab('bao-cao-xuat-du-lieu')}
-              title={isCollapsed ? 'Báo cáo & Xuất dữ liệu' : undefined}
-              className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
-                isCollapsed
-                  ? 'justify-center p-3'
-                  : 'gap-3 px-3.5 py-2.5 text-left'
-              } ${
-                ownerTab === 'bao-cao-xuat-du-lieu'
-                  ? 'bg-[#d0f81b] text-slate-950 font-black shadow-sm border border-[#bde412]'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <FileSpreadsheet className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="truncate">Báo cáo &amp; Xuất dữ liệu</span>}
+            {userRole !== 'STAFF' && (
+              <>
+                {/* Tab 2: Báo cáo & Xuất dữ liệu */}
+                <button
+                  onClick={() => setOwnerTab('bao-cao-xuat-du-lieu')}
+                  title={isCollapsed ? 'Báo cáo & Xuất dữ liệu' : undefined}
+                  className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
+                    isCollapsed
+                      ? 'justify-center p-3'
+                      : 'gap-3 px-3.5 py-2.5 text-left'
+                  } ${
+                    ownerTab === 'bao-cao-xuat-du-lieu'
+                      ? 'bg-[#d0f81b] text-slate-950 font-black shadow-sm border border-[#bde412]'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <FileSpreadsheet className="w-5 h-5 shrink-0" />
+                  {!isCollapsed && <span className="truncate">Báo cáo &amp; Xuất dữ liệu</span>}
 
-              {isCollapsed && (
-                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  Báo cáo &amp; Xuất dữ liệu
-                </span>
-              )}
-            </button>
+                  {isCollapsed && (
+                    <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      Báo cáo &amp; Xuất dữ liệu
+                    </span>
+                  )}
+                </button>
 
-            {/* Tab 3 */}
-            <button
-              onClick={() => setOwnerTab('bao-cao-tu-dong-telegram')}
-              title={isCollapsed ? 'Báo cáo tự động Telegram' : undefined}
-              className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
-                isCollapsed
-                  ? 'justify-center p-3'
-                  : 'gap-3 px-3.5 py-2.5 text-left'
-              } ${
-                ownerTab === 'bao-cao-tu-dong-telegram'
-                  ? 'bg-[#d0f81b] text-slate-950 font-black shadow-sm border border-[#bde412]'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <Send className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="truncate">Báo cáo tự động Telegram</span>}
+                {/* Tab 3: Danh mục Thu - Chi (Cha - Con) */}
+                <button
+                  onClick={() => setOwnerTab('quan-ly-danh-muc')}
+                  title={isCollapsed ? 'Danh mục Thu - Chi (Cha - Con)' : undefined}
+                  className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
+                    isCollapsed
+                      ? 'justify-center p-3'
+                      : 'gap-3 px-3.5 py-2.5 text-left'
+                  } ${
+                    ownerTab === 'quan-ly-danh-muc'
+                      ? 'bg-[#d0f81b] text-slate-950 font-black shadow-sm border border-[#bde412]'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <FolderTree className="w-5 h-5 shrink-0" />
+                  {!isCollapsed && <span className="truncate">Danh mục Thu - Chi</span>}
 
-              {isCollapsed && (
-                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  Báo cáo tự động Telegram
-                </span>
-              )}
-            </button>
+                  {isCollapsed && (
+                    <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      Danh mục Thu - Chi
+                    </span>
+                  )}
+                </button>
 
-            {/* Tab 4 */}
-            <button
-              onClick={() => setOwnerTab('cai-dat-cua-hang')}
-              title={isCollapsed ? 'Cài đặt cửa hàng & Tài khoản' : undefined}
-              className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
-                isCollapsed
-                  ? 'justify-center p-3'
-                  : 'gap-3 px-3.5 py-2.5 text-left'
-              } ${
-                ownerTab === 'cai-dat-cua-hang'
-                  ? 'bg-[#d0f81b] text-slate-950 font-black shadow-sm border border-[#bde412]'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <Store className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="truncate">Cài đặt cửa hàng &amp; Tài khoản</span>}
+                {/* Tab 4: Quản lý nhân viên (STAFF) */}
+                <button
+                  onClick={() => setOwnerTab('quan-ly-nhan-vien')}
+                  title={isCollapsed ? 'Quản lý nhân viên (STAFF)' : undefined}
+                  className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
+                    isCollapsed
+                      ? 'justify-center p-3'
+                      : 'gap-3 px-3.5 py-2.5 text-left'
+                  } ${
+                    ownerTab === 'quan-ly-nhan-vien'
+                      ? 'bg-[#d0f81b] text-slate-950 font-black shadow-sm border border-[#bde412]'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <Users className="w-5 h-5 shrink-0" />
+                  {!isCollapsed && <span className="truncate">Quản lý nhân viên</span>}
 
-              {isCollapsed && (
-                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  Cài đặt cửa hàng &amp; Tài khoản
-                </span>
-              )}
-            </button>
+                  {isCollapsed && (
+                    <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      Quản lý nhân viên
+                    </span>
+                  )}
+                </button>
+
+                {/* Tab 5: Báo cáo tự động Telegram */}
+                <button
+                  onClick={() => setOwnerTab('bao-cao-tu-dong-telegram')}
+                  title={isCollapsed ? 'Báo cáo tự động Telegram' : undefined}
+                  className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
+                    isCollapsed
+                      ? 'justify-center p-3'
+                      : 'gap-3 px-3.5 py-2.5 text-left'
+                  } ${
+                    ownerTab === 'bao-cao-tu-dong-telegram'
+                      ? 'bg-[#d0f81b] text-slate-950 font-black shadow-sm border border-[#bde412]'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <Send className="w-5 h-5 shrink-0" />
+                  {!isCollapsed && <span className="truncate">Báo cáo tự động Telegram</span>}
+
+                  {isCollapsed && (
+                    <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      Báo cáo tự động Telegram
+                    </span>
+                  )}
+                </button>
+
+                {/* Tab 6: Cài đặt cửa hàng & Tài khoản */}
+                <button
+                  onClick={() => setOwnerTab('cai-dat-cua-hang')}
+                  title={isCollapsed ? 'Cài đặt cửa hàng & Tài khoản' : undefined}
+                  className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
+                    isCollapsed
+                      ? 'justify-center p-3'
+                      : 'gap-3 px-3.5 py-2.5 text-left'
+                  } ${
+                    ownerTab === 'cai-dat-cua-hang'
+                      ? 'bg-[#d0f81b] text-slate-950 font-black shadow-sm border border-[#bde412]'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <Store className="w-5 h-5 shrink-0" />
+                  {!isCollapsed && <span className="truncate">Cài đặt cửa hàng &amp; Tài khoản</span>}
+
+                  {isCollapsed && (
+                    <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      Cài đặt cửa hàng &amp; Tài khoản
+                    </span>
+                  )}
+                </button>
+              </>
+            )}
           </nav>
         ) : (
           <nav className={`flex-1 py-2 space-y-1.5 transition-all ${isCollapsed ? 'px-2' : 'px-4'}`}>
@@ -249,16 +306,16 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 adminTab === 'tong-quan-van-hanh'
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/25'
-                  : 'text-slate-600 hover:bg-indigo-50/70 hover:text-indigo-900'
+                  ? 'bg-[#fff0f5] text-[#ff4783] font-extrabold shadow-xs border border-[#ffd6e4]'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
-              <LayoutDashboard className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="truncate">Người dùng &amp; Vận hành</span>}
+              <LayoutDashboard className={`w-5 h-5 shrink-0 ${adminTab === 'tong-quan-van-hanh' ? 'text-[#ff4783]' : ''}`} />
+              {!isCollapsed && <span className="truncate">Người dùng &amp; Duyệt cửa hàng</span>}
 
               {isCollapsed && (
-                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  Người dùng &amp; Vận hành
+                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                  Người dùng &amp; Duyệt cửa hàng
                 </span>
               )}
             </button>
@@ -273,45 +330,21 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 adminTab === 'bao-cao-tai-chinh-doanh-thu'
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/25'
-                  : 'text-slate-600 hover:bg-indigo-50/70 hover:text-indigo-900'
+                  ? 'bg-[#fff0f5] text-[#ff4783] font-extrabold shadow-xs border border-[#ffd6e4]'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
-              <CircleDollarSign className="w-5 h-5 shrink-0" />
+              <CircleDollarSign className={`w-5 h-5 shrink-0 ${adminTab === 'bao-cao-tai-chinh-doanh-thu' ? 'text-[#ff4783]' : ''}`} />
               {!isCollapsed && <span className="truncate">Thanh toán &amp; Doanh thu</span>}
 
               {isCollapsed && (
-                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                   Thanh toán &amp; Doanh thu
                 </span>
               )}
             </button>
 
-            {/* Admin Tab 3 */}
-            <button
-              onClick={() => setAdminTab('cau-hinh-telegram-bot')}
-              title={isCollapsed ? 'Báo cáo tự động Telegram' : undefined}
-              className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
-                isCollapsed
-                  ? 'justify-center p-3'
-                  : 'gap-3 px-3.5 py-2.5 text-left'
-              } ${
-                adminTab === 'cau-hinh-telegram-bot'
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/25'
-                  : 'text-slate-600 hover:bg-indigo-50/70 hover:text-indigo-900'
-              }`}
-            >
-              <Bot className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="truncate">Báo cáo tự động Telegram</span>}
-
-              {isCollapsed && (
-                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  Báo cáo tự động Telegram
-                </span>
-              )}
-            </button>
-
-            {/* Admin Tab 4 */}
+            {/* Admin Tab 3 (Telegram tab removed per FE-WEB-04 as Admin does not own a shop) */}
             <button
               onClick={() => setAdminTab('cai-dat-he-thong')}
               title={isCollapsed ? 'Hạ tầng máy chủ & Cài đặt' : undefined}
@@ -321,15 +354,15 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
                 adminTab === 'cai-dat-he-thong'
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/25'
-                  : 'text-slate-600 hover:bg-indigo-50/70 hover:text-indigo-900'
+                  ? 'bg-[#fff0f5] text-[#ff4783] font-extrabold shadow-xs border border-[#ffd6e4]'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
-              <Settings2 className="w-5 h-5 shrink-0" />
+              <Settings2 className={`w-5 h-5 shrink-0 ${adminTab === 'cai-dat-he-thong' ? 'text-[#ff4783]' : ''}`} />
               {!isCollapsed && <span className="truncate">Hạ tầng &amp; Cài đặt hệ thống</span>}
 
               {isCollapsed && (
-                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                   Hạ tầng &amp; Cài đặt hệ thống
                 </span>
               )}
@@ -350,11 +383,11 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs font-bold text-slate-800 truncate">{storeName}</span>
-                    <span className="text-[10px] text-slate-500 truncate">{userEmail}</span>
+                    <span className="text-xs text-slate-600 truncate">{userEmail}</span>
                   </div>
                 </div>
                 {userRole !== 'ADMIN' && subscriptionPlan && (
-                  <span className="text-[10px] font-black text-slate-950 bg-[#d0f81b] px-2 py-0.5 rounded border border-[#bde412] uppercase">
+                  <span className="text-xs font-black text-slate-950 bg-[#d0f81b] px-2 py-0.5 rounded border border-[#bde412] uppercase">
                     {subscriptionPlan}
                   </span>
                 )}
@@ -362,15 +395,15 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             ) : (
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-[#fff0f5] text-[#ff4783] border border-[#ffd6e4] flex items-center justify-center shrink-0">
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs font-bold text-slate-800 truncate">{storeName || 'Admin Quản Trị'}</span>
-                    <span className="text-[10px] text-slate-500 truncate">{userEmail}</span>
+                    <span className="text-xs text-slate-600 truncate">{userEmail}</span>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
+                <span className="text-xs font-black text-slate-950 bg-[#d0f81b] px-1.5 py-0.5 rounded border border-slate-900/20">
                   ADMIN
                 </span>
               </div>
@@ -412,7 +445,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             ) : (
               <div
                 title="Quản Trị Viên Hệ Thống • VikeSo Admin"
-                className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center cursor-help"
+                className="w-10 h-10 rounded-xl bg-[#fff0f5] text-[#ff4783] border border-[#ffd6e4] flex items-center justify-center cursor-help"
               >
                 <ShieldCheck className="w-5 h-5" />
               </div>
@@ -426,7 +459,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                 title="Về Trang Chủ"
               >
                 <Home className="w-4 h-4" />
-                <span className="absolute left-full ml-3 px-2 py-1 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                <span className="absolute left-full ml-3 px-2 py-1 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                   Trang chủ
                 </span>
               </button>
@@ -440,7 +473,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                 title="Đăng xuất"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="absolute left-full ml-3 px-2 py-1 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                <span className="absolute left-full ml-3 px-2 py-1 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                   Đăng xuất
                 </span>
               </button>

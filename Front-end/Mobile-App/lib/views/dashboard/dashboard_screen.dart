@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as flutter_secure_storage;
 import '../shared_widgets/side_drawer.dart';
+import '../shared_widgets/notification_sheet.dart';
 import 'widgets/dashboard_action_buttons.dart';
 import 'widgets/revenue_chart.dart';
 import 'widgets/donut_chart_painter.dart';
@@ -258,7 +259,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF0F172A), size: 24),
-            onPressed: () {},
+            onPressed: () => NotificationSheet.show(context),
           ),
           const SizedBox(width: 4),
         ],

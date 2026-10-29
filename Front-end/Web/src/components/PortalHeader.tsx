@@ -64,34 +64,33 @@ export const PortalHeader: React.FC<HeaderProps> = ({
 
           {portal === 'owner' ? (
             <div className="flex items-center gap-2.5">
-              {/* Store / Branch Selector */}
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 hover:bg-slate-200/70 cursor-pointer transition-colors border border-slate-200/70 text-slate-800 text-xs font-semibold">
+              {/* Store / Branch Selector - sleek flat trigger */}
+              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors text-slate-800 text-xs font-semibold">
                 <Store className="w-4 h-4 text-slate-950" />
                 <span className="truncate max-w-[150px] sm:max-w-none">{storeName}</span>
                 {subscriptionPlan && userRole !== 'ADMIN' && (
-                  <span className="text-[10px] bg-[#d0f81b] text-slate-950 px-1.5 py-0.5 rounded-md font-black uppercase border border-[#bde412]">
+                  <span className="text-xs bg-[#d0f81b] text-slate-950 px-2 py-0.5 rounded-md font-black uppercase border border-[#bde412]">
                     {subscriptionPlan}
                   </span>
                 )}
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </div>
 
-              {/* Realtime Bank Sync Badge */}
-              <div className="hidden xl:flex items-center gap-1.5 text-[11px] text-slate-800 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200 font-medium">
-                <span className="w-2 h-2 rounded-full bg-[#d0f81b] border border-slate-900/30 animate-pulse"></span>
+              {/* Realtime Bank Sync Badge - flat text and dot */}
+              <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
                 <span>Đồng bộ tự động</span>
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200/80 font-semibold">
-                <Shield className="w-3.5 h-3.5 text-indigo-600" />
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-1.5 text-xs text-[#b01755] font-bold">
+                <Shield className="w-4 h-4 text-[#ff4783]" />
                 <span>{storeName || 'Admin Quản Trị'}</span>
               </div>
-
-              <div className="hidden lg:flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-[#d0f81b] text-slate-950 border border-[#bde412] font-black shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-pulse"></span>
-                <span>OCR Engine: 99.8% Ổn định</span>
+              <div className="hidden lg:flex items-center gap-1.5 text-xs text-slate-600 font-semibold">
+                <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                <span>Đồng bộ thời gian thực</span>
               </div>
             </div>
           )}
@@ -118,7 +117,7 @@ export const PortalHeader: React.FC<HeaderProps> = ({
           >
             <Bell className="w-4 h-4" />
             <span className={`absolute top-2 right-2 w-2 h-2 rounded-full ring-2 ring-white ${
-              portal === 'owner' ? 'bg-[#d0f81b] border border-slate-900/40' : 'bg-indigo-500'
+              portal === 'owner' ? 'bg-[#d0f81b] border border-slate-900/40' : 'bg-[#ff4783]'
             }`}></span>
           </button>
 
@@ -128,17 +127,15 @@ export const PortalHeader: React.FC<HeaderProps> = ({
               <span className="text-xs font-bold text-slate-900 leading-tight">
                 {userName || (userRole === 'ADMIN' ? 'Admin' : 'Chủ Hộ')}
               </span>
-              <span className={`text-[10px] font-semibold truncate max-w-[150px] ${
-                portal === 'owner' ? 'text-slate-600' : 'text-indigo-700'
-              }`}>
+              <span className="text-xs font-medium truncate max-w-[150px] text-slate-600">
                 {userRole === 'ADMIN' ? 'Quản Trị Viên (Admin)' : 'Chủ Hộ Kinh Doanh'}
               </span>
             </div>
 
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shadow-xs ${
               portal === 'owner'
-                ? 'bg-[#d0f81b] text-slate-950 border border-[#bde412] shadow-sm'
-                : 'bg-gradient-to-br from-indigo-600 to-purple-700 text-white shadow-indigo-600/20'
+                ? 'bg-[#d0f81b] text-slate-950 border border-[#bde412]'
+                : 'bg-[#fff0f5] text-[#b01755] border border-[#ffd6e4]'
             }`}>
               {(userName || (userRole === 'ADMIN' ? 'A' : 'C')).charAt(0).toUpperCase()}
             </div>

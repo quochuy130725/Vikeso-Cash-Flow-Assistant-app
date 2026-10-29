@@ -296,9 +296,9 @@ export default function App() {
 
       {/* Floating Notification Toast */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#191c1d] text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-[#d0f81b]/30 flex items-center gap-3 animate-bounce">
-          <CheckCircle2 className="w-5 h-5 text-[#d0f81b] shrink-0" />
-          <span className="text-xs sm:text-sm font-semibold">{toastMessage}</span>
+        <div className="fixed bottom-6 right-6 z-50 bg-white text-slate-900 px-5 py-3.5 rounded-2xl shadow-2xl border-2 border-[#ff4783]/30 flex items-center gap-3 animate-bounce">
+          <CheckCircle2 className="w-5 h-5 text-[#ff4783] shrink-0" />
+          <span className="text-xs sm:text-sm font-bold">{toastMessage}</span>
         </div>
       )}
     </div>

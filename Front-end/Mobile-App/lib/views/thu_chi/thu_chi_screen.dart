@@ -25,6 +25,9 @@ class _ThuChiScreenState extends State<ThuChiScreen>
   bool _isPro = false;
   List<Map<String, dynamic>> _allTransactions = [];
   List<Map<String, dynamic>> _filteredTransactions = [];
+  int _selectedMonth = DateTime.now().month;
+  int _selectedYear = DateTime.now().year;
+  bool _filterByMonth = false;
   StreamSubscription? _txSub;
 
   @override
@@ -78,18 +81,64 @@ class _ThuChiScreenState extends State<ThuChiScreen>
 
   void _applyFilter() {
     setState(() {
+      List<Map<String, dynamic>> base = List.from(_allTransactions);
+      if (_filterByMonth) {
+        base = base.where((tx) {
+          final dt = _parseDate(tx['transactionDate'])?.toLocal();
+          if (dt == null) return true;
+          return dt.month == _selectedMonth && dt.year == _selectedYear;
+        }).toList();
+      }
       if (_tabController.index == 0) {
-        _filteredTransactions = List.from(_allTransactions);
+        _filteredTransactions = base;
       } else if (_tabController.index == 1) {
-        _filteredTransactions = _allTransactions
-            .where((tx) => tx['transactionType'] == 'THU')
-            .toList();
+        _filteredTransactions =
+            base.where((tx) => tx['transactionType'] == 'THU').toList();
       } else {
-        _filteredTransactions = _allTransactions
-            .where((tx) => tx['transactionType'] == 'CHI')
-            .toList();
+        _filteredTransactions =
+            base.where((tx) => tx['transactionType'] == 'CHI').toList();
       }
     });
+  }
+
+  void _shiftMonth(int delta) {
+    setState(() {
+      _filterByMonth = true;
+      int m = _selectedMonth + delta;
+      int y = _selectedYear;
+      if (m < 1) {
+        m = 12;
+        y -= 1;
+      } else if (m > 12) {
+        m = 1;
+        y += 1;
+      }
+      _selectedMonth = m;
+      _selectedYear = y;
+    });
+    _applyFilter();
+  }
+
+  String _resolvePaymentMethod(Map<String, dynamic> tx) {
+    final explicit = (tx['paymentMethodLabel'] ?? tx['paymentMethod'] ?? '').toString().trim();
+    if (explicit.toUpperCase() == 'TRANSFER' || explicit.toLowerCase().contains('chuyển khoản')) {
+      return 'Chuyển khoản VietQR';
+    }
+    if (explicit.toUpperCase() == 'POS' || explicit.toLowerCase().contains('pos')) {
+      return 'Thẻ POS';
+    }
+    if (explicit.toUpperCase() == 'CASH' || explicit.toLowerCase().contains('tiền mặt')) {
+      return 'Tiền mặt';
+    }
+    final cat = (tx['category'] ?? '').toString();
+    final reason = (tx['reason'] ?? '').toString().toLowerCase();
+    if (cat == 'Chuyen Khoan' || reason.contains('ck') || reason.contains('vietqr') || reason.contains('unc')) {
+      return 'Chuyển khoản VietQR';
+    }
+    if (cat == 'POS Ket Ca' || reason.contains('pos') || reason.contains('quẹt thẻ')) {
+      return 'Thẻ POS';
+    }
+    return 'Tiền mặt';
   }
 
   DateTime? _parseDate(dynamic dateVal) {
@@ -276,9 +325,15 @@ class _ThuChiScreenState extends State<ThuChiScreen>
               _buildDetailRow('Lý do / Nội dung:',
                   reason.isNotEmpty ? reason : 'Giao dịch không có ghi chú'),
               _buildDetailRow('Danh mục:', categoryName),
+              _buildDetailRow('Hình thức thanh toán:', _resolvePaymentMethod(tx)),
               _buildDetailRow('Loại giao dịch:', isChi ? 'Khoản Chi' : 'Khoản Thu'),
               _buildDetailRow('Hình thức ghi nhận:', method),
               _buildDetailRow('Thời gian ghi nhận:', dateStr),
+              if (tDate.hour >= 22)
+                _buildDetailRow(
+                  'Kỳ hạch toán (Quy tắc 22:00):',
+                  'Sau 22:00 → Hạch toán sang ngày ${DateFormat('dd/MM/yyyy').format(tDate.add(const Duration(days: 1)))}',
+                ),
               _buildDetailRow(
                 'Trạng thái đối soát:',
                 tx['status'] == 'MERGED'
@@ -534,6 +589,56 @@ class _ThuChiScreenState extends State<ThuChiScreen>
       ),
       body: Column(
         children: [
+          // Bộ lọc < Tháng / Năm > chuẩn MoMo
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _shiftMonth(-1),
+                    icon: const Icon(Icons.chevron_left_rounded, color: Color(0xFF0F172A)),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() => _filterByMonth = !_filterByMonth);
+                      _applyFilter();
+                    },
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_month_rounded, size: 16, color: Color(0xFFFF4783)),
+                        const SizedBox(width: 6),
+                        Text(
+                          _filterByMonth
+                              ? 'Tháng ${_selectedMonth.toString().padLeft(2, '0')} / $_selectedYear'
+                              : 'Tất cả các kỳ • Tháng ${_selectedMonth.toString().padLeft(2, '0')}/$_selectedYear',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _shiftMonth(1),
+                    icon: const Icon(Icons.chevron_right_rounded, color: Color(0xFF0F172A)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           // Navigation Tab Bar (Segmented Ledger Filter)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -676,7 +781,9 @@ class _ThuChiScreenState extends State<ThuChiScreen>
             final timeStr = DateFormat('HH:mm').format(tDate);
             final note = tx['description'] ?? tx['shopName'] ?? '';
             final displayTitle = reason.isNotEmpty ? reason : (note.isNotEmpty ? note : categoryName);
-            final subtitle = '$categoryName • $timeStr';
+            final paymentMethod = _resolvePaymentMethod(tx);
+            final after22hTag = tDate.hour >= 22 ? ' • Sau 22h (Kỳ hôm sau)' : '';
+            final subtitle = '$categoryName • $paymentMethod • $timeStr$after22hTag';
 
             return TransactionItemCard(
               title: displayTitle.toString(),

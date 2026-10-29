@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, HelpCircle, Sparkles } from 'lucide-react';
+import { ChevronDown, Sparkles } from 'lucide-react';
 
 export const FaqSection: React.FC = () => {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
@@ -36,14 +36,10 @@ export const FaqSection: React.FC = () => {
     <section id="faq" className="scroll-mt-24 w-full py-20 px-4 md:px-8 max-w-4xl mx-auto">
       {/* Header */}
       <div className="text-center mb-14 max-w-3xl mx-auto">
-        <span className="text-xs font-black text-slate-950 uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-[#d0f81b] border border-[#bde412] inline-flex items-center gap-1.5 shadow-2xs">
-          <HelpCircle className="w-3.5 h-3.5 text-slate-950" />
-          Giải Đáp Thắc Mắc (FAQ)
-        </span>
-        <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-950 mt-3 tracking-tight [text-shadow:_0_1px_8px_rgba(255,255,255,0.85)]">
+        <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-950 tracking-tight [text-shadow:_0_1px_8px_rgba(255,255,255,0.85)]">
           Câu Hỏi Thường Gặp Về VikeSo
         </h2>
-        <p className="text-sm sm:text-base text-slate-950 font-bold mt-2.5 [text-shadow:_0_1px_6px_rgba(255,255,255,0.85)]">
+        <p className="text-sm sm:text-base text-slate-950 font-bold mt-2.5 max-w-xl mx-auto leading-relaxed [text-shadow:_0_1px_6px_rgba(255,255,255,0.85)]">
           Mọi điều bạn cần biết trước khi bắt đầu sử dụng VikeSo cho cửa hàng của mình.
         </p>
       </div>
@@ -87,7 +83,8 @@ export const FaqSection: React.FC = () => {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-5 sm:px-6 pb-6 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100">
+                    <div className="mx-5 sm:mx-6 border-t border-slate-300/90" />
+                    <div className="px-5 sm:px-6 pb-6 pt-4 text-xs sm:text-sm text-slate-600 leading-relaxed">
                       {faq.a}
                     </div>
                   </motion.div>

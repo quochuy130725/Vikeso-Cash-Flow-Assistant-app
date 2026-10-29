@@ -15,6 +15,7 @@ class _CustomSideDrawerState extends State<CustomSideDrawer> {
   String _shopName = 'Cửa hàng Vikeso';
   String _email = '';
   String _plan = 'FREE';
+  String _role = 'OWNER';
 
   @override
   void initState() {
@@ -25,12 +26,14 @@ class _CustomSideDrawerState extends State<CustomSideDrawer> {
   Future<void> _loadUserHeader() async {
     final shopName = await _storage.read(key: 'user_shopName');
     final email = await _storage.read(key: 'user_email');
+    final role = await _storage.read(key: 'user_role') ?? 'OWNER';
     final plan = await AuthRepository().getSubscriptionPlan();
 
     if (mounted) {
       setState(() {
         if (shopName != null && shopName.isNotEmpty) _shopName = shopName;
         if (email != null && email.isNotEmpty) _email = email;
+        _role = role.toUpperCase();
         _plan = plan;
       });
     }
@@ -151,27 +154,30 @@ class _CustomSideDrawerState extends State<CustomSideDrawer> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                _buildDrawerItem(Icons.analytics_outlined, 'Báo cáo chi tiết', () {
-                  Navigator.pop(context);
-                  Navigator.of(context).pushNamed('/analytics');
-                }),
-                _buildDrawerItem(
-                  Icons.workspace_premium_rounded,
-                  isPro ? 'Gói VikeSo PRO (Đang bật)' : 'Nâng cấp gói VikeSo PRO',
-                  () {
+                if (_role != 'STAFF') ...[
+                  _buildDrawerItem(Icons.analytics_outlined, 'Báo cáo chi tiết', () {
                     Navigator.pop(context);
-                    Navigator.of(context).pushNamed('/upgrade-pro');
-                  },
-                  iconColor: isPro ? const Color(0xFF0F172A) : const Color(0xFFFF4783),
-                  trailing: isPro ? const ProBadge() : null,
-                ),
-
-                const Divider(),
-                _buildDrawerItem(Icons.settings_outlined, 'Cài đặt', () {
+                    Navigator.of(context).pushReplacementNamed('/analytics');
+                  }),
+                  _buildDrawerItem(Icons.storefront_outlined, 'Quản lý cửa hàng', () {
+                    Navigator.pop(context);
+                    Navigator.of(context).pushReplacementNamed('/store');
+                  }),
+                  _buildDrawerItem(
+                    Icons.workspace_premium_rounded,
+                    isPro ? 'Gói VikeSo PRO (Đang bật)' : 'Nâng cấp gói VikeSo PRO',
+                    () {
+                      Navigator.pop(context);
+                      Navigator.of(context).pushNamed('/upgrade-pro');
+                    },
+                    iconColor: isPro ? const Color(0xFF0F172A) : const Color(0xFFFF4783),
+                    trailing: isPro ? const ProBadge() : null,
+                  ),
+                  const Divider(),
+                ],
+                _buildDrawerItem(Icons.person_outline_rounded, 'Tài khoản cá nhân', () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tính năng cài đặt đang cập nhật!')),
-                  );
+                  Navigator.of(context).pushReplacementNamed('/personal');
                 }),
                 _buildDrawerItem(Icons.help_outline, 'Hướng dẫn sử dụng', () {
                   Navigator.pop(context);

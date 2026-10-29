@@ -5,8 +5,10 @@ import {
   createAdminUser,
   updateAdminUserRole,
   deleteAdminUser,
+  getLocalShops,
+  reviewAdminShopRequest,
 } from '../services/api';
-import { BusinessHousehold } from '../types';
+import { BusinessHousehold, ShopBranch } from '../types';
 import { UserAccount } from '../components/AuthModal';
 
 interface AdminOverviewProps {
@@ -16,6 +18,7 @@ interface AdminOverviewProps {
 export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => {
   const [overview, setOverview] = useState<any>(null);
   const [users, setUsers] = useState<BusinessHousehold[]>([]);
+  const [shopRequests, setShopRequests] = useState<ShopBranch[]>(() => getLocalShops());
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -23,6 +26,9 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'OWNER' | 'ADMIN'>('all');
   const [planFilter, setPlanFilter] = useState<'all' | 'pro' | 'free'>('all');
+
+  // Detail Modal for 2nd+ Shop Branch Request
+  const [selectedShopRequest, setSelectedShopRequest] = useState<ShopBranch | null>(null);
 
   // Create User Modal
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -156,10 +162,10 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* 1. Header Banner */}
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Bảng Điều Hành Hệ Thống
             </span>
             <span className="text-slate-300">•</span>
@@ -167,15 +173,15 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
               Quản trị viên: <strong className="text-slate-900">{currentUser?.name || 'Admin'}</strong> ({currentUser?.email || 'test@example.com'})
             </span>
             <span className="text-slate-300">•</span>
-            <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-900">
+              <span className="w-2 h-2 rounded-full bg-[#d0f81b] border border-slate-900"></span>
               Máy chủ MongoDB Atlas kết nối trực tiếp
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
             Tổng Quan Người Dùng &amp; Vận Hành Nền Tảng
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 max-w-2xl">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 max-w-lg">
             Giám sát số lượng hộ kinh doanh thực tế, quản lý phân quyền, nâng hạ gói thuê bao và kiểm soát vận hành toàn hệ thống.
           </p>
         </div>
@@ -187,7 +193,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
               loadData(true);
             }}
             disabled={isRefreshing}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-200 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-200 shadow-xs transition-all cursor-pointer disabled:opacity-50"
             type="button"
           >
             <span className={`material-symbols-outlined text-[16px] text-slate-500 ${isRefreshing ? 'animate-spin' : ''}`}>
@@ -198,10 +204,10 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
 
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-[#d6155f] hover:bg-[#b01755] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
             type="button"
           >
-            <span className="material-symbols-outlined text-[18px]">person_add</span>
+            <span className="material-symbols-outlined text-[18px] text-white">person_add</span>
             <span>+ Tạo Tài Khoản Mới</span>
           </button>
         </div>
@@ -210,16 +216,16 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
       {/* 2. 4 Real Metric Cards from Backend Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Tổng người dùng */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between gap-3">
+        <div className="bg-white p-5 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Tổng số hộ kinh doanh
             </span>
             <span className="w-2 h-2 rounded-full bg-slate-400"></span>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
-              {totalUsers} <span className="text-xs font-normal text-slate-400">tài khoản</span>
+            <div className="text-2xl font-extrabold text-slate-900 font-mono tabular-nums tracking-tight">
+              {totalUsers} <span className="text-xs font-sans font-normal text-slate-600">tài khoản</span>
             </div>
             <span className="text-xs text-slate-500 mt-1 block">
               Dữ liệu người dùng thực tế trên MongoDB
@@ -228,19 +234,19 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
         </div>
 
         {/* Card 2: Hộ dùng PRO */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between gap-3">
+        <div className="bg-white p-5 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Tài khoản Gói PRO
             </span>
-            <span className="w-2 h-2 rounded-full bg-[#d0f81b]"></span>
+            <span className="w-2 h-2 rounded-full bg-[#d0f81b] border border-slate-900"></span>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
-              {totalPRO} <span className="text-xs font-normal text-slate-400">hộ</span>
+            <div className="text-2xl font-extrabold text-slate-900 font-mono tabular-nums tracking-tight">
+              {totalPRO} <span className="text-xs font-sans font-normal text-slate-600">hộ</span>
             </div>
-            <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500">
-              <span className="bg-[#d0f81b] text-slate-950 px-1.5 py-0.2 rounded font-black border border-[#bde412] text-[11px]">
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500 tabular-nums">
+              <span className="bg-[#d0f81b] text-slate-950 px-1.5 py-0.5 rounded font-black border border-[#bde412] text-xs">
                 PRO: {totalPRO}
               </span>
               <span>/ FREE: {totalFREE}</span>
@@ -249,34 +255,34 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
         </div>
 
         {/* Card 3: Doanh thu thuê bao MRR */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between gap-3">
+        <div className="bg-white p-5 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Doanh thu MRR dự kiến
             </span>
             <span className="w-2 h-2 rounded-full bg-[#ff4783]"></span>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-[#ff4783] font-mono font-tabular tracking-tight">
+            <div className="text-2xl font-extrabold text-[#b01755] font-mono tabular-nums tracking-tight">
               {Number(mrr).toLocaleString('vi-VN')} <span className="text-xs font-semibold">đ</span>
             </div>
             <span className="text-xs text-slate-500 mt-1 block">
-              Dựa trên {totalPRO} hộ PRO (99k/tháng)
+              Dựa trên {totalPRO} hộ PRO (99k / 1 tháng)
             </span>
           </div>
         </div>
 
         {/* Card 4: Hoạt động trong ngày */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between gap-3">
+        <div className="bg-white p-5 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Hoạt động hôm nay
             </span>
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span className="w-2 h-2 rounded-full bg-[#ff4783]"></span>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
-              {todayReceipts} <span className="text-xs font-normal text-slate-400">giao dịch</span>
+            <div className="text-2xl font-extrabold text-slate-900 font-mono tabular-nums tracking-tight">
+              {todayReceipts} <span className="text-xs font-sans font-normal text-slate-600">giao dịch</span>
             </div>
             <span className="text-xs text-slate-500 mt-1 block">
               {todayOrders > 0 ? `${todayOrders} đơn nâng cấp PRO mới` : 'Hệ thống vận hành ổn định'}
@@ -285,92 +291,203 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
         </div>
       </div>
 
-      {/* 3. User Management Data Grid (Real Users with CRUD Actions) */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
-        {/* Table Title Header */}
-        <div className="p-5 sm:p-6 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ff4783]"></span>
+      {/* 2.5. Admin Multi-Shop Approval Queue Table (FE-WEB-13) */}
+      <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 overflow-hidden">
+        <div className="p-5 sm:p-6 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#d0f81b] border border-[#bde412]"></span>
               <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
-                Danh Sách Hộ Kinh Doanh &amp; Tài Khoản
+                Phê Duyệt Đăng Ký Cửa Hàng / Chi Nhánh Thứ 2+ (Kèm Chứng Từ)
               </h2>
+              <span className="px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold tabular-nums">
+                {shopRequests.filter((s) => s.status === 'PENDING_APPROVAL').length} chờ duyệt
+              </span>
             </div>
-            <p className="text-xs text-slate-500">
-              Quản trị toàn bộ tài khoản chủ hộ, theo dõi thời hạn gói PRO tự động kích hoạt qua VietQR.
+            <p className="text-xs text-slate-500 mt-0.5 max-w-sm">
+              Chủ hộ đăng ký cửa hàng đầu tiên được kích hoạt ngay; từ cửa hàng thứ 2 trở đi bắt buộc gửi chứng từ để Admin thẩm định.
             </p>
-          </div>
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
-              {filteredUsers.length} tài khoản hiển thị
-            </span>
           </div>
         </div>
 
-        {/* Table Toolbar */}
-        <div className="p-4 sm:p-5 bg-slate-50/70 border-b border-slate-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
-          <div className="relative flex-1 max-w-md">
-            <span className="material-symbols-outlined text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 text-[18px]">
-              search
-            </span>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Tìm theo tên chủ hộ, tên cửa hàng, số điện thoại..."
-              className="w-full h-9.5 pl-9 pr-8 bg-white text-slate-900 placeholder:text-slate-400 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all shadow-xs font-medium"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[15px]">close</span>
-              </button>
-            )}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs sm:text-sm min-w-[920px]">
+            <thead>
+              <tr className="bg-slate-50/90 text-slate-700 text-xs font-extrabold uppercase tracking-wider border-b border-slate-200">
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap">Chi Nhánh / Cửa Hàng Mới</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap">Chủ Hộ Kinh Doanh</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap">Địa Chỉ Kinh Doanh</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-center">Chứng Từ</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-center">Trạng Thái</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-right pr-6">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-slate-800">
+              {shopRequests.filter((s) => s.id !== 'shop-main').length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-slate-400 text-xs">
+                    Chưa có yêu cầu đăng ký chi nhánh thứ 2+ nào.
+                  </td>
+                </tr>
+              ) : (
+                shopRequests
+                  .filter((s) => s.id !== 'shop-main')
+                  .map((req) => {
+                    const docs = req.verificationDocs || req.documentUrls || [];
+                    return (
+                      <tr key={req.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-3.5 px-4 sm:px-5">
+                          <div className="font-bold text-slate-900">{req.shopName}</div>
+                          <div className="text-xs text-slate-600 mt-0.5">{req.businessType}</div>
+                        </td>
+
+                        <td className="py-3.5 px-4 sm:px-5">
+                          <div className="font-semibold text-slate-900">{req.ownerName || 'Chủ hộ kinh doanh'}</div>
+                          <div className="text-xs text-slate-600 font-mono">
+                            {req.ownerEmail ? `${req.ownerEmail} • ` : ''}
+                            {req.phone || '—'}
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-4 sm:px-5 max-w-[240px]">
+                          <div className="text-xs text-slate-700 truncate" title={req.address}>
+                            {req.address}
+                          </div>
+                          {req.createdAt && (
+                            <div className="text-xs text-slate-600 mt-0.5">Ngày gửi: {req.createdAt}</div>
+                          )}
+                        </td>
+
+                        <td className="py-3.5 px-4 sm:px-5 text-center whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 border border-slate-200 text-xs font-bold tabular-nums">
+                            <span className="material-symbols-outlined text-[14px] text-[#ff4783]">photo_library</span>
+                            <span>{docs.length} ảnh</span>
+                          </span>
+                        </td>
+
+                        <td className="py-3.5 px-4 sm:px-5 text-center whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-black border ${
+                              req.status === 'PENDING_APPROVAL'
+                                ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                : req.status === 'ACTIVE'
+                                  ? 'bg-[#d0f81b]/35 text-slate-950 border-[#bde412]'
+                                  : 'bg-rose-50 text-rose-700 border-rose-200'
+                            }`}
+                          >
+                            {req.status === 'PENDING_APPROVAL'
+                              ? 'CHỜ PHÊ DUYỆT'
+                              : req.status === 'ACTIVE'
+                                ? 'ĐÃ DUYỆT (ACTIVE)'
+                                : 'ĐÃ TỪ CHỐI'}
+                          </span>
+                        </td>
+
+                        <td className="py-3.5 px-4 sm:px-5 text-right whitespace-nowrap pr-6">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedShopRequest(req)}
+                            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#fff0f5] hover:bg-pink-100 text-[#b01755] border border-[#ffd6e4] text-xs font-bold transition-colors cursor-pointer shadow-2xs"
+                          >
+                            <span className="material-symbols-outlined text-[15px] text-[#ff4783]">visibility</span>
+                            <span>Xem chi tiết</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 3. User Management Data Grid (Real Users with CRUD Actions) */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+        {/* Table Title & Toolbar Header (Unified to avoid nested card containers) */}
+        <div className="p-5 sm:p-6 border-b border-slate-200/80 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ff4783]"></span>
+                <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
+                  Danh Sách Hộ Kinh Doanh &amp; Tài Khoản
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 max-w-sm">
+                Quản trị toàn bộ tài khoản chủ hộ, theo dõi thời hạn gói PRO tự động kích hoạt qua VietQR.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#fff0f5] text-[#b01755] text-xs font-bold border border-[#ffd6e4]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
+                {filteredUsers.length} tài khoản hiển thị
+              </span>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Role Filter Tabs */}
-            <div className="flex items-center bg-slate-200/70 p-0.5 rounded-xl border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setRoleFilter('all')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  roleFilter === 'all'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Tất cả ({users.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setRoleFilter('OWNER')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  roleFilter === 'OWNER'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Chủ Hộ ({totalOwners})
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setRoleFilter('ADMIN');
-                  setPlanFilter('all');
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  roleFilter === 'ADMIN'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-indigo-700'
-                }`}
-              >
-                Quản Trị ({totalAdmins})
-              </button>
+          <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+            <div className="relative flex-1 max-w-md">
+              <span className="material-symbols-outlined text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 text-[18px]">
+                search
+              </span>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Tìm theo tên chủ hộ, tên cửa hàng, số điện thoại..."
+                className="w-full h-9.5 pl-9 pr-8 bg-white text-slate-900 placeholder:text-slate-400 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#d6155f] border border-slate-200 transition-all shadow-2xs font-medium"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[15px]">close</span>
+                </button>
+              )}
             </div>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Role Filter Tabs */}
+              <div className="flex items-center bg-slate-100 p-0.5 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setRoleFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    roleFilter === 'all'
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Tất cả ({users.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRoleFilter('OWNER')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    roleFilter === 'OWNER'
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Chủ Hộ ({totalOwners})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRoleFilter('ADMIN');
+                    setPlanFilter('all');
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    roleFilter === 'ADMIN'
+                      ? 'bg-[#d6155f] text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Quản Trị ({totalAdmins})
+                </button>
+              </div>
 
             {/* Plan Filter (only shown if not filtering exclusively by Admin) */}
             {roleFilter !== 'ADMIN' && (
@@ -380,7 +497,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                   onClick={() => setPlanFilter('all')}
                   className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     planFilter === 'all'
-                      ? 'bg-slate-900 text-white shadow-xs'
+                      ? 'bg-[#d6155f] text-white shadow-xs'
                       : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                   }`}
                 >
@@ -402,7 +519,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                   onClick={() => setPlanFilter('free')}
                   className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     planFilter === 'free'
-                      ? 'bg-slate-700 text-white shadow-xs'
+                      ? 'bg-[#fff0f5] text-[#b01755] border border-[#ffd6e4] shadow-xs'
                       : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                   }`}
                 >
@@ -412,12 +529,13 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             )}
           </div>
         </div>
+      </div>
 
-        {/* Real Table */}
+      {/* Real Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs sm:text-sm min-w-[1000px]">
             <thead>
-              <tr className="bg-slate-50/90 text-slate-700 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200">
+              <tr className="bg-slate-50/90 text-slate-700 text-xs font-extrabold uppercase tracking-wider border-b border-slate-200">
                 <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap min-w-[180px]">Chủ Hộ &amp; SĐT</th>
                 <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap min-w-[200px]">Cửa Hàng Kinh Doanh</th>
                 <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap min-w-[140px]">Ngày Tham Gia</th>
@@ -448,14 +566,14 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                     <td className="py-3.5 px-4 sm:px-5">
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-900">{u.ownerName}</span>
-                        <span className="text-[11px] text-slate-400 font-mono">{u.phone}</span>
+                        <span className="text-xs text-slate-600 font-mono">{u.phone}</span>
                       </div>
                     </td>
 
                     <td className="py-3.5 px-4 sm:px-5">
                       <div className="flex flex-col">
                         <span className="font-semibold text-slate-900">{u.storeName}</span>
-                        <span className="text-[11px] text-slate-400">{u.businessType}</span>
+                        <span className="text-xs text-slate-600">{u.businessType}</span>
                       </div>
                     </td>
 
@@ -466,28 +584,28 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                     <td className="py-3.5 px-4 sm:px-5 whitespace-nowrap">
                       {u.role === 'ADMIN' ? (
                         <div className="flex flex-col">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 w-fit">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold text-[#b01755] bg-[#fff0f5] border border-[#ffd6e4] w-fit">
                             QUẢN TRỊ VIÊN
                           </span>
-                          <span className="text-[10px] text-slate-400 font-medium mt-0.5">
+                          <span className="text-xs text-slate-600 font-medium mt-0.5">
                             Đặc quyền hệ thống
                           </span>
                         </div>
                       ) : u.plan === 'pro' ? (
                         <div className="flex flex-col">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black text-slate-950 bg-[#d0f81b] border border-[#bde412] w-fit">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-black text-slate-950 bg-[#d0f81b] border border-[#bde412] w-fit">
                             PRO
                           </span>
-                          <span className="text-[10px] text-slate-500 font-medium mt-0.5">
+                          <span className="text-xs text-slate-600 font-medium mt-0.5">
                             {u.proExpiresAt ? `Hạn: ${u.proExpiresAt}` : 'Gói 30 ngày'}
                           </span>
                         </div>
                       ) : (
                         <div className="flex flex-col">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 w-fit">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200 w-fit">
                             MIỄN PHÍ
                           </span>
-                          <span className="text-[10px] text-slate-400 mt-0.5">
+                          <span className="text-xs text-slate-600 mt-0.5">
                             Gói Cơ Bản
                           </span>
                         </div>
@@ -525,17 +643,206 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                 ))
               )}
             </tbody>
+            <tfoot>
+              <tr className="border-t border-slate-100 text-xs text-slate-500">
+                <td colSpan={3} className="py-3.5 px-4 sm:px-5">
+                  Hiển thị <strong>{filteredUsers.length}</strong> người dùng
+                </td>
+                <td colSpan={3} className="py-3.5 px-4 sm:px-5 text-right font-medium text-slate-600 pr-6">
+                  Dữ liệu từ MongoDB Backend
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
-
-        {/* Table Footer */}
-        <div className="p-3.5 px-5 bg-slate-50/70 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
-          <span>
-            Hiển thị <strong>{filteredUsers.length}</strong> người dùng
-          </span>
-          <span className="font-semibold text-slate-700">Dữ liệu từ MongoDB Backend</span>
-        </div>
       </div>
+
+      {/* 3.5. Detail Popup Modal for 2nd+ Shop Branch Request */}
+      {selectedShopRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 p-5 sm:p-6 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-[#fff0f5] text-[#ff4783] border border-[#ffd6e4] flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[24px]">storefront</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base sm:text-lg font-extrabold text-slate-900">
+                      Hồ Sơ Đăng Ký Chi Nhánh Mới
+                    </h3>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-md text-xs font-black border ${
+                        selectedShopRequest.status === 'PENDING_APPROVAL'
+                          ? 'bg-amber-50 text-amber-800 border-amber-200'
+                          : selectedShopRequest.status === 'ACTIVE'
+                            ? 'bg-[#d0f81b]/35 text-slate-950 border-[#bde412]'
+                            : 'bg-rose-50 text-rose-700 border-rose-200'
+                      }`}
+                    >
+                      {selectedShopRequest.status === 'PENDING_APPROVAL'
+                        ? 'CHỜ PHÊ DUYỆT'
+                        : selectedShopRequest.status === 'ACTIVE'
+                          ? 'ĐÃ DUYỆT (ACTIVE)'
+                          : 'ĐÃ TỪ CHỐI'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5 max-w-xl">
+                    Kiểm tra thông tin pháp nhân hộ kinh doanh và chứng từ đính kèm trước khi phê duyệt
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedShopRequest(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+              {/* Info Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Tên cửa hàng / Chi nhánh đăng ký
+                  </span>
+                  <div className="text-sm font-extrabold text-slate-900">{selectedShopRequest.shopName}</div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Ngành nghề kinh doanh
+                  </span>
+                  <div className="text-sm font-bold text-slate-800">{selectedShopRequest.businessType}</div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Chủ hộ kinh doanh (Owner)
+                  </span>
+                  <div className="text-sm font-bold text-slate-900">
+                    {selectedShopRequest.ownerName || 'Chủ hộ kinh doanh'}
+                  </div>
+                  <div className="text-xs text-slate-500 font-mono">
+                    {selectedShopRequest.ownerEmail || '—'}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Số điện thoại &amp; Ngày gửi hồ sơ
+                  </span>
+                  <div className="text-sm font-bold text-slate-900 font-mono">
+                    {selectedShopRequest.phone || '—'}
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    Ngày đăng ký: {selectedShopRequest.createdAt || selectedShopRequest.submittedAt || 'Hôm nay'}
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2 p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Địa chỉ kinh doanh thực tế
+                  </span>
+                  <div className="text-sm font-semibold text-slate-900">{selectedShopRequest.address}</div>
+                </div>
+              </div>
+
+              {/* Verification Documents Section */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[18px] text-[#ff4783]">verified_user</span>
+                    <span>
+                      Giấy Chứng Từ Xác Minh Đính Kèm (
+                      {(selectedShopRequest.verificationDocs || selectedShopRequest.documentUrls || []).length} ảnh)
+                    </span>
+                  </span>
+                  <span className="text-xs text-slate-600">Nhấn vào ảnh để mở kích thước gốc</span>
+                </div>
+
+                {(selectedShopRequest.verificationDocs || selectedShopRequest.documentUrls || []).length === 0 ? (
+                  <div className="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">
+                    Không có hình ảnh chứng từ đính kèm.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {(selectedShopRequest.verificationDocs || selectedShopRequest.documentUrls || []).map(
+                      (imgUrl, idx) => (
+                        <a
+                          key={idx}
+                          href={imgUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="group relative rounded-2xl overflow-hidden border border-slate-200 hover:border-[#ff4783] bg-slate-100 aspect-video block shadow-xs"
+                        >
+                          <img
+                            src={imgUrl}
+                            alt={`Chứng từ ${idx + 1}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-bold">
+                            <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                            <span>Xem ảnh gốc #{idx + 1}</span>
+                          </div>
+                        </a>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-5 sm:p-6 bg-slate-50/80 border-t border-slate-200/80 flex items-center justify-between gap-3 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setSelectedShopRequest(null)}
+                className="h-10 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 cursor-pointer transition-colors"
+              >
+                Đóng cửa sổ
+              </button>
+
+              {selectedShopRequest.status === 'PENDING_APPROVAL' && (
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const res = await reviewAdminShopRequest(selectedShopRequest.id, 'REJECT');
+                      const updated = getLocalShops();
+                      setShopRequests(updated);
+                      setSelectedShopRequest(updated.find((s) => s.id === selectedShopRequest.id) || null);
+                      showToast(res.message, 'error');
+                    }}
+                    className="h-10 px-4 rounded-xl bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 text-xs font-bold cursor-pointer transition-colors"
+                  >
+                    Từ chối hồ sơ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const res = await reviewAdminShopRequest(selectedShopRequest.id, 'APPROVE');
+                      const updated = getLocalShops();
+                      setShopRequests(updated);
+                      setSelectedShopRequest(updated.find((s) => s.id === selectedShopRequest.id) || null);
+                      showToast(res.message, 'success');
+                    }}
+                    className="h-10 px-5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 border border-[#bde412] text-xs font-black cursor-pointer shadow-xs flex items-center gap-1.5 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[17px] text-[#ff4783]">check_circle</span>
+                    <span>Duyệt Kích Hoạt Cửa Hàng</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 4. Create User Modal */}
       {createModalOpen && (
@@ -657,8 +964,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
               )}
 
               {createRole === 'ADMIN' && (
-                <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl text-[11px] text-indigo-700">
-                  <span className="font-semibold">Lưu ý:</span> Tài khoản Quản trị viên (ADMIN) không áp dụng thông tin cửa hàng và các gói cước dịch vụ (PRO/FREE).
+                <div className="p-3 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-700">
+                  <span className="font-semibold text-slate-900">Lưu ý:</span> Tài khoản Quản trị viên (ADMIN) không áp dụng thông tin cửa hàng và các gói cước dịch vụ (PRO/FREE).
                 </div>
               )}
 
@@ -673,7 +980,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="px-5 py-2 rounded-xl bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
                 >
                   {isCreating ? 'Đang tạo...' : 'Tạo Tài Khoản'}
                 </button>
@@ -688,13 +995,13 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
         <div
           className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-bottom-2 ${
             toastMessage.type === 'error'
-              ? 'bg-rose-900 text-white border border-rose-700'
-              : 'bg-slate-900 text-white border border-slate-700'
+              ? 'bg-rose-50 text-rose-800 border-2 border-rose-200'
+              : 'bg-white text-slate-900 border-2 border-[#ffd6e4]'
           }`}
         >
           <span
             className={`material-symbols-outlined text-[18px] ${
-              toastMessage.type === 'error' ? 'text-rose-400' : 'text-[#d0f81b]'
+              toastMessage.type === 'error' ? 'text-rose-500' : 'text-[#ff4783]'
             }`}
           >
             {toastMessage.type === 'error' ? 'error' : 'check_circle'}

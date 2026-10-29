@@ -173,10 +173,10 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* 1. Header Banner */}
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Tài Chính Nền Tảng
             </span>
             <span className="text-slate-300">•</span>
@@ -184,15 +184,15 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
               Cổng thanh toán tự động: <strong className="text-slate-900">SePay VietQR</strong>
             </span>
             <span className="text-slate-300">•</span>
-            <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-900">
+              <span className="w-2 h-2 rounded-full bg-[#d0f81b] border border-slate-900"></span>
               Webhook 24/7 trực tuyến
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
             Quản Lý Doanh Thu Thuê Bao &amp; Đơn Hàng SePay
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 max-w-2xl">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 max-w-sm">
             Theo dõi dòng tiền thuê bao PRO thực tế, kiểm soát các giao dịch chuyển khoản VietQR và phê duyệt đơn thủ công khi cần.
           </p>
         </div>
@@ -204,7 +204,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
               loadData(true);
             }}
             disabled={isRefreshing}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-200 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-200 shadow-xs transition-all cursor-pointer disabled:opacity-50"
             type="button"
           >
             <span className={`material-symbols-outlined text-[16px] text-slate-500 ${isRefreshing ? 'animate-spin' : ''}`}>
@@ -218,15 +218,15 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
       {/* 2. Key Revenue Metrics (Real Data) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1: Tổng doanh thu đã thu */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between gap-3">
+        <div className="bg-white p-5 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Tổng doanh thu đã thu
             </span>
-            <span className="w-2 h-2 rounded-full bg-[#d0f81b]"></span>
+            <span className="w-2 h-2 rounded-full bg-[#d0f81b] border border-slate-900"></span>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
+            <div className="text-2xl font-extrabold text-slate-900 font-mono tabular-nums tracking-tight">
               {totalRevenue.toLocaleString('vi-VN')} <span className="text-xs font-semibold">đ</span>
             </div>
             <span className="text-xs text-slate-500 mt-1 block">
@@ -236,15 +236,15 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
         </div>
 
         {/* Metric 2: Lợi nhuận ròng (80%) */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between gap-3">
+        <div className="bg-white p-5 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Lợi Nhuận Ròng (80%)
             </span>
-            <span className="w-2 h-2 rounded-full bg-[#ff4783]"></span>
+            <span className="w-2 h-2 rounded-full bg-[#b01755]"></span>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-[#ff4783] font-mono font-tabular tracking-tight">
+            <div className="text-2xl font-extrabold text-[#b01755] font-mono tabular-nums tracking-tight">
               {netProfit.toLocaleString('vi-VN')} <span className="text-xs font-semibold">đ</span>
             </div>
             <span className="text-xs text-slate-500 mt-1 block">
@@ -254,34 +254,34 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
         </div>
 
         {/* Metric 3: Đơn hoàn tất */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between gap-3">
+        <div className="bg-white p-5 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Đơn hoàn tất (PRO)
             </span>
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span className="w-2 h-2 rounded-full bg-[#b01755]"></span>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
-              {countSuccess} <span className="text-xs font-normal text-slate-400">gói đã kích hoạt</span>
+            <div className="text-2xl font-extrabold text-slate-900 font-mono tabular-nums tracking-tight">
+              {countSuccess} <span className="text-xs font-sans font-normal text-slate-600">gói đã kích hoạt</span>
             </div>
             <span className="text-xs text-slate-500 mt-1 block">
-              Gia hạn 30 ngày tự động
+              Gia hạn 1 tháng (30 ngày) tự động
             </span>
           </div>
         </div>
 
         {/* Metric 4: Giá gói cước niêm yết */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between gap-3">
+        <div className="bg-white p-5 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Giá Gói Chuyên Nghiệp (PRO)
             </span>
             <span className="w-2 h-2 rounded-full bg-slate-400"></span>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-slate-900 font-mono font-tabular tracking-tight">
-              99.000 <span className="text-xs font-semibold text-slate-400">đ / tháng</span>
+            <div className="text-2xl font-extrabold text-slate-900 font-mono tabular-nums tracking-tight">
+              99.000 <span className="text-xs font-sans font-semibold text-slate-600">đ / 1 tháng</span>
             </div>
             <span className="text-xs text-slate-500 mt-1 block">
               Đã gồm VAT &amp; phí cổng SePay
@@ -308,18 +308,18 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
             </p>
           </div>
 
-          {/* 2 Mini KPI Badges (Only Completed / Paid) */}
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#d0f81b]/25 border border-[#bde412] text-slate-950 text-xs">
+          {/* Mini KPI Summary (Flat inline stats, no nested card wrappers) */}
+          <div className="flex items-center gap-4 flex-wrap text-xs">
+            <div className="flex items-center gap-1.5 font-bold text-slate-900">
               <span className="w-2 h-2 rounded-full bg-[#15803d]"></span>
-              <span className="text-[11px] font-semibold text-slate-600">Thực thu:</span>
-              <strong className="font-mono font-black">{totalRevenue.toLocaleString('vi-VN')} đ</strong>
+              <span className="text-xs font-medium text-slate-600">Thực thu:</span>
+              <span className="font-mono font-black">{totalRevenue.toLocaleString('vi-VN')} đ</span>
             </div>
 
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-pink-50 border border-pink-200 text-[#ff4783] text-xs">
-              <span className="w-2 h-2 rounded-full bg-[#ff4783]"></span>
-              <span className="text-[11px] font-semibold text-slate-600">Lợi nhuận (80%):</span>
-              <strong className="font-mono font-black">{netProfit.toLocaleString('vi-VN')} đ</strong>
+            <div className="flex items-center gap-1.5 font-bold text-[#b01755]">
+              <span className="w-2 h-2 rounded-full bg-[#b01755]"></span>
+              <span className="text-xs font-medium text-slate-600">Lợi nhuận (80%):</span>
+              <span className="font-mono font-black">{netProfit.toLocaleString('vi-VN')} đ</span>
             </div>
           </div>
         </div>
@@ -332,11 +332,11 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
               <span>Doanh thu gộp (Gross)</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm bg-[#ff4783]"></span>
+              <span className="w-3 h-3 rounded-sm bg-[#b01755]"></span>
               <span>Lợi nhuận ròng (Net 80%)</span>
             </span>
           </div>
-          <span className="text-[11px] text-slate-400 italic">
+          <span className="text-xs text-slate-500 italic">
             * Nhấn vào cột ngày để lọc nhanh danh sách đơn bên dưới
           </span>
         </div>
@@ -363,7 +363,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
                     title={`${d.date}: Doanh thu ${d.grossRev.toLocaleString('vi-VN')} đ | Lợi nhuận ${d.netProfit.toLocaleString('vi-VN')} đ`}
                     className={`flex-1 flex flex-col items-center justify-end h-full p-2 rounded-xl transition-all cursor-pointer relative group ${
                       isSelected
-                        ? 'bg-slate-100 ring-2 ring-slate-900 shadow-sm'
+                        ? 'bg-[#fff0f5] ring-2 ring-[#ff4783] shadow-sm'
                         : 'hover:bg-slate-50'
                     }`}
                   >
@@ -393,7 +393,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
                     {/* Date label */}
                     <span
                       className={`text-[11px] font-bold mt-2.5 truncate max-w-full font-mono ${
-                        isSelected ? 'text-slate-950 font-black' : 'text-slate-600'
+                        isSelected ? 'text-[#b01755] font-black' : 'text-slate-600'
                       }`}
                     >
                       {d.date}
@@ -406,14 +406,14 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
         )}
 
         {/* Actionable Insight Banner */}
-        <div className="p-3.5 sm:p-4 rounded-xl bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-linear-to-r from-[#fff0f5] via-white to-[#f7fee7] border border-[#ffd6e4] text-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-start sm:items-center gap-2.5">
-            <span className="material-symbols-outlined text-[20px] text-[#d0f81b] shrink-0 mt-0.5 sm:mt-0">
+            <span className="material-symbols-outlined text-[20px] text-[#ff4783] shrink-0 mt-0.5 sm:mt-0">
               verified
             </span>
             <div className="text-xs leading-relaxed">
               <span>
-                <strong className="text-[#d0f81b]">Toàn bộ giao dịch đã được đối soát thành công</strong> qua cổng SePay VietQR. Tỷ suất lợi nhuận ròng thực nhận đạt mức tối ưu <strong className="text-white font-black">80%</strong> ({netProfit.toLocaleString('vi-VN')} đ).
+                <strong className="text-[#b01755]">Toàn bộ giao dịch đã được đối soát thành công</strong> qua cổng SePay VietQR. Tỷ suất lợi nhuận ròng thực nhận đạt mức tối ưu <strong className="text-[#ff4783] font-black">80%</strong> ({netProfit.toLocaleString('vi-VN')} đ).
               </span>
             </div>
           </div>
@@ -422,7 +422,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
             {selectedChartDate && (
               <button
                 onClick={() => setSelectedChartDate(null)}
-                className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1"
+                className="px-3 py-1.5 rounded-lg bg-white hover:bg-[#fff0f5] text-[#b01755] border border-[#ffd6e4] text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1"
                 type="button"
               >
                 <span className="material-symbols-outlined text-[14px]">close</span>
@@ -437,7 +437,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
       <div id="sepay-orders-table" className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
         {/* Active Date Filter Alert if set */}
         {selectedChartDate && (
-          <div className="px-5 py-2.5 bg-slate-100 border-b border-slate-200 flex items-center justify-between text-xs">
+          <div className="px-5 py-2.5 bg-[#fff0f5] border-b border-[#ffd6e4] flex items-center justify-between text-xs">
             <span className="flex items-center gap-1.5 text-slate-700 font-semibold">
               <span className="material-symbols-outlined text-[16px] text-[#ff4783]">filter_alt</span>
               <span>Đang lọc giao dịch theo ngày trên biểu đồ: <strong className="text-slate-900 font-black">{selectedChartDate}</strong></span>
@@ -451,54 +451,54 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
           </div>
         )}
 
-        {/* Table Title Header */}
-        <div className="p-5 sm:p-6 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ff4783]"></span>
-              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
-                Danh Sách Đơn Hàng &amp; Đối Soát Giao Dịch SePay
-              </h2>
+        {/* Table Title & Toolbar Header (Unified, flat structure) */}
+        <div className="p-5 sm:p-6 border-b border-slate-200/80 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ff4783]"></span>
+                <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
+                  Danh Sách Đơn Hàng &amp; Đối Soát Giao Dịch SePay
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 max-w-sm">
+                Kiểm soát trạng thái thanh toán gói PRO và doanh thu thực nhận tự động qua cổng SePay VietQR.
+              </p>
             </div>
-            <p className="text-xs text-slate-500">
-              Kiểm soát trạng thái thanh toán gói PRO và doanh thu thực nhận tự động qua cổng SePay VietQR.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
-              {filteredPayments.length} giao dịch đã thanh toán
-            </span>
-          </div>
-        </div>
-
-        {/* Table Toolbar */}
-        <div className="p-4 sm:p-5 bg-slate-50/70 border-b border-slate-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
-          <div className="relative flex-1 max-w-md">
-            <span className="material-symbols-outlined text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 text-[18px]">
-              search
-            </span>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Tìm theo mã đơn (#INV), tên cửa hàng, gói cước..."
-              className="w-full h-9.5 pl-9 pr-8 bg-white text-slate-900 placeholder:text-slate-400 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all shadow-xs font-medium"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[15px]">close</span>
-              </button>
-            )}
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#fff0f5] text-[#b01755] text-xs font-bold border border-[#ffd6e4]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
+                {filteredPayments.length} giao dịch đã thanh toán
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span>Đã thanh toán ({filteredPayments.length})</span>
+          <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+            <div className="relative flex-1 max-w-md">
+              <span className="material-symbols-outlined text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 text-[18px]">
+                search
+              </span>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Tìm theo mã đơn (#INV), tên cửa hàng, gói cước..."
+                className="w-full h-9.5 pl-9 pr-8 bg-white text-slate-900 placeholder:text-slate-400 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#d6155f] border border-slate-200 transition-all shadow-2xs font-medium"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[15px]">close</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-slate-700">
+                Đã thanh toán: <strong className="text-slate-900 font-mono">{filteredPayments.length}</strong>
+              </span>
             </div>
           </div>
         </div>
@@ -507,7 +507,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs min-w-[880px]">
             <thead>
-              <tr className="bg-slate-50/90 text-slate-700 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200">
+              <tr className="bg-slate-50/90 text-slate-700 text-xs font-extrabold uppercase tracking-wider border-b border-slate-200">
                 <th className="py-3 px-3 whitespace-nowrap w-[110px]">Mã Đơn</th>
                 <th className="py-3 px-3 whitespace-nowrap min-w-[130px]">Cửa Hàng</th>
                 <th className="py-3 px-3 whitespace-nowrap min-w-[120px]">Gói Dịch Vụ</th>
@@ -547,7 +547,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
                   return (
                     <tr key={p.invoiceId} className="hover:bg-slate-50/70 transition-colors">
                       <td className="py-2.5 px-3 whitespace-nowrap">
-                        <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200/80 text-[11px] whitespace-nowrap inline-block">
+                        <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200/80 text-xs whitespace-nowrap inline-block">
                           {p.invoiceId}
                         </span>
                       </td>
@@ -557,40 +557,40 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
                           <span className="font-bold text-slate-900 text-xs whitespace-nowrap">
                             {p.storeName}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+                          <span className="text-xs text-slate-600 font-medium whitespace-nowrap">
                             {p.storeLocation || 'Việt Nam'}
                           </span>
                         </div>
                       </td>
 
                       <td className="py-2.5 px-3 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-pink-50 text-[#ff4783] text-[11px] font-bold border border-pink-200 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#fff0f5] text-[#b01755] text-xs font-bold border border-[#ffd6e4] whitespace-nowrap">
                           {planText}
                         </span>
                       </td>
 
                       <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                        <span className="font-mono font-black text-slate-900 text-xs whitespace-nowrap">
+                        <span className="font-mono tabular-nums font-black text-slate-900 text-xs whitespace-nowrap">
                           {p.amount.toLocaleString('vi-VN')} đ
                         </span>
                       </td>
 
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold border border-slate-200 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 whitespace-nowrap">
                           {cleanMethod}
                         </span>
                       </td>
 
-                      <td className="py-2.5 px-3 text-slate-500 text-[11px] whitespace-nowrap font-mono">
+                      <td className="py-2.5 px-3 text-slate-500 text-xs whitespace-nowrap font-mono tabular-nums">
                         <div className="flex flex-col leading-tight whitespace-nowrap">
                           <span className="font-semibold text-slate-800">{p.timestamp?.split(' ')[1] || p.timestamp}</span>
-                          <span className="text-slate-400 text-[10px]">{p.timestamp?.split(' ')[0]}</span>
+                          <span className="text-slate-600 text-xs">{p.timestamp?.split(' ')[0]}</span>
                         </div>
                       </td>
 
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#d0f81b]/35 text-slate-950 text-[11px] font-black border border-[#bde412] whitespace-nowrap shadow-2xs">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#d0f81b]/35 text-slate-950 text-xs font-black border border-[#bde412] whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
                           <span>Đã Thanh Toán</span>
                         </span>
                       </td>
@@ -613,15 +613,17 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
                 })
               )}
             </tbody>
+            <tfoot>
+              <tr className="border-t border-slate-100 text-xs text-slate-500">
+                <td colSpan={4} className="py-3 px-3">
+                  Hiển thị <strong>{filteredPayments.length}</strong> đơn hàng đã thanh toán thành công
+                </td>
+                <td colSpan={4} className="py-3 px-3 text-right font-medium text-slate-600 pr-4">
+                  Đồng bộ tự động qua SePay VietQR Webhook
+                </td>
+              </tr>
+            </tfoot>
           </table>
-        </div>
-
-        {/* Table Footer */}
-        <div className="p-3.5 px-5 bg-slate-50/70 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
-          <span>
-            Hiển thị <strong>{filteredPayments.length}</strong> đơn hàng đã thanh toán thành công
-          </span>
-          <span className="font-semibold text-slate-700">Đồng bộ tự động qua SePay VietQR Webhook</span>
         </div>
       </div>
 
@@ -630,13 +632,13 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
         <div
           className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-bottom-2 ${
             toastMessage.type === 'error'
-              ? 'bg-rose-900 text-white border border-rose-700'
-              : 'bg-slate-900 text-white border border-slate-700'
+              ? 'bg-rose-50 text-rose-800 border-2 border-rose-200'
+              : 'bg-white text-slate-900 border-2 border-[#ffd6e4]'
           }`}
         >
           <span
             className={`material-symbols-outlined text-[18px] ${
-              toastMessage.type === 'error' ? 'text-rose-400' : 'text-[#d0f81b]'
+              toastMessage.type === 'error' ? 'text-rose-500' : 'text-[#ff4783]'
             }`}
           >
             {toastMessage.type === 'error' ? 'error' : 'check_circle'}

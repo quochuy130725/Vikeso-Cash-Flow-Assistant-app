@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import '../shared_widgets/side_drawer.dart';
+import '../shared_widgets/notification_sheet.dart';
 import '../shared_widgets/pro_badge.dart';
 import '../shared_widgets/pro_paywall_sheet.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -441,7 +442,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
         ),
         actions: [
           IconButton(
-            onPressed: () => _showSnack('Bạn không có thông báo mới', isSuccess: true),
+            onPressed: () => NotificationSheet.show(context),
             icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF0F172A), size: 24),
           ),
           const SizedBox(width: 4),

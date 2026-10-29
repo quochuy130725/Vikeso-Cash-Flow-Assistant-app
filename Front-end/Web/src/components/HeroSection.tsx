@@ -87,7 +87,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               {/* Primary CTA: Scan receipt demo */}
               <button
                 onClick={onOpenScan}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white font-extrabold text-sm shadow-md hover:shadow-xl transition-all cursor-pointer group"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white font-extrabold text-sm shadow-md shadow-[#ff4783]/25 hover:shadow-xl transition-all cursor-pointer group border border-[#ff4783]"
                 type="button"
               >
                 <Camera className="w-4 h-4 text-[#d0f81b] group-hover:scale-110 transition-transform" />
@@ -131,12 +131,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           {/* Right Column: Three.js Interactive 3D Canvas Showcase (5 cols on lg) */}
           <div className="lg:col-span-5 relative flex flex-col items-center justify-center">
             {/* 3D Mode Selector Tabs */}
-            <div className="flex items-center gap-1.5 p-1 bg-white/80 backdrop-blur-md rounded-2xl border border-white/80 shadow-xs mb-3 z-20 max-w-full overflow-x-auto">
+            <div className="flex items-center gap-1.5 p-1 bg-white/85 backdrop-blur-md rounded-2xl border border-white/90 shadow-xs mb-3 z-20 max-w-full overflow-x-auto">
               <button
                 onClick={() => setActive3D('scanner')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                   active3D === 'scanner'
-                    ? 'bg-slate-950 text-white shadow-xs'
+                    ? 'bg-[#ff4783] text-white shadow-xs'
                     : 'text-slate-700 hover:text-slate-950 hover:bg-white/60'
                 }`}
                 type="button"
@@ -149,7 +149,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={() => setActive3D('cashflow')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                   active3D === 'cashflow'
-                    ? 'bg-slate-950 text-white shadow-xs'
+                    ? 'bg-[#ff4783] text-white shadow-xs'
                     : 'text-slate-700 hover:text-slate-950 hover:bg-white/60'
                 }`}
                 type="button"
@@ -162,12 +162,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={() => setActive3D('card')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                   active3D === 'card'
-                    ? 'bg-slate-950 text-white shadow-xs'
+                    ? 'bg-[#ff4783] text-white shadow-xs'
                     : 'text-slate-700 hover:text-slate-950 hover:bg-white/60'
                 }`}
                 type="button"
               >
-                <CreditCard className={`w-3.5 h-3.5 ${active3D === 'card' ? 'text-[#ff4783]' : 'text-slate-500'}`} />
+                <CreditCard className={`w-3.5 h-3.5 ${active3D === 'card' ? 'text-[#d0f81b]' : 'text-slate-500'}`} />
                 <span>Thẻ Cửa Hàng</span>
               </button>
             </div>

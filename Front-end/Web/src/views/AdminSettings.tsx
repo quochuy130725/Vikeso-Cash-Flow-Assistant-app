@@ -107,10 +107,10 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* 1. Header Banner */}
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Hệ Thống &amp; Cấu Hình
             </span>
             <span className="text-slate-300">•</span>
@@ -118,15 +118,15 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
               Quản trị viên: <strong className="text-slate-900">{currentUser?.name || 'Admin'}</strong>
             </span>
             <span className="text-slate-300">•</span>
-            <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-900">
+              <span className="w-2 h-2 rounded-full bg-[#d0f81b] border border-slate-900"></span>
               Máy chủ Render &amp; Atlas Online
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
             Giám Sát Hạ Tầng &amp; Cài Đặt Hệ Thống VikeSo
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 max-w-2xl">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 max-w-sm">
             Theo dõi độ trễ API thực tế, kiểm soát tiến trình gửi báo cáo tự động lúc 22:00, webhook SePay và quản lý bảo mật quyền Admin.
           </p>
         </div>
@@ -134,10 +134,10 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
         <button
           onClick={pingServer}
           disabled={isPinging}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50 self-start sm:self-auto shrink-0"
+          className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl bg-[#d6155f] hover:bg-[#b01755] text-white text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50 self-start sm:self-auto shrink-0"
           type="button"
         >
-          <span className={`material-symbols-outlined text-[16px] ${isPinging ? 'animate-spin' : ''}`}>
+          <span className={`material-symbols-outlined text-[16px] text-white ${isPinging ? 'animate-spin' : ''}`}>
             network_ping
           </span>
           <span>{isPinging ? 'Đang ping...' : 'Kiểm Tra Ping API'}</span>
@@ -149,10 +149,10 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
         {/* Left Column (7 cols): Real Infrastructure Health & Cron Automation */}
         <div className="lg:col-span-7 space-y-6">
           {/* Real Server Health Card */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-4">
+          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200">
+                <div className="w-9 h-9 rounded-xl bg-[#fff0f5] text-[#b01755] border border-[#ffd6e4] flex items-center justify-center">
                   <span className="material-symbols-outlined text-[20px]">monitor_heart</span>
                 </div>
                 <div>
@@ -161,36 +161,37 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
                 </div>
               </div>
 
-              <span className="text-xs font-black px-2.5 py-1 rounded-full bg-[#d0f81b] text-slate-950 border border-[#bde412]">
+              <span className="text-xs font-black px-2.5 py-1 rounded-md bg-[#d0f81b] text-slate-950 border border-[#bde412]">
                 TRỰC TUYẾN
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
-                <span className="text-[10px] font-bold text-slate-500 uppercase">Trạng Thái HTTP</span>
+            {/* Flat health stats layout (no nested cards) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Trạng Thái HTTP</span>
                 <div className="text-sm font-extrabold text-slate-900">{healthStatus}</div>
-                <span className="text-[10px] text-slate-400">Endpoint /api/health</span>
+                <span className="text-xs text-slate-500 block">Endpoint /api/health</span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
-                <span className="text-[10px] font-bold text-slate-500 uppercase">Độ Trễ Phản Hồi (Ping)</span>
-                <div className="text-xl font-extrabold text-[#ff4783] font-mono">
+              <div className="space-y-1 sm:border-l sm:border-slate-100 sm:pl-4">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Độ Trễ Phản Hồi</span>
+                <div className="text-xl font-extrabold text-[#b01755] font-mono tabular-nums">
                   {latencyMs !== null ? `${latencyMs} ms` : '...'}
                 </div>
-                <span className="text-[10px] text-slate-400">Lúc {lastPingTime || 'Vừa xong'}</span>
+                <span className="text-xs text-slate-500 block">Lúc {lastPingTime || 'Vừa xong'}</span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
-                <span className="text-[10px] font-bold text-slate-500 uppercase">Cơ Sở Dữ Liệu</span>
+              <div className="space-y-1 sm:border-l sm:border-slate-100 sm:pl-4">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Cơ Sở Dữ Liệu</span>
                 <div className="text-sm font-extrabold text-slate-900">MongoDB Atlas</div>
-                <span className="text-[10px] text-emerald-700 font-semibold">✓ Đã kết nối</span>
+                <span className="text-xs text-emerald-700 font-bold block">✓ Đã kết nối</span>
               </div>
             </div>
           </div>
 
-          {/* Cron Job & Automation Dispatch Card */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-4">
+          {/* Cron Job & Automation Dispatch Card (Flat layout without nested card wrapper) */}
+          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
               <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
                 <span className="material-symbols-outlined text-[20px]">alarm</span>
@@ -201,32 +202,32 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="space-y-3 pt-1">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#d0f81b] border border-slate-900"></span>
                   <span className="text-xs sm:text-sm font-bold text-slate-900">
                     Báo cáo kết ca ngày tự động (Daily Report)
                   </span>
                 </div>
-                <span className="text-[10px] font-black text-slate-950 bg-[#d0f81b] px-2 py-0.5 rounded border border-[#bde412]">
+                <span className="text-xs font-black text-slate-950 bg-[#d0f81b] px-2 py-0.5 rounded border border-[#bde412] font-mono tabular-nums">
                   22:00:00 (GMT+7)
                 </span>
               </div>
 
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-xs text-slate-600 leading-relaxed max-w-sm">
                 Hệ thống cronService tự động kích hoạt mỗi đêm lúc 22:00, gom toàn bộ hóa đơn của từng hộ kinh doanh, tạo file Excel bảng kê và gửi vào Telegram/Email của họ.
               </p>
 
-              <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between gap-3 flex-wrap">
-                <span className="text-[11px] text-slate-500">
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+                <span className="text-xs text-slate-500">
                   Dùng để kiểm thử ngay lập tức mà không cần đợi đến 22:00:
                 </span>
                 <button
                   type="button"
                   onClick={handleTestCronReport}
                   disabled={isTestingReport}
-                  className="px-3.5 py-1.5 rounded-lg bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  className="h-9 px-3.5 rounded-lg bg-[#d6155f] hover:bg-[#b01755] text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
                   <span className={`material-symbols-outlined text-[15px] ${isTestingReport ? 'animate-spin' : ''}`}>
                     {isTestingReport ? 'sync' : 'send'}
@@ -240,8 +241,8 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
 
         {/* Right Column (5 cols): Webhook Integrations & Admin Security */}
         <div className="lg:col-span-5 space-y-6">
-          {/* Webhook Endpoints Status Card */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-4">
+          {/* Webhook Endpoints Status Card (Flat divided rows, no nested cards) */}
+          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
               <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
                 <span className="material-symbols-outlined text-[20px]">webhook</span>
@@ -252,37 +253,37 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
               </div>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
+            <div className="space-y-4 pt-1 divide-y divide-slate-100 text-xs">
+              <div className="space-y-1.5 pt-1 first:pt-0">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-900">SePay VietQR Webhook</span>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                  <span className="text-xs font-black text-slate-950 bg-[#d0f81b]/40 px-2 py-0.5 rounded border border-[#bde412]">
                     Hoạt Động
                   </span>
                 </div>
-                <code className="text-[11px] font-mono text-slate-600 block bg-white p-1.5 rounded border border-slate-200 break-all">
+                <code className="text-xs font-mono text-slate-700 block bg-slate-50 p-2 rounded border border-slate-200/70 break-all">
                   POST /api/billing/sepay/webhook
                 </code>
-                <span className="text-[10px] text-slate-400">Xác thực bằng API-Key bảo mật</span>
+                <span className="text-xs text-slate-500 block">Xác thực bằng API-Key bảo mật</span>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
+              <div className="space-y-1.5 pt-3">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-900">Telegram Bot Webhook</span>
-                  <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">
+                  <span className="text-xs font-black text-slate-950 bg-[#d0f81b]/40 px-2 py-0.5 rounded border border-[#bde412]">
                     Hoạt Động
                   </span>
                 </div>
-                <code className="text-[11px] font-mono text-slate-600 block bg-white p-1.5 rounded border border-slate-200 break-all">
+                <code className="text-xs font-mono text-slate-700 block bg-slate-50 p-2 rounded border border-slate-200/70 break-all">
                   POST /api/telegram/webhook
                 </code>
-                <span className="text-[10px] text-slate-400">Đăng ký tự động với máy chủ Telegram API</span>
+                <span className="text-xs text-slate-500 block">Đăng ký tự động với máy chủ Telegram API</span>
               </div>
             </div>
           </div>
 
           {/* Admin Change Password Card */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-4">
+          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
               <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
                 <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
@@ -342,7 +343,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
               <button
                 type="submit"
                 disabled={isChangingPassword}
-                className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 mt-2"
+                className="w-full py-2.5 rounded-xl bg-[#d6155f] hover:bg-[#b01755] text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 mt-2"
               >
                 <span className={`material-symbols-outlined text-[16px] ${isChangingPassword ? 'animate-spin' : ''}`}>
                   {isChangingPassword ? 'sync' : 'key'}
@@ -359,13 +360,13 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser }) => 
         <div
           className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-bottom-2 ${
             toastMessage.type === 'error'
-              ? 'bg-rose-900 text-white border border-rose-700'
-              : 'bg-slate-900 text-white border border-slate-700'
+              ? 'bg-rose-50 text-rose-800 border-2 border-rose-200'
+              : 'bg-white text-slate-900 border-2 border-[#ffd6e4]'
           }`}
         >
           <span
             className={`material-symbols-outlined text-[18px] ${
-              toastMessage.type === 'error' ? 'text-rose-400' : 'text-[#d0f81b]'
+              toastMessage.type === 'error' ? 'text-rose-500' : 'text-[#b01755]'
             }`}
           >
             {toastMessage.type === 'error' ? 'error' : 'check_circle'}

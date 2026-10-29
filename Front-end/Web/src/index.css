@@ -36,13 +36,13 @@
   --color-accent-lime: #d0f81b;
   --color-on-accent-lime: #090d05;
 
-  /* Secondary Deep Slate & Cockpit Dark (#0f172a / #090d05) */
-  --color-secondary: #0f172a;
-  --color-secondary-container: #1e293b;
+  /* Secondary Soft Rose & Berry (#ff4783 / #fff0f5) - Thay thế hoàn toàn nền đen */
+  --color-secondary: #ff4783;
+  --color-secondary-container: #fff0f5;
   --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #f1f5f9;
-  --color-secondary-fixed: #e2e8f0;
-  --color-secondary-fixed-dim: #cbd5e1;
+  --color-on-secondary-container: #880e3c;
+  --color-secondary-fixed: #ffe4ee;
+  --color-secondary-fixed-dim: #fecddf;
   --color-on-secondary-fixed: #0f172a;
   --color-on-secondary-fixed-variant: #334155;
 
@@ -93,8 +93,8 @@
   --color-danger-vikeso: #e11d48;
   --color-warning-vikeso: #d97706;
   --color-surface-bg: #ffffff;
-  --color-dark-surface: #090d05;
-  --color-dark-card: #12180c;
+  --color-dark-surface: #fff0f5;
+  --color-dark-card: #ffffff;
 
   --spacing-space-xs: 0.25rem;
   --spacing-space-sm: 0.5rem;
@@ -112,12 +112,12 @@
     color: #ffffff;
     font-weight: 700;
     border: 1px solid #ff4783;
-    box-shadow: 0 4px 18px -2px rgba(255, 71, 131, 0.4);
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.08);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .btn-pink-primary:hover {
     background-color: #e0326e;
-    box-shadow: 0 6px 24px -2px rgba(255, 71, 131, 0.55);
+    box-shadow: 0 2px 4px -1px rgba(15, 23, 42, 0.1);
     transform: translateY(-1px);
   }
   .btn-pink-primary:active {
@@ -130,12 +130,12 @@
     color: #090d05;
     font-weight: 800;
     border: 1px solid #bde412;
-    box-shadow: 0 4px 20px -2px rgba(208, 248, 27, 0.45);
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.08);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .btn-lime-primary:hover {
     background-color: #c2ea14;
-    box-shadow: 0 6px 28px -2px rgba(208, 248, 27, 0.6);
+    box-shadow: 0 2px 4px -1px rgba(15, 23, 42, 0.1);
     transform: translateY(-1px);
   }
   .btn-lime-primary:active {
@@ -209,11 +209,11 @@
 }
 
 .glass-card-dark {
-  background: rgba(15, 23, 42, 0.88);
+  background: rgba(255, 240, 245, 0.94);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 214, 228, 0.9);
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05);
 }
 
 .glass-pill {
@@ -237,6 +237,26 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+  border: 1px solid #f1f5f9;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
 }
 
 @keyframes shiny-badge {
