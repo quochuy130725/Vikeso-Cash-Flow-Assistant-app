@@ -6,6 +6,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../shared_widgets/side_drawer.dart';
 import '../shared_widgets/notification_sheet.dart';
+import '../shared_widgets/pro_paywall_sheet.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/services/api_service.dart';
 import '../../data/services/socket_service.dart';
@@ -26,6 +28,10 @@ class _PersonalScreenState extends State<PersonalScreen> with WidgetsBindingObse
   String _phone = '';
   String _role = 'OWNER';
   String? _avatar;
+  bool _receiveEmail = true;
+  bool _receiveTelegram = false;
+  bool _hasTelegram = false;
+  String _plan = 'FREE';
   bool _isLoading = false;
   bool _receiveInApp = true;
 
@@ -84,13 +90,52 @@ class _PersonalScreenState extends State<PersonalScreen> with WidgetsBindingObse
       });
     }
 
+    final plan = await _storage.read(key: 'user_subscriptionPlan') ?? 'FREE';
+    final tgChatId = await _storage.read(key: 'user_telegramChatId');
+    if (mounted) {
+      setState(() {
+        _plan = plan.toUpperCase();
+        _hasTelegram = tgChatId != null && tgChatId.isNotEmpty;
+      });
+    }
+
     final settingsStr = await _storage.read(key: 'user_notificationSettings');
     if (settingsStr != null && mounted) {
       try {
         final Map<String, dynamic> settings = jsonDecode(settingsStr);
         setState(() {
           _receiveInApp = settings['receiveInApp'] ?? true;
+          _receiveEmail = settings['receiveEmail'] ?? true;
+          _receiveTelegram = settings['receiveTelegram'] ?? false;
         });
+      } catch (_) {}
+    }
+
+    final userId = await AuthRepository().getUserId();
+    if (userId != null && userId.isNotEmpty) {
+      try {
+        final serverProfile = await ApiService().getUserProfile(userId);
+        if (serverProfile['success'] == true && mounted) {
+          final user = serverProfile['user'] as Map<String, dynamic>?;
+          final bool hasTg = serverProfile['hasTelegram'] == true ||
+              (user != null && user['telegramChatId'] != null && user['telegramChatId'].toString().isNotEmpty);
+          final Map<String, dynamic>? st =
+              (serverProfile['settings'] as Map<String, dynamic>?) ?? (user?['notificationSettings'] as Map<String, dynamic>?);
+          if (st != null) {
+            setState(() {
+              _hasTelegram = hasTg;
+              _receiveEmail = st['receiveEmail'] ?? true;
+              _receiveTelegram = hasTg && (st['receiveTelegram'] == true);
+              _receiveInApp = st['receiveInApp'] ?? true;
+            });
+            await _storage.write(key: 'user_telegramChatId', value: hasTg ? 'linked' : '');
+            await _storage.write(key: 'user_notificationSettings', value: jsonEncode({
+              'receiveEmail': _receiveEmail,
+              'receiveTelegram': _receiveTelegram,
+              'receiveInApp': _receiveInApp,
+            }));
+          }
+        }
       } catch (_) {}
     }
   }
@@ -299,25 +344,72 @@ class _PersonalScreenState extends State<PersonalScreen> with WidgetsBindingObse
     }
   }
 
-  Future<void> _updateInAppNotification(bool value) async {
+  Future<void> _updateSetting(String key, bool val) async {
     setState(() {
-      _receiveInApp = value;
+      if (key == 'receiveEmail') _receiveEmail = val;
+      if (key == 'receiveTelegram') _receiveTelegram = val;
+      if (key == 'receiveInApp') _receiveInApp = val;
       _isLoading = true;
     });
+
     final userId = await AuthRepository().getUserId();
-    if (userId != null) {
-      await ApiService().updateNotificationSettings(userId: userId, receiveInApp: value);
-      final settingsStr = await _storage.read(key: 'user_notificationSettings');
-      Map<String, dynamic> settings = {};
-      if (settingsStr != null) {
-        try {
-          settings = jsonDecode(settingsStr);
-        } catch (_) {}
-      }
-      settings['receiveInApp'] = value;
+    if (userId != null && userId.isNotEmpty) {
+      final res = await ApiService().updateNotificationSettings(
+        userId: userId,
+        receiveEmail: _receiveEmail,
+        receiveTelegram: _receiveTelegram,
+        receiveInApp: _receiveInApp,
+      );
+      final settings = {
+        'receiveEmail': _receiveEmail,
+        'receiveTelegram': _receiveTelegram,
+        'receiveInApp': _receiveInApp,
+      };
       await _storage.write(key: 'user_notificationSettings', value: jsonEncode(settings));
+      if (res['success'] == true) {
+        _showSnack('Cập nhật cài đặt thông báo thành công!', isSuccess: true);
+      }
     }
     if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _promptConnectTelegram() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Liên kết Telegram', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('Bạn chưa kết nối với Bot Telegram của VikeSo. Bạn có muốn chuyển hướng đến Telegram để kết nối ngay bây giờ không?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF4783)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Kết nối', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      final userId = await AuthRepository().getUserId();
+      if (userId != null) {
+        final link = ApiService.getTelegramDeepLink(userId);
+        final uri = Uri.parse(link);
+        try {
+          final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+          if (!ok) await launchUrl(uri, mode: LaunchMode.platformDefault);
+        } catch (_) {
+          try {
+            await launchUrl(uri, mode: LaunchMode.platformDefault);
+          } catch (e) {
+            _showSnack('Không thể mở Telegram: $e', isSuccess: false);
+          }
+        }
+        await Future.delayed(const Duration(seconds: 2));
+        if (mounted) {
+          await _loadPersonalProfile();
+        }
+      }
+    }
   }
 
   Future<void> _handleLogout() async {
@@ -528,25 +620,105 @@ class _PersonalScreenState extends State<PersonalScreen> with WidgetsBindingObse
 
                     const SizedBox(height: 20),
 
-                    // Thông báo trên thiết bị này
+                    // Cài đặt thông báo & Báo cáo
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: const Color(0xFFE2E8F0)),
                       ),
-                      child: SwitchListTile(
-                        title: const Text(
-                          'Thông báo ứng dụng trên thiết bị này',
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFF0F172A)),
-                        ),
-                        subtitle: const Text(
-                          'Cảnh báo biến động thu chi & nhắc đối soát ca',
-                          style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                        ),
-                        value: _receiveInApp,
-                        activeThumbColor: const Color(0xFFFF4783),
-                        onChanged: _updateInAppNotification,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.fromLTRB(16, 14, 16, 4),
+                            child: Text(
+                              'CÀI ĐẶT THÔNG BÁO & BÁO CÁO',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF94A3B8),
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ),
+                          SwitchListTile(
+                            title: const Text(
+                              'Thông báo trên thiết bị này',
+                              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFF0F172A)),
+                            ),
+                            subtitle: const Text(
+                              'Cảnh báo biến động thu chi & nhắc đối soát ca',
+                              style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                            ),
+                            value: _receiveInApp,
+                            activeThumbColor: const Color(0xFFFF4783),
+                            onChanged: (val) => _updateSetting('receiveInApp', val),
+                          ),
+                          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                          SwitchListTile(
+                            title: const Text(
+                              'Báo cáo doanh thu qua Email',
+                              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFF0F172A)),
+                            ),
+                            subtitle: const Text(
+                              'Tự động chốt sổ và gửi bảng kê PDF lúc 22:00',
+                              style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                            ),
+                            value: _receiveEmail,
+                            activeThumbColor: const Color(0xFFFF4783),
+                            onChanged: (val) => _updateSetting('receiveEmail', val),
+                          ),
+                          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                          SwitchListTile(
+                            title: Row(
+                              children: [
+                                const Text(
+                                  'Cảnh báo qua Telegram Bot',
+                                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFF0F172A)),
+                                ),
+                                const SizedBox(width: 8),
+                                if (_plan != 'PRO')
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF0F5),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: const Color(0xFFFF4783), width: 0.8),
+                                    ),
+                                    child: const Text(
+                                      'PRO',
+                                      style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w900, color: Color(0xFFFF4783)),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            subtitle: Text(
+                              _hasTelegram
+                                  ? 'Đã liên kết Bot VikeSo (Nhận tin nhắn tức thời)'
+                                  : 'Tin nhắn tóm tắt dòng tiền vào/ra tức thời',
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                            ),
+                            value: _plan == 'PRO' ? _receiveTelegram : false,
+                            activeThumbColor: const Color(0xFFFF4783),
+                            onChanged: (val) {
+                              final isPro = _plan == 'PRO';
+                              if (!isPro) {
+                                ProPaywallSheet.show(
+                                  context,
+                                  featureTitle: 'Báo Cáo Telegram Bot',
+                                  featureDescription: 'Nhận tin nhắn thông báo dòng tiền tức thì và báo cáo chốt sổ 22:00 qua Telegram Bot là tính năng độc quyền của gói VikeSo PRO.',
+                                );
+                                return;
+                              }
+                              if (val && !_hasTelegram) {
+                                _promptConnectTelegram();
+                                return;
+                              }
+                              _updateSetting('receiveTelegram', val);
+                            },
+                          ),
+                        ],
                       ),
                     ),
 

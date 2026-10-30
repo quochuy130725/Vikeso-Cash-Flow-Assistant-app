@@ -66,31 +66,74 @@ class _LoginScreenState extends State<LoginScreen> {
   // DANG KY 3 BUOC (THONG TIN CA NHAN -> OTP -> ONBOARDING CUA HANG)
   // =========================================================
   Future<void> _handleRegister() async {
+    // BƯỚC 1: Đăng ký tài khoản cá nhân & Gửi OTP qua Brevo Email
     if (_registerStep == 1) {
       if (!_formKey.currentState!.validate()) return;
-      setState(() {
-        _errorMessage = null;
-        _registerStep = 2;
-      });
+      setState(() { _isLoading = true; _errorMessage = null; });
+
+      final result = await _authRepo.registerStep1SendOtp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        name: _fullNameController.text.trim(),
+      );
+
+      if (!mounted) return;
+      setState(() { _isLoading = false; });
+
+      if (result['success'] == true) {
+        setState(() {
+          _errorMessage = null;
+          _registerStep = 2;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Mã OTP đã được gửi về email của bạn!'),
+            backgroundColor: const Color(0xFF0F172A),
+          ),
+        );
+      } else {
+        setState(() { _errorMessage = result['message']; });
+      }
       return;
     }
 
+    // BƯỚC 2: Xác thực mã OTP 6 số từ Email
     if (_registerStep == 2) {
       final otp = _otpController.text.trim();
       if (otp.length != 6) {
         setState(() {
-          _errorMessage = 'Vui lòng nhập đủ mã OTP 6 chữ số (Demo: 123456)';
+          _errorMessage = 'Vui lòng nhập đủ mã OTP 6 chữ số';
         });
         return;
       }
-      setState(() {
-        _errorMessage = null;
-        _registerStep = 3;
-      });
+      setState(() { _isLoading = true; _errorMessage = null; });
+
+      final result = await _authRepo.verifyRegisterOtp(
+        email: _emailController.text.trim(),
+        otpCode: otp,
+      );
+
+      if (!mounted) return;
+      setState(() { _isLoading = false; });
+
+      if (result.isSuccess) {
+        setState(() {
+          _errorMessage = null;
+          _registerStep = 3;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Xác thực OTP thành công! Vui lòng khởi tạo cửa hàng đầu tiên.'),
+            backgroundColor: Color(0xFF0F172A),
+          ),
+        );
+      } else {
+        setState(() { _errorMessage = result.errorMessage; });
+      }
       return;
     }
 
-    // Bước 3: Onboarding cửa hàng đầu tiên & gọi API đăng ký
+    // BƯỚC 3: Onboarding cửa hàng đầu tiên (POST /api/shops/onboarding)
     if (_shopNameController.text.trim().isEmpty) {
       setState(() {
         _errorMessage = 'Vui lòng nhập tên cửa hàng đầu tiên của bạn';
@@ -100,10 +143,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() { _isLoading = true; _errorMessage = null; });
 
-    final result = await _authRepo.register(
-      email: _emailController.text,
-      password: _passwordController.text,
+    final result = await _authRepo.completeOnboardingShop(
       shopName: _shopNameController.text.trim(),
+      businessType: _selectedBusinessType,
+      address: _shopAddressController.text.trim(),
     );
 
     if (!mounted) return;
@@ -113,6 +156,23 @@ class _LoginScreenState extends State<LoginScreen> {
       _navigateToDashboard(result.userInfo!);
     } else {
       setState(() { _errorMessage = result.errorMessage; });
+    }
+  }
+
+  Future<void> _handleResendOtp() async {
+    setState(() { _isLoading = true; _errorMessage = null; });
+    final res = await _authRepo.resendRegisterOtp(email: _emailController.text.trim());
+    if (!mounted) return;
+    setState(() { _isLoading = false; });
+    if (res['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(res['message'] ?? 'Đã gửi lại mã OTP mới về email!'),
+          backgroundColor: const Color(0xFF0F172A),
+        ),
+      );
+    } else {
+      setState(() { _errorMessage = res['message']; });
     }
   }
 
@@ -288,13 +348,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton.icon(
-                        onPressed: () => setState(() => _registerStep = 1),
-                        icon: const Icon(Icons.arrow_back_rounded, size: 16),
-                        label: const Text('Quay lại sửa Email'),
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () => setState(() => _registerStep = 1),
+                          icon: const Icon(Icons.arrow_back_rounded, size: 16),
+                          label: const Text('Đổi Email'),
+                        ),
+                        TextButton.icon(
+                          onPressed: _isLoading ? null : _handleResendOtp,
+                          icon: const Icon(Icons.refresh_rounded, size: 16),
+                          label: const Text('Gửi lại mã OTP'),
+                        ),
+                      ],
                     ),
                   ] else if (_isRegisterMode && _registerStep == 3) ...[
                     TextFormField(

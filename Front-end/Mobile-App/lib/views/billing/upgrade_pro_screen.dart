@@ -38,7 +38,10 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
     if (_currentOrder != null && _currentOrder!.qrUrl.trim().startsWith('http')) {
       return _currentOrder!.qrUrl;
     }
-    return 'https://img.vietqr.io/image/VCB-1026466727-compact2.png?amount=$amount&addInfo=${Uri.encodeComponent(code)}&accountName=VIKESO';
+    final bankCode = _currentOrder?.bankCode ?? 'MB';
+    final bankAccount = _currentOrder?.bankAccount ?? '0829100286';
+    final accountName = Uri.encodeComponent(_currentOrder?.accountName ?? 'PHAM HUYNH QUOC HUY');
+    return 'https://img.vietqr.io/image/$bankCode-$bankAccount-compact2.png?amount=$amount&addInfo=${Uri.encodeComponent(code)}&accountName=$accountName';
   }
 
   @override
@@ -70,8 +73,11 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
           plan: 'PRO',
           amount: _proPlan['price'] as int,
           transferContent: 'VIKESO $fallbackCode',
+          bankCode: 'MB',
+          bankAccount: '0829100286',
+          accountName: 'PHAM HUYNH QUOC HUY',
           qrUrl:
-              'https://img.vietqr.io/image/VCB-1026466727-compact2.png?amount=${_proPlan['price']}&addInfo=${Uri.encodeComponent('VIKESO $fallbackCode')}&accountName=VIKESO',
+              'https://img.vietqr.io/image/MB-0829100286-compact2.png?amount=${_proPlan['price']}&addInfo=${Uri.encodeComponent('VIKESO $fallbackCode')}&accountName=PHAM%20HUYNH%20QUOC%20HUY',
           status: 'PENDING',
           expiresAt: DateTime.now().add(const Duration(minutes: 15)),
         );
@@ -469,7 +475,7 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
                         children: [
                           _buildDetailRow(
                             label: 'Số tiền thanh toán',
-                            value: '${_proPlan['priceText']} VNĐ',
+                            value: _proPlan['priceText'] as String,
                             isAmount: true,
                             onCopy: () => _copyToClipboard('${_proPlan['price']}', 'Số tiền'),
                           ),
@@ -484,18 +490,20 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
                           const Divider(height: 1, color: Color(0xFFE2E8F0)),
                           _buildDetailRow(
                             label: 'Ngân hàng thụ hưởng',
-                            value: 'Vietcombank (VCB)',
+                            value: (_currentOrder?.bankCode == 'MB' || _currentOrder?.bankCode == null)
+                                ? 'MB Bank (Quân Đội)'
+                                : '${_currentOrder!.bankCode} Bank',
                           ),
                           const Divider(height: 1, color: Color(0xFFE2E8F0)),
                           _buildDetailRow(
                             label: 'Số tài khoản',
-                            value: '1026466727',
-                            onCopy: () => _copyToClipboard('1026466727', 'Số tài khoản'),
+                            value: _currentOrder?.bankAccount ?? '0829100286',
+                            onCopy: () => _copyToClipboard(_currentOrder?.bankAccount ?? '0829100286', 'Số tài khoản'),
                           ),
                           const Divider(height: 1, color: Color(0xFFE2E8F0)),
                           _buildDetailRow(
                             label: 'Tên chủ tài khoản',
-                            value: 'VIKESO',
+                            value: _currentOrder?.accountName ?? 'PHAM HUYNH QUOC HUY',
                           ),
                         ],
                       ),
@@ -643,59 +651,71 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: Color(0xFF64748B),
-                  fontWeight: FontWeight.w500,
+              Expanded(
+                flex: 5,
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: isAmount ? 16 : 14,
-                      fontWeight: (isAmount || isMemo) ? FontWeight.w800 : FontWeight.w600,
-                      color: isAmount ? const Color(0xFFFF4783) : const Color(0xFF0F172A),
-                      letterSpacing: isMemo ? 1.0 : 0,
-                    ),
-                  ),
-                  if (onCopy != null) ...[
-                    const SizedBox(width: 8),
-                    InkWell(
-                      onTap: onCopy,
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.copy_rounded, size: 12, color: Color(0xFF475569)),
-                            SizedBox(width: 4),
-                            Text(
-                              'Sao chép',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF475569),
-                              ),
-                            ),
-                          ],
+              const SizedBox(width: 8),
+              Flexible(
+                flex: 7,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        value,
+                        textAlign: TextAlign.end,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: isAmount ? 15.5 : 13.5,
+                          fontWeight: (isAmount || isMemo) ? FontWeight.w800 : FontWeight.w600,
+                          color: isAmount ? const Color(0xFFFF4783) : const Color(0xFF0F172A),
+                          letterSpacing: isMemo ? 0.8 : 0,
                         ),
                       ),
                     ),
+                    if (onCopy != null) ...[
+                      const SizedBox(width: 6),
+                      InkWell(
+                        onTap: onCopy,
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.copy_rounded, size: 11, color: Color(0xFF475569)),
+                              SizedBox(width: 3),
+                              Text(
+                                'Sao chép',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF475569),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ],
           ),

@@ -92,6 +92,173 @@ class AuthRepository {
     }
   }
 
+  /// Bước 1: Đăng ký thông tin cá nhân & Gửi OTP 6 số qua email
+  Future<Map<String, dynamic>> registerStep1SendOtp({
+    required String email,
+    required String password,
+    String? name,
+    String? phone,
+  }) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      return {'success': true, 'message': 'Mã OTP demo: 123456'};
+    }
+
+    try {
+      final uri = Uri.parse('$_authBaseUrl/register');
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            body: jsonEncode({
+              'email': email.trim(),
+              'password': password,
+              if (name != null && name.isNotEmpty) 'name': name.trim(),
+              if (phone != null && phone.isNotEmpty) 'phone': phone.trim(),
+            }),
+          )
+          .timeout(_timeout);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if ((response.statusCode == 200 || response.statusCode == 201) && body['success'] == true) {
+        return {
+          'success': true,
+          'message': body['message'] ?? 'Mã xác thực OTP đã được gửi về email của bạn!',
+          'demoCode': body['demoCode'],
+        };
+      }
+      return {
+        'success': false,
+        'message': body['message'] ?? body['error'] ?? 'Đăng ký thất bại.',
+      };
+    } on SocketException {
+      return {'success': false, 'message': 'Không thể kết nối máy chủ. Kiểm tra Wifi và IP!'};
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi gửi OTP: $e'};
+    }
+  }
+
+  /// Bước 2: Xác thực mã OTP 6 số & nhận Token đăng nhập
+  Future<AuthResult> verifyRegisterOtp({
+    required String email,
+    required String otpCode,
+  }) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      return AuthResult.success(const UserInfo(
+        id: MockData.demoUserId,
+        email: MockData.demoEmail,
+        shopName: MockData.demoShopName,
+        authProvider: 'local',
+        accessToken: 'demo_jwt_token_header.payload.sig',
+      ));
+    }
+
+    try {
+      final uri = Uri.parse('$_authBaseUrl/verify-otp');
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            body: jsonEncode({
+              'email': email.trim(),
+              'otpCode': otpCode.trim(),
+            }),
+          )
+          .timeout(_timeout);
+
+      return await _handleAuthResponse(response);
+    } on SocketException {
+      return AuthResult.failure('Không thể kết nối máy chủ. Kiểm tra Wifi và IP!');
+    } catch (e) {
+      return AuthResult.failure('Lỗi xác thực OTP: $e');
+    }
+  }
+
+  /// Gửi lại mã OTP
+  Future<Map<String, dynamic>> resendRegisterOtp({required String email}) async {
+    if (MockData.useMockDemo) {
+      return {'success': true, 'message': 'Mã OTP mới (Demo): 123456'};
+    }
+    try {
+      final uri = Uri.parse('$_authBaseUrl/resend-otp');
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            body: jsonEncode({'email': email.trim()}),
+          )
+          .timeout(_timeout);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': (response.statusCode == 200 || response.statusCode == 201) && body['success'] == true,
+        'message': body['message'] ?? 'Đã gửi lại mã OTP!',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi gửi lại mã OTP: $e'};
+    }
+  }
+
+  /// Bước 3: Khởi tạo cửa hàng đầu tiên (Onboarding)
+  Future<AuthResult> completeOnboardingShop({
+    required String shopName,
+    String? businessType,
+    String? address,
+    String? phone,
+  }) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      await _storage.write(key: _kShopName, value: shopName.trim());
+      final user = await autoLogin();
+      return AuthResult.success(user!);
+    }
+
+    try {
+      final token = await getAccessToken();
+      final base = dotenv.env['API_BASE_URL'] ?? 'http://localhost:5000/api';
+      final uri = Uri.parse('$base/shops/onboarding');
+      final response = await http
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json; charset=UTF-8',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'shopName': shopName.trim(),
+              if (businessType != null) 'businessType': businessType,
+              if (address != null && address.isNotEmpty) 'address': address.trim(),
+              if (phone != null && phone.isNotEmpty) 'phone': phone.trim(),
+            }),
+          )
+          .timeout(_timeout);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if ((response.statusCode == 200 || response.statusCode == 201) && body['success'] == true) {
+        await _storage.write(key: _kShopName, value: shopName.trim());
+        if (body['shop'] != null && body['shop']['_id'] != null) {
+          await _storage.write(key: 'user_activeShopId', value: body['shop']['_id'].toString());
+        }
+        final refreshedUser = await autoLogin();
+        if (refreshedUser != null) {
+          return AuthResult.success(refreshedUser);
+        }
+        return AuthResult.success(UserInfo(
+          id: await getUserId() ?? '',
+          email: await _storage.read(key: _kEmail) ?? '',
+          shopName: shopName.trim(),
+          authProvider: 'local',
+          accessToken: token ?? '',
+        ));
+      }
+      return AuthResult.failure(body['message']?.toString() ?? 'Khởi tạo cửa hàng thất bại.');
+    } on SocketException {
+      return AuthResult.failure('Không thể kết nối máy chủ. Kiểm tra mạng!');
+    } catch (e) {
+      return AuthResult.failure('Lỗi khởi tạo cửa hàng: $e');
+    }
+  }
+
   Future<AuthResult> register({
     required String email,
     required String password,
