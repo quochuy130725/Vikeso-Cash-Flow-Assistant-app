@@ -34,10 +34,10 @@ export const BentoFeaturesSection: React.FC<BentoFeaturesSectionProps> = ({
             <Sparkles className="w-4 h-4 text-[#ff4783]" />
             <span>Tiện ích dành cho tiểu thương</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-950 tracking-tight [text-shadow:_0_1px_8px_rgba(255,255,255,0.85)]">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-950 tracking-tight">
             Tạm Biệt Nỗi Lo Tính Sổ Mỗi Đêm
           </h2>
-          <p className="text-sm sm:text-base text-slate-950 font-bold mt-3 max-w-xl mx-auto leading-relaxed [text-shadow:_0_1px_6px_rgba(255,255,255,0.85)]">
+          <p className="text-sm sm:text-base text-slate-950 font-bold mt-3 max-w-xl mx-auto leading-relaxed">
             4 tiện ích thực tế được thiết kế riêng cho các chủ vựa, cửa hàng bán lẻ và quán ăn tại Việt Nam.
           </p>
         </div>
