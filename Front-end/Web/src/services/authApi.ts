@@ -47,6 +47,11 @@ export interface AuthResponse {
   message?: string;
   accessToken?: string;
   userInfo?: UserInfo;
+  requireOtp?: boolean;
+  requireOnboarding?: boolean;
+  demoCode?: string | null;
+  maskedEmail?: string;
+  data?: any;
   error?: string;
 }
 
@@ -80,7 +85,137 @@ export async function loginUser(payload: LoginPayload): Promise<AuthResponse> {
 }
 
 /**
- * Đăng ký tài khoản mới bằng Email, Mật khẩu, Họ tên, Tên cửa hàng
+ * Bước 1: Đăng ký thông tin cá nhân & Gửi mã OTP 6 chữ số về Email
+ * Endpoint: POST /api/auth/register
+ */
+export async function sendRegisterOtp(payload: {
+  email: string;
+  password: string;
+  name: string;
+  phone?: string;
+  role?: string;
+}): Promise<AuthResponse> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: payload.email.trim(),
+        password: payload.password,
+        name: payload.name.trim(),
+        phone: payload.phone?.trim() || undefined,
+        role: payload.role || (payload.email.toLowerCase().includes('admin') ? 'ADMIN' : 'OWNER'),
+      }),
+    });
+
+    const data = await res.json();
+    return data;
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err.message || 'Không thể kết nối đến máy chủ Backend.',
+    };
+  }
+}
+
+/**
+ * Bước 2: Xác thực mã OTP 6 số nhận qua Email
+ * Endpoint: POST /api/auth/verify-otp
+ */
+export async function verifyRegisterOtp(payload: {
+  email: string;
+  otpCode: string;
+}): Promise<AuthResponse> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: payload.email.trim(),
+        otpCode: payload.otpCode.trim(),
+      }),
+    });
+
+    const data = await res.json();
+    return data;
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err.message || 'Không thể xác thực mã OTP.',
+    };
+  }
+}
+
+/**
+ * Gửi lại mã OTP 6 số về Email
+ * Endpoint: POST /api/auth/resend-otp
+ */
+export async function resendRegisterOtp(email: string): Promise<AuthResponse> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/resend-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email.trim(),
+      }),
+    });
+
+    const data = await res.json();
+    return data;
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err.message || 'Không thể gửi lại mã OTP.',
+    };
+  }
+}
+
+/**
+ * Bước 3: Khởi tạo cửa hàng đầu tiên (Onboarding Shop) sau khi xác thực OTP
+ * Endpoint: POST /api/shops/onboarding
+ */
+export async function onboardingShop(
+  payload: {
+    shopName: string;
+    businessType?: string;
+    address?: string;
+    phone?: string;
+  },
+  token: string
+): Promise<AuthResponse> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/shops/onboarding`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        shopName: payload.shopName.trim(),
+        businessType: payload.businessType?.trim() || 'Tạp hóa & Bán lẻ tiêu dùng',
+        address: payload.address?.trim() || '',
+        phone: payload.phone?.trim() || '',
+      }),
+    });
+
+    const data = await res.json();
+    return data;
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err.message || 'Không thể khởi tạo cửa hàng.',
+    };
+  }
+}
+
+/**
+ * Đăng ký tài khoản mới bằng Email, Mật khẩu, Họ tên, Tên cửa hàng (Legacy)
  * Endpoint: POST /api/auth/register
  */
 export async function registerUser(payload: RegisterPayload): Promise<AuthResponse> {

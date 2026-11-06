@@ -597,9 +597,9 @@ export async function createBillingOrder(payload: {
         ? 499000
         : 99000);
   const fallbackOrderCode = `VIKESO${Math.floor(100000 + Math.random() * 900000)}`;
-  const fallbackQrUrl = `https://img.vietqr.io/image/MB-0389999999-compact2.png?amount=${pkgAmount}&addInfo=${encodeURIComponent(
+  const fallbackQrUrl = `https://img.vietqr.io/image/MB-0829100286-compact2.png?amount=${pkgAmount}&addInfo=${encodeURIComponent(
     fallbackOrderCode
-  )}&accountName=${encodeURIComponent('CONG TY CONG NGHE VIKESO')}`;
+  )}&accountName=${encodeURIComponent('PHAM HUYNH QUOC HUY')}`;
 
   try {
     let targetUserId = payload.userId;
@@ -624,9 +624,9 @@ export async function createBillingOrder(payload: {
       const qrCodeUrl =
         json.data.qrCodeUrl && String(json.data.qrCodeUrl).startsWith('http')
           ? json.data.qrCodeUrl
-          : `https://img.vietqr.io/image/MB-0389999999-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(
+          : `https://img.vietqr.io/image/MB-0829100286-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(
               orderCode
-            )}&accountName=${encodeURIComponent('CONG TY CONG NGHE VIKESO')}`;
+            )}&accountName=${encodeURIComponent('PHAM HUYNH QUOC HUY')}`;
       return {
         success: true,
         data: {

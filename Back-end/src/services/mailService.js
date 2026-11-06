@@ -105,13 +105,42 @@ exports.sendRegisterOtpEmail = async ({ to, name, code, minutes = 5 }) => {
   return sendEmail({ to, name, subject, html, text });
 };
 
+let cachedBrevoSenderEmail = null;
+
+const getVerifiedBrevoSender = async (apiKey) => {
+  if (process.env.BREVO_SENDER_EMAIL) return process.env.BREVO_SENDER_EMAIL;
+  if (cachedBrevoSenderEmail) return cachedBrevoSenderEmail;
+  try {
+    const res = await fetch('https://api.brevo.com/v3/senders', {
+      method: 'GET',
+      headers: {
+        'api-key': apiKey,
+        Accept: 'application/json',
+      },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const activeSender = (data.senders || []).find((s) => s.active) || (data.senders || [])[0];
+      if (activeSender?.email) {
+        cachedBrevoSenderEmail = activeSender.email;
+        console.log('📧 Tự động nhận diện Brevo Verified Sender:', cachedBrevoSenderEmail);
+        return cachedBrevoSenderEmail;
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Không thể truy vấn danh sách sender từ Brevo:', err.message);
+  }
+  return process.env.MAIL_USER || 'baocao.vikeso@gmail.com';
+};
+
 // Hàm gửi mail dùng chung: Brevo (HTTPS) → Resend (HTTPS) → Gmail SMTP
 // Render free chặn SMTP nên ưu tiên các provider qua HTTPS (port 443)
 const sendEmail = async ({ to, name, subject, html, text, senderName = 'VikeSo' }) => {
   // 1. Thử gửi qua Brevo HTTP API (Port 443 — Gửi được cho MỌI email mà không cần domain)
   if (process.env.BREVO_API_KEY) {
     try {
-      console.log('📤 Đang gửi mail qua Brevo HTTP API...');
+      const senderEmail = await getVerifiedBrevoSender(process.env.BREVO_API_KEY);
+      console.log(`📤 Đang gửi mail qua Brevo HTTP API (sender: ${senderEmail} -> to: ${to})...`);
       const res = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
@@ -119,7 +148,7 @@ const sendEmail = async ({ to, name, subject, html, text, senderName = 'VikeSo' 
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sender: { name: senderName, email: process.env.BREVO_SENDER_EMAIL || process.env.MAIL_USER || 'baocao.vikeso@gmail.com' },
+          sender: { name: senderName, email: senderEmail },
           to: [{ email: to, name: name || 'Người dùng' }],
           subject,
           htmlContent: html,

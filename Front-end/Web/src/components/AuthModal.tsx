@@ -7,7 +7,14 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
-import { loginUser, registerUser, updateProfile } from '../services/authApi';
+import {
+  loginUser,
+  sendRegisterOtp,
+  verifyRegisterOtp,
+  resendRegisterOtp,
+  onboardingShop,
+  updateProfile,
+} from '../services/authApi';
 
 export interface UserAccount {
   id?: string;
@@ -49,6 +56,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   // Step 2: OTP state
   const [otpCode, setOtpCode] = useState('');
+  const [demoOtpHint, setDemoOtpHint] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [verifiedToken, setVerifiedToken] = useState<string | null>(null);
+  const [verifiedUserInfo, setVerifiedUserInfo] = useState<any>(null);
 
   // Step 3: First Shop Onboarding state
   const [storeName, setStoreName] = useState('');
@@ -65,13 +76,38 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setMode(initialMode);
       setRegisterStep('info');
       setErrorMessage(null);
+      setInfoMessage(null);
+      setDemoOtpHint(null);
       setSuccessMode(null);
     }
   }, [isOpen, initialMode]);
 
+  const handleResendOtp = async () => {
+    if (!email.trim() || isLoading) return;
+    setErrorMessage(null);
+    setInfoMessage(null);
+    setIsLoading(true);
+    try {
+      const res = await resendRegisterOtp(email.trim());
+      if (!res.success) {
+        setErrorMessage(res.message || 'Không thể gửi lại mã OTP. Vui lòng thử lại.');
+      } else {
+        setInfoMessage(res.message || 'Mã xác thực OTP 6 chữ số mới đã được gửi vào hộp thư của bạn.');
+        if (res.demoCode) {
+          setDemoOtpHint(String(res.demoCode));
+        }
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Không thể kết nối máy chủ.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setInfoMessage(null);
 
     if (mode === 'login') {
       if (!email.trim() || !password) {
@@ -101,7 +137,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           setErrorMessage('Mật khẩu xác nhận không khớp.');
           return;
         }
-        setRegisterStep('otp');
+
+        setIsLoading(true);
+        try {
+          const res = await sendRegisterOtp({
+            email: email.trim(),
+            password,
+            name: fullName.trim(),
+            phone: phone.trim() || undefined,
+          });
+          if (!res.success) {
+            setErrorMessage(res.message || 'Không thể gửi mã OTP. Vui lòng kiểm tra lại email.');
+            return;
+          }
+          setOtpCode('');
+          setDemoOtpHint(res.demoCode ? String(res.demoCode) : null);
+          setInfoMessage(res.message || `Mã xác thực 6 chữ số đã được gửi tới ${email.trim()}.`);
+          setRegisterStep('otp');
+        } catch (err: any) {
+          setErrorMessage(err.message || 'Không thể kết nối đến máy chủ Backend.');
+        } finally {
+          setIsLoading(false);
+        }
         return;
       }
 
@@ -110,7 +167,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           setErrorMessage('Vui lòng nhập đủ mã xác thực OTP gồm 6 chữ số đã gửi về Email.');
           return;
         }
-        setRegisterStep('onboarding');
+
+        setIsLoading(true);
+        try {
+          const res = await verifyRegisterOtp({
+            email: email.trim(),
+            otpCode: otpCode.trim(),
+          });
+          if (!res.success) {
+            setErrorMessage(res.message || 'Mã xác thực OTP không chính xác hoặc đã hết hạn.');
+            return;
+          }
+          if (res.accessToken) {
+            localStorage.setItem('vikeso_token', res.accessToken);
+            setVerifiedToken(res.accessToken);
+          }
+          if (res.userInfo) {
+            setVerifiedUserInfo(res.userInfo);
+          }
+          setRegisterStep('onboarding');
+        } catch (err: any) {
+          setErrorMessage(err.message || 'Không thể xác thực mã OTP.');
+        } finally {
+          setIsLoading(false);
+        }
         return;
       }
 
@@ -126,33 +206,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     try {
       if (mode === 'register') {
-        const res = await registerUser({
-          email: email.trim(),
-          password,
-          name: fullName.trim(),
-          shopName: storeName.trim(),
-          phone: phone.trim() || undefined,
-        });
+        const token = verifiedToken || localStorage.getItem('vikeso_token') || '';
+        const res = await onboardingShop(
+          {
+            shopName: storeName.trim(),
+            businessType: businessType.trim(),
+            address: storeAddress.trim(),
+            phone: phone.trim() || undefined,
+          },
+          token
+        );
 
         if (!res.success) {
-          setErrorMessage(res.message || 'Đăng ký không thành công. Vui lòng thử lại.');
+          setErrorMessage(res.message || 'Khởi tạo cửa hàng không thành công. Vui lòng thử lại.');
           setIsLoading(false);
           return;
         }
 
-        if (res.accessToken) {
-          localStorage.setItem('vikeso_token', res.accessToken);
-          // Tự động lưu Số điện thoại qua route profile có sẵn của Backend nếu người dùng có nhập
-          if (phone.trim()) {
-            try {
-              await updateProfile({ phone: phone.trim() }, res.accessToken);
-            } catch (profileErr) {
-              console.warn('Lưu số điện thoại sau đăng ký:', profileErr);
-            }
+        if (res.data?._id) {
+          localStorage.setItem('vikeso_active_shop_id', String(res.data._id));
+        }
+
+        if (token && phone.trim()) {
+          try {
+            await updateProfile({ phone: phone.trim() }, token);
+          } catch (profileErr) {
+            console.warn('Lưu số điện thoại sau đăng ký:', profileErr);
           }
         }
 
-        const serverRole = (res.userInfo as any)?.role;
+        const mergedUserInfo = res.userInfo || verifiedUserInfo || {};
+        const serverRole = (mergedUserInfo as any)?.role;
         const isExplicitAdmin =
           serverRole === 'ADMIN' ||
           String(serverRole || '').toUpperCase() === 'ADMIN' ||
@@ -161,15 +245,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         const userRole: 'ADMIN' | 'OWNER' = isExplicitAdmin ? 'ADMIN' : 'OWNER';
 
         const user: UserAccount = {
-          id: (res.userInfo as any)?.id || (res.userInfo as any)?._id,
-          name: res.userInfo?.name || fullName.trim() || (userRole === 'ADMIN' ? 'Admin' : 'Chủ Hộ'),
-          email: res.userInfo?.email || email.trim(),
-          storeName: res.userInfo?.shopName || storeName.trim() || (userRole === 'ADMIN' ? 'Admin Quản Trị' : 'Cửa Hàng Hộ Kinh Doanh'),
-          shopName: res.userInfo?.shopName || storeName.trim() || (userRole === 'ADMIN' ? 'Admin Quản Trị' : 'Cửa Hàng Hộ Kinh Doanh'),
-          phone: phone.trim() || (res.userInfo as any)?.phone || '',
+          id: (mergedUserInfo as any)?.id || (mergedUserInfo as any)?._id,
+          name: mergedUserInfo?.name || fullName.trim() || (userRole === 'ADMIN' ? 'Admin' : 'Chủ Hộ'),
+          email: mergedUserInfo?.email || email.trim(),
+          storeName: mergedUserInfo?.shopName || storeName.trim() || (userRole === 'ADMIN' ? 'Admin Quản Trị' : 'Cửa Hàng Hộ Kinh Doanh'),
+          shopName: mergedUserInfo?.shopName || storeName.trim() || (userRole === 'ADMIN' ? 'Admin Quản Trị' : 'Cửa Hàng Hộ Kinh Doanh'),
+          phone: phone.trim() || (mergedUserInfo as any)?.phone || '',
           role: userRole,
-          subscriptionPlan: userRole === 'ADMIN' ? undefined : ((res.userInfo as any)?.subscriptionPlan || 'FREE'),
-          proExpiresAt: (res.userInfo as any)?.proExpiresAt,
+          subscriptionPlan: userRole === 'ADMIN' ? undefined : ((mergedUserInfo as any)?.subscriptionPlan || 'FREE'),
+          proExpiresAt: (mergedUserInfo as any)?.proExpiresAt,
         };
 
         setSuccessMode('register');
@@ -187,6 +271,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         });
 
         if (!res.success) {
+          if (res.requireOtp) {
+            setMode('register');
+            setRegisterStep('otp');
+            setInfoMessage(res.message || 'Tài khoản chưa xác thực Email. Vui lòng nhập mã OTP.');
+            setIsLoading(false);
+            return;
+          }
           setErrorMessage(res.message || 'Email, số điện thoại hoặc mật khẩu không chính xác.');
           setIsLoading(false);
           return;
@@ -334,6 +425,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </motion.div>
               )}
 
+              {infoMessage && !errorMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 font-medium"
+                >
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                  <span>{infoMessage}</span>
+                </motion.div>
+              )}
+
               {/* Step Indicator for Registration (FE-WEB-12) */}
               {mode === 'register' && (
                 <div className="flex items-center justify-between text-[11px] font-bold pb-1.5 border-b border-slate-100">
@@ -360,8 +462,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       <strong className="text-[#ff4783]">{email}</strong>
                     </div>
                     <div className="text-[11px] text-slate-500">
-                      (Bản Demo: Bạn có thể nhập mã <strong>123456</strong> để tiếp tục ngay)
+                      Vui lòng kiểm tra hộp thư đến (hoặc mục Quảng cáo / Spam). Mã có hiệu lực trong 5 phút.
                     </div>
+                    {demoOtpHint && (
+                      <div className="text-[11px] font-bold text-[#ff4783] pt-1">
+                        Mã OTP dự phòng của bạn: <strong>{demoOtpHint}</strong>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="text-[11px] font-bold text-slate-700 block mb-1">
@@ -373,17 +480,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       required
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
-                      placeholder="123456"
+                      placeholder="••••••"
                       className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-center tracking-[0.5em] font-mono font-extrabold text-lg text-[#ff4783] focus:outline-none focus:border-[#ff4783]"
                     />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setRegisterStep('info')}
-                    className="text-[11px] text-slate-500 hover:text-slate-900 underline cursor-pointer font-semibold"
-                  >
-                    ← Quay lại sửa thông tin email
-                  </button>
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setErrorMessage(null);
+                        setInfoMessage(null);
+                        setRegisterStep('info');
+                      }}
+                      className="text-[11px] text-slate-500 hover:text-slate-900 underline cursor-pointer font-semibold"
+                    >
+                      ← Quay lại sửa thông tin email
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isLoading}
+                      onClick={handleResendOtp}
+                      className="text-[11px] text-[#ff4783] hover:text-[#e0326e] underline cursor-pointer font-bold disabled:opacity-50"
+                    >
+                      Gửi lại mã OTP mới
+                    </button>
+                  </div>
                 </div>
               )}
 
