@@ -372,17 +372,16 @@ export interface TelegramDispatchLog {
   receiptCount?: number;
 }
 
-export const defaultTelegramHistory: TelegramDispatchLog[] = [
-  {
-    sendTime: '24/10/2024 22:00:02',
-    shift: 'Ca Ngày 24/10/2024',
-    inflow: '+15.450.000 đ',
-    outflow: '-4.200.000 đ',
-    net: '+11.250.000 đ',
-    file: 'BangKe_24102024.xlsx',
-    status: 'Thành công (200 OK)',
-  },
-];
+// =============================================================================
+// NGHIỆP VỤ: LẤY LỊCH SỬ CHỐT CA & BÁO CÁO TELEGRAM (GET /api/telegram/history)
+// - Bắt đầu từ dòng này đến hết hàm fetchTelegramHistory
+// - Dùng để: Tải lịch sử các phiên kết ca thực tế của tài khoản từ MongoDB
+// - Phục vụ:
+//   1. Hiển thị bảng lịch sử gửi báo cáo kết ca kèm file Excel thực tế
+//   2. Nếu tài khoản mới chưa phát sinh ca chốt sổ nào, trả về đúng mảng rỗng []
+//      để bảng hiển thị trạng thái chưa có lịch sử thay vì hiển thị dữ liệu giả 24/10/2024.
+// =============================================================================
+export const defaultTelegramHistory: TelegramDispatchLog[] = [];
 
 /**
  * Fetch real telegram dispatch history from receipts
@@ -396,7 +395,7 @@ export async function fetchTelegramHistory(userId?: string): Promise<TelegramDis
       targetUserId = saved?.id || saved?._id;
     }
     if (!targetUserId) {
-      return defaultTelegramHistory;
+      return [];
     }
 
     const res = await fetch(`${API_BASE_URL}/telegram/history?userId=${targetUserId}`, {
@@ -404,13 +403,13 @@ export async function fetchTelegramHistory(userId?: string): Promise<TelegramDis
       headers: getAuthHeaders(),
     });
     const data = await res.json();
-    if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+    if (data.success && Array.isArray(data.data)) {
       return data.data;
     }
-    return defaultTelegramHistory;
+    return [];
   } catch (err) {
     console.error('Lỗi khi fetchTelegramHistory:', err);
-    return defaultTelegramHistory;
+    return [];
   }
 }
 
@@ -546,14 +545,55 @@ export async function updateUserProfile(payload: {
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-    if (data.success && data.user) {
+    if (data.success && (data.userInfo || data.user)) {
+      const returnedUser = data.userInfo || data.user;
       // Update local storage
       const saved = getSavedUser() || {};
-      localStorage.setItem('vikeso_user', JSON.stringify({ ...saved, ...data.user }));
+      localStorage.setItem('vikeso_user', JSON.stringify({ ...saved, ...returnedUser }));
     }
     return data;
   } catch (err: any) {
     console.error('Lỗi khi updateUserProfile:', err);
+    return { success: false, message: err.message || 'Lỗi kết nối máy chủ' };
+  }
+}
+
+/**
+ * =============================================================================
+ * NGHIỆP VỤ 1: ĐỒNG BỘ THÔNG TIN HỒ SƠ CHỦ HỘ TỪ DATABASE (GET /api/auth/me)
+ * - Dùng để: Lấy chính xác SĐT cá nhân, họ tên chủ hộ từ MongoDB Atlas
+ * - Phục vụ: Tránh việc hiển thị sai lệch do lấy dữ liệu cache cũ từ localStorage
+ * =============================================================================
+ */
+export async function fetchCurrentUserInfo(): Promise<{
+  success: boolean;
+  userInfo?: any;
+  message?: string;
+}> {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      return { success: false, message: 'Chưa đăng nhập' };
+    }
+
+    const res = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    const data = await res.json();
+    if (data.success && data.userInfo) {
+      const saved = getSavedUser() || {};
+      const updated = {
+        ...saved,
+        ...data.userInfo,
+        phone: data.userInfo.phone || saved.phone || '',
+      };
+      localStorage.setItem('vikeso_user', JSON.stringify(updated));
+    }
+    return data;
+  } catch (err: any) {
+    console.error('Lỗi khi fetchCurrentUserInfo:', err);
     return { success: false, message: err.message || 'Lỗi kết nối máy chủ' };
   }
 }
@@ -1020,11 +1060,76 @@ export async function fetchCategories(): Promise<CategoryItem[]> {
   return getLocalCategories();
 }
 
+// =============================================================================
+// NGHIỆP VỤ 1: CHUYỂN ĐỔI CỬA HÀNG / CHI NHÁNH LÀM VIỆC (PATCH /api/shops/:id/switch)
+// - Bắt đầu từ dòng này đến hết hàm switchActiveShop
+// - Dùng để: Ghi nhận chi nhánh mà Owner đang làm việc (activeShopId) lên Server.
+// - Phục vụ: Mọi hóa đơn, sổ quỹ phát sinh sau đó sẽ được hạch toán đúng vào chi nhánh này.
+// =============================================================================
+export async function switchActiveShop(
+  shopId: string
+): Promise<{ success: boolean; message?: string; activeShopId?: string; shopName?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/shops/${shopId}/switch`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (data.success) {
+      const saved = getSavedUser() || {};
+      localStorage.setItem(
+        'vikeso_user',
+        JSON.stringify({ ...saved, activeShopId: data.activeShopId, shopName: data.shopName, storeName: data.shopName })
+      );
+    }
+    return data;
+  } catch (err: any) {
+    console.warn('Lỗi switchActiveShop API:', err);
+    return { success: false, message: err.message || 'Lỗi chuyển đổi cửa hàng' };
+  }
+}
+
+// =============================================================================
+// NGHIỆP VỤ 2: QUẢN LÝ DANH MỤC THU CHI (THÊM / SỬA / XÓA) TRÊN BACKEND DATABASE
+// - Bắt đầu từ dòng này đến hết deleteCategoryItem
+// - Dùng để: Đồng bộ hóa toàn bộ cây danh mục cha - con trực tiếp vào CSDL MongoDB.
+// - Phục vụ: Đổi tên hoặc xóa danh mục thì toàn bộ hệ thống (Web và App) đều cập nhật tức thì.
+// =============================================================================
 export async function createCategoryItem(payload: {
   name: string;
   type: 'THU' | 'CHI';
   parentId: string | null;
 }): Promise<{ success: boolean; data: CategoryItem }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/categories`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        name: payload.name.trim(),
+        transactionType: payload.type,
+        parentId: payload.parentId || null,
+      }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && json.data) {
+        const item = json.data;
+        const newItem: CategoryItem = {
+          id: item._id || item.id,
+          name: item.name,
+          type: item.transactionType || payload.type,
+          parentId: item.parentId || null,
+          isDefault: item.isSystemDefault || false,
+        };
+        const list = getLocalCategories();
+        localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify([...list, newItem]));
+        return { success: true, data: newItem };
+      }
+    }
+  } catch (e) {
+    console.warn('Lỗi createCategoryItem API, lưu tạm local:', e);
+  }
+
   const list = getLocalCategories();
   const newItem: CategoryItem = {
     id: `cat-custom-${Date.now()}`,
@@ -1041,69 +1146,158 @@ export async function createCategoryItem(payload: {
 export async function updateCategoryItem(
   id: string,
   name: string
-): Promise<{ success: boolean }> {
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/categories/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name: name.trim() }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) {
+        const list = getLocalCategories().map((c) =>
+          c.id === id ? { ...c, name: name.trim() } : c
+        );
+        localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(list));
+        return { success: true, message: 'Đã cập nhật danh mục thành công!' };
+      }
+    }
+  } catch (e) {
+    console.warn('Lỗi updateCategoryItem API:', e);
+  }
+
   const list = getLocalCategories().map((c) =>
     c.id === id ? { ...c, name: name.trim() } : c
   );
   localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(list));
-  return { success: true };
+  return { success: true, message: 'Đã cập nhật danh mục cục bộ' };
 }
 
-export async function deleteCategoryItem(id: string): Promise<{ success: boolean }> {
+export async function deleteCategoryItem(id: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/categories/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) {
+        const list = getLocalCategories().filter((c) => c.id !== id && c.parentId !== id);
+        localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(list));
+        return { success: true, message: 'Đã xóa danh mục khỏi cơ sở dữ liệu!' };
+      }
+    }
+  } catch (e) {
+    console.warn('Lỗi deleteCategoryItem API:', e);
+  }
+
   const list = getLocalCategories().filter((c) => c.id !== id && c.parentId !== id);
   localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(list));
-  return { success: true };
+  return { success: true, message: 'Đã xóa danh mục cục bộ' };
+}
+
+// =============================================================================
+// NGHIỆP VỤ 3: LẤY SỐ LIỆU PHÂN TÍCH DOANH THU & SO SÁNH CÙNG KỲ (GET /api/transactions/analytics)
+// - Bắt đầu từ dòng này đến hết hàm fetchFinancialAnalytics
+// - Dùng để: Gọi số liệu tổng kết thu - chi đã chốt ca 22:00 theo ngày/tháng/năm từ Backend.
+// - Phục vụ: Cung cấp số liệu chính xác tuyệt đối cho biểu đồ tài chính, tính % tăng trưởng so với kỳ trước.
+// =============================================================================
+export async function fetchFinancialAnalytics(params?: {
+  period?: 'day' | 'week' | 'month' | 'year';
+  date?: string;
+  compare?: boolean;
+}): Promise<{
+  success: boolean;
+  data?: {
+    period: string;
+    currentPeriod: { thu: number; chi: number; net: number; count: number };
+    previousPeriod: { thu: number; chi: number; net: number; count: number };
+    growth: { thu: number; chi: number; net: number };
+    thuByCategory: Record<string, number>;
+    chiByCategory: Record<string, number>;
+  };
+  message?: string;
+}> {
+  try {
+    const p = params?.period || 'month';
+    const query = new URLSearchParams({
+      period: p,
+      compare: params?.compare !== false ? 'true' : 'false',
+    });
+    if (params?.date) query.append('date', params.date);
+
+    const res = await fetch(`${API_BASE_URL}/transactions/analytics?${query.toString()}`, {
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) return json;
+    }
+  } catch (e) {
+    console.warn('Lỗi fetchFinancialAnalytics API:', e);
+  }
+  return { success: false, message: 'Không thể tải số liệu phân tích tài chính' };
 }
 
 // ==================== MULTI-SHOP & ADMIN APPROVAL ====================
 
 const SHOPS_STORAGE_KEY = 'vikeso_shops_v1';
 
-const defaultShops: ShopBranch[] = [
-  {
-    id: 'shop-main',
-    shopName: 'Cửa Hàng Chính (Cơ sở 1)',
-    businessType: 'Tạp hóa & Bán lẻ tiêu dùng',
-    address: '128 Nguyễn Trãi, Quận 5, TP.HCM',
-    phone: '0912.845.221',
-    status: 'ACTIVE',
-    ownerId: 'owner-1',
-    ownerName: 'Chủ Cửa Hàng',
-    ownerEmail: 'owner@vikeso.vn',
-    createdAt: '01/10/2026',
-  },
-  {
-    id: 'shop-pending-demo',
-    shopName: 'Tạp Hóa Minh Phát - Chi Nhánh Quận 7',
-    businessType: 'Siêu thị mini & Thực phẩm sạch',
-    address: '45 Nguyễn Thị Thập, Quận 7, TP.HCM',
-    phone: '0909.334.556',
-    status: 'PENDING_APPROVAL',
-    verificationDocs: [
-      'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=600&q=80',
-    ],
-    ownerId: 'owner-1',
-    ownerName: 'Nguyễn Văn Minh',
-    ownerEmail: 'minhphat.hkd@gmail.com',
-    createdAt: '27/10/2026',
-  },
-];
+const defaultShops: ShopBranch[] = [];
 
 export function getLocalShops(): ShopBranch[] {
   try {
     const raw = localStorage.getItem(SHOPS_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const list = JSON.parse(raw);
+      if (Array.isArray(list)) return list;
+    }
   } catch {}
-  localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(defaultShops));
-  return defaultShops;
+  return [];
 }
 
+// =============================================================================
+// NGHIỆP VỤ QUẢN LÝ ĐA CỬA HÀNG / CHI NHÁNH (MULTI-SHOP & ADMIN APPROVAL)
+// - Bắt đầu từ dòng này đến hết file
+// - Kết nối đồng bộ với Backend API (/api/shops & /api/admin/shops)
+// - Cho phép Owner đăng ký cửa hàng / chi nhánh mới kèm ảnh chứng từ
+// - Cho phép Admin duyệt (APPROVE) hoặc từ chối (REJECT)
+// =============================================================================
+
 export async function fetchUserShops(currentShopName?: string): Promise<ShopBranch[]> {
-  const list = getLocalShops();
-  if (currentShopName && list.length > 0 && list[0].id === 'shop-main') {
-    list[0].shopName = currentShopName;
+  try {
+    const token = localStorage.getItem('vikeso_token');
+    if (token) {
+      const res = await fetch(`${API_BASE_URL}/shops`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          const mapped = json.data.map((s: any) => ({
+            id: s._id || s.id,
+            shopName: s.shopName,
+            businessType: s.businessType || 'Hộ kinh doanh bán lẻ',
+            address: s.address || '',
+            phone: s.phone || '',
+            isPrimary: s.isPrimary,
+            status: s.approvalStatus === 'APPROVED' ? 'ACTIVE' : s.approvalStatus === 'REJECTED' ? 'REJECTED' : 'PENDING_APPROVAL',
+            approvalStatus: s.approvalStatus,
+            documentUrls: s.verificationDocs || s.documentUrls || [],
+            verificationDocs: s.verificationDocs || s.documentUrls || [],
+            createdAt: s.createdAt ? new Date(s.createdAt).toLocaleDateString('vi-VN') : '',
+          }));
+          localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(mapped));
+          return mapped;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Lỗi fetchUserShops qua API, dùng dữ liệu đệm local:', e);
   }
+
+  const list = getLocalShops();
   return list;
 }
 
@@ -1116,6 +1310,52 @@ export async function createAdditionalShop(payload: {
   ownerName?: string;
   ownerEmail?: string;
 }): Promise<{ success: boolean; data: ShopBranch; message: string }> {
+  try {
+    const token = localStorage.getItem('vikeso_token');
+    if (token) {
+      const res = await fetch(`${API_BASE_URL}/shops`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          shopName: payload.shopName.trim(),
+          businessType: payload.businessType,
+          address: payload.address.trim(),
+          phone: payload.phone.trim(),
+          verificationDocs: payload.verificationDocs,
+          documentUrls: payload.verificationDocs,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success && json.data) {
+        const created: ShopBranch = {
+          id: json.data._id || json.data.id,
+          shopName: json.data.shopName,
+          businessType: json.data.businessType,
+          address: json.data.address,
+          phone: json.data.phone,
+          status: 'PENDING_APPROVAL',
+          approvalStatus: 'PENDING',
+          verificationDocs: json.data.documentUrls || payload.verificationDocs,
+          createdAt: new Date().toLocaleDateString('vi-VN'),
+        };
+        // Lưu kèm vào local đệm
+        const localList = getLocalShops();
+        localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify([...localList, created]));
+        return {
+          success: true,
+          data: created,
+          message: 'Đã gửi hồ sơ chi nhánh thứ 2+ lên hệ thống. Vui lòng chờ Admin phê duyệt!',
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('Lỗi gọi API createAdditionalShop, lưu tạm local:', e);
+  }
+
   const list = getLocalShops();
   const newShop: ShopBranch = {
     id: `shop-${Date.now()}`,
@@ -1139,21 +1379,121 @@ export async function createAdditionalShop(payload: {
   };
 }
 
+export async function fetchAdminShopRequests(): Promise<ShopBranch[]> {
+  try {
+    const token = localStorage.getItem('vikeso_token');
+    if (token) {
+      const res = await fetch(`${API_BASE_URL}/admin/shops/requests?status=ALL`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          return json.data.map((s: any) => ({
+            id: s._id || s.id,
+            shopName: s.shopName,
+            businessType: s.businessType || 'Hộ kinh doanh bán lẻ',
+            address: s.address || '',
+            phone: s.phone || '',
+            ownerName: s.ownerId?.name || 'Chủ hộ kinh doanh',
+            ownerEmail: s.ownerId?.email || '',
+            status: s.approvalStatus === 'APPROVED' ? 'ACTIVE' : s.approvalStatus === 'REJECTED' ? 'REJECTED' : 'PENDING_APPROVAL',
+            approvalStatus: s.approvalStatus,
+            documentUrls: s.verificationDocs || s.documentUrls || [],
+            verificationDocs: s.verificationDocs || s.documentUrls || [],
+            rejectionReason: s.rejectionReason,
+            createdAt: s.createdAt ? new Date(s.createdAt).toLocaleDateString('vi-VN') : '',
+          }));
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Lỗi fetchAdminShopRequests qua API:', e);
+  }
+  return getLocalShops();
+}
+
 export async function reviewAdminShopRequest(
   shopId: string,
   action: 'APPROVE' | 'REJECT',
   rejectReason?: string
 ): Promise<{ success: boolean; message: string }> {
+  try {
+    const token = localStorage.getItem('vikeso_token');
+    if (token) {
+      const res = await fetch(`${API_BASE_URL}/admin/shops/${shopId}/review`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action,
+          rejectionReason: rejectReason || 'Chứng từ chưa đạt yêu cầu',
+        }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success) {
+          // Cập nhật cả cache local
+          const list = getLocalShops().map((s) =>
+            s.id === shopId
+              ? {
+                  ...s,
+                  status: (action === 'APPROVE' ? 'ACTIVE' : 'REJECTED') as ShopBranch['status'],
+                  approvalStatus: (action === 'APPROVE' ? 'APPROVED' : 'REJECTED') as ShopBranch['approvalStatus'],
+                  rejectionReason: action === 'REJECT' ? rejectReason || 'Chứng từ chưa rõ nét' : undefined,
+                }
+              : s
+          );
+          localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(list));
+          return {
+            success: true,
+            message: action === 'APPROVE' ? 'Đã phê duyệt chi nhánh thành công!' : 'Đã từ chối chi nhánh.',
+          };
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Lỗi reviewAdminShopRequest API:', e);
+  }
+
   const list = getLocalShops().map((s) =>
     s.id === shopId
       ? {
           ...s,
           status: (action === 'APPROVE' ? 'ACTIVE' : 'REJECTED') as ShopBranch['status'],
-          rejectReason: action === 'REJECT' ? rejectReason || 'Chứng từ chưa rõ nét' : undefined,
+          approvalStatus: (action === 'APPROVE' ? 'APPROVED' : 'REJECTED') as ShopBranch['approvalStatus'],
+          rejectionReason: action === 'REJECT' ? rejectReason || 'Chứng từ chưa rõ nét' : undefined,
         }
       : s
   );
   localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(list));
+
+  // =============================================================================
+  // NGHIỆP VỤ: ĐỒNG BỘ THÔNG TIN CỬA HÀNG ĐƯỢC ADMIN DUYỆT VÀO TÀI KHOẢN OWNER
+  // - Khi Admin duyệt (APPROVE), nếu tài khoản Owner đang mở có tên là "Chưa thiết lập cửa hàng"
+  //   hoặc trùng email, hệ thống sẽ tự động cập nhật tên cửa hàng vừa duyệt vào User Profile.
+  // =============================================================================
+  if (action === 'APPROVE') {
+    const targetShop = list.find((s) => s.id === shopId);
+    if (targetShop) {
+      try {
+        const rawUser = localStorage.getItem('vikeso_user');
+        if (rawUser) {
+          const u = JSON.parse(rawUser);
+          if (!u.shopName || u.shopName === 'Chưa thiết lập cửa hàng' || u.email === targetShop.ownerEmail) {
+            u.shopName = targetShop.shopName;
+            u.storeName = targetShop.shopName;
+            u.activeShopId = targetShop.id;
+            if (targetShop.phone) u.phone = targetShop.phone;
+            localStorage.setItem('vikeso_user', JSON.stringify(u));
+          }
+        }
+      } catch (err) {}
+    }
+  }
+
   return {
     success: true,
     message:

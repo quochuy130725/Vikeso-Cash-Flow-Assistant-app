@@ -27,6 +27,11 @@ export const OwnerCategoryManagement: React.FC<OwnerCategoryManagementProps> = (
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  // =============================================================================
+  // NGHIỆP VỤ 1: ĐỒNG BỘ CÂY DANH MỤC TỪ BACKEND DATABASE (DÒNG 30 ĐẾN 40)
+  // - Dùng để làm gì: Gọi API GET /api/categories lấy danh mục Thu / Chi thực tế
+  // - Phục vụ mục đích gì: Đảm bảo danh mục phân loại trên Web và Mobile App luôn đồng nhất.
+  // =============================================================================
   const loadCategories = async () => {
     const list = await fetchCategories();
     setCategories(list);
@@ -36,6 +41,13 @@ export const OwnerCategoryManagement: React.FC<OwnerCategoryManagementProps> = (
     loadCategories();
   }, []);
 
+  // =============================================================================
+  // NGHIỆP VỤ 2: PHÂN CẤP DANH MỤC CHA - CON (DÒNG 45 ĐẾN 75)
+  // - Dùng để làm gì: Lọc ra danh mục Cấp 1 (Cha) và Cấp 2 (Con) theo Tab Thu / Chi
+  // - Phục vụ mục đích gì:
+  //   1. Giúp chủ quán gom nhóm chi phí (Ví dụ: Chi phí cố định -> Tiền thuê mặt bằng, Tiền điện nước)
+  //   2. Hỗ trợ trợ lý AI tự động phân loại đúng danh mục khi đọc hóa đơn quét OCR
+  // =============================================================================
   const parentCategories = useMemo(
     () => categories.filter((c) => c.type === activeTab && !c.parentId),
     [categories, activeTab]
@@ -66,6 +78,14 @@ export const OwnerCategoryManagement: React.FC<OwnerCategoryManagementProps> = (
     setModalOpen(true);
   };
 
+  // =============================================================================
+  // NGHIỆP VỤ 3: TẠO MỚI HOẶC SỬA TÊN DANH MỤC (POST & PUT /api/categories)
+  // - Bắt đầu từ dòng này đến hết hàm handleSave (Dòng 80 đến 105)
+  // - Dùng để làm gì:
+  //   + Khi tạo mới: Gọi POST /api/categories lưu vào CSDL MongoDB.
+  //   + Khi chỉnh sửa: Gọi PUT /api/categories/:id cập nhật tên danh mục trực tiếp.
+  // - Phục vụ mục đích gì: Cho phép chủ hộ tùy biến danh mục theo đặc thù từng ngành hàng bán lẻ.
+  // =============================================================================
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!catName.trim()) return;
@@ -86,6 +106,12 @@ export const OwnerCategoryManagement: React.FC<OwnerCategoryManagementProps> = (
     loadCategories();
   };
 
+  // =============================================================================
+  // NGHIỆP VỤ 4: XÓA DANH MỤC THU CHI (DELETE /api/categories/:id)
+  // - Bắt đầu từ dòng này đến hết hàm handleDelete (Dòng 110 đến 125)
+  // - Dùng để làm gì: Gửi yêu cầu xóa danh mục lên máy chủ Backend.
+  // - Phục vụ mục đích gì: Loại bỏ các nhóm chi tiêu không còn sử dụng, giữ sổ sách gọn gàng.
+  // =============================================================================
   const handleDelete = async (item: CategoryItem) => {
     if (!window.confirm(`Xóa danh mục "${item.name}"?`)) return;
     await deleteCategoryItem(item.id);

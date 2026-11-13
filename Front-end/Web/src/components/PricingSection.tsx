@@ -16,10 +16,10 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectStarter,
           <Sparkles className="w-3.5 h-3.5 text-slate-950" />
           Chi phí tối ưu cho mọi vựa &amp; tiểu thương
         </span>
-        <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-950 mt-4 tracking-tight max-w-2xl mx-auto [text-shadow:_0_1px_8px_rgba(255,255,255,0.85)]">
+        <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-950 mt-4 tracking-tight max-w-2xl mx-auto">
           Bảng Giá Minh Bạch — Đầu Tư Nhỏ, Lợi Ích Lớn
         </h2>
-        <p className="text-sm sm:text-base text-slate-950 font-bold mt-2.5 max-w-xl mx-auto leading-relaxed [text-shadow:_0_1px_6px_rgba(255,255,255,0.85)]">
+        <p className="text-sm sm:text-base text-slate-950 font-bold mt-2.5 max-w-xl mx-auto leading-relaxed">
           Bắt đầu hoàn toàn miễn phí. Chỉ nâng cấp khi hoạt động buôn bán của bạn mở rộng quy mô.
         </p>
       </div>

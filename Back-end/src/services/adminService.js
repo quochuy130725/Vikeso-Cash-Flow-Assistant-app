@@ -2,12 +2,13 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Receipt = require('../models/Receipt');
+const Shop = require('../models/Shop');
 const SubscriptionOrder = require('../models/SubscriptionOrder');
 const sepayConfig = require('../config/sepay');
 
 const toObjectId = (id) => (mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null);
 
-// Khung ngày VN (copy cách tính cronService): trả {start,end} UTC cho 1 ngày VN
+// Khung ngày VN: trả {start,end} UTC cho 1 ngày VN
 const vnDayRange = (date = new Date()) => {
   const vnOffset = 7 * 60 * 60 * 1000;
   const vn = new Date(date.getTime() + vnOffset);
@@ -108,7 +109,7 @@ const updatePlan = async (id, { plan, extendDays }) => {
 };
 
 const updateRole = async (id, { role }) => {
-  if (!['OWNER', 'ADMIN'].includes(role)) { const e = new Error('role chỉ nhận OWNER|ADMIN.'); e.statusCode = 400; throw e; }
+  if (!['OWNER', 'ADMIN', 'STAFF'].includes(role)) { const e = new Error('role chỉ nhận OWNER|ADMIN|STAFF.'); e.statusCode = 400; throw e; }
   const user = await User.findByIdAndUpdate(id, { $set: { role } }, { new: true }).select('-password');
   if (!user) { const e = new Error('Không tìm thấy người dùng.'); e.statusCode = 404; throw e; }
   require('../socket').emitToUser(user._id, 'profile_updated', { reason: 'role_changed', role });
@@ -121,6 +122,7 @@ const deleteUser = async (id) => {
   await Promise.all([
     Receipt.deleteMany({ userId: user._id }),
     SubscriptionOrder.deleteMany({ userId: user._id }),
+    Shop.deleteMany({ ownerId: user._id }),
     User.deleteOne({ _id: user._id }),
   ]);
   return { deleted: String(user._id) };
@@ -129,19 +131,21 @@ const deleteUser = async (id) => {
 // ── 5. Tổng quan hệ thống ──
 const getOverview = async () => {
   const today = vnDayRange(), month = vnMonthRange();
-  const [totalUsers, totalPRO, totalFREE, todayStats, monthStats, todayOrders] = await Promise.all([
+  const [totalUsers, totalPRO, totalFREE, todayStats, monthStats, todayOrders, pendingShops] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ subscriptionPlan: 'PRO' }),
     User.countDocuments({ subscriptionPlan: 'FREE' }),
     sumReceipts({ status: 'VALID', transactionDate: { $gte: today.start, $lte: today.end } }),
     sumReceipts({ status: 'VALID', transactionDate: { $gte: month.start, $lte: month.end } }),
     SubscriptionOrder.countDocuments({ status: 'SUCCESS', createdAt: { $gte: today.start, $lte: today.end } }),
+    Shop.countDocuments({ approvalStatus: 'PENDING' }),
   ]);
   return {
     totalUsers, totalPRO, totalFREE,
     mrr: totalPRO * sepayConfig.proPrice,
     todayThu: todayStats.thu, todayChi: todayStats.chi, todayReceipts: todayStats.count, todayOrders,
     monthThu: monthStats.thu, monthChi: monthStats.chi, monthReceipts: monthStats.count,
+    pendingShops,
   };
 };
 
@@ -188,13 +192,13 @@ const listPayments = async ({ status, from, to, page = 1, limit = 20 }) => {
   return { data, sums, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
 };
 
-// ── 8. Tạo user (admin tạo tài khoản thủ công) ──
+// ── 8. Tạo user ──
 const createUser = async ({ email, password, name, shopName, phone, role = 'OWNER', subscriptionPlan = 'FREE' }) => {
   const normalizedEmail = (email || '').toString().toLowerCase().trim();
   if (!normalizedEmail) { const e = new Error('Vui lòng nhập email.'); e.statusCode = 400; throw e; }
   const hasPassword = password !== undefined && password !== null && String(password) !== '';
   if (hasPassword && String(password).length < 6) { const e = new Error('Mật khẩu phải có ít nhất 6 ký tự.'); e.statusCode = 400; throw e; }
-  if (!['OWNER', 'ADMIN'].includes(role)) { const e = new Error('role chỉ nhận OWNER|ADMIN.'); e.statusCode = 400; throw e; }
+  if (!['OWNER', 'ADMIN', 'STAFF'].includes(role)) { const e = new Error('role chỉ nhận OWNER|ADMIN|STAFF.'); e.statusCode = 400; throw e; }
   if (!['FREE', 'PRO'].includes(subscriptionPlan)) { const e = new Error('subscriptionPlan chỉ nhận FREE|PRO.'); e.statusCode = 400; throw e; }
 
   const existing = await User.findOne({ email: normalizedEmail });
@@ -208,6 +212,10 @@ const createUser = async ({ email, password, name, shopName, phone, role = 'OWNE
     password: hasPassword ? await bcrypt.hash(String(password), 10) : null,
     role,
     subscriptionPlan,
+    isEmailVerified: true,
+    onboardingCompleted: true,
+    isActive: true,
+    tokenVersion: 0,
     authProvider: hasPassword ? 'local' : 'google',
   });
 
@@ -215,13 +223,15 @@ const createUser = async ({ email, password, name, shopName, phone, role = 'OWNE
 };
 
 // ── 9. Cập nhật thông tin chung của user ──
-const updateUser = async (id, { name, shopName, phone, avatar }) => {
+const updateUser = async (id, { name, shopName, phone, avatar, isActive }) => {
   if (!toObjectId(id)) { const e = new Error('userId không hợp lệ.'); e.statusCode = 400; throw e; }
   const updateFields = {};
   if (name !== undefined) updateFields.name = String(name).trim();
   if (shopName !== undefined) updateFields.shopName = String(shopName).trim();
   if (phone !== undefined) updateFields.phone = String(phone).trim();
   if (avatar !== undefined) updateFields.avatar = avatar;
+  if (isActive !== undefined) updateFields.isActive = Boolean(isActive);
+
   if (Object.keys(updateFields).length === 0) { const e = new Error('Không có trường nào để cập nhật.'); e.statusCode = 400; throw e; }
 
   const user = await User.findByIdAndUpdate(id, { $set: updateFields }, { new: true, runValidators: true }).select('-password').lean();
@@ -239,16 +249,17 @@ const getTransaction = async (id) => {
 };
 
 // ── 11. Tạo giao dịch ──
-const createTransaction = async ({ userId, category = 'Khac', transactionType, totalAmount, reason = '', confidenceLevel = 'HIGH', status = 'VALID', transactionDate, receiptUrl = '' }) => {
+const createTransaction = async ({ userId, category = 'Khac', transactionType, totalAmount, reason = '', confidenceLevel = 'HIGH', status = 'VALID', transactionDate, receiptUrl = '', paymentMethod = 'TIEN_MAT' }) => {
   if (!toObjectId(userId)) { const e = new Error('userId không hợp lệ.'); e.statusCode = 400; throw e; }
   if (!['THU', 'CHI'].includes(transactionType)) { const e = new Error('transactionType chỉ nhận THU|CHI.'); e.statusCode = 400; throw e; }
   const amount = Number(totalAmount);
   if (totalAmount === undefined || Number.isNaN(amount)) { const e = new Error('totalAmount không hợp lệ.'); e.statusCode = 400; throw e; }
-  if (!['Khac', 'Hoa Don Le', 'POS Ket Ca', 'So Tay', 'Chuyen Khoan'].includes(category)) { const e = new Error('category không hợp lệ.'); e.statusCode = 400; throw e; }
-  if (!['HIGH', 'MEDIUM', 'LOW'].includes(confidenceLevel)) { const e = new Error('confidenceLevel chỉ nhận HIGH|MEDIUM|LOW.'); e.statusCode = 400; throw e; }
-  if (!['VALID', 'MERGED'].includes(status)) { const e = new Error('status chỉ nhận VALID|MERGED.'); e.statusCode = 400; throw e; }
+
   const user = await User.findById(userId);
   if (!user) { const e = new Error('Không tìm thấy người dùng.'); e.statusCode = 404; throw e; }
+
+  const txDate = transactionDate ? new Date(transactionDate) : new Date();
+  const { calculateAccountingDate } = require('../utils/accountingDate');
 
   const tx = await Receipt.create({
     userId,
@@ -258,7 +269,9 @@ const createTransaction = async ({ userId, category = 'Khac', transactionType, t
     reason,
     confidenceLevel,
     status,
-    transactionDate: transactionDate ? new Date(transactionDate) : new Date(),
+    transactionDate: txDate,
+    accountingDate: calculateAccountingDate(txDate),
+    paymentMethod,
     receiptUrl,
   });
   require('../socket').emitToUser(userId, 'new_transaction', { transactions: [tx] });
@@ -271,17 +284,14 @@ const updateTransaction = async (id, body) => {
   const tx = await Receipt.findById(id);
   if (!tx) { const e = new Error('Không tìm thấy giao dịch.'); e.statusCode = 404; throw e; }
 
-  const { userId, category, transactionType, totalAmount, reason, confidenceLevel, status, transactionDate, receiptUrl } = body;
+  const { userId, category, transactionType, totalAmount, reason, confidenceLevel, status, transactionDate, receiptUrl, paymentMethod } = body;
   if (userId !== undefined) {
     if (!toObjectId(userId)) { const e = new Error('userId không hợp lệ.'); e.statusCode = 400; throw e; }
     const user = await User.findById(userId);
     if (!user) { const e = new Error('Không tìm thấy người dùng.'); e.statusCode = 404; throw e; }
     tx.userId = userId;
   }
-  if (category !== undefined) {
-    if (!['Khac', 'Hoa Don Le', 'POS Ket Ca', 'So Tay', 'Chuyen Khoan'].includes(category)) { const e = new Error('category không hợp lệ.'); e.statusCode = 400; throw e; }
-    tx.category = category;
-  }
+  if (category !== undefined) tx.category = category;
   if (transactionType !== undefined) {
     if (!['THU', 'CHI'].includes(transactionType)) { const e = new Error('transactionType chỉ nhận THU|CHI.'); e.statusCode = 400; throw e; }
     tx.transactionType = transactionType;
@@ -292,16 +302,15 @@ const updateTransaction = async (id, body) => {
     tx.totalAmount = amount;
   }
   if (reason !== undefined) tx.reason = String(reason);
-  if (confidenceLevel !== undefined) {
-    if (!['HIGH', 'MEDIUM', 'LOW'].includes(confidenceLevel)) { const e = new Error('confidenceLevel chỉ nhận HIGH|MEDIUM|LOW.'); e.statusCode = 400; throw e; }
-    tx.confidenceLevel = confidenceLevel;
+  if (confidenceLevel !== undefined) tx.confidenceLevel = confidenceLevel;
+  if (status !== undefined) tx.status = status;
+  if (transactionDate !== undefined) {
+    tx.transactionDate = new Date(transactionDate);
+    const { calculateAccountingDate } = require('../utils/accountingDate');
+    tx.accountingDate = calculateAccountingDate(tx.transactionDate);
   }
-  if (status !== undefined) {
-    if (!['VALID', 'MERGED'].includes(status)) { const e = new Error('status chỉ nhận VALID|MERGED.'); e.statusCode = 400; throw e; }
-    tx.status = status;
-  }
-  if (transactionDate !== undefined) tx.transactionDate = new Date(transactionDate);
   if (receiptUrl !== undefined) tx.receiptUrl = String(receiptUrl);
+  if (paymentMethod !== undefined) tx.paymentMethod = paymentMethod;
 
   await tx.save();
   const saved = await Receipt.findById(id).populate('userId', 'email shopName').lean();
@@ -309,7 +318,7 @@ const updateTransaction = async (id, body) => {
   return saved;
 };
 
-// ── 13. Xóa giao dịch (hard delete) ──
+// ── 13. Xóa giao dịch ──
 const deleteTransaction = async (id) => {
   if (!toObjectId(id)) { const e = new Error('transactionId không hợp lệ.'); e.statusCode = 400; throw e; }
   const tx = await Receipt.findByIdAndDelete(id);
@@ -335,19 +344,11 @@ const updatePayment = async (id, body) => {
 
   const { status, amount, plan, paidAt, bankCode, bankAccount, accountName, transferContent } = body;
   if (status !== undefined) {
-    if (!['PENDING', 'SUCCESS', 'FAILED', 'EXPIRED'].includes(status)) { const e = new Error('status không hợp lệ.'); e.statusCode = 400; throw e; }
     order.status = status;
     if (status === 'SUCCESS') order.paidAt = order.paidAt || new Date();
   }
-  if (amount !== undefined) {
-    const amt = Number(amount);
-    if (Number.isNaN(amt)) { const e = new Error('amount không hợp lệ.'); e.statusCode = 400; throw e; }
-    order.amount = amt;
-  }
-  if (plan !== undefined) {
-    if (!['PRO'].includes(plan)) { const e = new Error('plan chỉ nhận PRO.'); e.statusCode = 400; throw e; }
-    order.plan = plan;
-  }
+  if (amount !== undefined) order.amount = Number(amount);
+  if (plan !== undefined) order.plan = plan;
   if (paidAt !== undefined) order.paidAt = paidAt ? new Date(paidAt) : null;
   if (bankCode !== undefined) order.bankCode = String(bankCode);
   if (bankAccount !== undefined) order.bankAccount = String(bankAccount);
@@ -362,7 +363,7 @@ const updatePayment = async (id, body) => {
   return saved;
 };
 
-// ── 16. Xóa đơn thanh toán (hard delete) ──
+// ── 16. Xóa đơn thanh toán ──
 const deletePayment = async (id) => {
   if (!toObjectId(id)) { const e = new Error('paymentId không hợp lệ.'); e.statusCode = 400; throw e; }
   const order = await SubscriptionOrder.findByIdAndDelete(id);
@@ -370,8 +371,57 @@ const deletePayment = async (id) => {
   return { deleted: String(order._id) };
 };
 
+// ── 17. Danh sách yêu cầu mở chi nhánh (Shop Requests) ──
+const listShopRequests = async ({ status = 'PENDING', page = 1, limit = 20 }) => {
+  page = Math.max(1, Number(page) || 1);
+  limit = Math.min(100, Math.max(1, Number(limit) || 20));
+  const filter = {};
+  if (status && status !== 'ALL') filter.approvalStatus = status;
+
+  const [total, data] = await Promise.all([
+    Shop.countDocuments(filter),
+    Shop.find(filter)
+      .populate('ownerId', 'email name phone shopName')
+      .populate('reviewedBy', 'email name')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+  ]);
+
+  return { data, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+};
+
+// ── 18. Phê duyệt / Từ chối yêu cầu mở chi nhánh ──
+const reviewShopRequest = async (id, { action, rejectionReason }, adminId) => {
+  if (!toObjectId(id)) { const e = new Error('shopId không hợp lệ.'); e.statusCode = 400; throw e; }
+  if (!['APPROVE', 'REJECT'].includes(action)) {
+    const e = new Error('action chỉ nhận APPROVE hoặc REJECT.'); e.statusCode = 400; throw e;
+  }
+
+  const shop = await Shop.findById(id);
+  if (!shop) { const e = new Error('Không tìm thấy cửa hàng.'); e.statusCode = 404; throw e; }
+
+  shop.approvalStatus = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+  shop.rejectionReason = action === 'REJECT' ? (rejectionReason || 'Chứng từ chưa đạt yêu cầu.') : '';
+  shop.reviewedBy = adminId;
+  shop.reviewedAt = new Date();
+  await shop.save();
+
+  // Bắn socket cho chủ shop
+  require('../socket').emitToUser(shop.ownerId, 'shop_status_updated', {
+    shopId: shop._id,
+    shopName: shop.shopName,
+    status: shop.approvalStatus,
+    rejectionReason: shop.rejectionReason,
+  });
+
+  return shop;
+};
+
 module.exports = {
   listUsers, getUserDetail, updatePlan, updateRole, deleteUser, getOverview, listTransactions, listPayments,
   createUser, updateUser, getTransaction, createTransaction, updateTransaction, deleteTransaction,
   getPayment, updatePayment, deletePayment,
+  listShopRequests, reviewShopRequest,
 };

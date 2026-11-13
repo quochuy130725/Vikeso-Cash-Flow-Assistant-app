@@ -30,6 +30,17 @@ class SocketService {
   /// Hồ sơ / cài đặt thông báo / Telegram / gói dịch vụ thay đổi.
   Stream<Map<String, dynamic>> get onProfileChanged => _profileCtrl.stream;
 
+  // =============================================================================
+  // NGHIỆP VỤ: THÔNG BÁO THAY ĐỔI HỒ SƠ / TÊN QUÁN TỨC THÌ TRÊN TOÀN APP
+  // - Dùng để: Phát tín hiệu thay đổi thông tin cửa hàng qua Stream nội bộ
+  // - Phục vụ: Giúp Dashboard và Side Drawer cập nhật ngay tên quán khi đổi chi nhánh
+  // =============================================================================
+  void notifyProfileChanged([Map<String, dynamic>? data]) {
+    if (!_profileCtrl.isClosed) {
+      _profileCtrl.add(data ?? {});
+    }
+  }
+
   /// Thanh toán PRO thành công.
   Stream<Map<String, dynamic>> get onSubscriptionUpgraded => _subscriptionCtrl.stream;
 

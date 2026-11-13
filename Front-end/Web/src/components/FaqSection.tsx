@@ -36,10 +36,10 @@ export const FaqSection: React.FC = () => {
     <section id="faq" className="scroll-mt-24 w-full py-20 px-4 md:px-8 max-w-4xl mx-auto">
       {/* Header */}
       <div className="text-center mb-14 max-w-3xl mx-auto">
-        <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-950 tracking-tight [text-shadow:_0_1px_8px_rgba(255,255,255,0.85)]">
+        <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
           Câu Hỏi Thường Gặp Về VikeSo
         </h2>
-        <p className="text-sm sm:text-base text-slate-950 font-bold mt-2.5 max-w-xl mx-auto leading-relaxed [text-shadow:_0_1px_6px_rgba(255,255,255,0.85)]">
+        <p className="text-sm sm:text-base text-slate-950 font-bold mt-2.5 max-w-xl mx-auto leading-relaxed">
           Mọi điều bạn cần biết trước khi bắt đầu sử dụng VikeSo cho cửa hàng của mình.
         </p>
       </div>

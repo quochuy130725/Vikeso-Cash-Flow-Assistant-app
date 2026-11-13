@@ -3,8 +3,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'forgot_password_screen.dart';
 
-/// LoginScreen - Dang nhap bang Email/Password hoac Google Sign-In.
-/// Su dung AuthRepository de goi API backend va luu JWT vao SecureStorage.
+/// LoginScreen - Đăng nhập bằng Email/Mật khẩu hoặc Google Sign-In.
+/// Luồng Đăng ký chuẩn hóa 2 bước: Điền thông tin cá nhân -> Xác thực OTP Brevo.
+/// Sau khi xác thực OTP thành công, chuyển về Form Đăng Nhập để đăng nhập.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -13,106 +14,275 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey        = GlobalKey<FormState>();
-  final _emailController    = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _fullNameController = TextEditingController();
-  final _otpController      = TextEditingController();
-  final _shopNameController = TextEditingController();
-  final _shopAddressController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _otpController = TextEditingController();
   final _authRepo = AuthRepository();
 
   bool _obscurePassword = true;
-  bool _isLoading       = false;
-  bool _isRegisterMode  = false; // Toggle giua Dang nhap / Dang ky
-  int _registerStep     = 1; // 1: Thông tin cá nhân, 2: OTP 6 số, 3: Onboarding cửa hàng đầu tiên
-  String _selectedBusinessType = 'Bán lẻ / Tạp hóa';
+  bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
+  bool _isRegisterMode = false; // Toggle giữa Đăng nhập / Đăng ký
+  int _registerStep = 1; // 1: Thông tin cá nhân, 2: OTP 6 số
   String? _errorMessage;
+  final Map<String, String?> _fieldErrors = {};
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _fullNameController.dispose();
+    _phoneController.dispose();
     _otpController.dispose();
-    _shopNameController.dispose();
-    _shopAddressController.dispose();
     super.dispose();
   }
 
-  // =========================================================
-  // DANG NHAP EMAIL/PASSWORD
-  // =========================================================
+  // =============================================================================
+  // NGHIỆP VỤ 1: ĐĂNG NHẬP VỚI INLINE VALIDATION TRỰC TIẾP
+  // - Dùng để: Đăng nhập tài khoản vào hệ thống VikeSo
+  // - Phục vụ: Kiểm tra rỗng, sai mật khẩu và hiển thị lỗi trực tiếp dưới từng ô
+  // =============================================================================
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() { _isLoading = true; _errorMessage = null; });
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    final errors = <String, String?>{};
+    if (email.isEmpty) {
+      errors['loginEmail'] = 'Vui lòng nhập email đăng nhập';
+    } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email) &&
+        !RegExp(r'^[0-9]{9,11}$').hasMatch(email)) {
+      errors['loginEmail'] = 'Email hoặc số điện thoại không hợp lệ';
+    }
+
+    if (password.isEmpty) {
+      errors['loginPassword'] = 'Vui lòng nhập mật khẩu';
+    }
+
+    if (errors.isNotEmpty) {
+      setState(() {
+        _fieldErrors.clear();
+        _fieldErrors.addAll(errors);
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _fieldErrors.clear();
+    });
 
     final result = await _authRepo.loginWithEmail(
-      email: _emailController.text,
-      password: _passwordController.text,
+      email: email,
+      password: password,
     );
 
     if (!mounted) return;
-    setState(() { _isLoading = false; });
+    setState(() {
+      _isLoading = false;
+    });
 
     if (result.isSuccess) {
       _navigateToDashboard(result.userInfo!);
     } else {
-      setState(() { _errorMessage = result.errorMessage; });
+      final msg = result.errorMessage ?? 'Đăng nhập không thành công';
+      setState(() {
+        if (msg.toLowerCase().contains('mật khẩu') || msg.toLowerCase().contains('password')) {
+          _fieldErrors['loginPassword'] = msg;
+        } else if (msg.toLowerCase().contains('email') || msg.toLowerCase().contains('tài khoản')) {
+          _fieldErrors['loginEmail'] = msg;
+        } else {
+          _errorMessage = msg;
+        }
+      });
     }
   }
 
-  // =========================================================
-  // DANG KY 3 BUOC (THONG TIN CA NHAN -> OTP -> ONBOARDING CUA HANG)
-  // =========================================================
+  // =============================================================================
+  // NGHIỆP VỤ 2: ĐĂNG KÝ 2 BƯỚC CHUẨN ĐỒNG BỘ VỚI WEB & INLINE VALIDATION
+  // - Bước 1: Nhập Họ tên, Email, Số điện thoại, Mật khẩu, Nhập lại mật khẩu.
+  //           Validate trực tiếp dưới chân từng ô, tự động xóa lỗi khi gõ lại.
+  // - Bước 2: Xác thực mã OTP 6 số từ Email.
+  // - Sau khi xác thực OTP thành công: Chuyển về Form Đăng Nhập để đăng nhập.
+  //   Tuyệt đối KHÔNG bắt buộc Onboarding tạo cửa hàng tại đây, KHÔNG vào thẳng Dashboard.
+  // =============================================================================
   Future<void> _handleRegister() async {
+    // BƯỚC 1: Đăng ký thông tin tài khoản cá nhân & Gửi OTP qua Email
     if (_registerStep == 1) {
-      if (!_formKey.currentState!.validate()) return;
-      setState(() {
-        _errorMessage = null;
-        _registerStep = 2;
-      });
-      return;
-    }
+      final name = _fullNameController.text.trim();
+      final email = _emailController.text.trim();
+      final phone = _phoneController.text.trim();
+      final password = _passwordController.text;
+      final confirmPassword = _confirmPasswordController.text;
 
-    if (_registerStep == 2) {
-      final otp = _otpController.text.trim();
-      if (otp.length != 6) {
+      final errors = <String, String?>{};
+      if (name.isEmpty) {
+        errors['fullName'] = 'Vui lòng nhập họ và tên của bạn';
+      } else if (name.length < 2) {
+        errors['fullName'] = 'Họ và tên tối thiểu 2 ký tự';
+      }
+
+      if (email.isEmpty) {
+        errors['email'] = 'Vui lòng nhập email nhận mã OTP';
+      } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+        errors['email'] = 'Địa chỉ email không đúng định dạng';
+      }
+
+      if (phone.isNotEmpty && (phone.length < 10 || phone.length > 11)) {
+        errors['phone'] = 'Số điện thoại không hợp lệ (10 - 11 chữ số)';
+      }
+
+      if (password.isEmpty) {
+        errors['password'] = 'Vui lòng nhập mật khẩu khởi tạo';
+      } else if (password.length < 6) {
+        errors['password'] = 'Mật khẩu phải có ít nhất 6 ký tự';
+      }
+
+      if (confirmPassword.isEmpty) {
+        errors['confirmPassword'] = 'Vui lòng xác nhận lại mật khẩu';
+      } else if (confirmPassword != password) {
+        errors['confirmPassword'] = 'Mật khẩu xác nhận không khớp';
+      }
+
+      if (errors.isNotEmpty) {
         setState(() {
-          _errorMessage = 'Vui lòng nhập đủ mã OTP 6 chữ số (Demo: 123456)';
+          _fieldErrors.clear();
+          _fieldErrors.addAll(errors);
         });
         return;
       }
+
       setState(() {
+        _isLoading = true;
         _errorMessage = null;
-        _registerStep = 3;
+        _fieldErrors.clear();
       });
-      return;
-    }
 
-    // Bước 3: Onboarding cửa hàng đầu tiên & gọi API đăng ký
-    if (_shopNameController.text.trim().isEmpty) {
+      final result = await _authRepo.registerStep1SendOtp(
+        email: email,
+        password: password,
+        name: name,
+        phone: phone,
+      );
+
+      if (!mounted) return;
       setState(() {
-        _errorMessage = 'Vui lòng nhập tên cửa hàng đầu tiên của bạn';
+        _isLoading = false;
       });
+
+      if (result['success'] == true) {
+        setState(() {
+          _errorMessage = null;
+          _fieldErrors.clear();
+          _registerStep = 2;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Mã xác thực OTP đã được gửi về email của bạn!'),
+            backgroundColor: const Color(0xFF0F172A),
+          ),
+        );
+      } else {
+        final msg = result['message']?.toString() ?? 'Đăng ký thất bại.';
+        setState(() {
+          if (msg.toLowerCase().contains('email')) {
+            _fieldErrors['email'] = msg;
+          } else {
+            _errorMessage = msg;
+          }
+        });
+      }
       return;
     }
 
-    setState(() { _isLoading = true; _errorMessage = null; });
+    // BƯỚC 2: Xác thực mã OTP 6 số từ Email
+    if (_registerStep == 2) {
+      final otp = _otpController.text.trim();
+      if (otp.isEmpty) {
+        setState(() {
+          _fieldErrors['otp'] = 'Vui lòng nhập mã OTP 6 chữ số';
+        });
+        return;
+      }
+      if (otp.length != 6) {
+        setState(() {
+          _fieldErrors['otp'] = 'Mã OTP phải có đúng 6 chữ số';
+        });
+        return;
+      }
 
-    final result = await _authRepo.register(
-      email: _emailController.text,
-      password: _passwordController.text,
-      shopName: _shopNameController.text.trim(),
-    );
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+        _fieldErrors.clear();
+      });
 
+      final result = await _authRepo.verifyRegisterOtp(
+        email: _emailController.text.trim(),
+        otpCode: otp,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (result.isSuccess) {
+        // =============================================================================
+        // ĐỒNG BỘ CHUẨN WEB: QUAY VỀ FORM ĐĂNG NHẬP SAU KHI XÁC THỰC OTP THÀNH CÔNG
+        // =============================================================================
+        setState(() {
+          _errorMessage = null;
+          _fieldErrors.clear();
+          _isRegisterMode = false;
+          _registerStep = 1;
+          _passwordController.clear();
+          _confirmPasswordController.clear();
+          _otpController.clear();
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Xác thực tài khoản thành công! Vui lòng đăng nhập để bắt đầu.'),
+            backgroundColor: Color(0xFF10B981),
+            duration: Duration(seconds: 4),
+          ),
+        );
+      } else {
+        setState(() {
+          _fieldErrors['otp'] = result.errorMessage ?? 'Mã OTP không chính xác hoặc đã hết hạn';
+        });
+      }
+      return;
+    }
+  }
+
+  Future<void> _handleResendOtp() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _fieldErrors.clear();
+    });
+    final res = await _authRepo.resendRegisterOtp(email: _emailController.text.trim());
     if (!mounted) return;
-    setState(() { _isLoading = false; });
-
-    if (result.isSuccess) {
-      _navigateToDashboard(result.userInfo!);
+    setState(() {
+      _isLoading = false;
+    });
+    if (res['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(res['message'] ?? 'Đã gửi lại mã OTP mới về email!'),
+          backgroundColor: const Color(0xFF0F172A),
+        ),
+      );
     } else {
-      setState(() { _errorMessage = result.errorMessage; });
+      setState(() {
+        _fieldErrors['otp'] = res['message'];
+      });
     }
   }
 
@@ -120,25 +290,30 @@ class _LoginScreenState extends State<LoginScreen> {
   // GOOGLE SIGN-IN
   // =========================================================
   Future<void> _handleGoogleSignIn() async {
-    setState(() { _isLoading = true; _errorMessage = null; });
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _fieldErrors.clear();
+    });
 
     final result = await _authRepo.loginWithGoogle();
 
     if (!mounted) return;
-    setState(() { _isLoading = false; });
+    setState(() {
+      _isLoading = false;
+    });
 
     if (result.isSuccess) {
       _navigateToDashboard(result.userInfo!);
     } else {
-      setState(() { _errorMessage = result.errorMessage; });
+      setState(() {
+        _errorMessage = result.errorMessage;
+      });
     }
   }
 
   // =========================================================
-  // CHUYEN MAN HINH DASHBOARD (luu userId vao dotenv runtime)
-  // =========================================================
-  // =========================================================
-  // QUEN MAT KHAU
+  // QUÊN MẬT KHẨU
   // =========================================================
   Future<void> _openForgotPassword() async {
     final email = await Navigator.of(context).push<String>(
@@ -150,12 +325,13 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _emailController.text = email;
       _passwordController.clear();
+      _confirmPasswordController.clear();
       _errorMessage = null;
+      _fieldErrors.clear();
     });
   }
 
   void _navigateToDashboard(UserInfo user) {
-    // Cap nhat USER_ID trong dotenv runtime de cac screen khac dung duoc
     dotenv.env['USER_ID'] = user.id;
     Navigator.of(context).pushReplacementNamed('/dashboard');
   }
@@ -169,7 +345,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
             child: Form(
               key: _formKey,
               child: Column(
@@ -178,12 +354,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Logo
                   Center(
                     child: Container(
-                      width: 72,
-                      height: 72,
+                      width: 68,
+                      height: 68,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: const Color(0xFF0F172A),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.08),
@@ -198,21 +374,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   const Text(
                     'Vikeso',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Color(0xFF0F172A), letterSpacing: -0.5),
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.5,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _isRegisterMode ? 'Đăng ký tài khoản quản lý dòng tiền' : 'Đăng nhập vào sổ quỹ cửa hàng',
+                    _isRegisterMode
+                        ? 'Đăng ký tài khoản Quản lý Dòng tiền (Chủ hộ)'
+                        : 'Đăng nhập vào sổ quỹ cửa hàng',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
 
-                  // Hien thi loi
+                  // Hiển thị lỗi chung (nếu có lỗi hệ thống ngoài các ô nhập)
                   if (_errorMessage != null) ...[
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -228,7 +415,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           Expanded(
                             child: Text(
                               _errorMessage!,
-                              style: const TextStyle(color: Color(0xFFFF4783), fontSize: 13, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                color: Color(0xFFFF4783),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
@@ -237,29 +428,31 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                   ],
 
-                  // Stepper 3 bước khi ở chế độ Đăng ký
+                  // Stepper 2 bước khi ở chế độ Đăng ký (Đồng bộ chuẩn Web)
                   if (_isRegisterMode) ...[
                     Container(
-                      margin: const EdgeInsets.only(bottom: 18),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      margin: const EdgeInsets.only(bottom: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: const Color(0xFFE2E8F0)),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _buildStepBadge(1, 'Tài khoản'),
-                          const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF94A3B8)),
+                          _buildStepBadge(1, 'Thông tin'),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF94A3B8)),
+                          ),
                           _buildStepBadge(2, 'OTP Email'),
-                          const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF94A3B8)),
-                          _buildStepBadge(3, 'Mở cửa hàng'),
                         ],
                       ),
                     ),
                   ],
 
+                  // NỘI DUNG FORM THEO TRẠNG THÁI
                   if (_isRegisterMode && _registerStep == 2) ...[
                     Container(
                       padding: const EdgeInsets.all(14),
@@ -271,7 +464,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: Text(
                         'Mã xác thực OTP 6 chữ số đã được gửi tới ${_emailController.text.trim()}.\n(Mã Demo trải nghiệm: 123456)',
-                        style: const TextStyle(fontSize: 12.5, color: Color(0xFF0F172A), fontWeight: FontWeight.w600, height: 1.4),
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: Color(0xFF0F172A),
+                          fontWeight: FontWeight.w600,
+                          height: 1.4,
+                        ),
                       ),
                     ),
                     TextFormField(
@@ -279,125 +477,197 @@ class _LoginScreenState extends State<LoginScreen> {
                       keyboardType: TextInputType.number,
                       maxLength: 6,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: 8, color: Color(0xFF0F172A)),
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 8,
+                        color: Color(0xFF0F172A),
+                      ),
                       decoration: _inputDecoration(
                         label: 'Nhập mã OTP 6 chữ số',
                         hint: '123456',
                         icon: Icons.verified_user_outlined,
                         colorScheme: colorScheme,
+                        errorText: _fieldErrors['otp'],
                       ),
+                      onChanged: (v) {
+                        if (_fieldErrors['otp'] != null) {
+                          setState(() => _fieldErrors['otp'] = null);
+                        }
+                      },
                     ),
                     const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton.icon(
-                        onPressed: () => setState(() => _registerStep = 1),
-                        icon: const Icon(Icons.arrow_back_rounded, size: 16),
-                        label: const Text('Quay lại sửa Email'),
-                      ),
-                    ),
-                  ] else if (_isRegisterMode && _registerStep == 3) ...[
-                    TextFormField(
-                      controller: _shopNameController,
-                      decoration: _inputDecoration(
-                        label: 'Tên cửa hàng / Hộ kinh doanh đầu tiên',
-                        hint: 'VD: Tạp hóa Cô Ba',
-                        icon: Icons.storefront_outlined,
-                        colorScheme: colorScheme,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    DropdownButtonFormField<String>(
-                      initialValue: _selectedBusinessType,
-                      decoration: _inputDecoration(
-                        label: 'Loại hình kinh doanh',
-                        icon: Icons.category_outlined,
-                        colorScheme: colorScheme,
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'Bán lẻ / Tạp hóa', child: Text('Bán lẻ / Tạp hóa')),
-                        DropdownMenuItem(value: 'F&B / Quán ăn / Cà phê', child: Text('F&B / Quán ăn / Cà phê')),
-                        DropdownMenuItem(value: 'Thời trang / Phụ kiện', child: Text('Thời trang / Phụ kiện')),
-                        DropdownMenuItem(value: 'Dịch vụ / Spa / Tiệm tóc', child: Text('Dịch vụ / Spa / Tiệm tóc')),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () => setState(() {
+                            _registerStep = 1;
+                            _fieldErrors.clear();
+                          }),
+                          icon: const Icon(Icons.arrow_back_rounded, size: 16),
+                          label: const Text('Đổi thông tin'),
+                        ),
+                        TextButton.icon(
+                          onPressed: _isLoading ? null : _handleResendOtp,
+                          icon: const Icon(Icons.refresh_rounded, size: 16),
+                          label: const Text('Gửi lại mã OTP'),
+                        ),
                       ],
+                    ),
+                  ] else if (_isRegisterMode && _registerStep == 1) ...[
+                    // Họ và tên
+                    TextFormField(
+                      controller: _fullNameController,
+                      decoration: _inputDecoration(
+                        label: 'Họ và tên của bạn *',
+                        hint: 'VD: Nguyễn Bá Minh Tiến',
+                        icon: Icons.person_outline,
+                        colorScheme: colorScheme,
+                        errorText: _fieldErrors['fullName'],
+                      ),
                       onChanged: (v) {
-                        if (v != null) setState(() => _selectedBusinessType = v);
+                        if (_fieldErrors['fullName'] != null) {
+                          setState(() => _fieldErrors['fullName'] = null);
+                        }
                       },
                     ),
                     const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _shopAddressController,
-                      decoration: _inputDecoration(
-                        label: 'Địa chỉ cửa hàng (Tùy chọn)',
-                        hint: 'VD: 123 Nguyễn Trãi, Quận 1',
-                        icon: Icons.location_on_outlined,
-                        colorScheme: colorScheme,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ] else ...[
-                    if (_isRegisterMode) ...[
-                      TextFormField(
-                        controller: _fullNameController,
-                        decoration: _inputDecoration(
-                          label: 'Họ và tên chủ hộ kinh doanh',
-                          hint: 'VD: Nguyễn Văn A',
-                          icon: Icons.badge_outlined,
-                          colorScheme: colorScheme,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
 
-                    // Email hoặc SĐT
+                    // Email nhận OTP
                     TextFormField(
                       controller: _emailController,
-                      keyboardType: _isRegisterMode ? TextInputType.emailAddress : TextInputType.text,
+                      keyboardType: TextInputType.emailAddress,
                       decoration: _inputDecoration(
-                        label: _isRegisterMode ? 'Email đăng nhập (Nhận OTP)' : 'Email hoặc Số điện thoại',
-                        hint: _isRegisterMode ? 'VD: cuahang@vikeso.vn' : 'VD: cuahang@vikeso.vn hoặc 0987654321',
-                        icon: _isRegisterMode ? Icons.email_outlined : Icons.person_outline,
+                        label: 'Email nhận mã OTP *',
+                        hint: 'VD: name@domain.com',
+                        icon: Icons.email_outlined,
                         colorScheme: colorScheme,
+                        errorText: _fieldErrors['email'],
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return _isRegisterMode ? 'Vui lòng nhập email' : 'Vui lòng nhập email hoặc số điện thoại';
+                      onChanged: (v) {
+                        if (_fieldErrors['email'] != null) {
+                          setState(() => _fieldErrors['email'] = null);
                         }
-                        if (_isRegisterMode) {
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
-                            return 'Email không đúng định dạng';
-                          }
-                        }
-                        return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
 
-                    // Password
+                    // SĐT liên hệ
+                    TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: _inputDecoration(
+                        label: 'Số điện thoại Zalo / Liên hệ',
+                        hint: 'VD: 0327778888',
+                        icon: Icons.phone_outlined,
+                        colorScheme: colorScheme,
+                        errorText: _fieldErrors['phone'],
+                      ),
+                      onChanged: (v) {
+                        if (_fieldErrors['phone'] != null) {
+                          setState(() => _fieldErrors['phone'] = null);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Mật khẩu
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       decoration: _inputDecoration(
-                        label: 'Mật khẩu',
+                        label: 'Mật khẩu *',
+                        hint: 'Tối thiểu 6 ký tự',
                         icon: Icons.lock_outline,
                         colorScheme: colorScheme,
+                        errorText: _fieldErrors['password'],
                       ).copyWith(
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                             color: const Color(0xFF64748B),
                           ),
-                          onPressed: () => setState(() { _obscurePassword = !_obscurePassword; }),
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) return 'Vui lòng nhập mật khẩu';
-                        if (_isRegisterMode && value.length < 6) return 'Mật khẩu ít nhất 6 ký tự';
-                        return null;
+                      onChanged: (v) {
+                        if (_fieldErrors['password'] != null) {
+                          setState(() => _fieldErrors['password'] = null);
+                        }
                       },
                     ),
-                  ],
-                  if (!_isRegisterMode) ...[
+                    const SizedBox(height: 14),
+
+                    // Xác nhận mật khẩu
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      obscureText: _obscureConfirmPassword,
+                      decoration: _inputDecoration(
+                        label: 'Xác nhận lại mật khẩu *',
+                        hint: 'Nhập lại mật khẩu trên',
+                        icon: Icons.lock_reset_outlined,
+                        colorScheme: colorScheme,
+                        errorText: _fieldErrors['confirmPassword'],
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                            color: const Color(0xFF64748B),
+                          ),
+                          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                        ),
+                      ),
+                      onChanged: (v) {
+                        if (_fieldErrors['confirmPassword'] != null) {
+                          setState(() => _fieldErrors['confirmPassword'] = null);
+                        }
+                      },
+                    ),
+                  ] else ...[
+                    // FORM ĐĂNG NHẬP
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: _inputDecoration(
+                        label: 'Email hoặc Số điện thoại',
+                        hint: 'VD: name@domain.com hoặc 0987654321',
+                        icon: Icons.person_outline,
+                        colorScheme: colorScheme,
+                        errorText: _fieldErrors['loginEmail'],
+                      ),
+                      onChanged: (v) {
+                        if (_fieldErrors['loginEmail'] != null) {
+                          setState(() => _fieldErrors['loginEmail'] = null);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: _inputDecoration(
+                        label: 'Mật khẩu',
+                        hint: 'Nhập mật khẩu',
+                        icon: Icons.lock_outline,
+                        colorScheme: colorScheme,
+                        errorText: _fieldErrors['loginPassword'],
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                            color: const Color(0xFF64748B),
+                          ),
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        ),
+                      ),
+                      onChanged: (v) {
+                        if (_fieldErrors['loginPassword'] != null) {
+                          setState(() => _fieldErrors['loginPassword'] = null);
+                        }
+                      },
+                    ),
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
@@ -415,12 +685,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                  ] else ...[
-                    const SizedBox(height: 20),
                   ],
 
-                  // Nut Dang nhap / Dang ky
+                  const SizedBox(height: 18),
+
+                  // Nút Đăng nhập / Đăng ký
                   SizedBox(
                     height: 52,
                     child: ElevatedButton(
@@ -435,67 +704,72 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: _isLoading
                           ? const SizedBox(
-                              height: 20, width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.2),
                             )
                           : Text(
                               _isRegisterMode
-                                  ? (_registerStep == 1
-                                      ? 'Tiếp Tục & Nhận Mã OTP'
-                                      : (_registerStep == 2
-                                          ? 'Xác Thực OTP'
-                                          : 'Hoàn Tất & Mở Cửa Hàng'))
+                                  ? (_registerStep == 1 ? 'Tiếp Tục: Gửi Mã OTP Xác Thực →' : 'Xác Thực & Hoàn Tất')
                                   : 'Đăng Nhập',
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: -0.2),
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
                             ),
                     ),
                   ),
-                  const SizedBox(height: 20),
 
-                  // Duong chia HOAC
-                  const Row(
-                    children: [
-                      Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('HOẶC', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF94A3B8))),
-                      ),
-                      Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
+                  if (!_isRegisterMode) ...[
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'Hoặc đăng nhập với',
+                            style: TextStyle(color: Colors.grey.shade500, fontSize: 12.5),
+                          ),
+                        ),
+                        const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
 
-                  // Google Sign-In Button
-                  SizedBox(
-                    height: 50,
-                    child: OutlinedButton.icon(
-                      onPressed: _isLoading ? null : _handleGoogleSignIn,
-                      icon: Image.network(
-                        'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png',
-                        height: 20, width: 20,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 24, color: Color(0xFFFF4783)),
-                      ),
-                      label: const Text(
-                        'Đăng nhập với Google',
-                        style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w700, fontSize: 14),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        backgroundColor: Colors.white,
+                    SizedBox(
+                      height: 50,
+                      child: OutlinedButton.icon(
+                        onPressed: _isLoading ? null : _handleGoogleSignIn,
+                        icon: Image.asset(
+                          'assets/images/google_logo.png',
+                          width: 20,
+                          height: 20,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 24, color: Colors.red),
+                        ),
+                        label: const Text(
+                          'Tiếp tục với Google',
+                          style: TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w700),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          backgroundColor: Colors.white,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
+
                   const SizedBox(height: 24),
 
-                  // Toggle Dang nhap / Dang ky
+                  // Toggle Đăng nhập / Đăng ký
                   Center(
                     child: TextButton(
                       onPressed: () => setState(() {
                         _isRegisterMode = !_isRegisterMode;
                         _registerStep = 1;
                         _errorMessage = null;
-                        _formKey.currentState?.reset();
+                        _fieldErrors.clear();
+                        _passwordController.clear();
+                        _confirmPasswordController.clear();
+                        _otpController.clear();
                       }),
                       child: RichText(
                         text: TextSpan(
@@ -527,8 +801,8 @@ class _LoginScreenState extends State<LoginScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 20,
-          height: 20,
+          width: 22,
+          height: 22,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: done
@@ -539,7 +813,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Text(
             done ? '✓' : '$step',
             style: TextStyle(
-              fontSize: 10.5,
+              fontSize: 11,
               fontWeight: FontWeight.w900,
               color: done
                   ? const Color(0xFF0F172A)
@@ -547,11 +821,11 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-        const SizedBox(width: 5),
+        const SizedBox(width: 6),
         Text(
           title,
           style: TextStyle(
-            fontSize: 11.5,
+            fontSize: 12.5,
             fontWeight: active ? FontWeight.w800 : FontWeight.w600,
             color: active ? const Color(0xFF0F172A) : const Color(0xFF64748B),
           ),
@@ -560,22 +834,66 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // =============================================================================
+  // NGHIỆP VỤ: ĐỊNH DẠNG Ô NHẬP KÈM INLINE VALIDATION VÀ VIỀN ĐỎ CHUẨN XÁC
+  // - Hiển thị chữ lỗi màu đỏ trực tiếp ngay dưới chân ô nhập liệu (errorText)
+  // - Khi có lỗi, đổi toàn bộ viền và icon sang màu đỏ cảnh báo (Color(0xFFEF4444))
+  // =============================================================================
   InputDecoration _inputDecoration({
     required String label,
     String? hint,
     required IconData icon,
     required ColorScheme colorScheme,
+    String? errorText,
   }) {
+    final hasError = errorText != null && errorText.isNotEmpty;
     return InputDecoration(
-      prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 20),
+      prefixIcon: Icon(
+        icon,
+        color: hasError ? const Color(0xFFEF4444) : const Color(0xFF64748B),
+        size: 20,
+      ),
       labelText: label,
-      labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+      labelStyle: TextStyle(
+        color: hasError ? const Color(0xFFEF4444) : const Color(0xFF64748B),
+        fontSize: 14,
+        fontWeight: hasError ? FontWeight.w600 : FontWeight.w500,
+      ),
       hintText: hint,
       hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+      errorText: errorText,
+      errorStyle: const TextStyle(
+        color: Color(0xFFEF4444),
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+      ),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.2)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFFF4783), width: 1.8)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color: hasError ? const Color(0xFFEF4444) : const Color(0xFFE2E8F0),
+          width: hasError ? 1.5 : 1.2,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color: hasError ? const Color(0xFFEF4444) : const Color(0xFFFF4783),
+          width: 1.8,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.8),
+      ),
       filled: true,
       fillColor: Colors.white,
     );

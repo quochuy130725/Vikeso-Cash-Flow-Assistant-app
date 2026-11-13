@@ -14,6 +14,10 @@ const apiRoutes = require('./src/routes/apiRoutes');
 const authRoutes = require('./src/routes/authRoutes');
 const billingRoutes = require('./src/routes/billingRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
+const staffRoutes = require('./src/routes/staffRoutes');
+const shopRoutes = require('./src/routes/shopRoutes');
+const categoryRoutes = require('./src/routes/categoryRoutes');
+const { seedDefaultCategories } = require('./src/services/categoryService');
 const { initSocket } = require('./src/socket');
 
 const app = express();
@@ -24,18 +28,20 @@ const httpServer = http.createServer(app);
 // Khởi tạo Socket.IO — phải làm TRƯỚC khi lắng nghe
 initSocket(httpServer);
 
-// Kết nối MongoDB Atlas
-connectDB();
+// Kết nối MongoDB Atlas và khởi tạo danh mục mẫu
+connectDB().then(() => {
+  seedDefaultCategories();
+}).catch(() => {});
 
-// Middleware parse JSON & CORS với cache preflight 24h (loại bỏ độ trễ OPTIONS mỗi lần click)
+// Middleware parse JSON & CORS với cache preflight 24h
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Shop-Id'],
   maxAge: 86400,
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 // Khởi chạy hệ thống Cron-job tự động bắn báo cáo (Chạy ngầm)
 require('./src/services/cronService');
@@ -48,10 +54,13 @@ app.get('/health', (req, res) => res.status(200).json({ status: 'ok', time: Date
 app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok', time: Date.now() }));
 
 // Gắn toàn bộ routes
-app.use('/api/auth', authRoutes);   // ─ Đăng nhập/Đăng ký/Google Sign-In
-app.use('/api', apiRoutes);         // ─ Scan receipt, manual-entry, transactions...
-app.use('/api/billing', billingRoutes); // ─ SePay VietQR: create-order, status, history, sepay/webhook
-app.use('/api/admin', adminRoutes); // ─ Admin: users, overview, transactions, payments
+app.use('/api/auth', authRoutes);         // Đăng nhập/Đăng ký/OTP Verify/Resend/Google Sign-In
+app.use('/api/staff', staffRoutes);       // Quản lý nhân viên thu ngân (STAFF) & force_logout
+app.use('/api/shops', shopRoutes);       // Quản lý cửa hàng (Onboarding & Chi nhánh thứ 2+)
+app.use('/api/categories', categoryRoutes); // Cây danh mục Thu - Chi (Cha - Con)
+app.use('/api/billing', billingRoutes);   // SePay VietQR: create-order, status, history, sepay/webhook
+app.use('/api/admin', adminRoutes);       // Admin: users, overview, transactions, payments, shop requests
+app.use('/api', apiRoutes);               // Scan receipt, manual-entry, confirm-receipt, transactions, analytics...
 
 // Bật Server lắng nghe — dùng httpServer thay vì app.listen()
 const PORT = process.env.PORT || 5000;

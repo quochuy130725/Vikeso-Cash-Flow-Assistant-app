@@ -534,7 +534,10 @@ class MockData {
       amount: 99000,
       status: 'PENDING',
       transferContent: code,
-      qrUrl: 'https://img.vietqr.io/image/VCB-1026466727-compact2.png?amount=99000&addInfo=$code&accountName=VIKESO',
+      qrUrl: 'https://img.vietqr.io/image/MB-0829100286-compact2.png?amount=99000&addInfo=$code&accountName=PHAM%20HUYNH%20QUOC%20HUY',
+      bankCode: 'MB',
+      bankAccount: '0829100286',
+      accountName: 'PHAM HUYNH QUOC HUY',
       expiresAt: now.add(const Duration(minutes: 15)),
       createdAt: now,
     );

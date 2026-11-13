@@ -28,4 +28,8 @@ router.get('/payments/:id', adminController.getPayment);
 router.patch('/payments/:id', adminController.updatePayment);
 router.delete('/payments/:id', adminController.deletePayment);
 
+// Quản lý phê duyệt chi nhánh cửa hàng thứ 2+
+router.get('/shops/requests', adminController.listShopRequests);
+router.patch('/shops/:id/review', adminController.reviewShopRequest);
+
 module.exports = router;

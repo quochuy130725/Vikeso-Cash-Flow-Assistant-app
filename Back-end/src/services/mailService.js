@@ -56,10 +56,52 @@ const buildResetPasswordHTML = ({ name, code, minutes }) => `
 </body>
 </html>`;
 
+const buildRegisterOtpHTML = ({ name, code, minutes = 5 }) => `
+<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="UTF-8" /></head>
+<body style="margin:0;padding:0;background:#f5f5f7;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0;">
+    <tr><td align="center">
+      <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.06);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#0F172A,#FF4783);padding:28px;text-align:center;color:#fff;">
+            <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.5px;">VikeSo</h1>
+            <p style="margin:6px 0 0;font-size:14px;opacity:0.95;">Xác thực tài khoản Hộ kinh doanh</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.6;">
+            <p>Xin chào <b>${name || 'Chủ hộ kinh doanh'}</b>,</p>
+            <p>Cảm ơn bạn đã đăng ký tài khoản VikeSo. Vui lòng nhập mã xác thực OTP 6 số dưới đây để kích hoạt tài khoản:</p>
+            <div style="text-align:center;margin:24px 0;">
+              <span style="display:inline-block;letter-spacing:10px;font-size:34px;font-weight:900;color:#FF4783;background:#FFF0F5;padding:16px 28px;border-radius:14px;border:2px dashed #FF4783;">${code}</span>
+            </div>
+            <p style="color:#64748b;font-size:14px;">Mã xác thực có hiệu lực trong vòng <b>${minutes} phút</b>. Tuyệt đối không chia sẻ mã này cho người khác.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f8fafc;padding:16px;text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #f1f5f9;">
+            © VikeSo - Trợ lý Kế toán & Quản trị Dòng tiền Thông minh SME
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
 exports.sendResetPasswordEmail = async ({ to, name, code, minutes }) => {
   const subject = `[VikeSo] Mã đặt lại mật khẩu: ${code}`;
   const html = buildResetPasswordHTML({ name, code, minutes });
   const text = `Mã đặt lại mật khẩu VikeSo của bạn là ${code}. Mã có hiệu lực trong ${minutes} phút.`;
+  return sendEmail({ to, name, subject, html, text });
+};
+
+exports.sendRegisterOtpEmail = async ({ to, name, code, minutes = 5 }) => {
+  const subject = `[VikeSo] Mã xác thực đăng ký tài khoản: ${code}`;
+  const html = buildRegisterOtpHTML({ name, code, minutes });
+  const text = `Mã xác thực OTP đăng ký tài khoản VikeSo của bạn là ${code}. Mã có hiệu lực trong ${minutes} phút.`;
   return sendEmail({ to, name, subject, html, text });
 };
 
@@ -138,5 +180,3 @@ const sendEmail = async ({ to, name, subject, html, text, senderName = 'VikeSo' 
 };
 
 exports.sendEmail = sendEmail;
-
-

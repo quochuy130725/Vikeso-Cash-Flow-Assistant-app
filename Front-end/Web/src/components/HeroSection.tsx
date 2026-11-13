@@ -59,7 +59,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="text-2xl sm:text-3xl md:text-4xl lg:text-[34px] xl:text-[38px] font-black tracking-tight leading-[1.25] text-slate-950 mb-4 max-w-full [text-shadow:_0_1px_8px_rgba(255,255,255,0.85)]"
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-[34px] xl:text-[38px] font-black tracking-tight leading-[1.25] text-slate-950 mb-4 max-w-full"
             >
               Chụp Hóa Đơn Tự Vào Sổ Quỹ <br />
               <span className="text-[#e11d48] inline-block">
@@ -72,7 +72,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
-              className="text-sm sm:text-base text-slate-950 max-w-xl mb-7 leading-relaxed font-bold [text-shadow:_0_1px_6px_rgba(255,255,255,0.85)]"
+              className="text-sm sm:text-base text-slate-950 max-w-xl mb-7 leading-relaxed font-bold"
             >
               Chỉ cần 1 cú chụp ảnh: Chữ viết tay hay bill in mờ đều tự tính tiền. Tự trừ bill quẹt thẻ POS để không bị cộng trùng, tối 10 giờ tự báo lãi ròng về điện thoại.
             </motion.p>

@@ -10,6 +10,7 @@ import 'widgets/donut_chart_painter.dart';
 import 'dart:async';
 import '../../data/services/api_service.dart';
 import '../../data/services/socket_service.dart';
+import '../../main.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,6 +23,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final ApiService _apiService = ApiService();
   bool _isLoading = true;
   String _displayName = 'Người dùng';
+  String _storeStatus = 'ACTIVE';
+  String _pendingShopName = '';
   List<Map<String, dynamic>> _transactions = [];
 
   // Thống kê động
@@ -73,18 +76,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
         dotenv.env['USER_ID'] = userId;
       }
       final shopName = await storage.read(key: 'user_shopName');
-      final userName = await storage.read(key: 'user_name');
-      final email = await storage.read(key: 'user_email');
+      final statusStr = await storage.read(key: 'user_shopStatus') ?? 'ACTIVE';
+      final pendingName = await storage.read(key: 'user_pendingShopName') ?? '';
+      final role = (await storage.read(key: 'user_role'))?.toUpperCase() ?? 'OWNER';
+
+      String computedStatus = statusStr;
+      if (role == 'OWNER') {
+        if (shopName == null || shopName.trim().isEmpty || shopName == 'Chưa thiết lập cửa hàng') {
+          if (statusStr != 'PENDING') {
+            computedStatus = 'NO_STORE';
+          }
+        }
+      } else {
+        computedStatus = 'ACTIVE';
+      }
+
       if (mounted) {
         setState(() {
-          if (shopName != null && shopName.trim() != '') {
-            _displayName = shopName;
-          } else if (userName != null && userName.trim() != '') {
-            _displayName = userName;
-          } else if (email != null && email.trim() != '') {
-            _displayName = email.split('@')[0];
+          _storeStatus = computedStatus;
+          _pendingShopName = pendingName;
+          if (shopName != null && shopName.trim().isNotEmpty) {
+            _displayName = shopName.trim();
           } else {
-            _displayName = 'Người dùng';
+            _displayName = 'Chưa thiết lập cửa hàng';
           }
         });
       }
@@ -530,6 +544,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 16),
 
+                      // =============================================================================
+                      // NGHIỆP VỤ BƯỚC 3: BANNER ONBOARDING CỬA HÀNG TRÊN DASHBOARD
+                      // =============================================================================
+                      _buildStoreOnboardingBanner(),
+
                       // --- 2. ACTION HUB ---
                       const DashboardActionButtons(),
                       const SizedBox(height: 18),
@@ -833,6 +852,151 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ),
+    );
+  }
+
+  // =============================================================================
+  // NGHIỆP VỤ BƯỚC 3: BANNER ONBOARDING / THÔNG BÁO TIẾN ĐỘ THẨM ĐỊNH CỬA HÀNG
+  // - Nếu chưa có cửa hàng (NO_STORE): Hiển thị Card chào mừng + Nút "+ Thiết lập cửa hàng ngay"
+  // - Nếu đang chờ duyệt (PENDING): Hiển thị Card màu vàng cam thông báo hồ sơ đang được thẩm định
+  // - Nếu đã có cửa hàng (ACTIVE): Ẩn đi hoàn toàn
+  // =============================================================================
+  Widget _buildStoreOnboardingBanner() {
+    if (_storeStatus == 'ACTIVE') return const SizedBox.shrink();
+
+    final isPending = _storeStatus == 'PENDING';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isPending ? const Color(0xFFFFFBEB) : const Color(0xFFFFF0F5),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isPending ? const Color(0xFFFDE68A) : const Color(0xFFFF4783).withValues(alpha: 0.35),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isPending
+                ? const Color(0xFFF59E0B).withValues(alpha: 0.08)
+                : const Color(0xFFFF4783).withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: isPending ? const Color(0xFFFEF3C7) : const Color(0xFFFF4783),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isPending
+                          ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
+                          : const Color(0xFFFF4783).withValues(alpha: 0.28),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  isPending ? Icons.pending_actions_rounded : Icons.storefront_rounded,
+                  color: isPending ? const Color(0xFFB45309) : Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            isPending
+                                ? 'Hồ sơ: ${_pendingShopName.isNotEmpty ? _pendingShopName : _displayName}'
+                                : 'Chào mừng bạn đến với VikeSo!',
+                            style: const TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF0F172A),
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isPending ? const Color(0xFFFDE68A) : const Color(0xFFD0F81B),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            isPending ? 'CHỜ ADMIN DUYỆT' : 'BƯỚC THIẾT LẬP',
+                            style: const TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isPending
+                          ? 'Hồ sơ pháp lý đang được Ban Quản Trị thẩm định. Bạn sẽ có thể bóc tách hóa đơn ngay khi cơ sở được phê duyệt!'
+                          : 'Hãy tạo cửa hàng đầu tiên để bắt đầu quét hóa đơn, bóc tách dòng tiền và phân loại chi phí tự động.',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF475569),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isPending ? const Color(0xFFD97706) : const Color(0xFFFF4783),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              onPressed: () => MainNavigationShell.switchToTab(context, 3),
+              icon: Icon(
+                isPending ? Icons.visibility_rounded : Icons.add_business_rounded,
+                size: 18,
+                color: Colors.white,
+              ),
+              label: Text(
+                isPending ? 'Xem Trạng Thái Thẩm Định' : '+ Thiết Lập Cửa Hàng Ngay',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

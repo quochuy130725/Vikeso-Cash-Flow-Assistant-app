@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/guards/store_guard.dart';
 import '../../manual_entry/manual_entry_screen.dart';
 
 class DashboardActionButtons extends StatelessWidget {
@@ -10,12 +11,24 @@ class DashboardActionButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // Nút Quét Hóa Đơn (Primary Action)
+        // =============================================================================
+        // NGHIỆP VỤ BƯỚC 2: KHÓA TÁC VỤ QUÉT HÓA ĐƠN NẾU CHƯA CÓ CỬA HÀNG HOẠT ĐỘNG
+        // - Yêu cầu: Bắt buộc Owner phải có cơ sở kinh doanh ACTIVE mới được quét hóa đơn
+        // =============================================================================
         Expanded(
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => Navigator.pushNamed(context, '/camera'),
+              onTap: () async {
+                final isAllowed = await StoreGuard.ensureStoreActive(
+                  context,
+                  actionName: 'quét hóa đơn bóc tách tự động',
+                );
+                if (!isAllowed) return;
+                if (context.mounted) {
+                  Navigator.pushNamed(context, '/camera');
+                }
+              },
               borderRadius: BorderRadius.circular(14),
               child: Ink(
                 padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
@@ -52,12 +65,22 @@ class DashboardActionButtons extends StatelessWidget {
         ),
         const SizedBox(width: 10),
 
-        // Nút Ghi Chép Thủ Công (Secondary Action)
+        // =============================================================================
+        // NGHIỆP VỤ BƯỚC 2: KHÓA TÁC VỤ NHẬP THU/CHI NẾU CHƯA CÓ CỬA HÀNG HOẠT ĐỘNG
+        // - Yêu cầu: Giao dịch phải gắn vào 1 cửa hàng, không cho ghi sổ khi chưa có cơ sở
+        // =============================================================================
         Expanded(
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () async {
+                final isAllowed = await StoreGuard.ensureStoreActive(
+                  context,
+                  actionName: 'nhập thu chi và ghi sổ dòng tiền',
+                );
+                if (!isAllowed) return;
+                if (!context.mounted) return;
+
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(

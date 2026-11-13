@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PortalType, OwnerTab, AdminTab } from '../types';
 import { PortalSidebar } from './PortalSidebar';
 import { PortalHeader } from './PortalHeader';
@@ -6,6 +6,7 @@ import { MobileAppModal, NotificationModal } from './PortalModals';
 import { UserAccount } from './AuthModal';
 import { CheckCircle2, AlertTriangle, X } from 'lucide-react';
 import { exportTransactionsToExcel, printFinancialReport } from '../utils/exportExcel';
+import { fetchUserShops } from '../services/api';
 
 // Views
 import { OwnerCashflowLedger } from '../views/OwnerCashflowLedger';
@@ -149,6 +150,89 @@ export const PortalView: React.FC<PortalViewProps> = ({
 
   const isRoleAdmin = userRole === 'ADMIN';
 
+  // =============================================================================
+  // NGHIỆP VỤ: ĐỒNG BỘ TÊN CỬA HÀNG VÀO THANH HEADER & PROFILE SIDEBAR (DÒNG 155 ĐẾN 215)
+  // - Dùng để: Tự động tải thông tin cửa hàng thực tế từ API /shops
+  // - Phục vụ:
+  //   1. Thay thế hoàn toàn chữ "Chưa thiết lập cửa hàng" ở Header và Sidebar Profile
+  //      ngay khi Owner đã thiết lập cửa hàng hoặc đã được Admin phê duyệt.
+  //   2. Lắng nghe event 'vikeso_shop_updated' để cập nhật tức thời khi Owner tạo thêm
+  //      chi nhánh hoặc chuyển chi nhánh làm việc mà không cần bấm F5 tải lại trang.
+  // =============================================================================
+  const [currentStoreName, setCurrentStoreName] = useState<string>(() => {
+    return currentUser?.shopName || currentUser?.storeName || (isRoleAdmin ? 'Admin Quản Trị' : 'Chưa thiết lập cửa hàng');
+  });
+
+  useEffect(() => {
+    if (portal !== 'owner') return;
+
+    const syncStore = async () => {
+      try {
+        const rawUser = localStorage.getItem('vikeso_user');
+        let savedActiveShopId = '';
+        let savedShopName = '';
+        if (rawUser) {
+          try {
+            const u = JSON.parse(rawUser);
+            savedActiveShopId = u.activeShopId || '';
+            savedShopName = u.shopName || u.storeName || '';
+          } catch (e) {}
+        }
+
+        const shops = await fetchUserShops();
+        if (shops && shops.length > 0) {
+          // Ưu tiên 1: Lấy cửa hàng theo activeShopId đang chọn
+          const byId = savedActiveShopId ? shops.find((s) => s.id === savedActiveShopId) : undefined;
+          // Ưu tiên 2: Lấy cửa hàng theo tên đã chọn trước đó
+          const byName = savedShopName && savedShopName !== 'Chưa thiết lập cửa hàng'
+            ? shops.find((s) => s.shopName === savedShopName)
+            : undefined;
+          // Ưu tiên 3: Lấy cửa hàng đã được duyệt (ACTIVE)
+          const activeShop = shops.find((s) => s.status === 'ACTIVE');
+          // Ưu tiên 4: Cửa hàng vừa tạo đang chờ duyệt (PENDING_APPROVAL)
+          const pendingShop = shops.find((s) => s.status === 'PENDING_APPROVAL');
+          const target = byId || byName || activeShop || pendingShop || shops[0];
+
+          if (target && target.shopName) {
+            setCurrentStoreName(target.shopName);
+
+            // Đồng bộ vào localStorage để duy trì phiên làm việc
+            if (rawUser) {
+              try {
+                const u = JSON.parse(rawUser);
+                u.shopName = target.shopName;
+                u.storeName = target.shopName;
+                u.activeShopId = target.id;
+                localStorage.setItem('vikeso_user', JSON.stringify(u));
+              } catch (e) {}
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Lỗi đồng bộ tên cửa hàng trong PortalView:', err);
+      }
+    };
+
+    syncStore();
+
+    // Lắng nghe sự kiện khi Owner tạo shop mới hoặc chuyển đổi chi nhánh
+    const handleShopUpdated = (e: any) => {
+      if (e.detail?.shopName) {
+        setCurrentStoreName(e.detail.shopName);
+      } else {
+        syncStore();
+      }
+    };
+
+    window.addEventListener('vikeso_shop_updated', handleShopUpdated);
+    window.addEventListener('storage', syncStore);
+
+    return () => {
+      window.removeEventListener('vikeso_shop_updated', handleShopUpdated);
+      window.removeEventListener('storage', syncStore);
+    };
+  }, [portal]);
+
   const activeUser: UserAccount = currentUser || (isRoleAdmin ? {
     name: 'Admin',
     email: 'test@example.com',
@@ -159,17 +243,27 @@ export const PortalView: React.FC<PortalViewProps> = ({
   } : {
     name: 'Chủ Hộ Kinh Doanh',
     email: 'owner@example.com',
-    storeName: 'Cửa Hàng Hộ Kinh Doanh',
-    shopName: 'Cửa Hàng Hộ Kinh Doanh',
+    storeName: currentStoreName || 'Chưa thiết lập cửa hàng',
+    shopName: currentStoreName || 'Chưa thiết lập cửa hàng',
     phone: '',
     role: 'OWNER',
     subscriptionPlan: 'FREE',
   });
 
   const displayName = activeUser.name || (activeUser.email ? activeUser.email.split('@')[0] : (isRoleAdmin ? 'Admin' : 'Chủ Hộ'));
-  const displayStoreName = activeUser.shopName || activeUser.storeName || (isRoleAdmin ? 'Admin Quản Trị' : 'Cửa Hàng Hộ Kinh Doanh');
+  const displayStoreName = isRoleAdmin
+    ? 'Admin Quản Trị'
+    : (currentStoreName && currentStoreName !== 'Chưa thiết lập cửa hàng'
+        ? currentStoreName
+        : (activeUser.shopName || activeUser.storeName || 'Chưa thiết lập cửa hàng'));
   const displayEmail = activeUser.email || (isRoleAdmin ? 'test@example.com' : 'owner@example.com');
   const displayPlan = isRoleAdmin ? undefined : (activeUser.subscriptionPlan || 'FREE');
+
+  // Đảm bảo activeUser truyền xuống các view con luôn có tên shop mới nhất
+  if (displayStoreName && displayStoreName !== 'Chưa thiết lập cửa hàng') {
+    activeUser.shopName = displayStoreName;
+    activeUser.storeName = displayStoreName;
+  }
 
   return (
     <div className={`min-h-screen bg-slate-50 text-slate-900 antialiased font-sans ${

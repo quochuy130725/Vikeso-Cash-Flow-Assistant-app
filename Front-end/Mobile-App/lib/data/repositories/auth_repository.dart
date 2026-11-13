@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../mock/mock_data.dart';
 import '../services/socket_service.dart';
+import '../services/api_service.dart';
 
 /// AuthRepository - Quản lý toàn bộ luồng xác thực FinAuto.
 class AuthRepository {
@@ -41,6 +42,13 @@ class AuthRepository {
   static const _kRole = 'user_role';
   static const _kSubscriptionPlan = 'user_subscriptionPlan';
   static const _kPhone = 'user_phone';
+  static const _kActiveShopId = 'user_activeShopId';
+  static const _kShopStatus = 'user_shopStatus';
+  static const _kPendingShopName = 'user_pendingShopName';
+
+  Future<String?> getActiveShopId() => _storage.read(key: _kActiveShopId);
+  Future<String?> getShopStatus() => _storage.read(key: _kShopStatus);
+  Future<String?> getPendingShopName() => _storage.read(key: _kPendingShopName);
 
   Future<AuthResult> loginWithEmail(
       {required String email, required String password}) async {
@@ -89,6 +97,173 @@ class AuthRepository {
             'Máy chủ phản hồi quá chậm (cold start). Thử lại sau 30 giây.');
       }
       return AuthResult.failure('Lỗi không xác định: $e');
+    }
+  }
+
+  /// Bước 1: Đăng ký thông tin cá nhân & Gửi OTP 6 số qua email
+  Future<Map<String, dynamic>> registerStep1SendOtp({
+    required String email,
+    required String password,
+    String? name,
+    String? phone,
+  }) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      return {'success': true, 'message': 'Mã OTP demo: 123456'};
+    }
+
+    try {
+      final uri = Uri.parse('$_authBaseUrl/register');
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            body: jsonEncode({
+              'email': email.trim(),
+              'password': password,
+              if (name != null && name.isNotEmpty) 'name': name.trim(),
+              if (phone != null && phone.isNotEmpty) 'phone': phone.trim(),
+            }),
+          )
+          .timeout(_timeout);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if ((response.statusCode == 200 || response.statusCode == 201) && body['success'] == true) {
+        return {
+          'success': true,
+          'message': body['message'] ?? 'Mã xác thực OTP đã được gửi về email của bạn!',
+          'demoCode': body['demoCode'],
+        };
+      }
+      return {
+        'success': false,
+        'message': body['message'] ?? body['error'] ?? 'Đăng ký thất bại.',
+      };
+    } on SocketException {
+      return {'success': false, 'message': 'Không thể kết nối máy chủ. Kiểm tra Wifi và IP!'};
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi gửi OTP: $e'};
+    }
+  }
+
+  /// Bước 2: Xác thực mã OTP 6 số & nhận Token đăng nhập
+  Future<AuthResult> verifyRegisterOtp({
+    required String email,
+    required String otpCode,
+  }) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      return AuthResult.success(const UserInfo(
+        id: MockData.demoUserId,
+        email: MockData.demoEmail,
+        shopName: MockData.demoShopName,
+        authProvider: 'local',
+        accessToken: 'demo_jwt_token_header.payload.sig',
+      ));
+    }
+
+    try {
+      final uri = Uri.parse('$_authBaseUrl/verify-otp');
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            body: jsonEncode({
+              'email': email.trim(),
+              'otpCode': otpCode.trim(),
+            }),
+          )
+          .timeout(_timeout);
+
+      return await _handleAuthResponse(response);
+    } on SocketException {
+      return AuthResult.failure('Không thể kết nối máy chủ. Kiểm tra Wifi và IP!');
+    } catch (e) {
+      return AuthResult.failure('Lỗi xác thực OTP: $e');
+    }
+  }
+
+  /// Gửi lại mã OTP
+  Future<Map<String, dynamic>> resendRegisterOtp({required String email}) async {
+    if (MockData.useMockDemo) {
+      return {'success': true, 'message': 'Mã OTP mới (Demo): 123456'};
+    }
+    try {
+      final uri = Uri.parse('$_authBaseUrl/resend-otp');
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            body: jsonEncode({'email': email.trim()}),
+          )
+          .timeout(_timeout);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': (response.statusCode == 200 || response.statusCode == 201) && body['success'] == true,
+        'message': body['message'] ?? 'Đã gửi lại mã OTP!',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi gửi lại mã OTP: $e'};
+    }
+  }
+
+  /// Bước 3: Khởi tạo cửa hàng đầu tiên (Onboarding)
+  Future<AuthResult> completeOnboardingShop({
+    required String shopName,
+    String? businessType,
+    String? address,
+    String? phone,
+  }) async {
+    if (MockData.useMockDemo) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      await _storage.write(key: _kShopName, value: shopName.trim());
+      final user = await autoLogin();
+      return AuthResult.success(user!);
+    }
+
+    try {
+      final token = await getAccessToken();
+      final base = dotenv.env['API_BASE_URL'] ?? 'http://localhost:5000/api';
+      final uri = Uri.parse('$base/shops/onboarding');
+      final response = await http
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json; charset=UTF-8',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'shopName': shopName.trim(),
+              if (businessType != null) 'businessType': businessType,
+              if (address != null && address.isNotEmpty) 'address': address.trim(),
+              if (phone != null && phone.isNotEmpty) 'phone': phone.trim(),
+            }),
+          )
+          .timeout(_timeout);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if ((response.statusCode == 200 || response.statusCode == 201) && body['success'] == true) {
+        await _storage.write(key: _kShopName, value: shopName.trim());
+        if (body['shop'] != null && body['shop']['_id'] != null) {
+          await _storage.write(key: 'user_activeShopId', value: body['shop']['_id'].toString());
+        }
+        final refreshedUser = await autoLogin();
+        if (refreshedUser != null) {
+          return AuthResult.success(refreshedUser);
+        }
+        return AuthResult.success(UserInfo(
+          id: await getUserId() ?? '',
+          email: await _storage.read(key: _kEmail) ?? '',
+          shopName: shopName.trim(),
+          authProvider: 'local',
+          accessToken: token ?? '',
+        ));
+      }
+      return AuthResult.failure(body['message']?.toString() ?? 'Khởi tạo cửa hàng thất bại.');
+    } on SocketException {
+      return AuthResult.failure('Không thể kết nối máy chủ. Kiểm tra mạng!');
+    } catch (e) {
+      return AuthResult.failure('Lỗi khởi tạo cửa hàng: $e');
     }
   }
 
@@ -285,7 +460,7 @@ class AuthRepository {
         final plan = info['subscriptionPlan']?.toString() ?? 'FREE';
         final phone = info['phone']?.toString();
         final name = info['name']?.toString();
-        final shopName = info['shopName']?.toString() ?? '';
+        String shopName = info['shopName']?.toString() ?? '';
         final email = info['email']?.toString() ?? '';
         final avatar = info['avatar']?.toString();
         final telegramChatId = info['telegramChatId']?.toString();
@@ -293,12 +468,93 @@ class AuthRepository {
             ? jsonEncode(info['notificationSettings'])
             : null;
 
+        String? activeShopId = info['activeShopId']?.toString();
+        if (activeShopId == null || activeShopId.isEmpty) {
+          activeShopId = await _storage.read(key: _kActiveShopId);
+        }
+
+        // =============================================================================
+        // NGHIỆP VỤ BƯỚC 1: XÁC ĐỊNH TRẠNG THÁI CỬA HÀNG (ACTIVE / PENDING / NO_STORE)
+        // - Dùng để: Đánh giá xem Owner đã có cửa hàng hoạt động chưa hay đang chờ duyệt
+        // - Phục vụ: Cung cấp dữ liệu cho StoreGuard khóa/mở các tính năng quét hóa đơn, thu chi
+        // =============================================================================
+        String storeStatus = 'NO_STORE';
+        String pendingShopName = '';
+
+        try {
+          final serverShops = await ApiService().getOwnerShops(token);
+          if (serverShops.isNotEmpty) {
+            final hasApproved = serverShops.any((s) => s['approvalStatus'] == 'APPROVED');
+            final pendingShop = serverShops.firstWhere(
+              (s) => s['approvalStatus'] == 'PENDING',
+              orElse: () => <String, dynamic>{},
+            );
+
+            if (hasApproved) {
+              storeStatus = 'ACTIVE';
+            } else if (pendingShop.isNotEmpty) {
+              storeStatus = 'PENDING';
+              pendingShopName = pendingShop['shopName']?.toString() ?? '';
+            } else {
+              storeStatus = 'NO_STORE';
+            }
+
+            Map<String, dynamic>? targetShop;
+            // 1. Ưu tiên tìm đúng cửa hàng theo activeShopId
+            if (activeShopId != null && activeShopId.isNotEmpty) {
+              targetShop = serverShops.firstWhere(
+                (s) => s['_id']?.toString() == activeShopId,
+                orElse: () => <String, dynamic>{},
+              );
+            }
+            // 2. Nếu không tìm thấy theo activeShopId, tìm theo shopName hiện tại từ profile
+            if ((targetShop == null || targetShop.isEmpty) && shopName.isNotEmpty && shopName != 'Chưa thiết lập cửa hàng') {
+              targetShop = serverShops.firstWhere(
+                (s) => s['shopName']?.toString() == shopName,
+                orElse: () => <String, dynamic>{},
+              );
+            }
+            // 3. CHỈ KHI shopName hoàn toàn rỗng hoặc chưa thiết lập thì mới fallback lấy quán đầu tiên
+            if ((targetShop == null || targetShop.isEmpty) && (shopName.isEmpty || shopName == 'Chưa thiết lập cửa hàng')) {
+              targetShop = serverShops.firstWhere(
+                (s) => s['approvalStatus'] == 'APPROVED',
+                orElse: () => serverShops.first,
+              );
+            }
+
+            if (targetShop != null && targetShop.isNotEmpty) {
+              final dbShopName = targetShop['shopName']?.toString() ?? '';
+              final dbShopId = targetShop['_id']?.toString() ?? '';
+              if (dbShopName.isNotEmpty && (shopName.isEmpty || shopName == 'Chưa thiết lập cửa hàng' || targetShop['_id']?.toString() == activeShopId)) {
+                shopName = dbShopName;
+              }
+              if (dbShopId.isNotEmpty) {
+                activeShopId = dbShopId;
+              }
+            }
+          } else {
+            storeStatus = 'NO_STORE';
+          }
+        } catch (_) {}
+
+        if (role == 'STAFF') {
+          storeStatus = 'ACTIVE';
+        }
+
+        if (shopName.trim().isEmpty) {
+          shopName = 'Chưa thiết lập cửa hàng';
+        }
+
         await Future.wait([
           _storage.write(key: _kRole, value: role),
           _storage.write(key: _kSubscriptionPlan, value: plan),
           if (phone != null) _storage.write(key: _kPhone, value: phone),
           if (name != null) _storage.write(key: _kName, value: name),
           _storage.write(key: _kShopName, value: shopName),
+          _storage.write(key: _kShopStatus, value: storeStatus),
+          _storage.write(key: _kPendingShopName, value: pendingShopName),
+          if (activeShopId != null && activeShopId.isNotEmpty)
+            _storage.write(key: _kActiveShopId, value: activeShopId),
           _storage.write(key: _kEmail, value: email),
           if (avatar != null) _storage.write(key: _kAvatar, value: avatar),
           if (telegramChatId != null && telegramChatId.isNotEmpty)
@@ -438,10 +694,62 @@ class AuthRepository {
       final plan = userInfo['subscriptionPlan']?.toString() ?? 'FREE';
       final phone = userInfo['phone']?.toString() ?? '';
       final name = userInfo['name']?.toString() ?? '';
+      String shopName = userInfo['shopName']?.toString() ?? '';
       final telegramChatId = userInfo['telegramChatId']?.toString();
       final notificationSettings = userInfo['notificationSettings'] != null
           ? jsonEncode(userInfo['notificationSettings'])
           : null;
+
+      String? activeShopId = userInfo['activeShopId']?.toString();
+      if (activeShopId == null || activeShopId.isEmpty) {
+        activeShopId = await _storage.read(key: _kActiveShopId);
+      }
+
+      // =============================================================================
+      // NGHIỆP VỤ: ĐỒNG BỘ CỬA HÀNG ĐANG LÀM VIỆC KHI ĐĂNG NHẬP (DÒNG NÀY ĐẾN DÒNG KẾ)
+      // - Dùng để: Lấy đúng cửa hàng active của người dùng
+      // - Phục vụ: Tránh việc firstWhere chọn sai quán đầu tiên khi user có nhiều quán APPROVED
+      // =============================================================================
+      try {
+        final serverShops = await ApiService().getOwnerShops(accessToken);
+        if (serverShops.isNotEmpty) {
+          Map<String, dynamic>? targetShop;
+          if (activeShopId != null && activeShopId.isNotEmpty) {
+            targetShop = serverShops.firstWhere(
+              (s) => s['_id']?.toString() == activeShopId,
+              orElse: () => <String, dynamic>{},
+            );
+          }
+          if ((targetShop == null || targetShop.isEmpty) && shopName.isNotEmpty && shopName != 'Chưa thiết lập cửa hàng') {
+            targetShop = serverShops.firstWhere(
+              (s) => s['shopName']?.toString() == shopName,
+              orElse: () => <String, dynamic>{},
+            );
+          }
+          // 3. CHỈ KHI shopName hoàn toàn rỗng hoặc chưa thiết lập thì mới fallback lấy quán đầu tiên
+          if ((targetShop == null || targetShop.isEmpty) && (shopName.isEmpty || shopName == 'Chưa thiết lập cửa hàng')) {
+            targetShop = serverShops.firstWhere(
+              (s) => s['approvalStatus'] == 'APPROVED',
+              orElse: () => serverShops.first,
+            );
+          }
+
+          if (targetShop != null && targetShop.isNotEmpty) {
+            final dbShopName = targetShop['shopName']?.toString() ?? '';
+            final dbShopId = targetShop['_id']?.toString() ?? '';
+            if (dbShopName.isNotEmpty && (shopName.isEmpty || shopName == 'Chưa thiết lập cửa hàng' || targetShop['_id']?.toString() == activeShopId)) {
+              shopName = dbShopName;
+            }
+            if (dbShopId.isNotEmpty) {
+              activeShopId = dbShopId;
+            }
+          }
+        }
+      } catch (_) {}
+
+      if (shopName.trim().isEmpty) {
+        shopName = 'Chưa thiết lập cửa hàng';
+      }
 
       await Future.wait([
         _storage.write(key: _kAccessToken, value: accessToken),
@@ -449,8 +757,9 @@ class AuthRepository {
         _storage.write(
             key: _kEmail, value: userInfo['email']?.toString() ?? ''),
         if (name.isNotEmpty) _storage.write(key: _kName, value: name),
-        _storage.write(
-            key: _kShopName, value: userInfo['shopName']?.toString() ?? ''),
+        _storage.write(key: _kShopName, value: shopName),
+        if (activeShopId != null && activeShopId.isNotEmpty)
+          _storage.write(key: _kActiveShopId, value: activeShopId),
         _storage.write(key: _kAvatar, value: userInfo['avatar']?.toString()),
         _storage.write(
             key: _kProvider,
@@ -471,7 +780,7 @@ class AuthRepository {
         id: resolvedUserId,
         email: userInfo['email']?.toString() ?? '',
         name: name.isNotEmpty ? name : null,
-        shopName: userInfo['shopName']?.toString() ?? '',
+        shopName: shopName,
         avatar: userInfo['avatar']?.toString(),
         authProvider: userInfo['authProvider']?.toString() ?? 'local',
         notificationSettings: userInfo['notificationSettings'] != null

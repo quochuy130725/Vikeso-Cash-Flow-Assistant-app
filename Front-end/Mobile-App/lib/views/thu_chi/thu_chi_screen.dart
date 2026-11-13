@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../core/guards/store_guard.dart';
 import '../shared_widgets/side_drawer.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
@@ -577,8 +578,20 @@ class _ThuChiScreenState extends State<ThuChiScreen>
               ),
             ),
           ),
+          // =============================================================================
+          // NGHIỆP VỤ BƯỚC 2: KHÓA TÁC VỤ QUÉT HÓA ĐƠN TẠI MÀN HÌNH THU CHI
+          // =============================================================================
           IconButton(
-            onPressed: () => Navigator.pushNamed(context, '/camera'),
+            onPressed: () async {
+              final isAllowed = await StoreGuard.ensureStoreActive(
+                context,
+                actionName: 'quét hóa đơn bóc tách tự động',
+              );
+              if (!isAllowed) return;
+              if (context.mounted) {
+                Navigator.pushNamed(context, '/camera');
+              }
+            },
             icon: const Icon(Icons.qr_code_scanner_rounded, color: Color(0xFFFF4783), size: 22),
           ),
           const SizedBox(width: 4),
