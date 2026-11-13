@@ -61,6 +61,23 @@ class MainNavigationShell extends StatefulWidget {
   final int initialIndex;
   const MainNavigationShell({super.key, this.initialIndex = 0});
 
+  // =============================================================================
+  // NGHIỆP VỤ BƯỚC 1: ĐIỀU HƯỚNG TAB LINH HOẠT TỪ BẤT KỲ MÀN HÌNH NÀO
+  // - Cho phép StoreGuard hoặc Banner Onboarding chuyển nhanh sang Tab Cửa Hàng (index 3)
+  //   hoặc bất kỳ tab nào mà không cần tạo mới toàn bộ navigation stack.
+  // =============================================================================
+  static void switchToTab(BuildContext context, int index) {
+    final state = context.findAncestorStateOfType<_MainNavigationShellState>();
+    if (state != null) {
+      state.setTabIndex(index);
+    } else {
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        '/dashboard',
+        (route) => false,
+      );
+    }
+  }
+
   @override
   State<MainNavigationShell> createState() => _MainNavigationShellState();
 }
@@ -70,6 +87,14 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   late int _currentIndex;
   String _role = 'OWNER';
   StreamSubscription? _forceLogoutSub;
+
+  void setTabIndex(int index) {
+    if (mounted) {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
+  }
 
   @override
   void initState() {

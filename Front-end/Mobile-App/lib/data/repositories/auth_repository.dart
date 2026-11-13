@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../mock/mock_data.dart';
 import '../services/socket_service.dart';
+import '../services/api_service.dart';
 
 /// AuthRepository - Quản lý toàn bộ luồng xác thực FinAuto.
 class AuthRepository {
@@ -41,6 +42,13 @@ class AuthRepository {
   static const _kRole = 'user_role';
   static const _kSubscriptionPlan = 'user_subscriptionPlan';
   static const _kPhone = 'user_phone';
+  static const _kActiveShopId = 'user_activeShopId';
+  static const _kShopStatus = 'user_shopStatus';
+  static const _kPendingShopName = 'user_pendingShopName';
+
+  Future<String?> getActiveShopId() => _storage.read(key: _kActiveShopId);
+  Future<String?> getShopStatus() => _storage.read(key: _kShopStatus);
+  Future<String?> getPendingShopName() => _storage.read(key: _kPendingShopName);
 
   Future<AuthResult> loginWithEmail(
       {required String email, required String password}) async {
@@ -452,7 +460,7 @@ class AuthRepository {
         final plan = info['subscriptionPlan']?.toString() ?? 'FREE';
         final phone = info['phone']?.toString();
         final name = info['name']?.toString();
-        final shopName = info['shopName']?.toString() ?? '';
+        String shopName = info['shopName']?.toString() ?? '';
         final email = info['email']?.toString() ?? '';
         final avatar = info['avatar']?.toString();
         final telegramChatId = info['telegramChatId']?.toString();
@@ -460,12 +468,93 @@ class AuthRepository {
             ? jsonEncode(info['notificationSettings'])
             : null;
 
+        String? activeShopId = info['activeShopId']?.toString();
+        if (activeShopId == null || activeShopId.isEmpty) {
+          activeShopId = await _storage.read(key: _kActiveShopId);
+        }
+
+        // =============================================================================
+        // NGHIỆP VỤ BƯỚC 1: XÁC ĐỊNH TRẠNG THÁI CỬA HÀNG (ACTIVE / PENDING / NO_STORE)
+        // - Dùng để: Đánh giá xem Owner đã có cửa hàng hoạt động chưa hay đang chờ duyệt
+        // - Phục vụ: Cung cấp dữ liệu cho StoreGuard khóa/mở các tính năng quét hóa đơn, thu chi
+        // =============================================================================
+        String storeStatus = 'NO_STORE';
+        String pendingShopName = '';
+
+        try {
+          final serverShops = await ApiService().getOwnerShops(token);
+          if (serverShops.isNotEmpty) {
+            final hasApproved = serverShops.any((s) => s['approvalStatus'] == 'APPROVED');
+            final pendingShop = serverShops.firstWhere(
+              (s) => s['approvalStatus'] == 'PENDING',
+              orElse: () => <String, dynamic>{},
+            );
+
+            if (hasApproved) {
+              storeStatus = 'ACTIVE';
+            } else if (pendingShop.isNotEmpty) {
+              storeStatus = 'PENDING';
+              pendingShopName = pendingShop['shopName']?.toString() ?? '';
+            } else {
+              storeStatus = 'NO_STORE';
+            }
+
+            Map<String, dynamic>? targetShop;
+            // 1. Ưu tiên tìm đúng cửa hàng theo activeShopId
+            if (activeShopId != null && activeShopId.isNotEmpty) {
+              targetShop = serverShops.firstWhere(
+                (s) => s['_id']?.toString() == activeShopId,
+                orElse: () => <String, dynamic>{},
+              );
+            }
+            // 2. Nếu không tìm thấy theo activeShopId, tìm theo shopName hiện tại từ profile
+            if ((targetShop == null || targetShop.isEmpty) && shopName.isNotEmpty && shopName != 'Chưa thiết lập cửa hàng') {
+              targetShop = serverShops.firstWhere(
+                (s) => s['shopName']?.toString() == shopName,
+                orElse: () => <String, dynamic>{},
+              );
+            }
+            // 3. CHỈ KHI shopName hoàn toàn rỗng hoặc chưa thiết lập thì mới fallback lấy quán đầu tiên
+            if ((targetShop == null || targetShop.isEmpty) && (shopName.isEmpty || shopName == 'Chưa thiết lập cửa hàng')) {
+              targetShop = serverShops.firstWhere(
+                (s) => s['approvalStatus'] == 'APPROVED',
+                orElse: () => serverShops.first,
+              );
+            }
+
+            if (targetShop != null && targetShop.isNotEmpty) {
+              final dbShopName = targetShop['shopName']?.toString() ?? '';
+              final dbShopId = targetShop['_id']?.toString() ?? '';
+              if (dbShopName.isNotEmpty && (shopName.isEmpty || shopName == 'Chưa thiết lập cửa hàng' || targetShop['_id']?.toString() == activeShopId)) {
+                shopName = dbShopName;
+              }
+              if (dbShopId.isNotEmpty) {
+                activeShopId = dbShopId;
+              }
+            }
+          } else {
+            storeStatus = 'NO_STORE';
+          }
+        } catch (_) {}
+
+        if (role == 'STAFF') {
+          storeStatus = 'ACTIVE';
+        }
+
+        if (shopName.trim().isEmpty) {
+          shopName = 'Chưa thiết lập cửa hàng';
+        }
+
         await Future.wait([
           _storage.write(key: _kRole, value: role),
           _storage.write(key: _kSubscriptionPlan, value: plan),
           if (phone != null) _storage.write(key: _kPhone, value: phone),
           if (name != null) _storage.write(key: _kName, value: name),
           _storage.write(key: _kShopName, value: shopName),
+          _storage.write(key: _kShopStatus, value: storeStatus),
+          _storage.write(key: _kPendingShopName, value: pendingShopName),
+          if (activeShopId != null && activeShopId.isNotEmpty)
+            _storage.write(key: _kActiveShopId, value: activeShopId),
           _storage.write(key: _kEmail, value: email),
           if (avatar != null) _storage.write(key: _kAvatar, value: avatar),
           if (telegramChatId != null && telegramChatId.isNotEmpty)
@@ -605,10 +694,62 @@ class AuthRepository {
       final plan = userInfo['subscriptionPlan']?.toString() ?? 'FREE';
       final phone = userInfo['phone']?.toString() ?? '';
       final name = userInfo['name']?.toString() ?? '';
+      String shopName = userInfo['shopName']?.toString() ?? '';
       final telegramChatId = userInfo['telegramChatId']?.toString();
       final notificationSettings = userInfo['notificationSettings'] != null
           ? jsonEncode(userInfo['notificationSettings'])
           : null;
+
+      String? activeShopId = userInfo['activeShopId']?.toString();
+      if (activeShopId == null || activeShopId.isEmpty) {
+        activeShopId = await _storage.read(key: _kActiveShopId);
+      }
+
+      // =============================================================================
+      // NGHIỆP VỤ: ĐỒNG BỘ CỬA HÀNG ĐANG LÀM VIỆC KHI ĐĂNG NHẬP (DÒNG NÀY ĐẾN DÒNG KẾ)
+      // - Dùng để: Lấy đúng cửa hàng active của người dùng
+      // - Phục vụ: Tránh việc firstWhere chọn sai quán đầu tiên khi user có nhiều quán APPROVED
+      // =============================================================================
+      try {
+        final serverShops = await ApiService().getOwnerShops(accessToken);
+        if (serverShops.isNotEmpty) {
+          Map<String, dynamic>? targetShop;
+          if (activeShopId != null && activeShopId.isNotEmpty) {
+            targetShop = serverShops.firstWhere(
+              (s) => s['_id']?.toString() == activeShopId,
+              orElse: () => <String, dynamic>{},
+            );
+          }
+          if ((targetShop == null || targetShop.isEmpty) && shopName.isNotEmpty && shopName != 'Chưa thiết lập cửa hàng') {
+            targetShop = serverShops.firstWhere(
+              (s) => s['shopName']?.toString() == shopName,
+              orElse: () => <String, dynamic>{},
+            );
+          }
+          // 3. CHỈ KHI shopName hoàn toàn rỗng hoặc chưa thiết lập thì mới fallback lấy quán đầu tiên
+          if ((targetShop == null || targetShop.isEmpty) && (shopName.isEmpty || shopName == 'Chưa thiết lập cửa hàng')) {
+            targetShop = serverShops.firstWhere(
+              (s) => s['approvalStatus'] == 'APPROVED',
+              orElse: () => serverShops.first,
+            );
+          }
+
+          if (targetShop != null && targetShop.isNotEmpty) {
+            final dbShopName = targetShop['shopName']?.toString() ?? '';
+            final dbShopId = targetShop['_id']?.toString() ?? '';
+            if (dbShopName.isNotEmpty && (shopName.isEmpty || shopName == 'Chưa thiết lập cửa hàng' || targetShop['_id']?.toString() == activeShopId)) {
+              shopName = dbShopName;
+            }
+            if (dbShopId.isNotEmpty) {
+              activeShopId = dbShopId;
+            }
+          }
+        }
+      } catch (_) {}
+
+      if (shopName.trim().isEmpty) {
+        shopName = 'Chưa thiết lập cửa hàng';
+      }
 
       await Future.wait([
         _storage.write(key: _kAccessToken, value: accessToken),
@@ -616,8 +757,9 @@ class AuthRepository {
         _storage.write(
             key: _kEmail, value: userInfo['email']?.toString() ?? ''),
         if (name.isNotEmpty) _storage.write(key: _kName, value: name),
-        _storage.write(
-            key: _kShopName, value: userInfo['shopName']?.toString() ?? ''),
+        _storage.write(key: _kShopName, value: shopName),
+        if (activeShopId != null && activeShopId.isNotEmpty)
+          _storage.write(key: _kActiveShopId, value: activeShopId),
         _storage.write(key: _kAvatar, value: userInfo['avatar']?.toString()),
         _storage.write(
             key: _kProvider,
@@ -638,7 +780,7 @@ class AuthRepository {
         id: resolvedUserId,
         email: userInfo['email']?.toString() ?? '',
         name: name.isNotEmpty ? name : null,
-        shopName: userInfo['shopName']?.toString() ?? '',
+        shopName: shopName,
         avatar: userInfo['avatar']?.toString(),
         authProvider: userInfo['authProvider']?.toString() ?? 'local',
         notificationSettings: userInfo['notificationSettings'] != null

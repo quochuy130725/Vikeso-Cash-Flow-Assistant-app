@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/services/socket_service.dart';
+import '../../main.dart';
 import 'pro_badge.dart';
 
 class CustomSideDrawer extends StatefulWidget {
@@ -12,15 +15,30 @@ class CustomSideDrawer extends StatefulWidget {
 
 class _CustomSideDrawerState extends State<CustomSideDrawer> {
   static const _storage = FlutterSecureStorage(aOptions: AndroidOptions());
-  String _shopName = 'Cửa hàng Vikeso';
+  String _shopName = 'Chưa thiết lập cửa hàng';
   String _email = '';
   String _plan = 'FREE';
   String _role = 'OWNER';
+  StreamSubscription? _profileSub;
 
   @override
   void initState() {
     super.initState();
     _loadUserHeader();
+    // =============================================================================
+    // NGHIỆP VỤ: ĐỒNG BỘ TỨC THÌ TÊN CỬA HÀNG TRÊN SIDE DRAWER (DÒNG NÀY ĐẾN DÒNG KẾ)
+    // - Dùng để: Lắng nghe sự kiện thay đổi chi nhánh hoặc cập nhật hồ sơ cửa hàng
+    // - Phục vụ: Cập nhật ngay tên cửa hàng trên Drawer khi người dùng đổi chi nhánh
+    // =============================================================================
+    _profileSub = SocketService.instance.onProfileChanged.listen((_) {
+      _loadUserHeader();
+    });
+  }
+
+  @override
+  void dispose() {
+    _profileSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUserHeader() async {
@@ -31,12 +49,28 @@ class _CustomSideDrawerState extends State<CustomSideDrawer> {
 
     if (mounted) {
       setState(() {
-        if (shopName != null && shopName.isNotEmpty) _shopName = shopName;
+        _shopName = (shopName != null && shopName.trim().isNotEmpty) ? shopName.trim() : 'Chưa thiết lập cửa hàng';
         if (email != null && email.isNotEmpty) _email = email;
         _role = role.toUpperCase();
         _plan = plan;
       });
     }
+
+    // Luôn tải hồ sơ mới nhất từ máy chủ để tránh bị lệch tên quán
+    try {
+      final profile = await AuthRepository().fetchUserProfile();
+      if (profile != null && mounted) {
+        setState(() {
+          if (profile.shopName.isNotEmpty) {
+            _shopName = profile.shopName;
+          }
+          if (profile.email.isNotEmpty) {
+            _email = profile.email;
+          }
+          _plan = profile.subscriptionPlan;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -175,9 +209,14 @@ class _CustomSideDrawerState extends State<CustomSideDrawer> {
                   ),
                   const Divider(),
                 ],
+                // =============================================================================
+                // NGHIỆP VỤ: ĐIỀU HƯỚNG SANG TAB TÀI KHOẢN CÁ NHÂN (TAB INDEX 4)
+                // - Dùng để: Chuyển tab mượt mà ngay trên NavigationShell hiện tại
+                // - Phục vụ: Tránh việc tạo lại toàn bộ stack làm giật lag hoặc hiện chữ "Người dùng VikeSo"
+                // =============================================================================
                 _buildDrawerItem(Icons.person_outline_rounded, 'Tài khoản cá nhân', () {
                   Navigator.pop(context);
-                  Navigator.of(context).pushReplacementNamed('/personal');
+                  MainNavigationShell.switchToTab(context, 4);
                 }),
                 _buildDrawerItem(Icons.help_outline, 'Hướng dẫn sử dụng', () {
                   Navigator.pop(context);

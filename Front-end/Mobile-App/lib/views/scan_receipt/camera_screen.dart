@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
 import '../../core/utils/ui_helpers.dart';
+import '../../core/guards/store_guard.dart';
 import '../../data/services/api_service.dart';
 import '../../data/services/subscription_service.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -34,6 +35,19 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   void initState() {
     super.initState();
+    // =============================================================================
+    // NGHIỆP VỤ BƯỚC 2: BẢO VỆ CHẶN TÁC VỤ QUÉT HÓA ĐƠN TRỰC TIẾP TẠI CAMERA SCREEN
+    // - Nếu Owner chưa có cửa hàng hoạt động thì lập tức đóng camera và báo lỗi
+    // =============================================================================
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final isAllowed = await StoreGuard.ensureStoreActive(
+        context,
+        actionName: 'quét hóa đơn bóc tách tự động',
+      );
+      if (!isAllowed && mounted) {
+        Navigator.of(context).pop();
+      }
+    });
     _initializeCamera();
     _loadSubscriptionInfo();
   }

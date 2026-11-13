@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
 import '../../core/utils/ui_helpers.dart';
+import '../../core/guards/store_guard.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/services/api_service.dart';
 
@@ -30,6 +31,23 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     'Chuyen Khoan': 'Chuyển khoản',
     'Khac': 'Khác',
   };
+
+  @override
+  void initState() {
+    super.initState();
+    // =============================================================================
+    // NGHIỆP VỤ BƯỚC 2: KHÓA TÁC VỤ NHẬP THU/CHI NẾU CHƯA CÓ CỬA HÀNG HOẠT ĐỘNG
+    // =============================================================================
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final isAllowed = await StoreGuard.ensureStoreActive(
+        context,
+        actionName: 'nhập thu chi và ghi sổ dòng tiền',
+      );
+      if (!isAllowed && mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
 
   @override
   void dispose() {

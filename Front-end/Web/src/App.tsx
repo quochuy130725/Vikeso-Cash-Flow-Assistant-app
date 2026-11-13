@@ -28,7 +28,7 @@ export default function App() {
   // Authentication & Portal View states
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
-  
+
   // Read saved session immediately on component initialization
   const getSavedUser = (): UserAccount | null => {
     try {
@@ -197,8 +197,8 @@ export default function App() {
         className="fixed inset-0 pointer-events-none -z-20 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url('/retail_store_bg.jpg')` }}
       />
-      {/* Light Clean Scrim Overlay (0 blur) to keep the store crisp & vivid */}
-      <div className="fixed inset-0 pointer-events-none -z-10 bg-gradient-to-b from-white/60 via-white/40 to-white/65" />
+      {/* Light Clean Scrim Overlay with high readability & soft ambient blur */}
+      <div className="fixed inset-0 pointer-events-none -z-10 bg-gradient-to-b from-white/85 via-white/60 to-white/85 backdrop-blur-[2px]" />
 
       {/* Sticky Header with Glassmorphism */}
       <Header

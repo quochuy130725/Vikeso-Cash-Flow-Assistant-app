@@ -1,5 +1,14 @@
 export type PortalType = 'owner' | 'admin' | 'staff';
 
+// =============================================================================
+// PHÂN QUYỀN VAI TRÒ NGƯỜI DÙNG TRONG HỆ THỐNG
+// - OWNER: Chủ hộ kinh doanh cá thể, quản lý sổ quỹ thu chi, nhân viên, cửa hàng
+// - ADMIN: Quản trị viên cấp cao, quản lý hệ thống, phê duyệt chi nhánh 2+
+// - STAFF: Nhân viên thu ngân/phụ bán, chỉ được quét biên lai và nhập hóa đơn
+// =============================================================================
+export type UserRole = 'OWNER' | 'ADMIN' | 'STAFF';
+export type RegisterRole = 'OWNER' | 'ADMIN';
+
 export type OwnerTab =
   | 'so-thu-chi-dong-tien'
   | 'bao-cao-xuat-du-lieu'
