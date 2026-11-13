@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   updateUserProfile,
+  updateShopDetails,
   changeUserPassword,
   createBillingOrder,
   fetchUserShops,
@@ -29,6 +30,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
   const [isSavingPersonal, setIsSavingPersonal] = useState(false);
 
   // Active Store form state
+  const [activeStoreId, setActiveStoreId] = useState<string>('');
   const [activeStoreName, setActiveStoreName] = useState(currentUser?.shopName || currentUser?.storeName || '');
   const [activeStorePhone, setActiveStorePhone] = useState('');
   const [activeStoreAddress, setActiveStoreAddress] = useState('');
@@ -92,9 +94,20 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
     fetchUserShops(currentUser?.shopName || currentUser?.storeName).then((list) => {
       setShops(list);
 
-      // Ưu tiên 1: Lấy chi nhánh đã được duyệt kích hoạt (ACTIVE)
-      const activeShop = list.find((s) => s.status === 'ACTIVE');
+      let savedActiveShopId = '';
+      try {
+        const raw = localStorage.getItem('vikeso_user');
+        if (raw) {
+          savedActiveShopId = JSON.parse(raw)?.activeShopId || '';
+        }
+      } catch {}
+
+      // Ưu tiên 1: Lấy đúng chi nhánh đang chọn theo activeShopId hoặc chi nhánh ACTIVE đầu tiên
+      const activeShop =
+        list.find((s) => savedActiveShopId && s.id === savedActiveShopId && s.status === 'ACTIVE') ||
+        list.find((s) => s.status === 'ACTIVE');
       if (activeShop) {
+        setActiveStoreId(activeShop.id);
         setActiveStoreName(activeShop.shopName);
         setActiveStorePhone(activeShop.phone || '');
         setActiveStoreAddress(activeShop.address || '');
@@ -117,21 +130,23 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
 
         // Bắn sự kiện cập nhật tức thời Header & Sidebar
         window.dispatchEvent(new CustomEvent('vikeso_shop_updated', {
-          detail: { shopName: activeShop.shopName }
+          detail: { shopName: activeShop.shopName, activeShopId: activeShop.id }
         }));
       } else {
         // Ưu tiên 2: Nếu chưa có cửa hàng nào được duyệt nhưng có hồ sơ đang chờ duyệt
         const pendingShop = list.find((s) => s.status === 'PENDING_APPROVAL');
         if (pendingShop) {
+          setActiveStoreId(pendingShop.id);
           setActiveStoreName(pendingShop.shopName);
           setActiveStorePhone(pendingShop.phone || '');
           setActiveStoreAddress(pendingShop.address || '');
           setActiveStoreType(pendingShop.businessType || 'Tạp hóa & Bán lẻ tiêu dùng');
           setActiveStoreStatus(pendingShop.status || 'PENDING_APPROVAL');
           window.dispatchEvent(new CustomEvent('vikeso_shop_updated', {
-            detail: { shopName: pendingShop.shopName }
+            detail: { shopName: pendingShop.shopName, activeShopId: pendingShop.id }
           }));
         } else {
+          setActiveStoreId('');
           setActiveStoreName(currentUser?.shopName || currentUser?.storeName || 'Chưa thiết lập cửa hàng');
         }
       }
@@ -179,7 +194,8 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
 
   // =============================================================================
   // NGHIỆP VỤ BƯỚC 1B: CẬP NHẬT THÔNG TIN CƠ SỞ KINH DOANH
-  // - Cập nhật tên cửa hàng, đồng bộ tức thì trên Header & Sidebar
+  // - Lưu trực tiếp tên cửa hàng, hotline, loại hình và địa chỉ vào collection `shops`
+  // - Đồng bộ tức thì trên Header, Sidebar và danh sách chi nhánh
   // =============================================================================
   const handleSaveStore = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,16 +204,59 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
       return;
     }
 
+    const targetShopId =
+      activeStoreId ||
+      shops.find((s) => s.status === 'ACTIVE')?.id ||
+      shops[0]?.id ||
+      '';
+
     setIsSavingStore(true);
     try {
-      const res = await updateUserProfile({
-        shopName: activeStoreName.trim(),
-      });
+      let res: { success: boolean; data?: any; message?: string };
+
+      if (targetShopId) {
+        res = await updateShopDetails(targetShopId, {
+          shopName: activeStoreName.trim(),
+          phone: activeStorePhone.trim(),
+          businessType: activeStoreType,
+          address: activeStoreAddress.trim(),
+        });
+      } else {
+        res = await updateUserProfile({
+          shopName: activeStoreName.trim(),
+        });
+      }
 
       if (res.success) {
+        const updatedShopName = res.data?.shopName || activeStoreName.trim();
+        const updatedPhone = res.data?.phone ?? activeStorePhone.trim();
+        const updatedType = res.data?.businessType ?? activeStoreType;
+        const updatedAddress = res.data?.address ?? activeStoreAddress.trim();
+
+        setActiveStoreName(updatedShopName);
+        setActiveStorePhone(updatedPhone);
+        setActiveStoreType(updatedType);
+        setActiveStoreAddress(updatedAddress);
+
+        if (targetShopId) {
+          setShops((prev) =>
+            prev.map((s) =>
+              s.id === targetShopId
+                ? {
+                    ...s,
+                    shopName: updatedShopName,
+                    phone: updatedPhone,
+                    businessType: updatedType,
+                    address: updatedAddress,
+                  }
+                : s
+            )
+          );
+        }
+
         showToast('Đã lưu thông tin cơ sở kinh doanh thành công!');
         window.dispatchEvent(new CustomEvent('vikeso_shop_updated', {
-          detail: { shopName: activeStoreName.trim() }
+          detail: { shopName: updatedShopName, activeShopId: targetShopId || undefined }
         }));
       } else {
         showToast(res.message || 'Lỗi khi cập nhật thông tin cửa hàng', 'error');
@@ -834,10 +893,11 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                           onClick={async () => {
                             const res = await switchActiveShop(s.id);
                             if (res.success) {
+                              setActiveStoreId(s.id);
                               setActiveStoreName(s.shopName);
-                              if (s.phone) setActiveStorePhone(s.phone);
-                              if (s.address) setActiveStoreAddress(s.address);
-                              if (s.businessType) setActiveStoreType(s.businessType);
+                              setActiveStorePhone(s.phone || '');
+                              setActiveStoreAddress(s.address || '');
+                              setActiveStoreType(s.businessType || 'Tạp hóa & Bán lẻ tiêu dùng');
                               setActiveStoreStatus(s.status || 'ACTIVE');
                               try {
                                 const rawUser = localStorage.getItem('vikeso_user');

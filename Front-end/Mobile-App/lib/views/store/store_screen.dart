@@ -379,13 +379,76 @@ class _StoreScreenState extends State<StoreScreen> with WidgetsBindingObserver {
     if (result['address'] != null && result['address']!.isNotEmpty) {
       await _storage.write(key: 'user_address', value: result['address']!);
     }
-    await _updateShopProfile(result['shopName']!, result['phone']!, address: result['address']);
+    await _updateShopProfile(
+      result['shopName']!,
+      result['phone']!,
+      address: result['address'],
+      businessType: result['businessType'],
+    );
   }
 
-  Future<void> _updateShopProfile(String shopName, String phone, {String? address}) async {
+  Future<void> _updateShopProfile(
+    String shopName,
+    String phone, {
+    String? address,
+    String? businessType,
+  }) async {
     setState(() => _isLoading = true);
     try {
-      final token = await _storage.read(key: 'access_token') ?? '';
+      final token = await AuthRepository().getAccessToken() ?? await _storage.read(key: 'access_token') ?? '';
+      String shopId = '';
+      if (_branches.isNotEmpty && _selectedBranchIndex < _branches.length) {
+        shopId = _branches[_selectedBranchIndex]['id'] ?? '';
+      }
+      if (shopId.isEmpty) {
+        shopId = await _storage.read(key: 'user_activeShopId') ?? '';
+      }
+
+      if (shopId.isNotEmpty && token.isNotEmpty) {
+        final body = await ApiService().updateShopDetails(
+          shopId: shopId,
+          token: token,
+          shopName: shopName,
+          phone: phone,
+          businessType: businessType ?? _businessType,
+          address: address,
+        );
+
+        if (body['success'] == true) {
+          final shopData = body['data'] as Map<String, dynamic>? ?? {};
+          final updatedName = shopData['shopName']?.toString() ?? shopName;
+          final updatedPhone = shopData['phone']?.toString() ?? phone;
+          final updatedType = shopData['businessType']?.toString() ?? (businessType ?? _businessType);
+          final updatedAddress = shopData['address']?.toString() ?? address ?? '';
+
+          await _storage.write(key: 'user_shopName', value: updatedName);
+          await _storage.write(key: 'user_businessType', value: updatedType);
+          if (updatedAddress.isNotEmpty) {
+            await _storage.write(key: 'user_address', value: updatedAddress);
+          }
+
+          SocketService.instance.notifyProfileChanged({'shopName': updatedName});
+          if (!mounted) return;
+          setState(() {
+            _shopName = updatedName;
+            _storePhone = updatedPhone;
+            _businessType = updatedType;
+            if (_branches.isNotEmpty && _selectedBranchIndex < _branches.length) {
+              _branches[_selectedBranchIndex]['name'] = updatedName;
+              _branches[_selectedBranchIndex]['phone'] = updatedPhone;
+              _branches[_selectedBranchIndex]['type'] = updatedType;
+              if (updatedAddress.isNotEmpty) {
+                _branches[_selectedBranchIndex]['address'] = updatedAddress;
+              }
+            }
+          });
+          _showSnack('Đã cập nhật thông tin cửa hàng!', isSuccess: true);
+        } else {
+          _showSnack(body['message']?.toString() ?? 'Không thể cập nhật thông tin cửa hàng.');
+        }
+        return;
+      }
+
       final baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:5000/api';
       final uri = Uri.parse('$baseUrl/auth/profile');
 

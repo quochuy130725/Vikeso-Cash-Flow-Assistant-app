@@ -369,4 +369,38 @@ class ApiService {
       return {'success': false, 'message': 'Lỗi kết nối máy chủ khi tạo chi nhánh: $e'};
     }
   }
+
+  /// Cập nhật thông tin chi tiết cửa hàng (PUT /api/shops/:id)
+  Future<Map<String, dynamic>> updateShopDetails({
+    required String shopId,
+    required String token,
+    String? shopName,
+    String? phone,
+    String? businessType,
+    String? address,
+  }) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/shops/$shopId');
+      final payload = <String, dynamic>{};
+      if (shopName != null) payload['shopName'] = shopName.trim();
+      if (phone != null) payload['phone'] = phone.trim();
+      if (businessType != null) payload['businessType'] = businessType.trim();
+      if (address != null) payload['address'] = address.trim();
+
+      final response = await http.put(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(payload),
+      ).timeout(const Duration(seconds: 20));
+
+      final body = jsonDecode(response.body);
+      return body is Map<String, dynamic> ? body : {'success': false, 'message': 'Phản hồi không hợp lệ'};
+    } catch (e) {
+      debugPrint('Lỗi updateShopDetails: $e');
+      return {'success': false, 'message': 'Lỗi kết nối máy chủ khi cập nhật cửa hàng: $e'};
+    }
+  }
 }

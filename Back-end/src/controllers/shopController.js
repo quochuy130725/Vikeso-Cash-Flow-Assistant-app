@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Shop = require('../models/Shop');
 const User = require('../models/User');
 const { seedDefaultCategories } = require('../services/categoryService');
@@ -173,6 +174,73 @@ exports.switchShop = async (req, res) => {
     });
   } catch (error) {
     console.error('Lỗi switch-shop:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * PUT /api/shops/:id
+ * Cập nhật thông tin chi tiết của một cửa hàng (Tên, Hotline, Loại hình, Địa chỉ)
+ */
+exports.updateShopDetails = async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.user?.id;
+    const { id } = req.params;
+    const { shopName, businessType, address, phone } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'ID cửa hàng không hợp lệ.' });
+    }
+
+    const shop = await Shop.findOne({ _id: id, ownerId: userId });
+    if (!shop) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy cửa hàng thuộc quyền sở hữu của bạn.' });
+    }
+
+    if (shopName !== undefined) {
+      const trimmedName = String(shopName).trim();
+      if (!trimmedName) {
+        return res.status(400).json({ success: false, message: 'Tên cửa hàng không được để trống.' });
+      }
+      shop.shopName = trimmedName;
+    }
+    if (businessType !== undefined) {
+      shop.businessType = String(businessType).trim() || shop.businessType;
+    }
+    if (address !== undefined) {
+      shop.address = String(address).trim();
+    }
+    if (phone !== undefined) {
+      shop.phone = String(phone).trim();
+    }
+
+    await shop.save();
+
+    // Nếu cửa hàng đang cập nhật là cửa hàng đang active (hoặc là cửa hàng chính mặc định) thì đồng bộ lại lên User
+    const ownerUser = await User.findById(userId);
+    if (
+      ownerUser &&
+      (String(ownerUser.activeShopId || '') === String(shop._id) ||
+        (!ownerUser.activeShopId && shop.isPrimary))
+    ) {
+      ownerUser.shopName = shop.shopName;
+      ownerUser.activeShopId = shop._id;
+      await ownerUser.save();
+    }
+
+    emitToUser(userId, 'profile_updated', {
+      reason: 'shop_updated',
+      activeShopId: shop._id,
+      shopName: shop.shopName,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Cập nhật thông tin cửa hàng thành công!',
+      data: shop,
+    });
+  } catch (error) {
+    console.error('Lỗi update-shop-details:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 };

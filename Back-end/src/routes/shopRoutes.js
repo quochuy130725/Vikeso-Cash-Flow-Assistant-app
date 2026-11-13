@@ -19,5 +19,8 @@ router.post('/', shopController.createAdditionalShop);
 // PATCH /api/shops/:id/switch (Chuyển shop active)
 router.patch('/:id/switch', shopController.switchShop);
 
+// PUT /api/shops/:id (Cập nhật Tên, Hotline, Loại hình, Địa chỉ cửa hàng)
+router.put('/:id', shopController.updateShopDetails);
+
 module.exports = router;
 

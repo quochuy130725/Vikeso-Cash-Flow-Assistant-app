@@ -1089,6 +1089,69 @@ export async function switchActiveShop(
   }
 }
 
+/**
+ * Cập nhật thông tin chi tiết của một cửa hàng vào collection `shops`
+ * Endpoint: PUT /api/shops/:id
+ */
+export async function updateShopDetails(
+  shopId: string,
+  payload: {
+    shopName?: string;
+    phone?: string;
+    businessType?: string;
+    address?: string;
+  }
+): Promise<{ success: boolean; data?: any; message?: string }> {
+  try {
+    const body: Record<string, string> = {};
+    if (payload.shopName !== undefined) body.shopName = payload.shopName.trim();
+    if (payload.phone !== undefined) body.phone = payload.phone.trim();
+    if (payload.businessType !== undefined) body.businessType = payload.businessType.trim();
+    if (payload.address !== undefined) body.address = payload.address.trim();
+
+    const res = await fetch(`${API_BASE_URL}/shops/${shopId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(body),
+    });
+    const json = await res.json();
+
+    if (json.success && json.data) {
+      const updatedShop = json.data;
+      const localList = getLocalShops().map((s) =>
+        s.id === shopId
+          ? {
+              ...s,
+              shopName: updatedShop.shopName ?? s.shopName,
+              phone: updatedShop.phone ?? s.phone,
+              businessType: updatedShop.businessType ?? s.businessType,
+              address: updatedShop.address ?? s.address,
+            }
+          : s
+      );
+      localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(localList));
+
+      const saved = getSavedUser();
+      if (saved && (saved.activeShopId === shopId || !saved.activeShopId)) {
+        localStorage.setItem(
+          'vikeso_user',
+          JSON.stringify({
+            ...saved,
+            activeShopId: shopId,
+            shopName: updatedShop.shopName ?? saved.shopName,
+            storeName: updatedShop.shopName ?? saved.storeName,
+          })
+        );
+      }
+    }
+
+    return json;
+  } catch (err: any) {
+    console.error('Lỗi khi updateShopDetails:', err);
+    return { success: false, message: err.message || 'Lỗi kết nối máy chủ khi cập nhật cửa hàng' };
+  }
+}
+
 // =============================================================================
 // NGHIỆP VỤ 2: QUẢN LÝ DANH MỤC THU CHI (THÊM / SỬA / XÓA) TRÊN BACKEND DATABASE
 // - Bắt đầu từ dòng này đến hết deleteCategoryItem
