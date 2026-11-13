@@ -5,9 +5,12 @@ import {
   createBillingOrder,
   fetchUserShops,
   createAdditionalShop,
+  switchActiveShop,
+  fetchCurrentUserInfo,
 } from '../services/api';
 import { ShopBranch } from '../types';
 import { UserAccount } from '../components/AuthModal';
+import { AddressSelectPicker } from '../components/AddressSelectPicker';
 
 interface OwnerSettingsProps {
   currentUser?: UserAccount | null;
@@ -15,12 +18,23 @@ interface OwnerSettingsProps {
 }
 
 export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLogout }) => {
-  // Profile form state
-  const [name, setName] = useState(currentUser?.name || '');
-  const [shopName, setShopName] = useState(currentUser?.shopName || currentUser?.storeName || '');
-  const [phone, setPhone] = useState(currentUser?.phone || '');
+  // =============================================================================
+  // NGHIỆP VỤ BƯỚC 1: TÁCH BIỆT HOÀN TOÀN THÔNG TIN CÁ NHÂN & THÔNG TIN CỬA HÀNG
+  // - personalName & personalPhone: Dữ liệu cá nhân của Chủ hộ (User model)
+  // - activeStoreName, activeStorePhone, activeStoreAddress: Dữ liệu của Cơ sở kinh doanh (Shop model)
+  // =============================================================================
+  const [personalName, setPersonalName] = useState(currentUser?.name || '');
+  const [personalPhone, setPersonalPhone] = useState(currentUser?.phone || '');
   const [email] = useState(currentUser?.email || '');
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isSavingPersonal, setIsSavingPersonal] = useState(false);
+
+  // Active Store form state
+  const [activeStoreName, setActiveStoreName] = useState(currentUser?.shopName || currentUser?.storeName || '');
+  const [activeStorePhone, setActiveStorePhone] = useState('');
+  const [activeStoreAddress, setActiveStoreAddress] = useState('');
+  const [activeStoreType, setActiveStoreType] = useState('Tạp hóa & Bán lẻ tiêu dùng');
+  const [activeStoreStatus, setActiveStoreStatus] = useState('ACTIVE');
+  const [isSavingStore, setIsSavingStore] = useState(false);
 
   // Password change form state
   const [oldPassword, setOldPassword] = useState('');
@@ -51,44 +65,147 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  // =============================================================================
+  // NGHIỆP VỤ BƯỚC 1: ĐỒNG BỘ ĐỘC LẬP THÔNG TIN CÁ NHÂN & CƠ SỞ KINH DOANH
+  // - Thông tin cá nhân (Họ tên, SĐT cá nhân): Nạp trực tiếp từ MongoDB qua /api/auth/me
+  // - Thông tin cơ sở kinh doanh: Nạp từ cửa hàng đang chọn (ACTIVE shop / PENDING shop).
+  // =============================================================================
   useEffect(() => {
+    // 1. Khởi tạo tức thì từ cache để UI mượt mà không chớp nháy
     if (currentUser) {
-      setName(currentUser.name || '');
-      setShopName(currentUser.shopName || currentUser.storeName || '');
-      setPhone(currentUser.phone || '');
+      setPersonalName(currentUser.name || '');
+      setPersonalPhone(currentUser.phone || '');
     }
-    fetchUserShops(currentUser?.shopName || currentUser?.storeName).then(setShops);
+
+    // 2. Gọi API GET /api/auth/me lấy thông tin mới nhất trực tiếp từ Database MongoDB
+    fetchCurrentUserInfo().then((res) => {
+      if (res.success && res.userInfo) {
+        if (res.userInfo.name) {
+          setPersonalName(res.userInfo.name);
+        }
+        if (res.userInfo.phone !== undefined && res.userInfo.phone !== null) {
+          setPersonalPhone(res.userInfo.phone);
+        }
+      }
+    });
+
+    fetchUserShops(currentUser?.shopName || currentUser?.storeName).then((list) => {
+      setShops(list);
+
+      // Ưu tiên 1: Lấy chi nhánh đã được duyệt kích hoạt (ACTIVE)
+      const activeShop = list.find((s) => s.status === 'ACTIVE');
+      if (activeShop) {
+        setActiveStoreName(activeShop.shopName);
+        setActiveStorePhone(activeShop.phone || '');
+        setActiveStoreAddress(activeShop.address || '');
+        setActiveStoreType(activeShop.businessType || 'Tạp hóa & Bán lẻ tiêu dùng');
+        setActiveStoreStatus(activeShop.status || 'ACTIVE');
+
+        // Đồng bộ vào localStorage để header và toàn bộ trang cập nhật theo
+        const saved = localStorage.getItem('vikeso_user');
+        if (saved) {
+          try {
+            const u = JSON.parse(saved);
+            if (!u.shopName || u.shopName === 'Chưa thiết lập cửa hàng' || u.activeShopId !== activeShop.id) {
+              u.shopName = activeShop.shopName;
+              u.storeName = activeShop.shopName;
+              u.activeShopId = activeShop.id;
+              localStorage.setItem('vikeso_user', JSON.stringify(u));
+            }
+          } catch (e) {}
+        }
+
+        // Bắn sự kiện cập nhật tức thời Header & Sidebar
+        window.dispatchEvent(new CustomEvent('vikeso_shop_updated', {
+          detail: { shopName: activeShop.shopName }
+        }));
+      } else {
+        // Ưu tiên 2: Nếu chưa có cửa hàng nào được duyệt nhưng có hồ sơ đang chờ duyệt
+        const pendingShop = list.find((s) => s.status === 'PENDING_APPROVAL');
+        if (pendingShop) {
+          setActiveStoreName(pendingShop.shopName);
+          setActiveStorePhone(pendingShop.phone || '');
+          setActiveStoreAddress(pendingShop.address || '');
+          setActiveStoreType(pendingShop.businessType || 'Tạp hóa & Bán lẻ tiêu dùng');
+          setActiveStoreStatus(pendingShop.status || 'PENDING_APPROVAL');
+          window.dispatchEvent(new CustomEvent('vikeso_shop_updated', {
+            detail: { shopName: pendingShop.shopName }
+          }));
+        } else {
+          setActiveStoreName(currentUser?.shopName || currentUser?.storeName || 'Chưa thiết lập cửa hàng');
+        }
+      }
+    });
   }, [currentUser]);
 
-  // Handle Save Profile
-  const handleSaveProfile = async (e: React.FormEvent) => {
+  // =============================================================================
+  // NGHIỆP VỤ BƯỚC 1A: CẬP NHẬT HỒ SƠ CÁ NHÂN CHỦ HỘ
+  // - Chỉ cập nhật: Họ tên, Số điện thoại cá nhân nhận OTP
+  // =============================================================================
+  const handleSavePersonal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
+    if (!personalName.trim()) {
       showToast('Vui lòng nhập họ và tên chủ hộ', 'error');
       return;
     }
-    if (!shopName.trim()) {
-      showToast('Vui lòng nhập tên cửa hàng', 'error');
-      return;
-    }
 
-    setIsSavingProfile(true);
+    setIsSavingPersonal(true);
     try {
       const res = await updateUserProfile({
-        name: name.trim(),
-        shopName: shopName.trim(),
-        phone: phone.trim(),
+        name: personalName.trim(),
+        phone: personalPhone.trim(),
       });
 
       if (res.success) {
-        showToast('Đã cập nhật thông tin cửa hàng thành công!');
+        showToast('Đã cập nhật thông tin cá nhân chủ hộ thành công!');
+        const rawUser = localStorage.getItem('vikeso_user');
+        if (rawUser) {
+          try {
+            const u = JSON.parse(rawUser);
+            u.name = personalName.trim();
+            u.phone = personalPhone.trim();
+            localStorage.setItem('vikeso_user', JSON.stringify(u));
+          } catch (e) {}
+        }
       } else {
-        showToast(res.message || 'Lỗi khi cập nhật hồ sơ', 'error');
+        showToast(res.message || 'Lỗi khi cập nhật hồ sơ cá nhân', 'error');
       }
     } catch (err: any) {
       showToast(err.message || 'Lỗi kết nối máy chủ', 'error');
     } finally {
-      setIsSavingProfile(false);
+      setIsSavingPersonal(false);
+    }
+  };
+
+  // =============================================================================
+  // NGHIỆP VỤ BƯỚC 1B: CẬP NHẬT THÔNG TIN CƠ SỞ KINH DOANH
+  // - Cập nhật tên cửa hàng, đồng bộ tức thì trên Header & Sidebar
+  // =============================================================================
+  const handleSaveStore = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeStoreName.trim()) {
+      showToast('Vui lòng nhập tên cơ sở kinh doanh', 'error');
+      return;
+    }
+
+    setIsSavingStore(true);
+    try {
+      const res = await updateUserProfile({
+        shopName: activeStoreName.trim(),
+      });
+
+      if (res.success) {
+        showToast('Đã lưu thông tin cơ sở kinh doanh thành công!');
+        window.dispatchEvent(new CustomEvent('vikeso_shop_updated', {
+          detail: { shopName: activeStoreName.trim() }
+        }));
+      } else {
+        showToast(res.message || 'Lỗi khi cập nhật thông tin cửa hàng', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Lỗi kết nối máy chủ', 'error');
+    } finally {
+      setIsSavingStore(false);
     }
   };
 
@@ -154,15 +271,23 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
     }
   };
 
-  // Handle Register 2nd+ Shop Branch with Verification Docs (FE-WEB-13)
+  // =============================================================================
+  // NGHIỆP VỤ 1: TẠO CỬA HÀNG MỚI & ĐÍNH KÈM CHỨNG TỪ XÁC MINH (DÒNG 160 ĐẾN 215)
+  // - Dùng để: Xử lý submit hồ sơ thành lập cửa hàng / chi nhánh mới từ mục "Quản Lý Đa Cửa Hàng"
+  // - Phục vụ:
+  //   1. Cho phép Owner đăng ký cơ sở kinh doanh đầu tiên hoặc mở thêm chi nhánh mới.
+  //   2. Kiểm tra tính hợp lệ: Tên cơ sở, Địa chỉ kinh doanh thực tế, và Bắt buộc có chứng từ.
+  //   3. Gửi hồ sơ lên hệ thống với trạng thái PENDING_APPROVAL để Quản trị viên (Admin) xét duyệt.
+  //   4. Tự động đồng bộ danh sách chi nhánh và cập nhật cửa hàng hoạt động ngay sau khi tạo.
+  // =============================================================================
   const handleCreateAdditionalShop = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!branchName.trim() || !branchAddress.trim()) {
-      showToast('Vui lòng nhập Tên chi nhánh mới và Địa chỉ kinh doanh', 'error');
+      showToast('Vui lòng nhập Tên cửa hàng và Địa chỉ kinh doanh thực tế', 'error');
       return;
     }
     if (branchDocUrls.length === 0) {
-      showToast('Bắt buộc đính kèm ít nhất 1 ảnh chứng từ xác minh (Giấy phép HKD / Mặt tiền cửa hàng)', 'error');
+      showToast('Bắt buộc đính kèm ít nhất 1 ảnh chứng từ xác minh (Giấy phép HKD / Biển hiệu cửa hàng)', 'error');
       return;
     }
     setIsSubmittingBranch(true);
@@ -171,20 +296,42 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
         shopName: branchName.trim(),
         businessType: branchType,
         address: branchAddress.trim(),
-        phone: branchPhone.trim() || phone || '0912.345.678',
+        phone: branchPhone.trim() || activeStorePhone || '0912.345.678',
         verificationDocs: branchDocUrls,
-        ownerName: name || currentUser?.name,
+        ownerName: personalName || currentUser?.name,
         ownerEmail: email || currentUser?.email,
       });
       if (res.success) {
-        showToast(res.message);
+        showToast(res.message || 'Đã gửi hồ sơ cửa hàng kèm chứng từ! Đang chờ Admin phê duyệt.');
         setNewShopModalOpen(false);
         setBranchName('');
         setBranchAddress('');
+        setBranchPhone('');
         setBranchDocUrls([]);
-        const updated = await fetchUserShops(shopName);
+        const updated = await fetchUserShops(activeStoreName);
         setShops(updated);
+        const createdName = branchName.trim();
+        if (!activeStoreName || activeStoreName === 'Chưa thiết lập cửa hàng') {
+          setActiveStoreName(createdName);
+        }
+        // Đồng bộ tức thời lên thanh Header và Sidebar Profile
+        window.dispatchEvent(new CustomEvent('vikeso_shop_updated', {
+          detail: { shopName: createdName }
+        }));
+        const rawUser = localStorage.getItem('vikeso_user');
+        if (rawUser) {
+          try {
+            const u = JSON.parse(rawUser);
+            u.shopName = createdName;
+            u.storeName = createdName;
+            localStorage.setItem('vikeso_user', JSON.stringify(u));
+          } catch (e) {}
+        }
+      } else {
+        showToast(res.message || 'Không thể tạo cửa hàng', 'error');
       }
+    } catch (err: any) {
+      showToast(err.message || 'Lỗi kết nối máy chủ', 'error');
     } finally {
       setIsSubmittingBranch(false);
     }
@@ -202,6 +349,14 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  // Tiện ích chèn ảnh mẫu chứng từ phục vụ test nhanh khi không có sẵn file trên máy
+  const handleUseSampleDoc = () => {
+    const sampleGpkd = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200"><rect width="320" height="200" fill="%23f8fafc" stroke="%23cbd5e1" stroke-width="2"/><text x="160" y="80" font-size="14" font-weight="bold" fill="%230f172a" text-anchor="middle">GIẤY CHỨNG NHẬN ĐKKD</text><text x="160" y="110" font-size="11" fill="%2364748b" text-anchor="middle">HỘ KINH DOANH CÁ THỂ</text><text x="160" y="140" font-size="10" fill="%23ff4783" text-anchor="middle">Xác thực hợp lệ - Demo</text></svg>';
+    const sampleSign = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200"><rect width="320" height="200" fill="%23fff1f2" stroke="%23f43f5e" stroke-width="2"/><text x="160" y="80" font-size="14" font-weight="bold" fill="%239f1239" text-anchor="middle">ẢNH BIỂN HIỆU CỬA HÀNG</text><text x="160" y="110" font-size="11" fill="%2364748b" text-anchor="middle">MẶT TIỀN THỰC TẾ</text><text x="160" y="140" font-size="10" fill="%23059669" text-anchor="middle">Biển hiệu rõ ràng - Demo</text></svg>';
+    setBranchDocUrls([sampleGpkd, sampleSign]);
+    showToast('Đã nạp 2 ảnh chứng từ mẫu (GPKD & Biển hiệu) để bạn thử nghiệm!');
   };
 
   const isPro = currentUser?.subscriptionPlan === 'PRO';
@@ -240,8 +395,108 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
 
       {/* 2. Main 2-Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column (7 cols): Store Profile Editor */}
+        {/* Left Column (7 cols): Owner Profile Editor & Store Profile Editor */}
         <div className="lg:col-span-7 space-y-6">
+          {/* =============================================================================
+              NGHIỆP VỤ BƯỚC 1A: THẺ THÔNG TIN CÁ NHÂN CHỦ HỘ (OWNER PROFILE)
+              - Tách biệt hoàn toàn với thông tin cơ sở kinh doanh
+              - Hiển thị: Họ tên chủ hộ, Email cố định, Số điện thoại cá nhân (nhận OTP), Role
+          ============================================================================= */}
+          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
+                  <span className="material-symbols-outlined text-[20px]">person</span>
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">Thông Tin Cá Nhân Chủ Hộ</h2>
+                  <p className="text-xs text-slate-500">Tài khoản quản trị, đăng nhập và bảo mật VikeSo</p>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-[10.5px] font-black bg-[#d0f81b] text-slate-950 border border-[#bde412] uppercase tracking-wider">
+                CHỦ HỘ KINH DOANH
+              </span>
+            </div>
+
+            <form onSubmit={handleSavePersonal} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_owner_name">
+                    <span>Họ và tên chủ hộ *</span>
+                  </label>
+                  <input
+                    id="settings_owner_name"
+                    type="text"
+                    value={personalName}
+                    onChange={(e) => setPersonalName(e.target.value)}
+                    required
+                    placeholder="VD: Nguyễn Bá Minh Tiến"
+                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_personal_phone">
+                    <span>Số điện thoại cá nhân *</span>
+                    <span className="text-[11px] font-normal text-slate-400">Nhận OTP &amp; đăng nhập</span>
+                  </label>
+                  <input
+                    id="settings_personal_phone"
+                    type="tel"
+                    value={personalPhone}
+                    onChange={(e) => setPersonalPhone(e.target.value)}
+                    placeholder="Ví dụ: 01238889999"
+                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_email">
+                    <span>Email tài khoản</span>
+                    <span className="text-[11px] font-normal text-slate-400">Cố định bảo mật</span>
+                  </label>
+                  <input
+                    id="settings_email"
+                    type="email"
+                    value={email}
+                    disabled
+                    className="w-full h-10 px-3 bg-slate-100 rounded-xl text-xs sm:text-sm text-slate-600 font-medium cursor-not-allowed border border-slate-200"
+                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5">
+                    <span>Vai trò trong hệ thống</span>
+                    <span className="text-[11px] font-semibold text-emerald-600">Đã kích hoạt</span>
+                  </label>
+                  <div className="w-full h-10 px-3 bg-slate-100 rounded-xl text-xs sm:text-sm text-slate-700 font-semibold border border-slate-200 flex items-center justify-between select-none">
+                    <span>Chủ Hộ Kinh Doanh (Owner)</span>
+                    <span className="material-symbols-outlined text-emerald-600 text-[18px]">verified</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isSavingPersonal}
+                  className="h-10 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black shadow-xs transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <span className={`material-symbols-outlined text-[16px] ${isSavingPersonal ? 'animate-spin' : ''}`}>
+                    {isSavingPersonal ? 'sync' : 'save'}
+                  </span>
+                  <span>{isSavingPersonal ? 'Đang lưu...' : 'Lưu Thông Tin Cá Nhân'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* =============================================================================
+              NGHIỆP VỤ BƯỚC 1B: THẺ THÔNG TIN CƠ SỞ KINH DOANH ĐANG CHỌN (STORE PROFILE)
+              - Hiển thị: Tên cửa hàng, Loại hình, Hotline của quán, Địa chỉ thực tế, Badge trạng thái
+          ============================================================================= */}
           <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
@@ -249,70 +504,79 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                   <span className="material-symbols-outlined text-[20px]">storefront</span>
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">Thông Tin Cửa Hàng &amp; Chủ Hộ</h2>
-                  <p className="text-xs text-slate-500">Dữ liệu hiển thị trên bảng kê thuế và báo cáo kết ca</p>
+                  <h2 className="text-base font-bold text-slate-900">
+                    Cơ Sở Kinh Doanh Đang Chọn: <span className="text-[#ff4783] font-extrabold">{activeStoreName || 'Chưa thiết lập'}</span>
+                  </h2>
+                  <p className="text-xs text-slate-500">Dữ liệu hiển thị trên bảng kê thuế, hóa đơn khách hàng và báo cáo kết ca</p>
                 </div>
               </div>
+              <span className={`px-2.5 py-1 rounded-full text-[10.5px] font-black uppercase tracking-wider ${
+                activeStoreStatus === 'ACTIVE'
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-amber-50 text-amber-700 border border-amber-200'
+              }`}>
+                {activeStoreStatus === 'ACTIVE' ? 'ĐANG HOẠT ĐỘNG' : 'CHỜ DUYỆT'}
+              </span>
             </div>
 
-            <form onSubmit={handleSaveProfile} className="space-y-4">
+            <form onSubmit={handleSaveStore} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="settings_shop_name">
-                    Tên cửa hàng / Hộ kinh doanh *
+                  <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_shop_name">
+                    <span>Tên cơ sở / Chi nhánh *</span>
                   </label>
                   <input
                     id="settings_shop_name"
                     type="text"
-                    value={shopName}
-                    onChange={(e) => setShopName(e.target.value)}
+                    value={activeStoreName}
+                    onChange={(e) => setActiveStoreName(e.target.value)}
                     required
-                    placeholder="Ví dụ: Tạp Hóa Minh Phát"
+                    placeholder="Ví dụ: Thú Y Mrs.Mây"
                     className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="settings_owner_name">
-                    Họ và tên chủ hộ *
+                  <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_store_phone">
+                    <span>Số điện thoại Hotline của quán</span>
+                    <span className="text-[11px] font-normal text-slate-400">In trên bill</span>
                   </label>
                   <input
-                    id="settings_owner_name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    placeholder="Ví dụ: Nguyễn Văn Minh"
-                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
+                    id="settings_store_phone"
+                    type="tel"
+                    value={activeStorePhone}
+                    onChange={(e) => setActiveStorePhone(e.target.value)}
+                    placeholder="Ví dụ: 0441235555"
+                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="settings_phone">
-                    Số điện thoại liên hệ
+                  <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_store_type">
+                    <span>Loại hình kinh doanh</span>
                   </label>
-                  <input
-                    id="settings_phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Ví dụ: 0912345678"
-                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
-                  />
+                  <select
+                    id="settings_store_type"
+                    value={activeStoreType}
+                    onChange={(e) => setActiveStoreType(e.target.value)}
+                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] transition-all font-medium cursor-pointer"
+                  >
+                    <option value="Tạp hóa & Bán lẻ tiêu dùng">Tạp hóa & Bán lẻ tiêu dùng</option>
+                    <option value="F&B / Quán cà phê / Ăn uống">F&B / Quán cà phê / Ăn uống</option>
+                    <option value="Thời trang / Phụ kiện">Thời trang / Phụ kiện</option>
+                    <option value="Dịch vụ / Spa / Tiệm tóc">Dịch vụ / Spa / Tiệm tóc</option>
+                    <option value="Hộ kinh doanh khác">Hộ kinh doanh khác</option>
+                  </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="settings_email">
-                    Email tài khoản (Cố định)
-                  </label>
-                  <input
-                    id="settings_email"
-                    type="email"
-                    value={email}
-                    disabled
-                    className="w-full h-10 px-3 bg-slate-100 rounded-xl text-xs sm:text-sm text-slate-500 font-medium cursor-not-allowed border border-slate-200"
+                <div className="sm:col-span-2">
+                  <AddressSelectPicker
+                    id="settings_store_address"
+                    label="Địa chỉ cơ sở kinh doanh thực tế"
+                    value={activeStoreAddress}
+                    onChange={(addr) => setActiveStoreAddress(addr)}
                   />
                 </div>
               </div>
@@ -320,13 +584,13 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
               <div className="pt-2 flex justify-end">
                 <button
                   type="submit"
-                  disabled={isSavingProfile}
-                  className="px-5 py-2.5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black shadow-xs transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  disabled={isSavingStore}
+                  className="h-10 px-5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black shadow-xs transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  <span className={`material-symbols-outlined text-[16px] ${isSavingProfile ? 'animate-spin' : ''}`}>
-                    {isSavingProfile ? 'sync' : 'save'}
+                  <span className={`material-symbols-outlined text-[16px] ${isSavingStore ? 'animate-spin' : ''}`}>
+                    {isSavingStore ? 'sync' : 'save'}
                   </span>
-                  <span>{isSavingProfile ? 'Đang lưu...' : 'Lưu Thay Đổi'}</span>
+                  <span>{isSavingStore ? 'Đang lưu...' : 'Lưu Thông Tin Cửa Hàng'}</span>
                 </button>
               </div>
             </form>
@@ -496,7 +760,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-slate-900">Quản Lý Đa Cửa Hàng / Chi Nhánh</h2>
-                  <p className="text-xs text-slate-500">Chi nhánh thứ 2+ cần đính kèm chứng từ để Admin duyệt</p>
+                  <p className="text-xs text-slate-500">Đính kèm chứng từ để Ban Quản Trị (Admin) thẩm định &amp; phê duyệt kích hoạt</p>
                 </div>
               </div>
               <button
@@ -504,40 +768,107 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                 onClick={() => setNewShopModalOpen(true)}
                 className="h-8 px-3 rounded-lg bg-[#d6155f] hover:bg-[#b01755] text-white text-xs font-bold transition-colors cursor-pointer shrink-0"
               >
-                + Thêm chi nhánh
+                + Thêm cửa hàng / Chi nhánh
               </button>
             </div>
 
-            <div className="divide-y divide-slate-100 text-xs">
-              {shops.map((s) => (
-                <div
-                  key={s.id}
-                  className="py-3 flex items-center justify-between gap-3 first:pt-0"
+            {/* =============================================================================
+                NGHIỆP VỤ 2: QUẢN LÝ TẬP TRUNG TẠO MỚI & CHUYỂN ĐỔI CỬA HÀNG (DÒNG 540 ĐẾN 620)
+                - Dùng để làm gì:
+                  1. Cho phép Owner tạo cửa hàng đầu tiên hoặc chi nhánh thứ 2+ ngay tại mục này.
+                  2. Hiển thị danh sách cửa hàng kèm trạng thái: "CHỜ ADMIN DUYỆT" hay "HOẠT ĐỘNG".
+                  3. Cho phép chủ hộ chuyển chi nhánh làm việc nhanh chóng.
+            ============================================================================= */}
+            {shops.length === 0 ? (
+              <div className="py-8 text-center bg-slate-50/70 rounded-2xl border border-dashed border-slate-200 p-6 space-y-3">
+                <div className="w-12 h-12 mx-auto rounded-2xl bg-[#ff4783]/10 text-[#ff4783] flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[26px]">storefront</span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800">Chưa có cửa hàng nào được thiết lập</h3>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 leading-relaxed">
+                    Bạn chưa có cửa hàng nào trên hệ thống. Hãy bấm nút <b>"+ Thêm cửa hàng / Chi nhánh"</b> ở trên để tạo cửa hàng đầu tiên và gửi hồ sơ chứng từ cho Admin duyệt.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNewShopModalOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-bold transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  <div className="min-w-0">
-                    <div className="text-xs sm:text-sm font-bold text-slate-900 truncate">{s.shopName}</div>
-                    <div className="text-xs text-slate-500 truncate mt-0.5">
-                      {s.businessType} • {s.address}
+                  <span className="material-symbols-outlined text-[16px]">add_business</span>
+                  <span>Tạo Cửa Hàng Mới Ngay</span>
+                </button>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 text-xs">
+                {shops.map((s) => (
+                  <div
+                    key={s.id}
+                    className="py-3 flex items-center justify-between gap-3 first:pt-0"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-xs sm:text-sm font-bold text-slate-900 truncate">{s.shopName}</div>
+                      <div className="text-xs text-slate-500 truncate mt-0.5">
+                        {s.businessType} • {s.address}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span
+                        className={`text-xs font-bold px-2.5 py-1 rounded-md border ${
+                          s.status === 'ACTIVE'
+                            ? 'bg-[#d0f81b]/35 text-slate-950 border-[#bde412]'
+                            : s.status === 'PENDING_APPROVAL'
+                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                              : 'bg-rose-50 text-rose-700 border-rose-200'
+                        }`}
+                      >
+                        {s.status === 'ACTIVE'
+                          ? (s.shopName === activeStoreName ? 'ĐANG CHỌN' : 'HOẠT ĐỘNG')
+                          : s.status === 'PENDING_APPROVAL'
+                            ? 'CHỜ ADMIN DUYỆT'
+                            : 'TỪ CHỐI'}
+                      </span>
+                      {s.status === 'ACTIVE' && s.shopName !== activeStoreName && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const res = await switchActiveShop(s.id);
+                            if (res.success) {
+                              setActiveStoreName(s.shopName);
+                              if (s.phone) setActiveStorePhone(s.phone);
+                              if (s.address) setActiveStoreAddress(s.address);
+                              if (s.businessType) setActiveStoreType(s.businessType);
+                              setActiveStoreStatus(s.status || 'ACTIVE');
+                              try {
+                                const rawUser = localStorage.getItem('vikeso_user');
+                                if (rawUser) {
+                                  const u = JSON.parse(rawUser);
+                                  u.shopName = s.shopName;
+                                  u.storeName = s.shopName;
+                                  u.activeShopId = s.id;
+                                  localStorage.setItem('vikeso_user', JSON.stringify(u));
+                                }
+                              } catch (e) {}
+                              window.dispatchEvent(new CustomEvent('vikeso_shop_updated', {
+                                detail: { shopName: s.shopName, activeShopId: s.id }
+                              }));
+                              showToast(`Đã chuyển sang chi nhánh "${s.shopName}"!`);
+                              const fresh = await fetchUserShops(s.shopName);
+                              setShops(fresh);
+                            } else {
+                              showToast(res.message || 'Lỗi chuyển chi nhánh', 'error');
+                            }
+                          }}
+                          className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-[#d0f81b] text-slate-800 hover:text-slate-950 border border-slate-200 text-xs font-bold transition-all cursor-pointer"
+                        >
+                          Chuyển làm việc
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <span
-                    className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-md border ${
-                      s.status === 'ACTIVE'
-                        ? 'bg-[#d0f81b]/35 text-slate-950 border-[#bde412]'
-                        : s.status === 'PENDING_APPROVAL'
-                          ? 'bg-amber-50 text-amber-800 border-amber-200'
-                          : 'bg-rose-50 text-rose-700 border-rose-200'
-                    }`}
-                  >
-                    {s.status === 'ACTIVE'
-                      ? 'ĐANG HOẠT ĐỘNG'
-                      : s.status === 'PENDING_APPROVAL'
-                        ? 'CHỜ ADMIN DUYỆT'
-                        : 'TỪ CHỐI'}
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -663,17 +994,24 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
         </div>
       )}
 
-      {/* Modal: Register 2nd+ Shop Branch with Verification Docs (FE-WEB-13) */}
+      {/* =============================================================================
+          NGHIỆP VỤ 3: MODAL TẠO CỬA HÀNG MỚI & NỘP CHỨNG TỪ XÁC MINH (DÒNG 740 ĐẾN 880)
+          - Dùng để làm gì: Hiển thị form khai báo cửa hàng (cơ sở đầu tiên hoặc chi nhánh thứ 2+).
+          - Phục vụ mục đích gì:
+            1. Cho phép Owner nhập tên cơ sở, ngành nghề, số điện thoại, địa chỉ thực tế.
+            2. Cho phép tải lên hoặc chọn ảnh mẫu chứng từ xác minh pháp lý (GPKD / Biển hiệu).
+            3. Đẩy hồ sơ với trạng thái PENDING_APPROVAL vào hệ thống để Admin kiểm duyệt.
+      ============================================================================= */}
       {newShopModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
           <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">
-                  Đăng Ký Cửa Hàng / Chi Nhánh Thứ 2+
+                  Đăng Ký Cửa Hàng / Chi Nhánh Mới
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Bắt buộc đính kèm hình ảnh chứng từ xác minh để Admin phê duyệt kích hoạt
+                  Bắt buộc đính kèm hình ảnh chứng từ xác minh để Admin thẩm định &amp; phê duyệt kích hoạt
                 </p>
               </div>
               <button
@@ -695,8 +1033,8 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                   required
                   value={branchName}
                   onChange={(e) => setBranchName(e.target.value)}
-                  placeholder="VD: Tạp Hóa Minh Phát - Chi Nhánh 2"
-                  className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200"
+                  placeholder="VD: Tạp Hóa Minh Phát - Chi Nhánh 1"
+                  className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] transition-all"
                 />
               </div>
 
@@ -709,41 +1047,48 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                     type="text"
                     value={branchType}
                     onChange={(e) => setBranchType(e.target.value)}
-                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs border border-slate-200"
+                    placeholder="Bán lẻ / Tạp hóa / Ăn uống..."
+                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] transition-all"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Số điện thoại chi nhánh
+                    Số điện thoại liên hệ
                   </label>
                   <input
                     type="tel"
                     value={branchPhone}
                     onChange={(e) => setBranchPhone(e.target.value)}
                     placeholder="0909.111.222"
-                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs border border-slate-200"
+                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Địa chỉ kinh doanh thực tế *
-                </label>
-                <input
-                  type="text"
+                <AddressSelectPicker
+                  id="modal_branch_address"
+                  label="Địa chỉ kinh doanh thực tế"
                   required
                   value={branchAddress}
-                  onChange={(e) => setBranchAddress(e.target.value)}
-                  placeholder="Số nhà, đường, phường/xã, quận/huyện..."
-                  className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200"
+                  onChange={(addr) => setBranchAddress(addr)}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Tải ảnh chứng từ xác minh (Giấy ĐKKD / Hợp đồng thuê / Biển hiệu) *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Ảnh chứng từ xác minh (GPKD / HĐ thuê / Biển hiệu) *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleUseSampleDoc}
+                    className="text-[11px] font-bold text-[#b01755] hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">auto_fix_high</span>
+                    <span>+ Dùng ảnh mẫu thử nghiệm</span>
+                  </button>
+                </div>
                 <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 hover:border-[#ff4783] rounded-2xl bg-slate-50 cursor-pointer transition-colors text-center">
                   <span className="material-symbols-outlined text-[24px] text-[#ff4783]">upload_file</span>
                   <span className="text-xs font-bold text-slate-700 mt-1">
@@ -761,10 +1106,17 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                 {branchDocUrls.length > 0 && (
                   <div className="flex items-center gap-2 mt-2">
                     {branchDocUrls.map((url, idx) => (
-                      <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200">
+                      <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200 shadow-2xs">
                         <img src={url} alt="Doc" className="w-full h-full object-cover" />
                       </div>
                     ))}
+                    <button
+                      type="button"
+                      onClick={() => setBranchDocUrls([])}
+                      className="text-xs text-rose-500 hover:underline ml-1 cursor-pointer"
+                    >
+                      Xóa tất cả
+                    </button>
                   </div>
                 )}
               </div>
@@ -773,16 +1125,19 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                 <button
                   type="button"
                   onClick={() => setNewShopModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingBranch}
-                  className="px-5 py-2 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  {isSubmittingBranch ? 'Đang gửi hồ sơ...' : 'Gửi Hồ Sơ Chờ Admin Duyệt'}
+                  <span className={`material-symbols-outlined text-[16px] ${isSubmittingBranch ? 'animate-spin' : ''}`}>
+                    {isSubmittingBranch ? 'sync' : 'send'}
+                  </span>
+                  <span>{isSubmittingBranch ? 'Đang gửi hồ sơ...' : 'Gửi Hồ Sơ Chờ Admin Duyệt'}</span>
                 </button>
               </div>
             </form>

@@ -61,37 +61,81 @@ class _PersonalScreenState extends State<PersonalScreen> with WidgetsBindingObse
     }
   }
 
+  // =============================================================================
+  // NGHIỆP VỤ: TẢI HỒ SƠ CÁ NHÂN THEO CHIẾN LƯỢC CACHE-FIRST (0ms DELAY)
+  // - Bắt đầu từ dòng này đến hết hàm _loadPersonalProfile
+  // - Dùng để: Đọc ngay dữ liệu từ bộ nhớ đệm cục bộ (_storage) trước khi gọi API
+  // - Phục vụ:
+  //   1. Hiển thị ngay lập tức Họ tên, SĐT, Email cá nhân (0ms) mà không bị giật
+  //      hay hiện chữ "Người dùng VikeSo".
+  //   2. Gọi ngầm fetchUserProfile() qua API để đồng bộ dữ liệu mới nhất từ database.
+  // =============================================================================
   Future<void> _loadPersonalProfile() async {
-    final profile = await AuthRepository().fetchUserProfile();
-    final storedRole = await _storage.read(key: 'user_role') ?? 'OWNER';
-    if (profile != null && mounted) {
+    // 1. Tải tức thì từ bộ nhớ đệm cục bộ (Cache-First)
+    final cachedResults = await Future.wait([
+      _storage.read(key: 'user_name'),
+      _storage.read(key: 'user_shopName'),
+      _storage.read(key: 'user_email'),
+      _storage.read(key: 'user_phone'),
+      _storage.read(key: 'user_avatar'),
+      _storage.read(key: 'user_role'),
+      _storage.read(key: 'user_subscriptionPlan'),
+      _storage.read(key: 'user_telegramChatId'),
+    ]);
+
+    final cachedName = cachedResults[0] ?? '';
+    final cachedShop = cachedResults[1] ?? '';
+    final cachedEmail = cachedResults[2] ?? '';
+    final cachedPhone = cachedResults[3] ?? '';
+    final cachedAvatar = cachedResults[4];
+    final storedRole = cachedResults[5] ?? 'OWNER';
+    final plan = cachedResults[6] ?? 'FREE';
+    final tgChatId = cachedResults[7];
+
+    if (mounted && (cachedName.isNotEmpty || cachedEmail.isNotEmpty || cachedPhone.isNotEmpty)) {
       setState(() {
-        _name = profile.name ?? '';
-        _shopName = profile.shopName;
-        _email = profile.email;
-        _phone = profile.phone ?? '';
-        _avatar = profile.avatar;
+        if (cachedName.isNotEmpty) _name = cachedName;
+        if (cachedShop.isNotEmpty) _shopName = cachedShop;
+        if (cachedEmail.isNotEmpty) _email = cachedEmail;
+        if (cachedPhone.isNotEmpty) _phone = cachedPhone;
+        _avatar = cachedAvatar;
         _role = storedRole.toUpperCase();
-      });
-    } else {
-      final name = await _storage.read(key: 'user_name') ?? '';
-      final shopName = await _storage.read(key: 'user_shopName') ?? '';
-      final email = await _storage.read(key: 'user_email') ?? '';
-      final phone = await _storage.read(key: 'user_phone') ?? '';
-      final avatar = await _storage.read(key: 'user_avatar');
-      if (!mounted) return;
-      setState(() {
-        _name = name;
-        _shopName = shopName;
-        _email = email;
-        _phone = phone;
-        _avatar = avatar;
-        _role = storedRole.toUpperCase();
+        _plan = plan.toUpperCase();
+        _hasTelegram = tgChatId != null && tgChatId.isNotEmpty;
       });
     }
 
-    final plan = await _storage.read(key: 'user_subscriptionPlan') ?? 'FREE';
-    final tgChatId = await _storage.read(key: 'user_telegramChatId');
+    // 2. Đồng bộ ngầm thông tin mới nhất từ máy chủ (Background Revalidation)
+    try {
+      final profile = await AuthRepository().fetchUserProfile();
+      if (profile != null && mounted) {
+        setState(() {
+          if (profile.name != null && profile.name!.isNotEmpty) {
+            _name = profile.name!;
+          }
+          if (profile.shopName.isNotEmpty) {
+            _shopName = profile.shopName;
+          }
+          if (profile.email.isNotEmpty) {
+            _email = profile.email;
+          }
+          if (profile.phone != null && profile.phone!.isNotEmpty) {
+            _phone = profile.phone!;
+          }
+          _avatar = profile.avatar;
+          _role = storedRole.toUpperCase();
+        });
+        if (profile.phone != null && profile.phone!.isNotEmpty) {
+          await _storage.write(key: 'user_phone', value: profile.phone!);
+        }
+        if (profile.name != null && profile.name!.isNotEmpty) {
+          await _storage.write(key: 'user_name', value: profile.name!);
+        }
+      }
+    } catch (e) {
+      debugPrint('Lỗi đồng bộ hồ sơ cá nhân nền: $e');
+    }
+
     if (mounted) {
       setState(() {
         _plan = plan.toUpperCase();
@@ -510,7 +554,7 @@ class _PersonalScreenState extends State<PersonalScreen> with WidgetsBindingObse
                                       ? Text(
                                           _name.isNotEmpty
                                               ? _name[0].toUpperCase()
-                                              : (_shopName.isNotEmpty ? _shopName[0].toUpperCase() : 'V'),
+                                              : (_shopName.isNotEmpty ? _shopName[0].toUpperCase() : 'N'),
                                           style: const TextStyle(
                                             fontSize: 32,
                                             color: Color(0xFFFF4783),
@@ -541,7 +585,7 @@ class _PersonalScreenState extends State<PersonalScreen> with WidgetsBindingObse
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            _name.isNotEmpty ? _name : 'Người dùng VikeSo',
+                            _name.isNotEmpty ? _name : (_email.isNotEmpty ? _email : ''),
                             style: const TextStyle(
                               fontWeight: FontWeight.w800,
                               fontSize: 18,
@@ -576,6 +620,30 @@ class _PersonalScreenState extends State<PersonalScreen> with WidgetsBindingObse
                                 color: Color(0xFF0F172A),
                                 letterSpacing: 0.4,
                               ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.storefront_rounded, size: 16, color: Color(0xFFFF4783)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  _shopName.isNotEmpty ? _shopName : 'Chưa thiết lập cửa hàng',
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF0F172A),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],

@@ -274,4 +274,99 @@ class ApiService {
       return {'success': false, 'error': e.toString()};
     }
   }
+
+  // ============================================================
+  // 7. LẤY DANH SÁCH CHI NHÁNH / CỬA HÀNG CỦA OWNER (GET /api/shops)
+  // Kết nối trực tiếp Backend để đồng bộ trạng thái duyệt chi nhánh
+  // ============================================================
+  Future<List<Map<String, dynamic>>> getOwnerShops(String token) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/shops');
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        if (body['success'] == true && body['data'] is List) {
+          return List<Map<String, dynamic>>.from(body['data']);
+        }
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Lỗi getOwnerShops: $e');
+      return [];
+    }
+  }
+
+  // =============================================================================
+  // NGHIỆP VỤ 8: CHUYỂN ĐỔI CHI NHÁNH LÀM VIỆC HIỆN TẠI (PATCH /api/shops/:id/switch)
+  // - Bắt đầu từ dòng này đến hết hàm switchActiveShop
+  // - Dùng để: Gửi yêu cầu chuyển cửa hàng hoạt động lên máy chủ Backend
+  // - Phục vụ: Cho phép chủ hộ kinh doanh đổi giữa các chi nhánh đã được Admin duyệt
+  //   Mọi hóa đơn chụp OCR hay giao dịch sau đó sẽ được tính đúng cho chi nhánh này.
+  // =============================================================================
+  Future<Map<String, dynamic>> switchActiveShop(String shopId, String token) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/shops/$shopId/switch');
+      final response = await http.patch(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 15));
+
+      final body = jsonDecode(response.body);
+      return body is Map<String, dynamic> ? body : {'success': false, 'message': 'Phản hồi không hợp lệ'};
+    } catch (e) {
+      debugPrint('Lỗi switchActiveShop: $e');
+      return {'success': false, 'message': 'Lỗi kết nối máy chủ khi chuyển chi nhánh'};
+    }
+  }
+
+  // =============================================================================
+  // NGHIỆP VỤ 9: ĐĂNG KÝ CỬA HÀNG / CHI NHÁNH MỚI KÈM CHỨNG TỪ (POST /api/shops)
+  // - Bắt đầu từ dòng này đến hết hàm createShop
+  // - Dùng để: Gửi hồ sơ đăng ký chi nhánh mới kèm ảnh chứng từ lên máy chủ Backend
+  // - Phục vụ: Cho phép chủ hộ kinh doanh mở rộng kinh doanh, tạo chi nhánh mới
+  //   với trạng thái PENDING chờ Ban Quản Trị (Admin) thẩm định và phê duyệt.
+  // =============================================================================
+  Future<Map<String, dynamic>> createShop({
+    required String shopName,
+    required String businessType,
+    required String address,
+    required String phone,
+    required List<String> verificationDocs,
+    required String token,
+  }) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/shops');
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'shopName': shopName.trim(),
+          'businessType': businessType,
+          'address': address.trim(),
+          'phone': phone.trim(),
+          'verificationDocs': verificationDocs,
+          'documentUrls': verificationDocs,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      final body = jsonDecode(response.body);
+      return body is Map<String, dynamic> ? body : {'success': false, 'message': 'Phản hồi không hợp lệ'};
+    } catch (e) {
+      debugPrint('Lỗi createShop: $e');
+      return {'success': false, 'message': 'Lỗi kết nối máy chủ khi tạo chi nhánh: $e'};
+    }
+  }
 }

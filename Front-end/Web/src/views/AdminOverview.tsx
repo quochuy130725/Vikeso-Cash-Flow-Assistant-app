@@ -6,6 +6,7 @@ import {
   updateAdminUserRole,
   deleteAdminUser,
   getLocalShops,
+  fetchAdminShopRequests,
   reviewAdminShopRequest,
 } from '../services/api';
 import { BusinessHousehold, ShopBranch } from '../types';
@@ -30,15 +31,16 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
   // Detail Modal for 2nd+ Shop Branch Request
   const [selectedShopRequest, setSelectedShopRequest] = useState<ShopBranch | null>(null);
 
-  // Create User Modal
+  // =============================================================================
+  // NGHIỆP VỤ 1: QUẢN LÝ CẤP TÀI KHOẢN QUẢN TRỊ VIÊN (ADMIN) HỆ THỐNG
+  // - Admin chỉ có quyền cấp mới tài khoản Quản Trị Viên cho nhân sự ban quản trị.
+  // - Tài khoản Chủ hộ (Owner) sẽ do người dùng tự đăng ký ngoài trang chủ web.
+  // =============================================================================
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [createEmail, setCreateEmail] = useState('');
   const [createPassword, setCreatePassword] = useState('');
   const [createName, setCreateName] = useState('');
-  const [createShopName, setCreateShopName] = useState('');
   const [createPhone, setCreatePhone] = useState('');
-  const [createRole, setCreateRole] = useState<'OWNER' | 'ADMIN'>('OWNER');
-  const [createPlan, setCreatePlan] = useState<'FREE' | 'PRO'>('FREE');
   const [isCreating, setIsCreating] = useState(false);
 
   // Toast
@@ -49,15 +51,24 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  // ===========================================================================
+  // NGHIỆP VỤ TẢI DỮ LIỆU BẢNG QUẢN TRỊ ADMIN (TỪ DÒNG 50 ĐẾN 75)
+  // - Đồng bộ danh sách tài khoản người dùng, chỉ số hệ thống
+  // - Gọi API lấy danh sách hồ sơ chi nhánh chờ Admin duyệt thực tế từ database
+  // ===========================================================================
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
     try {
-      const [overviewData, usersData] = await Promise.all([
+      const [overviewData, usersData, shopsData] = await Promise.all([
         fetchAdminOverview(),
         fetchAdminUsers(),
+        fetchAdminShopRequests(),
       ]);
       setOverview(overviewData);
       setUsers(usersData || []);
+      if (Array.isArray(shopsData)) {
+        setShopRequests(shopsData);
+      }
     } catch (err) {
       console.error('Lỗi khi tải dữ liệu Admin:', err);
     } finally {
@@ -111,11 +122,26 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
     }
   };
 
-  // Handle Create User Submit
+  // =============================================================================
+  // NGHIỆP VỤ 2: XỬ LÝ CẤP MỚI TÀI KHOẢN QUẢN TRỊ VIÊN (ADMIN) (DÒNG 125 ĐẾN 168)
+  // - Dùng để: Gửi yêu cầu khởi tạo tài khoản Admin lên API POST /api/admin/users
+  // - Phục vụ:
+  //   1. Kiểm tra tính hợp lệ: Email, Họ tên và Mật khẩu (tối thiểu 6 ký tự).
+  //   2. Gán cứng vai trò role: 'ADMIN'. Không áp dụng gói cước hay thông tin cửa hàng.
+  //   3. Cập nhật tức thời danh sách người dùng trên giao diện sau khi tạo thành công.
+  // =============================================================================
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createEmail.trim()) {
-      showToast('Vui lòng nhập email', 'error');
+      showToast('Vui lòng nhập email đăng nhập của Quản trị viên', 'error');
+      return;
+    }
+    if (!createName.trim()) {
+      showToast('Vui lòng nhập họ và tên của Quản trị viên', 'error');
+      return;
+    }
+    if (!createPassword || createPassword.length < 6) {
+      showToast('Mật khẩu khởi tạo phải có tối thiểu 6 ký tự', 'error');
       return;
     }
 
@@ -123,25 +149,22 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
     try {
       const res = await createAdminUser({
         email: createEmail.trim(),
-        password: createPassword || undefined,
-        name: createName.trim() || undefined,
-        shopName: createShopName.trim() || undefined,
-        phone: createRole === 'ADMIN' ? undefined : (createPhone.trim() || undefined),
-        role: createRole,
-        subscriptionPlan: createRole === 'ADMIN' ? undefined : createPlan,
+        password: createPassword,
+        name: createName.trim(),
+        phone: createPhone.trim() || undefined,
+        role: 'ADMIN',
       });
 
       if (res.success) {
-        showToast('Đã tạo tài khoản người dùng mới thành công!');
+        showToast('Đã cấp tài khoản Quản trị viên mới thành công!');
         setCreateEmail('');
         setCreatePassword('');
         setCreateName('');
-        setCreateShopName('');
         setCreatePhone('');
         setCreateModalOpen(false);
         loadData(true);
       } else {
-        showToast(res.message || 'Không thể tạo tài khoản', 'error');
+        showToast(res.message || 'Không thể tạo tài khoản quản trị viên', 'error');
       }
     } catch (err: any) {
       showToast(err.message || 'Lỗi kết nối máy chủ', 'error');
@@ -207,8 +230,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-[#d6155f] hover:bg-[#b01755] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
             type="button"
           >
-            <span className="material-symbols-outlined text-[18px] text-white">person_add</span>
-            <span>+ Tạo Tài Khoản Mới</span>
+            <span className="material-symbols-outlined text-[18px] text-white">admin_panel_settings</span>
+            <span>+ Thêm Quản Trị Viên</span>
           </button>
         </div>
       </div>
@@ -298,14 +321,14 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             <div className="flex items-center gap-2 flex-wrap">
               <span className="w-2.5 h-2.5 rounded-full bg-[#d0f81b] border border-[#bde412]"></span>
               <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
-                Phê Duyệt Đăng Ký Cửa Hàng / Chi Nhánh Thứ 2+ (Kèm Chứng Từ)
+                Phê Duyệt Đăng Ký Cửa Hàng / Chi Nhánh Mới (Kèm Chứng Từ)
               </h2>
               <span className="px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold tabular-nums">
                 {shopRequests.filter((s) => s.status === 'PENDING_APPROVAL').length} chờ duyệt
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5 max-w-sm">
-              Chủ hộ đăng ký cửa hàng đầu tiên được kích hoạt ngay; từ cửa hàng thứ 2 trở đi bắt buộc gửi chứng từ để Admin thẩm định.
+              Chủ hộ đăng ký tài khoản cần gửi hồ sơ cửa hàng kèm chứng từ xác minh để Ban Quản Trị (Admin) thẩm định và phê duyệt kích hoạt.
             </p>
           </div>
         </div>
@@ -326,7 +349,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
               {shopRequests.filter((s) => s.id !== 'shop-main').length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-10 text-center text-slate-400 text-xs">
-                    Chưa có yêu cầu đăng ký chi nhánh thứ 2+ nào.
+                    Chưa có yêu cầu đăng ký cửa hàng / chi nhánh nào chờ duyệt.
                   </td>
                 </tr>
               ) : (
@@ -814,9 +837,9 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                     type="button"
                     onClick={async () => {
                       const res = await reviewAdminShopRequest(selectedShopRequest.id, 'REJECT');
-                      const updated = getLocalShops();
-                      setShopRequests(updated);
-                      setSelectedShopRequest(updated.find((s) => s.id === selectedShopRequest.id) || null);
+                      const fresh = await fetchAdminShopRequests();
+                      setShopRequests(fresh);
+                      setSelectedShopRequest(fresh.find((s) => s.id === selectedShopRequest.id) || null);
                       showToast(res.message, 'error');
                     }}
                     className="h-10 px-4 rounded-xl bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 text-xs font-bold cursor-pointer transition-colors"
@@ -827,9 +850,9 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                     type="button"
                     onClick={async () => {
                       const res = await reviewAdminShopRequest(selectedShopRequest.id, 'APPROVE');
-                      const updated = getLocalShops();
-                      setShopRequests(updated);
-                      setSelectedShopRequest(updated.find((s) => s.id === selectedShopRequest.id) || null);
+                      const fresh = await fetchAdminShopRequests();
+                      setShopRequests(fresh);
+                      setSelectedShopRequest(fresh.find((s) => s.id === selectedShopRequest.id) || null);
                       showToast(res.message, 'success');
                     }}
                     className="h-10 px-5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 border border-[#bde412] text-xs font-black cursor-pointer shadow-xs flex items-center gap-1.5 transition-colors"
@@ -844,18 +867,25 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
         </div>
       )}
 
-      {/* 4. Create User Modal */}
+      {/* =============================================================================
+          NGHIỆP VỤ 3: MODAL CẤP TÀI KHOẢN QUẢN TRỊ VIÊN (ADMIN) (DÒNG 870 ĐẾN 990)
+          - Dùng để làm gì: Form cấp mới tài khoản dành riêng cho Quản Trị Viên (Admin).
+          - Phục vụ mục đích:
+            1. Không cho phép tạo tài khoản Chủ hộ (Owner) tại đây vì Owner tự đăng ký ngoài web.
+            2. Thu thập đầy đủ thông tin định danh: Họ tên, Email, Mật khẩu khởi tạo và SĐT liên hệ.
+            3. Khóa cứng phân quyền ADMIN, loại bỏ các trường không cần thiết (Tên shop, Gói dịch vụ).
+      ============================================================================= */}
       {createModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
             <div className="flex items-center justify-between p-5 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-900 flex items-center justify-center border border-slate-200">
-                  <span className="material-symbols-outlined text-[20px]">person_add</span>
+                <div className="w-10 h-10 rounded-2xl bg-[#fff0f5] text-[#b01755] flex items-center justify-center border border-[#ffd6e4]">
+                  <span className="material-symbols-outlined text-[22px]">admin_panel_settings</span>
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">Tạo Tài Khoản Người Dùng Mới</h3>
-                  <p className="text-xs text-slate-500">Thêm thủ công tài khoản chủ hộ hoặc quản trị viên</p>
+                  <h3 className="text-base font-extrabold text-slate-900">Tạo Tài Khoản Quản Trị Viên (Admin)</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Cấp quyền quản trị hệ thống cho nhân sự ban quản lý</p>
                 </div>
               </div>
               <button
@@ -868,8 +898,23 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
 
             <form onSubmit={handleCreateUser} className="p-5 space-y-3.5">
               <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_name">
+                  Họ và tên Quản trị viên <span className="text-[#ff4783]">*</span>
+                </label>
+                <input
+                  id="create_name"
+                  type="text"
+                  value={createName}
+                  onChange={(e) => setCreateName(e.target.value)}
+                  required
+                  placeholder="Ví dụ: Nguyễn Văn Quản Trị"
+                  className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-medium"
+                />
+              </div>
+
+              <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_email">
-                  Email đăng nhập *
+                  Email đăng nhập quản trị <span className="text-[#ff4783]">*</span>
                 </label>
                 <input
                   id="create_email"
@@ -877,14 +922,14 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                   value={createEmail}
                   onChange={(e) => setCreateEmail(e.target.value)}
                   required
-                  placeholder="name@example.com"
+                  placeholder="admin@vikeso.vn"
                   className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-medium"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_password">
-                  Mật khẩu khởi tạo *
+                  Mật khẩu khởi tạo <span className="text-[#ff4783]">*</span>
                 </label>
                 <input
                   id="create_password"
@@ -893,81 +938,37 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                   onChange={(e) => setCreatePassword(e.target.value)}
                   required
                   placeholder="Tối thiểu 6 ký tự"
-                  className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
+                  className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-medium"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className={createRole === 'ADMIN' ? 'col-span-2' : ''}>
-                  <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_role">
-                    Vai trò (Role)
-                  </label>
-                  <select
-                    id="create_role"
-                    value={createRole}
-                    onChange={(e) => setCreateRole(e.target.value as any)}
-                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs text-slate-900 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all cursor-pointer"
-                  >
-                    <option value="OWNER">Chủ Hộ (OWNER)</option>
-                    <option value="ADMIN">Quản Trị (ADMIN)</option>
-                  </select>
-                </div>
-
-                {createRole === 'OWNER' && (
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_plan">
-                      Gói dịch vụ
-                    </label>
-                    <select
-                      id="create_plan"
-                      value={createPlan}
-                      onChange={(e) => setCreatePlan(e.target.value as any)}
-                      className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs text-slate-900 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all cursor-pointer"
-                    >
-                      <option value="FREE">Miễn phí (FREE)</option>
-                      <option value="PRO">Chuyên nghiệp (PRO)</option>
-                    </select>
-                  </div>
-                )}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_phone">
+                  Số điện thoại liên hệ (Tùy chọn)
+                </label>
+                <input
+                  id="create_phone"
+                  type="tel"
+                  value={createPhone}
+                  onChange={(e) => setCreatePhone(e.target.value)}
+                  placeholder="Ví dụ: 0909123456"
+                  className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-medium"
+                />
               </div>
 
-              {createRole === 'OWNER' && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_name">
-                      Tên chủ hộ
-                    </label>
-                    <input
-                      id="create_name"
-                      type="text"
-                      value={createName}
-                      onChange={(e) => setCreateName(e.target.value)}
-                      placeholder="Nguyễn Văn A"
-                      className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-medium"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="create_shop">
-                      Tên cửa hàng
-                    </label>
-                    <input
-                      id="create_shop"
-                      type="text"
-                      value={createShopName}
-                      onChange={(e) => setCreateShopName(e.target.value)}
-                      placeholder="Tạp Hóa X"
-                      className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all font-medium"
-                    />
-                  </div>
+              {/* Vai trò cố định ADMIN */}
+              <div className="p-3 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-1">
+                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  Vai trò phân quyền hệ thống
                 </div>
-              )}
-
-              {createRole === 'ADMIN' && (
-                <div className="p-3 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-700">
-                  <span className="font-semibold text-slate-900">Lưu ý:</span> Tài khoản Quản trị viên (ADMIN) không áp dụng thông tin cửa hàng và các gói cước dịch vụ (PRO/FREE).
+                <div className="flex items-center gap-2 pt-0.5 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#fff0f5] text-[#b01755] border border-[#ffd6e4] text-xs font-black">
+                    <span className="material-symbols-outlined text-[16px]">shield_person</span>
+                    <span>Quản Trị Viên (ADMIN)</span>
+                  </span>
+                  <span className="text-xs text-slate-500 font-medium">• Toàn quyền phê duyệt &amp; quản trị hệ thống</span>
                 </div>
-              )}
+              </div>
 
               <div className="pt-2 flex justify-end gap-2.5">
                 <button
@@ -980,9 +981,12 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="px-5 py-2 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl bg-[#d6155f] hover:bg-[#b01755] text-white text-xs font-black shadow-xs transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  {isCreating ? 'Đang tạo...' : 'Tạo Tài Khoản'}
+                  <span className={`material-symbols-outlined text-[16px] ${isCreating ? 'animate-spin' : ''}`}>
+                    {isCreating ? 'sync' : 'admin_panel_settings'}
+                  </span>
+                  <span>{isCreating ? 'Đang tạo...' : 'Cấp Quyền Admin'}</span>
                 </button>
               </div>
             </form>

@@ -8,6 +8,7 @@ import '../../data/services/api_service.dart';
 import '../../data/services/socket_service.dart';
 import '../../data/services/excel_export_service.dart';
 import '../../data/services/subscription_service.dart';
+import '../../main.dart';
 import '../shared_widgets/pro_paywall_sheet.dart';
 import '../shared_widgets/side_drawer.dart';
 
@@ -33,12 +34,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Map<String, double> _categoryChiSums = {};
   bool _showThuPieChart = true;
   int _touchedPieIndex = -1;
-  String _periodMode = 'MONTH'; // WEEK | MONTH | YEAR
+  String _periodMode = 'MONTH'; // DAY | MONTH | YEAR
+  int _selectedDay = DateTime.now().day;
   int _selectedMonth = DateTime.now().month;
   int _selectedYear = DateTime.now().year;
   bool _comparePrevPeriod = true;
   bool _showSubCategories = false;
   StreamSubscription? _txSub;
+  String _storeStatus = 'ACTIVE';
+  String _pendingShopName = '';
 
   @override
   void initState() {
@@ -73,6 +77,24 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       }
       final data = await _apiService.getTransactions(userId);
       final isProUser = await SubscriptionService().isPro();
+      final statusStr = await storage.read(key: 'user_shopStatus') ?? 'ACTIVE';
+      final pendingName = await storage.read(key: 'user_pendingShopName') ?? '';
+      final shopName = await storage.read(key: 'user_shopName');
+
+      String computedStatus = statusStr;
+      if (shopName == null || shopName.trim().isEmpty || shopName == 'Chưa thiết lập cửa hàng') {
+        if (statusStr != 'PENDING') {
+          computedStatus = 'NO_STORE';
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _storeStatus = computedStatus;
+          _pendingShopName = pendingName;
+        });
+      }
+
       _transactions = data;
       _isPro = isProUser;
       _processData();
@@ -87,6 +109,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     }
   }
 
+  DateTime? _parseDate(dynamic dateVal) {
+    if (dateVal == null) return null;
+    if (dateVal is DateTime) return dateVal;
+    if (dateVal is Map) {
+      if (dateVal.containsKey(r'$date')) {
+        return DateTime.tryParse(dateVal[r'$date'].toString());
+      }
+    }
+    return DateTime.tryParse(dateVal.toString());
+  }
+
   void _processData() {
     _totalThu = 0;
     _totalChi = 0;
@@ -96,6 +129,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     _categoryChiSums = {};
 
     for (var tx in _transactions) {
+      final dt = _parseDate(tx['transactionDate'] ?? tx['createdAt'] ?? tx['date'])?.toLocal();
+      if (dt != null) {
+        if (_periodMode == 'DAY') {
+          if (dt.day != _selectedDay || dt.month != _selectedMonth || dt.year != _selectedYear) {
+            continue;
+          }
+        } else if (_periodMode == 'MONTH') {
+          if (dt.month != _selectedMonth || dt.year != _selectedYear) {
+            continue;
+          }
+        } else if (_periodMode == 'YEAR') {
+          if (dt.year != _selectedYear) {
+            continue;
+          }
+        }
+      }
+
       final type = tx['transactionType'] ?? '';
       final double amount = (tx['totalAmount'] as num?)?.toDouble() ?? 0.0;
       final rawCategory = tx['category'] ?? 'Khac';
@@ -121,19 +171,29 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     _prevChi = _totalChi > 0 ? (_totalChi * 0.91) : 0;
   }
 
-  void _shiftMonth(int delta) {
+  void _shiftPeriod(int delta) {
     setState(() {
-      int m = _selectedMonth + delta;
-      int y = _selectedYear;
-      if (m < 1) {
-        m = 12;
-        y -= 1;
-      } else if (m > 12) {
-        m = 1;
-        y += 1;
+      if (_periodMode == 'DAY') {
+        final current = DateTime(_selectedYear, _selectedMonth, _selectedDay);
+        final next = current.add(Duration(days: delta));
+        _selectedDay = next.day;
+        _selectedMonth = next.month;
+        _selectedYear = next.year;
+      } else if (_periodMode == 'YEAR') {
+        _selectedYear += delta;
+      } else {
+        int m = _selectedMonth + delta;
+        int y = _selectedYear;
+        if (m < 1) {
+          m = 12;
+          y -= 1;
+        } else if (m > 12) {
+          m = 1;
+          y += 1;
+        }
+        _selectedMonth = m;
+        _selectedYear = y;
       }
-      _selectedMonth = m;
-      _selectedYear = y;
       _processData();
     });
   }
@@ -296,7 +356,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Thanh chọn Kỳ báo cáo (Theo tuần | Theo tháng | Theo năm) & < Tháng / Năm >
+                    // =============================================================================
+                    // NGHIỆP VỤ BƯỚC 2: CẢNH BÁO TẠI MÀN HÌNH BÁO CÁO NẾU CHƯA CÓ CỬA HÀNG
+                    // =============================================================================
+                    if (_storeStatus == 'NO_STORE' || _storeStatus == 'PENDING') ...[
+                      _buildStoreNoticeCard(),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // Thanh chọn Kỳ báo cáo (Theo ngày | Theo tháng | Theo năm) & < Ngày / Tháng / Năm >
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -308,7 +376,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         children: [
                           Row(
                             children: [
-                              _buildPeriodChip('WEEK', 'Theo tuần'),
+                              _buildPeriodChip('DAY', 'Theo ngày'),
                               const SizedBox(width: 6),
                               _buildPeriodChip('MONTH', 'Theo tháng'),
                               const SizedBox(width: 6),
@@ -321,13 +389,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             children: [
                               IconButton(
                                 visualDensity: VisualDensity.compact,
-                                onPressed: () => _shiftMonth(-1),
+                                onPressed: () => _shiftPeriod(-1),
                                 icon: const Icon(Icons.chevron_left_rounded, color: Color(0xFF0F172A)),
                               ),
                               Text(
-                                _periodMode == 'YEAR'
-                                    ? 'Năm $_selectedYear'
-                                    : 'Tháng ${_selectedMonth.toString().padLeft(2, '0')} / $_selectedYear',
+                                _periodMode == 'DAY'
+                                    ? 'Ngày ${_selectedDay.toString().padLeft(2, '0')} / ${_selectedMonth.toString().padLeft(2, '0')} / $_selectedYear'
+                                    : _periodMode == 'YEAR'
+                                        ? 'Năm $_selectedYear'
+                                        : 'Tháng ${_selectedMonth.toString().padLeft(2, '0')} / $_selectedYear',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 14,
@@ -336,7 +406,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               ),
                               IconButton(
                                 visualDensity: VisualDensity.compact,
-                                onPressed: () => _shiftMonth(1),
+                                onPressed: () => _shiftPeriod(1),
                                 icon: const Icon(Icons.chevron_right_rounded, color: Color(0xFF0F172A)),
                               ),
                             ],
@@ -426,11 +496,98 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
+  Widget _buildStoreNoticeCard() {
+    final isPending = _storeStatus == 'PENDING';
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isPending ? const Color(0xFFFFFBEB) : const Color(0xFFFFF0F5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isPending ? const Color(0xFFFDE68A) : const Color(0xFFFFD6E4),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: isPending ? const Color(0xFFFEF3C7) : Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isPending ? const Color(0xFFF59E0B) : const Color(0xFFFF4783),
+                  ),
+                ),
+                child: Icon(
+                  isPending ? Icons.pending_actions_rounded : Icons.storefront_rounded,
+                  color: isPending ? const Color(0xFFD97706) : const Color(0xFFFF4783),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isPending ? 'Hồ Sơ Cửa Hàng Đang Chờ Duyệt' : 'Chưa Thiết Lập Cửa Hàng',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isPending
+                          ? 'Cơ sở "${_pendingShopName.isNotEmpty ? _pendingShopName : 'mới'}" đang chờ Admin thẩm định.'
+                          : 'Cần có cửa hàng hoạt động để kích hoạt biểu đồ phân tích.',
+                      style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 38,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isPending ? const Color(0xFFD97706) : const Color(0xFFFF4783),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                elevation: 0,
+              ),
+              onPressed: () => MainNavigationShell.switchToTab(context, 3),
+              child: Text(
+                isPending ? 'Xem Tiến Độ Thẩm Định' : 'Thiết Lập Cửa Hàng Ngay',
+                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPeriodChip(String key, String label) {
     final active = _periodMode == key;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _periodMode = key),
+        onTap: () {
+          if (_periodMode != key) {
+            setState(() {
+              _periodMode = key;
+              _processData();
+            });
+          }
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
