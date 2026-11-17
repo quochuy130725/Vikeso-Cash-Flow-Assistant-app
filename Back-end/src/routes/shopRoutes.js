@@ -19,8 +19,10 @@ router.post('/', shopController.createAdditionalShop);
 // PATCH /api/shops/:id/switch (Chuyển shop active)
 router.patch('/:id/switch', shopController.switchShop);
 
-// PUT /api/shops/:id (Cập nhật Tên, Hotline, Loại hình, Địa chỉ cửa hàng)
+// PUT /api/shops/:id (Cập nhật Tên, Hotline, Loại hình, MST, CCCD, 3 Địa chỉ, ảnh KYC)
 router.put('/:id', shopController.updateShopDetails);
 
-module.exports = router;
+// POST /api/shops/:id/resubmit (Nộp lại hồ sơ sau khi bị Admin từ chối)
+router.post('/:id/resubmit', shopController.resubmitShop);
 
+module.exports = router;

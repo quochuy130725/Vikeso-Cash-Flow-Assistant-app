@@ -2,7 +2,12 @@ const adminService = require('../services/adminService');
 
 /** Controller mỏng: chỉ lấy query/params/body, gọi service, trả res. */
 const ok = (res, data, status = 200) => res.status(status).json({ success: true, ...data });
-const fail = (res, err) => res.status(err.statusCode || 500).json({ success: false, message: err.message || 'Lỗi máy chủ.' });
+const fail = (res, err) =>
+  res.status(err.statusCode || 500).json({
+    success: false,
+    ...(err.code ? { code: err.code } : {}),
+    message: err.message || 'Lỗi máy chủ.',
+  });
 
 exports.listUsers = async (req, res) => {
   try { return ok(res, await adminService.listUsers(req.query)); } catch (e) { return fail(res, e); }

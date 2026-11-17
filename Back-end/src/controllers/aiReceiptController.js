@@ -57,8 +57,9 @@ exports.scanReceipt = async (req, res) => {
           if (currentMonthBillCount >= 30) {
             return res.status(403).json({
               success: false,
+              code: 'TIER_SCAN_LIMIT_EXCEEDED',
               error_type: 'MONTHLY_QUOTA_EXCEEDED',
-              message: 'Gói Cơ Bản đã đạt giới hạn 30 hóa đơn trong tháng này. Vui lòng nâng cấp PRO để quét không giới hạn!',
+              message: 'Đã hết lượt quét AI tháng này. Vui lòng ghi tay hoặc lên PRO.',
             });
           }
         }
@@ -69,6 +70,7 @@ exports.scanReceipt = async (req, res) => {
     if (userPlan === 'FREE' && files.length > 1) {
       return res.status(403).json({
         success: false,
+        code: 'TIER_SCAN_LIMIT_EXCEEDED',
         error_type: 'PRO_REQUIRED_BATCH_OCR',
         message: 'Gói Cơ Bản chỉ hỗ trợ tải 1 ảnh/lần. Nâng cấp PRO để quét 3 ảnh cùng lúc!',
       });
