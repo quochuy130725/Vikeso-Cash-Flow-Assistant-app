@@ -118,13 +118,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   DateTime? _parseDate(dynamic dateVal) {
     if (dateVal == null) return null;
-    if (dateVal is DateTime) return dateVal;
-    if (dateVal is Map) {
-      if (dateVal.containsKey('\$date')) {
-        return DateTime.tryParse(dateVal['\$date'].toString());
-      }
+    if (dateVal is DateTime) {
+      return DateTime(dateVal.year, dateVal.month, dateVal.day, dateVal.hour, dateVal.minute, dateVal.second);
     }
-    return DateTime.tryParse(dateVal.toString());
+    String s = dateVal.toString();
+    if (dateVal is Map && dateVal.containsKey(r'$date')) {
+      s = dateVal[r'$date'].toString();
+    }
+    final dt = DateTime.tryParse(s);
+    if (dt == null) return null;
+
+    // Chuỗi ngày giờ trả về từ Backend (dạng "2026-11-13T19:xx:xx.xxxZ") mang giá trị
+    // thời gian thực tế mà người dùng nhập. Trích xuất trực tiếp các thành phần thời gian
+    // (year, month, day, hour, minute, second) để bảo toàn ngày giờ gốc, tránh bị lệch
+    // múi giờ UTC+7 làm trôi sang ngày hôm sau (14/11).
+    return DateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
   }
 
   String _formatCategory(String rawCategory) {
@@ -166,7 +174,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     for (var tx in _transactions) {
       final type = tx['transactionType'] ?? '';
       final double amount = (tx['totalAmount'] as num?)?.toDouble() ?? 0.0;
-      final tDate = _parseDate(tx['transactionDate'])?.toLocal();
+      final tDate = _parseDate(tx['transactionDate']);
 
       if (tDate == null) continue;
 

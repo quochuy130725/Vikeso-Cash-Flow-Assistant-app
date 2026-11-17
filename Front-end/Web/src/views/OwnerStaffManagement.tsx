@@ -13,6 +13,33 @@ interface OwnerStaffManagementProps {
   currentUser?: UserAccount | null;
 }
 
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return '—';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  } catch {
+    return dateStr;
+  }
+};
+
+const formatPhone = (phone?: string) => {
+  if (!phone) return '';
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length === 10) {
+    return `${cleaned.slice(0, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
+  } else if (cleaned.length === 11) {
+    return `${cleaned.slice(0, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
+  }
+  return phone;
+};
+
 export const OwnerStaffManagement: React.FC<OwnerStaffManagementProps> = ({ currentUser }) => {
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -204,82 +231,95 @@ export const OwnerStaffManagement: React.FC<OwnerStaffManagementProps> = ({ curr
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[850px]">
+          <table className="w-full text-left border-collapse min-w-[960px]">
             <thead>
-              <tr className="bg-slate-50 text-slate-700 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider">
-                <th className="py-3.5 px-5">Nhân Viên &amp; Vai Trò</th>
-                <th className="py-3.5 px-5">Tài Khoản Đăng Nhập</th>
-                <th className="py-3.5 px-5">Truy Cập Gần Nhất</th>
-                <th className="py-3.5 px-5 text-center">Trạng Thái Quyền</th>
-                <th className="py-3.5 px-5 text-right pr-6">Điều Khiển Tức Thì</th>
+              <tr className="bg-slate-50/90 text-slate-700 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider">
+                <th className="py-3.5 px-5 w-[28%] min-w-[240px] whitespace-nowrap">Nhân Viên &amp; Vai Trò</th>
+                <th className="py-3.5 px-5 w-[22%] min-w-[200px] whitespace-nowrap">Tài Khoản Đăng Nhập</th>
+                <th className="py-3.5 px-5 w-[18%] min-w-[170px] whitespace-nowrap">Truy Cập Gần Nhất</th>
+                <th className="py-3.5 px-5 w-[15%] min-w-[150px] text-center whitespace-nowrap">Trạng Thái Quyền</th>
+                <th className="py-3.5 px-5 w-[17%] min-w-[180px] text-right pr-6 whitespace-nowrap">Điều Khiển Tức Thì</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-slate-400">
-                    Đang tải danh sách nhân viên...
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-[#ff4783] border-t-transparent rounded-full animate-spin"></span>
+                      <span>Đang tải danh sách nhân viên...</span>
+                    </div>
                   </td>
                 </tr>
               ) : staffList.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-slate-500">
+                  <td colSpan={5} className="py-12 text-center text-slate-500">
                     Chưa có tài khoản nhân viên nào. Hãy nhấn "+ Thêm Nhân Viên Mới" để cấp tài khoản thu ngân.
                   </td>
                 </tr>
               ) : (
                 staffList.map((staff) => (
                   <tr key={staff.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-4 px-5">
+                    <td className="py-4 px-5 align-middle">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs ${
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs shrink-0 shadow-2xs ${
                             staff.isActive
                               ? 'bg-[#fff0f5] text-[#b01755] border border-[#ffd6e4]'
-                              : 'bg-slate-200 text-slate-700'
+                              : 'bg-slate-100 text-slate-600 border border-slate-200'
                           }`}
                         >
                           {staff.name.slice(0, 2).toUpperCase()}
                         </div>
-                        <div>
-                          <div className="font-bold text-slate-900">{staff.name}</div>
-                          <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 mt-0.5">
+                        <div className="min-w-0">
+                          <div className="font-bold text-slate-900 text-sm truncate">{staff.name}</div>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200/90 mt-1 whitespace-nowrap">
                             STAFF • Thu ngân tại quầy
                           </span>
                         </div>
                       </div>
                     </td>
 
-                    <td className="py-4 px-5">
-                      <div className="font-semibold text-slate-900">{staff.email}</div>
-                      <div className="text-xs text-slate-500 font-mono">{staff.phone}</div>
+                    <td className="py-4 px-5 align-middle whitespace-nowrap">
+                      <div className="font-semibold text-slate-900 text-xs sm:text-sm">{staff.email}</div>
+                      {staff.phone && (
+                        <div className="text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1.5 mt-0.5">
+                          <span className="material-symbols-outlined text-[13px] text-slate-400">call</span>
+                          <span>{formatPhone(staff.phone)}</span>
+                        </div>
+                      )}
                     </td>
 
-                    <td className="py-4 px-5 text-xs text-slate-600">
-                      <div>{staff.lastLogin || 'Hôm nay'}</div>
-                      <div className="text-xs text-slate-500">Tạo ngày: {staff.createdAt}</div>
+                    <td className="py-4 px-5 align-middle text-xs whitespace-nowrap">
+                      <div className="font-semibold text-slate-700 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                        <span>{staff.lastLogin || 'Hôm nay'}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">
+                        Tạo ngày: {formatDate(staff.createdAt)}
+                      </div>
                     </td>
 
-                    <td className="py-4 px-5 text-center">
+                    <td className="py-4 px-5 align-middle text-center whitespace-nowrap">
                       {staff.isActive ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#d0f81b]/35 text-slate-950 text-xs font-black border border-[#bde412]">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
-                          Đang hoạt động
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#d0f81b]/35 text-slate-950 text-xs font-black border border-[#bde412] shadow-2xs whitespace-nowrap">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          <span>Đang hoạt động</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 text-xs font-bold border border-rose-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                          Đã khóa (Force Logout)
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 text-rose-700 text-xs font-bold border border-rose-200 whitespace-nowrap">
+                          <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                          <span>Đã khóa tài khoản</span>
                         </span>
                       )}
                     </td>
 
-                    <td className="py-4 px-5 text-right pr-6">
-                      <div className="inline-flex items-center gap-2">
+                    <td className="py-4 px-5 align-middle text-right pr-6 whitespace-nowrap">
+                      <div className="inline-flex items-center justify-end gap-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => handleToggleLock(staff)}
-                          className={`h-8 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          className={`h-8 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                             staff.isActive
                               ? 'bg-[#fff0f5] hover:bg-pink-100 text-[#b01755] border border-[#ffd6e4] shadow-2xs'
                               : 'bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 border border-[#bde412] font-black'
@@ -288,7 +328,7 @@ export const OwnerStaffManagement: React.FC<OwnerStaffManagementProps> = ({ curr
                           <span className="material-symbols-outlined text-[15px]">
                             {staff.isActive ? 'gpp_bad' : 'lock_open'}
                           </span>
-                          <span>{staff.isActive ? 'Khóa tức thì' : 'Mở khóa'}</span>
+                          <span className="whitespace-nowrap">{staff.isActive ? 'Khóa tức thì' : 'Mở khóa'}</span>
                         </button>
 
                         <button
@@ -297,7 +337,7 @@ export const OwnerStaffManagement: React.FC<OwnerStaffManagementProps> = ({ curr
                             setResetTarget(staff);
                             setNewPassword('');
                           }}
-                          className="h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center"
+                          className="h-8 w-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center shrink-0 border border-slate-200"
                           title="Cấp lại mật khẩu"
                         >
                           <span className="material-symbols-outlined text-[16px]">key</span>
@@ -306,7 +346,7 @@ export const OwnerStaffManagement: React.FC<OwnerStaffManagementProps> = ({ curr
                         <button
                           type="button"
                           onClick={() => handleDelete(staff)}
-                          className="h-8 w-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer flex items-center justify-center"
+                          className="h-8 w-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer flex items-center justify-center shrink-0 border border-transparent hover:border-rose-100"
                           title="Xóa nhân viên"
                         >
                           <span className="material-symbols-outlined text-[18px]">delete</span>

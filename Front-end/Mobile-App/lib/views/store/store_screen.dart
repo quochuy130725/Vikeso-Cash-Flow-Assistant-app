@@ -963,6 +963,17 @@ class _StoreScreenState extends State<StoreScreen> with WidgetsBindingObserver {
     );
   }
 
+  String _formatPhoneNumber(String? phone) {
+    if (phone == null || phone.isEmpty) return '';
+    final cleaned = phone.replaceAll(RegExp(r'\D'), '');
+    if (cleaned.length == 10) {
+      return '${cleaned.substring(0, 4)} ${cleaned.substring(4, 7)} ${cleaned.substring(7)}';
+    } else if (cleaned.length == 11) {
+      return '${cleaned.substring(0, 4)} ${cleaned.substring(4, 7)} ${cleaned.substring(7)}';
+    }
+    return phone;
+  }
+
   void _showBranchSwitcherSheet() {
     showModalBottomSheet(
       context: context,
@@ -1015,7 +1026,7 @@ class _StoreScreenState extends State<StoreScreen> with WidgetsBindingObserver {
                       ? const Color(0xFFFFF0F5)
                       : isPending
                           ? const Color(0xFFFFFBEB)
-                          : const Color(0xFFF8FAFC),
+                          : Colors.white,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: isSelected
@@ -1023,65 +1034,271 @@ class _StoreScreenState extends State<StoreScreen> with WidgetsBindingObserver {
                         : isPending
                             ? const Color(0xFFFDE68A)
                             : const Color(0xFFE2E8F0),
-                    width: 1.4,
+                    width: isSelected ? 1.5 : 1.2,
                   ),
-                ),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.storefront_rounded,
-                    color: isPending ? const Color(0xFFD97706) : const Color(0xFFFF4783),
-                  ),
-                  title: Text(
-                    b['name'] ?? 'Chi nhánh chính',
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF0F172A)),
-                  ),
-                  subtitle: Text(
-                    isPending
-                        ? 'Hồ sơ đang chờ Ban Quản Trị thẩm định chứng từ'
-                        : (b['address'] ?? 'Đang hoạt động'),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isPending ? const Color(0xFFB45309) : const Color(0xFF64748B),
-                    ),
-                  ),
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-                    decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
                       color: isSelected
-                          ? const Color(0xFFD0F81B)
-                          : isPending
-                              ? const Color(0xFFFEF3C7)
-                              : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFF0F172A)
-                            : isPending
-                                ? const Color(0xFFF59E0B)
-                                : const Color(0xFFCBD5E1),
-                      ),
+                          ? const Color(0x14FF4783)
+                          : const Color(0x080F172A),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
                     ),
-                    child: Text(
-                      isSelected
-                          ? 'ĐANG CHỌN'
-                          : isPending
-                              ? 'CHỜ DUYỆT'
-                              : 'CHUYỂN',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        color: isSelected
-                            ? const Color(0xFF0F172A)
-                            : isPending
-                                ? const Color(0xFF92400E)
-                                : const Color(0xFF475569),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _handleSelectBranch(i, b);
+                    },
+                    borderRadius: BorderRadius.circular(14),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? const Color(0x1FFF4783)
+                                      : (isPending ? const Color(0xFFFEF3C7) : const Color(0xFFF1F5F9)),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color(0x40FF4783)
+                                        : (isPending ? const Color(0xFFFDE68A) : const Color(0xFFCBD5E1)),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.storefront_rounded,
+                                  color: isPending
+                                      ? const Color(0xFFD97706)
+                                      : (isSelected ? const Color(0xFFFF4783) : const Color(0xFF64748B)),
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      b['name'] ?? 'Chi nhánh chính',
+                                      style: const TextStyle(
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF0F172A),
+                                        letterSpacing: -0.2,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? const Color(0xB3FFFFFF)
+                                            : const Color(0xFFF1F5F9),
+                                        borderRadius: BorderRadius.circular(5),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? const Color(0x40FF4783)
+                                              : const Color(0xFFE2E8F0),
+                                          width: 0.7,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        b['type'] ?? 'Hộ kinh doanh',
+                                        style: const TextStyle(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFF64748B),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                constraints: const BoxConstraints(minWidth: 72),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? const Color(0xFFD0F81B)
+                                      : isPending
+                                          ? const Color(0xFFFEF3C7)
+                                          : Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color(0xFF0F172A)
+                                        : isPending
+                                            ? const Color(0xFFF59E0B)
+                                            : const Color(0xFFCBD5E1),
+                                    width: isSelected ? 1.2 : 1,
+                                  ),
+                                  boxShadow: isSelected
+                                      ? const [
+                                          BoxShadow(
+                                            color: Color(0xFF0F172A),
+                                            offset: Offset(1.5, 1.5),
+                                            blurRadius: 0,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Text(
+                                  isSelected
+                                      ? 'ĐANG CHỌN'
+                                      : isPending
+                                          ? 'CHỜ DUYỆT'
+                                          : 'CHUYỂN',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    color: isSelected
+                                        ? const Color(0xFF0F172A)
+                                        : isPending
+                                            ? const Color(0xFF92400E)
+                                            : const Color(0xFF475569),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xD9FFFFFF)
+                                  : isPending
+                                      ? const Color(0x99FFFFFF)
+                                      : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(0xFFFFD1DC)
+                                    : isPending
+                                        ? const Color(0xFFFDE68A)
+                                        : const Color(0xFFE2E8F0),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    if (b['phone'] != null && b['phone']!.isNotEmpty)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                        decoration: BoxDecoration(
+                                          color: isSelected ? const Color(0xFFFFE8F0) : Colors.white,
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(
+                                            color: isSelected ? const Color(0xFFFFB3CA) : const Color(0xFFCBD5E1),
+                                            width: 0.8,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.phone_rounded,
+                                              size: 11,
+                                              color: isSelected ? const Color(0xFFFF4783) : const Color(0xFF475569),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _formatPhoneNumber(b['phone']),
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w700,
+                                                color: isSelected ? const Color(0xFFFF4783) : const Color(0xFF1E293B),
+                                                letterSpacing: 0.4,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    else
+                                      const SizedBox.shrink(),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: BoxDecoration(
+                                            color: isPending ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          isPending ? 'Chờ duyệt' : 'Đang hoạt động',
+                                          style: TextStyle(
+                                            fontSize: 10.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: isPending ? const Color(0xFFB45309) : const Color(0xFF059669),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 1.5),
+                                      child: Icon(
+                                        isPending ? Icons.info_outline_rounded : Icons.location_on_outlined,
+                                        size: 13,
+                                        color: isPending ? const Color(0xFFD97706) : const Color(0xFF64748B),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Expanded(
+                                      child: Text(
+                                        isPending
+                                            ? 'Hồ sơ đang chờ Ban Quản Trị thẩm định chứng từ'
+                                            : (b['address'] ?? 'Đang hoạt động'),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: isPending ? const Color(0xFFB45309) : const Color(0xFF475569),
+                                          height: 1.35,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _handleSelectBranch(i, b);
-                  },
                 ),
               );
             }),
@@ -1188,97 +1405,281 @@ class _StoreScreenState extends State<StoreScreen> with WidgetsBindingObserver {
               final isPending = b['status'] == 'PENDING' || b['statusLabel'] == 'Chờ Admin duyệt';
 
               return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? const Color(0xFFFFF0F5)
                       : isPending
                           ? const Color(0xFFFFFBEB)
-                          : const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(12),
+                          : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: isSelected
                         ? const Color(0xFFFF4783)
                         : isPending
                             ? const Color(0xFFFDE68A)
                             : const Color(0xFFE2E8F0),
-                    width: 1.2,
+                    width: isSelected ? 1.5 : 1.2,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isSelected
+                          ? const Color(0x14FF4783)
+                          : const Color(0x080F172A),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                child: InkWell(
-                  onTap: () => _handleSelectBranch(i, b),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.storefront_rounded,
-                        color: isPending
-                            ? const Color(0xFFD97706)
-                            : (isSelected ? const Color(0xFFFF4783) : const Color(0xFF64748B)),
-                        size: 22,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              b['name'] ?? 'Chi nhánh',
-                              style: const TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F172A),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _handleSelectBranch(i, b),
+                    borderRadius: BorderRadius.circular(14),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? const Color(0x1FFF4783)
+                                      : (isPending ? const Color(0xFFFEF3C7) : const Color(0xFFF1F5F9)),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color(0x40FF4783)
+                                        : (isPending ? const Color(0xFFFDE68A) : const Color(0xFFCBD5E1)),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.storefront_rounded,
+                                  color: isPending
+                                      ? const Color(0xFFD97706)
+                                      : (isSelected ? const Color(0xFFFF4783) : const Color(0xFF64748B)),
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      b['name'] ?? 'Chi nhánh',
+                                      style: const TextStyle(
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF0F172A),
+                                        letterSpacing: -0.2,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? const Color(0xB3FFFFFF)
+                                            : const Color(0xFFF1F5F9),
+                                        borderRadius: BorderRadius.circular(5),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? const Color(0x40FF4783)
+                                              : const Color(0xFFE2E8F0),
+                                          width: 0.7,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        b['type'] ?? 'Hộ kinh doanh',
+                                        style: const TextStyle(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFF64748B),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                constraints: const BoxConstraints(minWidth: 72),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? const Color(0xFFD0F81B)
+                                      : isPending
+                                          ? const Color(0xFFFEF3C7)
+                                          : Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color(0xFF0F172A)
+                                        : isPending
+                                            ? const Color(0xFFF59E0B)
+                                            : const Color(0xFFCBD5E1),
+                                    width: isSelected ? 1.2 : 1,
+                                  ),
+                                  boxShadow: isSelected
+                                      ? const [
+                                          BoxShadow(
+                                            color: Color(0xFF0F172A),
+                                            offset: Offset(1.5, 1.5),
+                                            blurRadius: 0,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Text(
+                                  isSelected
+                                      ? 'ĐANG CHỌN'
+                                      : isPending
+                                          ? 'CHỜ ADMIN DUYỆT'
+                                          : 'CHUYỂN',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    color: isSelected
+                                        ? const Color(0xFF0F172A)
+                                        : isPending
+                                            ? const Color(0xFF92400E)
+                                            : const Color(0xFF475569),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xD9FFFFFF)
+                                  : isPending
+                                      ? const Color(0x99FFFFFF)
+                                      : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(0xFFFFD1DC)
+                                    : isPending
+                                        ? const Color(0xFFFDE68A)
+                                        : const Color(0xFFE2E8F0),
+                                width: 0.8,
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              isPending
-                                  ? 'Hồ sơ đang chờ Ban Quản Trị thẩm định chứng từ'
-                                  : '${b['type'] ?? 'Hộ kinh doanh'}${(b['phone'] != null && b['phone']!.isNotEmpty) ? ' • Hotline: ${b['phone']}' : ''} • ${b['address'] ?? 'Đang hoạt động'}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isPending ? const Color(0xFFB45309) : const Color(0xFF64748B),
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    if (b['phone'] != null && b['phone']!.isNotEmpty)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                        decoration: BoxDecoration(
+                                          color: isSelected ? const Color(0xFFFFE8F0) : Colors.white,
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(
+                                            color: isSelected ? const Color(0xFFFFB3CA) : const Color(0xFFCBD5E1),
+                                            width: 0.8,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.phone_rounded,
+                                              size: 11,
+                                              color: isSelected ? const Color(0xFFFF4783) : const Color(0xFF475569),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _formatPhoneNumber(b['phone']),
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w700,
+                                                color: isSelected ? const Color(0xFFFF4783) : const Color(0xFF1E293B),
+                                                letterSpacing: 0.4,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    else
+                                      const SizedBox.shrink(),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: BoxDecoration(
+                                            color: isPending ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          isPending ? 'Chờ duyệt' : 'Đang hoạt động',
+                                          style: TextStyle(
+                                            fontSize: 10.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: isPending ? const Color(0xFFB45309) : const Color(0xFF059669),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 1.5),
+                                      child: Icon(
+                                        isPending ? Icons.info_outline_rounded : Icons.location_on_outlined,
+                                        size: 13,
+                                        color: isPending ? const Color(0xFFD97706) : const Color(0xFF64748B),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Expanded(
+                                      child: Text(
+                                        isPending
+                                            ? 'Hồ sơ đang chờ Ban Quản Trị thẩm định chứng từ'
+                                            : (b['address'] ?? 'Đang hoạt động'),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: isPending ? const Color(0xFFB45309) : const Color(0xFF475569),
+                                          height: 1.35,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFFD0F81B)
-                              : isPending
-                                  ? const Color(0xFFFEF3C7)
-                                  : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: isSelected
-                                ? const Color(0xFF0F172A)
-                                : isPending
-                                    ? const Color(0xFFF59E0B)
-                                    : const Color(0xFFCBD5E1),
                           ),
-                        ),
-                        child: Text(
-                          isSelected
-                              ? 'ĐANG CHỌN'
-                              : isPending
-                                  ? 'CHỜ ADMIN DUYỆT'
-                                  : 'CHUYỂN',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: isSelected
-                                ? const Color(0xFF0F172A)
-                                : isPending
-                                    ? const Color(0xFF92400E)
-                                    : const Color(0xFF475569),
-                          ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               );
