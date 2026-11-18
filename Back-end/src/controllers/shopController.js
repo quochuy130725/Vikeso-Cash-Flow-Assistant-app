@@ -5,37 +5,209 @@ const { seedDefaultCategories } = require('../services/categoryService');
 const { emitToUser } = require('../socket');
 
 /**
- * POST /api/shops/onboarding
+ * Helper: Kiểm tra chống trùng Mã số thuế (taxCode) & Số CCCD (ownerCccd)
+ * - Chống trùng MST: Nếu có cửa hàng khác (_id != excludeShopId) đang APPROVED có cùng taxCode -> 409 TAX_CODE_ALREADY_EXISTS
+ *   Hỗ trợ Multi-Branch cùng MST cha cho cùng 1 ownerId nếu có hậu tố mã chi nhánh (VD: 0312345678-001).
+ *   Nếu MST cha (10 số đầu) đã thuộc về một ownerId KHÁC đang APPROVED -> 409 TAX_CODE_ALREADY_EXISTS.
+ * - Chống trùng CCCD: Nếu ownerCccd đã được xác thực (APPROVED) cho một chủ hộ khác (ownerId != userId) -> 409 CCCD_ALREADY_EXISTS.
+ */
+async function validateTaxAndCccd({ taxCode, ownerCccd, userId, excludeShopId = null }) {
+  if (taxCode && String(taxCode).trim()) {
+    const trimmedTax = String(taxCode).trim();
+    const excludeFilter = excludeShopId ? { _id: { $ne: excludeShopId } } : {};
+
+    // 1. Trùng chính xác taxCode với bất kỳ shop APPROVED nào khác
+    const exactConflict = await Shop.findOne({
+      ...excludeFilter,
+      taxCode: trimmedTax,
+      approvalStatus: 'APPROVED',
+    }).lean();
+
+    if (exactConflict) {
+      return {
+        status: 409,
+        code: 'TAX_CODE_ALREADY_EXISTS',
+        message: 'Mã số thuế này đã được đăng ký trên hệ thống.',
+      };
+    }
+
+    // 2. Nếu nhập mã chi nhánh (VD: 0312345678-001), kiểm tra xem MST gốc 10 số có thuộc về chủ hộ khác đang APPROVED không
+    const baseTaxCode = trimmedTax.split('-')[0].trim();
+    if (baseTaxCode && baseTaxCode !== trimmedTax) {
+      const parentConflictOtherOwner = await Shop.findOne({
+        ...excludeFilter,
+        ownerId: { $ne: userId },
+        taxCode: baseTaxCode,
+        approvalStatus: 'APPROVED',
+      }).lean();
+
+      if (parentConflictOtherOwner) {
+        return {
+          status: 409,
+          code: 'TAX_CODE_ALREADY_EXISTS',
+          message: 'Mã số thuế này đã được đăng ký trên hệ thống.',
+        };
+      }
+    }
+  }
+
+  if (ownerCccd && String(ownerCccd).trim()) {
+    const trimmedCccd = String(ownerCccd).trim();
+    const excludeFilter = excludeShopId ? { _id: { $ne: excludeShopId } } : {};
+
+    const cccdConflict = await Shop.findOne({
+      ...excludeFilter,
+      ownerId: { $ne: userId },
+      ownerCccd: trimmedCccd,
+      approvalStatus: 'APPROVED',
+    }).lean();
+
+    if (cccdConflict) {
+      return {
+        status: 409,
+        code: 'CCCD_ALREADY_EXISTS',
+        message: 'Số CCCD này đã được xác thực cho chủ tiệm khác.',
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Helper: Chuẩn hóa mảng ảnh chứng từ KYC để tương thích ngược giữa licenseImageUrls, cccdFrontUrl, cccdBackUrl và verificationDocs
+ */
+function normalizeKycDocs(body, existingShop = null) {
+  const hasLicenseArr = Array.isArray(body.licenseImageUrls);
+  const hasLegacyDocs = Array.isArray(body.verificationDocs) || Array.isArray(body.documentUrls);
+
+  const licenseImageUrls = hasLicenseArr
+    ? body.licenseImageUrls.filter(Boolean)
+    : hasLegacyDocs
+      ? (body.verificationDocs || body.documentUrls).filter(Boolean)
+      : existingShop
+        ? existingShop.licenseImageUrls || []
+        : [];
+
+  const cccdFrontUrl =
+    body.cccdFrontUrl !== undefined
+      ? String(body.cccdFrontUrl || '').trim()
+      : existingShop
+        ? existingShop.cccdFrontUrl || ''
+        : '';
+
+  const cccdBackUrl =
+    body.cccdBackUrl !== undefined
+      ? String(body.cccdBackUrl || '').trim()
+      : existingShop
+        ? existingShop.cccdBackUrl || ''
+        : '';
+
+  let verificationDocs = hasLegacyDocs
+    ? (body.verificationDocs || body.documentUrls).filter(Boolean)
+    : existingShop
+      ? existingShop.verificationDocs || []
+      : [];
+
+  if (verificationDocs.length === 0 && (licenseImageUrls.length > 0 || cccdFrontUrl || cccdBackUrl)) {
+    verificationDocs = [...licenseImageUrls, cccdFrontUrl, cccdBackUrl].filter(Boolean);
+  }
+
+  return {
+    licenseImageUrls,
+    cccdFrontUrl,
+    cccdBackUrl,
+    verificationDocs,
+  };
+}
+
+/**
+ * API 1: POST /api/shops/onboarding
  * Dành cho Owner vừa xác thực OTP xong để tạo cửa hàng đầu tiên (isPrimary: true, APPROVED)
  */
 exports.onboardingShop = async (req, res) => {
   try {
     const userId = req.user?.userId || req.user?.id;
-    const { shopName, businessType, address, phone } = req.body;
+    const {
+      shopName,
+      businessType,
+      taxCode,
+      legalOwnerName,
+      ownerCccd,
+      address,
+      registeredAddress,
+      invoiceAddress,
+      phone,
+    } = req.body;
 
-    if (!shopName || !shopName.trim()) {
+    if (!shopName || !String(shopName).trim()) {
       return res.status(400).json({ success: false, message: 'Vui lòng nhập tên cửa hàng.' });
     }
 
-    const trimmedShopName = shopName.trim();
+    const trimmedShopName = String(shopName).trim();
 
     // Kiểm tra xem user đã có shop chính chưa
     let shop = await Shop.findOne({ ownerId: userId, isPrimary: true });
+
+    const validationError = await validateTaxAndCccd({
+      taxCode,
+      ownerCccd,
+      userId,
+      excludeShopId: shop?._id || null,
+    });
+    if (validationError) {
+      return res.status(validationError.status).json({
+        success: false,
+        code: validationError.code,
+        message: validationError.message,
+      });
+    }
+
+    const kyc = normalizeKycDocs(req.body, shop);
+    const trimmedAddress = address !== undefined ? String(address).trim() : shop?.address || '';
+    const trimmedRegAddress =
+      registeredAddress !== undefined
+        ? String(registeredAddress).trim()
+        : shop?.registeredAddress || trimmedAddress;
+    const trimmedInvAddress =
+      invoiceAddress !== undefined
+        ? String(invoiceAddress).trim()
+        : shop?.invoiceAddress || trimmedAddress;
+
     if (!shop) {
       shop = await Shop.create({
         ownerId: userId,
         shopName: trimmedShopName,
-        businessType: businessType || 'Hộ kinh doanh bán lẻ',
-        address: address || '',
-        phone: phone || '',
+        businessType: businessType ? String(businessType).trim() : 'Hộ kinh doanh bán lẻ',
+        taxCode: taxCode ? String(taxCode).trim() : '',
+        legalOwnerName: legalOwnerName ? String(legalOwnerName).trim() : '',
+        ownerCccd: ownerCccd ? String(ownerCccd).trim() : '',
+        address: trimmedAddress,
+        registeredAddress: trimmedRegAddress,
+        invoiceAddress: trimmedInvAddress,
+        phone: phone ? String(phone).trim() : '',
         isPrimary: true,
+        licenseImageUrls: kyc.licenseImageUrls,
+        cccdFrontUrl: kyc.cccdFrontUrl,
+        cccdBackUrl: kyc.cccdBackUrl,
+        verificationDocs: kyc.verificationDocs,
         approvalStatus: 'APPROVED',
       });
     } else {
       shop.shopName = trimmedShopName;
-      if (businessType) shop.businessType = businessType;
-      if (address) shop.address = address;
-      if (phone) shop.phone = phone;
+      if (businessType !== undefined) shop.businessType = String(businessType).trim() || 'Hộ kinh doanh bán lẻ';
+      if (taxCode !== undefined) shop.taxCode = String(taxCode).trim();
+      if (legalOwnerName !== undefined) shop.legalOwnerName = String(legalOwnerName).trim();
+      if (ownerCccd !== undefined) shop.ownerCccd = String(ownerCccd).trim();
+      if (address !== undefined) shop.address = trimmedAddress;
+      if (registeredAddress !== undefined) shop.registeredAddress = trimmedRegAddress;
+      if (invoiceAddress !== undefined) shop.invoiceAddress = trimmedInvAddress;
+      if (phone !== undefined) shop.phone = String(phone).trim();
+      shop.licenseImageUrls = kyc.licenseImageUrls;
+      shop.cccdFrontUrl = kyc.cccdFrontUrl;
+      shop.cccdBackUrl = kyc.cccdBackUrl;
+      shop.verificationDocs = kyc.verificationDocs;
+      shop.approvalStatus = 'APPROVED';
       await shop.save();
     }
 
@@ -59,16 +231,18 @@ exports.onboardingShop = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Khởi tạo cửa hàng đầu tiên thành công!',
+      message: 'Khởi tạo cửa hàng thành công!',
       data: shop,
-      userInfo: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        shopName: user.shopName,
-        activeShopId: user.activeShopId,
-        onboardingCompleted: user.onboardingCompleted,
-      },
+      userInfo: user
+        ? {
+            id: user._id,
+            email: user.email,
+            name: user.name,
+            shopName: user.shopName,
+            activeShopId: user.activeShopId,
+            onboardingCompleted: user.onboardingCompleted,
+          }
+        : undefined,
     });
   } catch (error) {
     console.error('Lỗi onboarding-shop:', error);
@@ -97,32 +271,85 @@ exports.listShops = async (req, res) => {
 
 /**
  * POST /api/shops
- * Đăng ký thêm cửa hàng/chi nhánh thứ 2 trở đi (Bắt buộc verificationDocs >= 1, PENDING)
+ * Đăng ký thêm cửa hàng/chi nhánh thứ 2 trở đi (Kiểm tra giới hạn gói FREE/PRO, chống trùng MST/CCCD, PENDING)
  */
 exports.createAdditionalShop = async (req, res) => {
   try {
     const userId = req.user?.userId || req.user?.id;
-    const { shopName, businessType, address, phone, verificationDocs } = req.body;
+    const {
+      shopName,
+      businessType,
+      taxCode,
+      legalOwnerName,
+      ownerCccd,
+      address,
+      registeredAddress,
+      invoiceAddress,
+      phone,
+    } = req.body;
 
-    if (!shopName || !shopName.trim()) {
+    if (!shopName || !String(shopName).trim()) {
       return res.status(400).json({ success: false, message: 'Vui lòng nhập tên chi nhánh mới.' });
     }
 
-    if (!Array.isArray(verificationDocs) || verificationDocs.length === 0) {
-      return res.status(400).json({
+    // Kiểm tra Giới hạn Gói cước (Tier Limits): Nếu là FREE và đã có từ 1 shop trở lên -> 403 TIER_SHOP_LIMIT_EXCEEDED
+    const [ownerUser, existingShopCount] = await Promise.all([
+      User.findById(userId).lean(),
+      Shop.countDocuments({ ownerId: userId }),
+    ]);
+
+    const userPlan = ownerUser?.subscriptionPlan || 'FREE';
+    if (userPlan === 'FREE' && ownerUser?.role !== 'ADMIN' && existingShopCount >= 1) {
+      return res.status(403).json({
         success: false,
-        message: 'Bắt buộc đính kèm ít nhất 1 ảnh chứng từ (giấy phép kinh doanh, hợp đồng thuê mặt bằng hoặc ảnh cửa hàng).',
+        code: 'TIER_SHOP_LIMIT_EXCEEDED',
+        message: 'Nâng cấp gói PRO để quản lý chuỗi nhiều cửa hàng.',
       });
     }
 
+    // Kiểm tra chống trùng MST & CCCD
+    const validationError = await validateTaxAndCccd({
+      taxCode,
+      ownerCccd,
+      userId,
+      excludeShopId: null,
+    });
+    if (validationError) {
+      return res.status(validationError.status).json({
+        success: false,
+        code: validationError.code,
+        message: validationError.message,
+      });
+    }
+
+    // Kiểm tra chứng từ xác thực (KYC)
+    const kyc = normalizeKycDocs(req.body, null);
+    if (kyc.verificationDocs.length === 0) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_DOCUMENT_DATA',
+        message: 'Vui lòng đính kèm đủ ảnh giấy phép và CCCD 2 mặt.',
+      });
+    }
+
+    const trimmedAddress = address ? String(address).trim() : '';
+
     const newShop = await Shop.create({
       ownerId: userId,
-      shopName: shopName.trim(),
-      businessType: businessType || 'Hộ kinh doanh bán lẻ',
-      address: address || '',
-      phone: phone || '',
-      isPrimary: false,
-      verificationDocs,
+      shopName: String(shopName).trim(),
+      businessType: businessType ? String(businessType).trim() : 'Hộ kinh doanh bán lẻ',
+      taxCode: taxCode ? String(taxCode).trim() : '',
+      legalOwnerName: legalOwnerName ? String(legalOwnerName).trim() : ownerUser?.name || '',
+      ownerCccd: ownerCccd ? String(ownerCccd).trim() : '',
+      address: trimmedAddress,
+      registeredAddress: registeredAddress ? String(registeredAddress).trim() : trimmedAddress,
+      invoiceAddress: invoiceAddress ? String(invoiceAddress).trim() : trimmedAddress,
+      phone: phone ? String(phone).trim() : '',
+      isPrimary: existingShopCount === 0,
+      licenseImageUrls: kyc.licenseImageUrls,
+      cccdFrontUrl: kyc.cccdFrontUrl,
+      cccdBackUrl: kyc.cccdBackUrl,
+      verificationDocs: kyc.verificationDocs,
       approvalStatus: 'PENDING',
     });
 
@@ -147,6 +374,10 @@ exports.switchShop = async (req, res) => {
   try {
     const userId = req.user?.userId || req.user?.id;
     const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'ID cửa hàng không hợp lệ.' });
+    }
 
     const shop = await Shop.findOne({ _id: id, ownerId: userId });
     if (!shop) {
@@ -179,14 +410,24 @@ exports.switchShop = async (req, res) => {
 };
 
 /**
- * PUT /api/shops/:id
- * Cập nhật thông tin chi tiết của một cửa hàng (Tên, Hotline, Loại hình, Địa chỉ)
+ * API 2: PUT /api/shops/:id
+ * Cập nhật thông tin chi tiết của một cửa hàng (Hỗ trợ gửi từng phần hoặc toàn bộ)
  */
 exports.updateShopDetails = async (req, res) => {
   try {
     const userId = req.user?.userId || req.user?.id;
     const { id } = req.params;
-    const { shopName, businessType, address, phone } = req.body;
+    const {
+      shopName,
+      businessType,
+      taxCode,
+      legalOwnerName,
+      ownerCccd,
+      address,
+      registeredAddress,
+      invoiceAddress,
+      phone,
+    } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: 'ID cửa hàng không hợp lệ.' });
@@ -195,6 +436,21 @@ exports.updateShopDetails = async (req, res) => {
     const shop = await Shop.findOne({ _id: id, ownerId: userId });
     if (!shop) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy cửa hàng thuộc quyền sở hữu của bạn.' });
+    }
+
+    // Kiểm tra chống trùng MST & CCCD
+    const validationError = await validateTaxAndCccd({
+      taxCode: taxCode !== undefined ? taxCode : shop.taxCode,
+      ownerCccd: ownerCccd !== undefined ? ownerCccd : shop.ownerCccd,
+      userId,
+      excludeShopId: shop._id,
+    });
+    if (validationError) {
+      return res.status(validationError.status).json({
+        success: false,
+        code: validationError.code,
+        message: validationError.message,
+      });
     }
 
     if (shopName !== undefined) {
@@ -207,11 +463,41 @@ exports.updateShopDetails = async (req, res) => {
     if (businessType !== undefined) {
       shop.businessType = String(businessType).trim() || shop.businessType;
     }
+    if (taxCode !== undefined) {
+      shop.taxCode = String(taxCode).trim();
+    }
+    if (legalOwnerName !== undefined) {
+      shop.legalOwnerName = String(legalOwnerName).trim();
+    }
+    if (ownerCccd !== undefined) {
+      shop.ownerCccd = String(ownerCccd).trim();
+    }
     if (address !== undefined) {
       shop.address = String(address).trim();
     }
+    if (registeredAddress !== undefined) {
+      shop.registeredAddress = String(registeredAddress).trim();
+    }
+    if (invoiceAddress !== undefined) {
+      shop.invoiceAddress = String(invoiceAddress).trim();
+    }
     if (phone !== undefined) {
       shop.phone = String(phone).trim();
+    }
+
+    // Cập nhật ảnh KYC nếu có gửi lên
+    if (
+      req.body.licenseImageUrls !== undefined ||
+      req.body.cccdFrontUrl !== undefined ||
+      req.body.cccdBackUrl !== undefined ||
+      req.body.verificationDocs !== undefined ||
+      req.body.documentUrls !== undefined
+    ) {
+      const kyc = normalizeKycDocs(req.body, shop);
+      shop.licenseImageUrls = kyc.licenseImageUrls;
+      shop.cccdFrontUrl = kyc.cccdFrontUrl;
+      shop.cccdBackUrl = kyc.cccdBackUrl;
+      shop.verificationDocs = kyc.verificationDocs;
     }
 
     await shop.save();
@@ -245,3 +531,113 @@ exports.updateShopDetails = async (req, res) => {
   }
 };
 
+/**
+ * API 3: POST /api/shops/:id/resubmit
+ * Chủ shop nộp lại hồ sơ sau khi bị Admin từ chối (REJECTED -> PENDING, xóa rejectionReason)
+ */
+exports.resubmitShop = async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.user?.id;
+    const { id } = req.params;
+    const {
+      shopName,
+      businessType,
+      taxCode,
+      legalOwnerName,
+      ownerCccd,
+      address,
+      registeredAddress,
+      invoiceAddress,
+      phone,
+    } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'ID cửa hàng không hợp lệ.' });
+    }
+
+    const shop = await Shop.findOne({ _id: id, ownerId: userId });
+    if (!shop) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy cửa hàng thuộc quyền sở hữu của bạn.' });
+    }
+
+    // Kiểm tra chống trùng MST & CCCD
+    const validationError = await validateTaxAndCccd({
+      taxCode: taxCode !== undefined ? taxCode : shop.taxCode,
+      ownerCccd: ownerCccd !== undefined ? ownerCccd : shop.ownerCccd,
+      userId,
+      excludeShopId: shop._id,
+    });
+    if (validationError) {
+      return res.status(validationError.status).json({
+        success: false,
+        code: validationError.code,
+        message: validationError.message,
+      });
+    }
+
+    if (shopName !== undefined && String(shopName).trim()) {
+      shop.shopName = String(shopName).trim();
+    }
+    if (businessType !== undefined && String(businessType).trim()) {
+      shop.businessType = String(businessType).trim();
+    }
+    if (taxCode !== undefined) {
+      shop.taxCode = String(taxCode).trim();
+    }
+    if (legalOwnerName !== undefined) {
+      shop.legalOwnerName = String(legalOwnerName).trim();
+    }
+    if (ownerCccd !== undefined) {
+      shop.ownerCccd = String(ownerCccd).trim();
+    }
+    if (address !== undefined) {
+      shop.address = String(address).trim();
+    }
+    if (registeredAddress !== undefined) {
+      shop.registeredAddress = String(registeredAddress).trim();
+    }
+    if (invoiceAddress !== undefined) {
+      shop.invoiceAddress = String(invoiceAddress).trim();
+    }
+    if (phone !== undefined) {
+      shop.phone = String(phone).trim();
+    }
+
+    const kyc = normalizeKycDocs(req.body, shop);
+    if (kyc.verificationDocs.length === 0) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_DOCUMENT_DATA',
+        message: 'Vui lòng đính kèm đủ ảnh giấy phép và CCCD 2 mặt.',
+      });
+    }
+
+    shop.licenseImageUrls = kyc.licenseImageUrls;
+    shop.cccdFrontUrl = kyc.cccdFrontUrl;
+    shop.cccdBackUrl = kyc.cccdBackUrl;
+    shop.verificationDocs = kyc.verificationDocs;
+
+    // Chuyển trạng thái về PENDING và xóa lý do từ chối cũ
+    shop.approvalStatus = 'PENDING';
+    shop.rejectionReason = '';
+    await shop.save();
+
+    console.log(`🔄 Chủ shop nộp lại hồ sơ cửa hàng: ${shop.shopName} (Shop ID: ${shop._id})`);
+
+    emitToUser(userId, 'shop_status_updated', {
+      shopId: shop._id,
+      shopName: shop.shopName,
+      status: shop.approvalStatus,
+      rejectionReason: '',
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Đã nộp lại hồ sơ thành công! Vui lòng chờ Admin duyệt lại.',
+      data: shop,
+    });
+  } catch (error) {
+    console.error('Lỗi resubmit-shop:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};

@@ -85,7 +85,7 @@ class _ThuChiScreenState extends State<ThuChiScreen>
       List<Map<String, dynamic>> base = List.from(_allTransactions);
       if (_filterByMonth) {
         base = base.where((tx) {
-          final dt = _parseDate(tx['transactionDate'])?.toLocal();
+          final dt = _parseDate(tx['transactionDate']);
           if (dt == null) return true;
           return dt.month == _selectedMonth && dt.year == _selectedYear;
         }).toList();
@@ -144,13 +144,17 @@ class _ThuChiScreenState extends State<ThuChiScreen>
 
   DateTime? _parseDate(dynamic dateVal) {
     if (dateVal == null) return null;
-    if (dateVal is DateTime) return dateVal;
-    if (dateVal is Map) {
-      if (dateVal.containsKey(r'$date')) {
-        return DateTime.tryParse(dateVal[r'$date'].toString());
-      }
+    if (dateVal is DateTime) {
+      return DateTime(dateVal.year, dateVal.month, dateVal.day, dateVal.hour, dateVal.minute, dateVal.second);
     }
-    return DateTime.tryParse(dateVal.toString());
+    String s = dateVal.toString();
+    if (dateVal is Map && dateVal.containsKey(r'$date')) {
+      s = dateVal[r'$date'].toString();
+    }
+    final dt = DateTime.tryParse(s);
+    if (dt == null) return null;
+
+    return DateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
   }
 
   String _formatCategoryName(String raw) {
@@ -192,7 +196,7 @@ class _ThuChiScreenState extends State<ThuChiScreen>
     final Map<String, List<Map<String, dynamic>>> groups = {};
 
     for (var tx in transactions) {
-      final tDate = _parseDate(tx['transactionDate'])?.toLocal();
+      final tDate = _parseDate(tx['transactionDate']);
       if (tDate == null) continue;
 
       final key = DateFormat('yyyy-MM-dd').format(tDate);
@@ -211,7 +215,7 @@ class _ThuChiScreenState extends State<ThuChiScreen>
     final reason = (tx['reason'] as String?)?.trim() ?? '';
     final rawCategory = tx['category'] as String? ?? 'Khac';
     final categoryName = _formatCategoryName(rawCategory);
-    final tDate = _parseDate(tx['transactionDate'])?.toLocal() ?? DateTime.now();
+    final tDate = _parseDate(tx['transactionDate']) ?? DateTime.now();
     final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(tDate);
     final receiptUrl = (tx['receiptUrl'] as String?)?.trim() ?? '';
 
@@ -780,7 +784,7 @@ class _ThuChiScreenState extends State<ThuChiScreen>
 
           final dateKey = sortedKeys[index];
           final txList = grouped[dateKey]!;
-          final sampleDate = _parseDate(txList.first['transactionDate'])?.toLocal() ?? DateTime.now();
+          final sampleDate = _parseDate(txList.first['transactionDate']) ?? DateTime.now();
           final headerText = _getDateHeader(sampleDate);
 
           final cardItems = txList.map((tx) {
@@ -790,7 +794,7 @@ class _ThuChiScreenState extends State<ThuChiScreen>
             final reason = (tx['reason'] as String?)?.trim() ?? '';
             final rawCategory = tx['category'] as String? ?? (isThu ? 'Bán hàng' : 'Chi phí khác');
             final categoryName = _formatCategoryName(rawCategory);
-            final tDate = _parseDate(tx['transactionDate'])?.toLocal() ?? DateTime.now();
+            final tDate = _parseDate(tx['transactionDate']) ?? DateTime.now();
             final timeStr = DateFormat('HH:mm').format(tDate);
             final note = tx['description'] ?? tx['shopName'] ?? '';
             final displayTitle = reason.isNotEmpty ? reason : (note.isNotEmpty ? note : categoryName);

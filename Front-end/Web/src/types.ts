@@ -85,21 +85,56 @@ export interface CategoryItem {
 
 export interface ShopBranch {
   id: string;
+  _id?: string;
   ownerId?: string;
   ownerName?: string;
   ownerEmail?: string;
   shopName: string;
   businessType: string;
+  taxCode?: string;
+  legalOwnerName?: string;
+  ownerCccd?: string;
   address: string;
+  registeredAddress?: string;
+  invoiceAddress?: string;
   phone?: string;
   isPrimary?: boolean;
   documentUrls?: string[];
   verificationDocs?: string[];
+  licenseImageUrls?: string[];
+  cccdFrontUrl?: string;
+  cccdBackUrl?: string;
   status: 'ACTIVE' | 'PENDING_APPROVAL' | 'REJECTED';
   approvalStatus?: 'APPROVED' | 'PENDING' | 'REJECTED';
   rejectionReason?: string;
   submittedAt?: string;
   createdAt?: string;
+}
+
+export type ShopApprovalStatus = 'APPROVED' | 'PENDING' | 'REJECTED';
+
+export interface Shop {
+  _id: string;
+  id?: string;
+  ownerId: string;
+  shopName: string;
+  businessType: string;
+  taxCode?: string;
+  legalOwnerName?: string;
+  ownerCccd?: string;
+  address: string;
+  registeredAddress?: string;
+  invoiceAddress?: string;
+  phone: string;
+  isPrimary: boolean;
+  approvalStatus: ShopApprovalStatus;
+  rejectionReason?: string;
+  licenseImageUrls?: string[];
+  cccdFrontUrl?: string;
+  cccdBackUrl?: string;
+  verificationDocs?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface BusinessHousehold {

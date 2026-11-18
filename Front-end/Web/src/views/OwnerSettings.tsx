@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   updateUserProfile,
   updateShopDetails,
+  resubmitShop,
   changeUserPassword,
   createBillingOrder,
   fetchUserShops,
@@ -37,6 +38,21 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
   const [activeStoreType, setActiveStoreType] = useState('Tạp hóa & Bán lẻ tiêu dùng');
   const [activeStoreStatus, setActiveStoreStatus] = useState('ACTIVE');
   const [isSavingStore, setIsSavingStore] = useState(false);
+
+  // KYC & Legal Information state (Mentor Requirements)
+  const [activeTaxCode, setActiveTaxCode] = useState('');
+  const [activeLegalOwnerName, setActiveLegalOwnerName] = useState('');
+  const [activeOwnerCccd, setActiveOwnerCccd] = useState('');
+  const [activeRegisteredAddress, setActiveRegisteredAddress] = useState('');
+  const [sameAsBusinessRegistered, setSameAsBusinessRegistered] = useState(true);
+  const [activeInvoiceAddress, setActiveInvoiceAddress] = useState('');
+  const [sameAsBusinessInvoice, setSameAsBusinessInvoice] = useState(true);
+  const [activeApprovalStatus, setActiveApprovalStatus] = useState<'APPROVED' | 'PENDING' | 'REJECTED'>('APPROVED');
+  const [activeRejectionReason, setActiveRejectionReason] = useState('');
+  const [licenseImageUrls, setLicenseImageUrls] = useState<string[]>([]);
+  const [cccdFrontUrl, setCccdFrontUrl] = useState('');
+  const [cccdBackUrl, setCccdBackUrl] = useState('');
+  const [isResubmitting, setIsResubmitting] = useState(false);
 
   // Password change form state
   const [oldPassword, setOldPassword] = useState('');
@@ -105,7 +121,10 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
       // Ưu tiên 1: Lấy đúng chi nhánh đang chọn theo activeShopId hoặc chi nhánh ACTIVE đầu tiên
       const activeShop =
         list.find((s) => savedActiveShopId && s.id === savedActiveShopId && s.status === 'ACTIVE') ||
-        list.find((s) => s.status === 'ACTIVE');
+        list.find((s) => s.status === 'ACTIVE') ||
+        list.find((s) => s.status === 'PENDING_APPROVAL') ||
+        list[0];
+
       if (activeShop) {
         setActiveStoreId(activeShop.id);
         setActiveStoreName(activeShop.shopName);
@@ -113,6 +132,26 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
         setActiveStoreAddress(activeShop.address || '');
         setActiveStoreType(activeShop.businessType || 'Tạp hóa & Bán lẻ tiêu dùng');
         setActiveStoreStatus(activeShop.status || 'ACTIVE');
+
+        // KYC & Pháp lý
+        setActiveTaxCode(activeShop.taxCode || '');
+        setActiveLegalOwnerName(activeShop.legalOwnerName || '');
+        setActiveOwnerCccd(activeShop.ownerCccd || '');
+        setActiveRegisteredAddress(activeShop.registeredAddress || activeShop.address || '');
+        setSameAsBusinessRegistered(!activeShop.registeredAddress || activeShop.registeredAddress === activeShop.address);
+        setActiveInvoiceAddress(activeShop.invoiceAddress || activeShop.address || '');
+        setSameAsBusinessInvoice(!activeShop.invoiceAddress || activeShop.invoiceAddress === activeShop.address);
+
+        const statusMapped = activeShop.approvalStatus || (activeShop.status === 'ACTIVE' ? 'APPROVED' : activeShop.status === 'REJECTED' ? 'REJECTED' : 'PENDING');
+        setActiveApprovalStatus(statusMapped);
+        setActiveRejectionReason(activeShop.rejectionReason || '');
+
+        const docs = activeShop.licenseImageUrls?.length
+          ? activeShop.licenseImageUrls
+          : (activeShop.verificationDocs || activeShop.documentUrls || []);
+        setLicenseImageUrls(docs);
+        setCccdFrontUrl(activeShop.cccdFrontUrl || '');
+        setCccdBackUrl(activeShop.cccdBackUrl || '');
 
         // Đồng bộ vào localStorage để header và toàn bộ trang cập nhật theo
         const saved = localStorage.getItem('vikeso_user');
@@ -133,22 +172,8 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           detail: { shopName: activeShop.shopName, activeShopId: activeShop.id }
         }));
       } else {
-        // Ưu tiên 2: Nếu chưa có cửa hàng nào được duyệt nhưng có hồ sơ đang chờ duyệt
-        const pendingShop = list.find((s) => s.status === 'PENDING_APPROVAL');
-        if (pendingShop) {
-          setActiveStoreId(pendingShop.id);
-          setActiveStoreName(pendingShop.shopName);
-          setActiveStorePhone(pendingShop.phone || '');
-          setActiveStoreAddress(pendingShop.address || '');
-          setActiveStoreType(pendingShop.businessType || 'Tạp hóa & Bán lẻ tiêu dùng');
-          setActiveStoreStatus(pendingShop.status || 'PENDING_APPROVAL');
-          window.dispatchEvent(new CustomEvent('vikeso_shop_updated', {
-            detail: { shopName: pendingShop.shopName, activeShopId: pendingShop.id }
-          }));
-        } else {
-          setActiveStoreId('');
-          setActiveStoreName(currentUser?.shopName || currentUser?.storeName || 'Chưa thiết lập cửa hàng');
-        }
+        setActiveStoreId('');
+        setActiveStoreName(currentUser?.shopName || currentUser?.storeName || 'Chưa thiết lập cửa hàng');
       }
     });
   }, [currentUser]);
@@ -212,7 +237,14 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
 
     setIsSavingStore(true);
     try {
-      let res: { success: boolean; data?: any; message?: string };
+      let res: { success: boolean; data?: any; message?: string; code?: string };
+
+      const finalRegisteredAddress = sameAsBusinessRegistered
+        ? activeStoreAddress.trim()
+        : activeRegisteredAddress.trim();
+      const finalInvoiceAddress = sameAsBusinessInvoice
+        ? activeStoreAddress.trim()
+        : activeInvoiceAddress.trim();
 
       if (targetShopId) {
         res = await updateShopDetails(targetShopId, {
@@ -220,6 +252,14 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           phone: activeStorePhone.trim(),
           businessType: activeStoreType,
           address: activeStoreAddress.trim(),
+          taxCode: activeTaxCode.trim(),
+          legalOwnerName: activeLegalOwnerName.trim(),
+          ownerCccd: activeOwnerCccd.trim(),
+          registeredAddress: finalRegisteredAddress,
+          invoiceAddress: finalInvoiceAddress,
+          licenseImageUrls,
+          cccdFrontUrl,
+          cccdBackUrl,
         });
       } else {
         res = await updateUserProfile({
@@ -227,16 +267,36 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
         });
       }
 
+      if (res.code === 'TAX_CODE_ALREADY_EXISTS') {
+        showToast('Mã số thuế này đã được đăng ký và xác thực trên hệ thống.', 'error');
+        return;
+      }
+      if (res.code === 'CCCD_ALREADY_EXISTS') {
+        showToast('Số CCCD này đã được xác thực cho chủ tiệm khác.', 'error');
+        return;
+      }
+      if (res.code === 'TIER_SHOP_LIMIT_EXCEEDED') {
+        setPackagePopupOpen(true);
+        showToast('Gói FREE chỉ được quản lý 1 cửa hàng. Vui lòng nâng cấp gói PRO!', 'error');
+        return;
+      }
+
       if (res.success) {
         const updatedShopName = res.data?.shopName || activeStoreName.trim();
         const updatedPhone = res.data?.phone ?? activeStorePhone.trim();
         const updatedType = res.data?.businessType ?? activeStoreType;
         const updatedAddress = res.data?.address ?? activeStoreAddress.trim();
+        const updatedTaxCode = res.data?.taxCode ?? activeTaxCode.trim();
+        const updatedLegalName = res.data?.legalOwnerName ?? activeLegalOwnerName.trim();
+        const updatedCccd = res.data?.ownerCccd ?? activeOwnerCccd.trim();
 
         setActiveStoreName(updatedShopName);
         setActiveStorePhone(updatedPhone);
         setActiveStoreType(updatedType);
         setActiveStoreAddress(updatedAddress);
+        setActiveTaxCode(updatedTaxCode);
+        setActiveLegalOwnerName(updatedLegalName);
+        setActiveOwnerCccd(updatedCccd);
 
         if (targetShopId) {
           setShops((prev) =>
@@ -248,6 +308,14 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                     phone: updatedPhone,
                     businessType: updatedType,
                     address: updatedAddress,
+                    taxCode: updatedTaxCode,
+                    legalOwnerName: updatedLegalName,
+                    ownerCccd: updatedCccd,
+                    registeredAddress: finalRegisteredAddress,
+                    invoiceAddress: finalInvoiceAddress,
+                    licenseImageUrls,
+                    cccdFrontUrl,
+                    cccdBackUrl,
                   }
                 : s
             )
@@ -266,6 +334,70 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
     } finally {
       setIsSavingStore(false);
     }
+  };
+
+  const handleResubmitStore = async () => {
+    const targetShopId = activeStoreId || shops[0]?.id;
+    if (!targetShopId) {
+      showToast('Không tìm thấy cửa hàng để nộp lại hồ sơ', 'error');
+      return;
+    }
+    setIsResubmitting(true);
+    try {
+      const finalRegisteredAddress = sameAsBusinessRegistered
+        ? activeStoreAddress.trim()
+        : activeRegisteredAddress.trim();
+      const finalInvoiceAddress = sameAsBusinessInvoice
+        ? activeStoreAddress.trim()
+        : activeInvoiceAddress.trim();
+
+      const res = await resubmitShop(targetShopId, {
+        shopName: activeStoreName.trim(),
+        phone: activeStorePhone.trim(),
+        businessType: activeStoreType,
+        address: activeStoreAddress.trim(),
+        taxCode: activeTaxCode.trim(),
+        legalOwnerName: activeLegalOwnerName.trim(),
+        ownerCccd: activeOwnerCccd.trim(),
+        registeredAddress: finalRegisteredAddress,
+        invoiceAddress: finalInvoiceAddress,
+        licenseImageUrls,
+        cccdFrontUrl,
+        cccdBackUrl,
+      });
+
+      if (res.success) {
+        setActiveApprovalStatus('PENDING');
+        setActiveStoreStatus('PENDING_APPROVAL');
+        setActiveRejectionReason('');
+        showToast('Đã nộp lại hồ sơ thành công! Vui lòng chờ Admin thẩm định lại.');
+        const fresh = await fetchUserShops(activeStoreName);
+        setShops(fresh);
+      } else {
+        showToast(res.message || 'Lỗi khi nộp lại hồ sơ', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Lỗi kết nối khi nộp lại hồ sơ', 'error');
+    } finally {
+      setIsResubmitting(false);
+    }
+  };
+
+  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>, target: 'license' | 'cccdFront' | 'cccdBack') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      if (target === 'license') {
+        setLicenseImageUrls((prev) => [...prev, result]);
+      } else if (target === 'cccdFront') {
+        setCccdFrontUrl(result);
+      } else if (target === 'cccdBack') {
+        setCccdBackUrl(result);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   // Handle Change Password
@@ -356,10 +488,26 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
         businessType: branchType,
         address: branchAddress.trim(),
         phone: branchPhone.trim() || activeStorePhone || '0912.345.678',
+        taxCode: activeTaxCode.trim(),
+        legalOwnerName: activeLegalOwnerName.trim() || personalName,
+        ownerCccd: activeOwnerCccd.trim(),
         verificationDocs: branchDocUrls,
+        licenseImageUrls: branchDocUrls,
         ownerName: personalName || currentUser?.name,
         ownerEmail: email || currentUser?.email,
       });
+
+      if (res.code === 'TIER_SHOP_LIMIT_EXCEEDED') {
+        setNewShopModalOpen(false);
+        setPackagePopupOpen(true);
+        showToast('Gói FREE chỉ được quản lý 1 cửa hàng. Vui lòng nâng cấp gói PRO để mở thêm chi nhánh!', 'error');
+        return;
+      }
+      if (res.code === 'TAX_CODE_ALREADY_EXISTS') {
+        showToast('Mã số thuế này đã được đăng ký và xác thực trên hệ thống.', 'error');
+        return;
+      }
+
       if (res.success) {
         showToast(res.message || 'Đã gửi hồ sơ cửa hàng kèm chứng từ! Đang chờ Admin phê duyệt.');
         setNewShopModalOpen(false);
@@ -553,11 +701,12 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           </div>
 
           {/* =============================================================================
-              NGHIỆP VỤ BƯỚC 1B: THẺ THÔNG TIN CƠ SỞ KINH DOANH ĐANG CHỌN (STORE PROFILE)
-              - Hiển thị: Tên cửa hàng, Loại hình, Hotline của quán, Địa chỉ thực tế, Badge trạng thái
+              NGHIỆP VỤ BƯỚC 1B: THẺ THÔNG TIN CƠ SỞ KINH DOANH & PHÁP LÝ KYC (STORE & KYC)
+              - Hiển thị: Tên cửa hàng, Hotline, Loại hình, MST, Người đại diện, Số CCCD,
+                Tách bạch 3 loại địa chỉ và upload ảnh GPKD + CCCD 2 mặt theo chuẩn Mentor
           ============================================================================= */}
           <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-[#ff4783]/10 text-[#ff4783] flex items-center justify-center border border-[#ff4783]/20">
                   <span className="material-symbols-outlined text-[20px]">storefront</span>
@@ -569,88 +718,423 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                   <p className="text-xs text-slate-500">Dữ liệu hiển thị trên bảng kê thuế, hóa đơn khách hàng và báo cáo kết ca</p>
                 </div>
               </div>
+
               <span className={`px-2.5 py-1 rounded-full text-[10.5px] font-black uppercase tracking-wider ${
-                activeStoreStatus === 'ACTIVE'
+                activeApprovalStatus === 'APPROVED' || activeStoreStatus === 'ACTIVE'
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  : activeApprovalStatus === 'REJECTED'
+                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                    : 'bg-amber-50 text-amber-700 border border-amber-200'
               }`}>
-                {activeStoreStatus === 'ACTIVE' ? 'ĐANG HOẠT ĐỘNG' : 'CHỜ DUYỆT'}
+                {activeApprovalStatus === 'APPROVED' || activeStoreStatus === 'ACTIVE'
+                  ? 'ĐÃ DUYỆT (ACTIVE)'
+                  : activeApprovalStatus === 'REJECTED'
+                    ? 'BỊ TỪ CHỐI'
+                    : 'CHỜ ADMIN DUYỆT'}
               </span>
             </div>
 
-            <form onSubmit={handleSaveStore} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_shop_name">
-                    <span>Tên cơ sở / Chi nhánh *</span>
-                  </label>
-                  <input
-                    id="settings_shop_name"
-                    type="text"
-                    value={activeStoreName}
-                    onChange={(e) => setActiveStoreName(e.target.value)}
-                    required
-                    placeholder="Ví dụ: Thú Y Mrs.Mây"
-                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
-                  />
+            {/* Banner Cảnh báo Trạng thái */}
+            {activeApprovalStatus === 'PENDING' && (
+              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3">
+                <span className="material-symbols-outlined text-amber-600 text-[22px] shrink-0 mt-0.5">hourglass_top</span>
+                <div className="space-y-0.5">
+                  <div className="text-xs font-extrabold text-amber-900 uppercase tracking-wide">Hồ sơ đang chờ Ban Quản Trị (Admin) thẩm định</div>
+                  <div className="text-xs text-amber-800">
+                    Hồ sơ đăng ký cửa hàng của bạn đang được kiểm tra đối soát. Bạn vẫn có thể cập nhật thông tin và bổ sung chứng từ rõ nét hơn ở bên dưới.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeApprovalStatus === 'REJECTED' && (
+              <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 flex items-start justify-between gap-3 flex-wrap">
+                <div className="flex items-start gap-3 max-w-xl">
+                  <span className="material-symbols-outlined text-rose-600 text-[22px] shrink-0 mt-0.5">error</span>
+                  <div className="space-y-1">
+                    <div className="text-xs font-extrabold text-rose-900 uppercase tracking-wide">Hồ sơ cửa hàng đã bị từ chối phê duyệt</div>
+                    <div className="text-xs text-rose-800">
+                      <strong>Lý do từ chối:</strong> {activeRejectionReason || 'Giấy tờ chứng từ chưa rõ nét hoặc thông tin khai báo chưa hợp lệ.'}
+                    </div>
+                    <div className="text-[11px] text-rose-700">
+                      Vui lòng kiểm tra lại thông tin, cập nhật hình ảnh chứng từ hợp lệ rồi bấm nút "Cập nhật &amp; Nộp lại hồ sơ" bên cạnh.
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleResubmitStore}
+                  disabled={isResubmitting}
+                  className="h-9 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <span className={`material-symbols-outlined text-[16px] ${isResubmitting ? 'animate-spin' : ''}`}>
+                    {isResubmitting ? 'sync' : 'restart_alt'}
+                  </span>
+                  <span>{isResubmitting ? 'Đang nộp lại...' : 'Cập nhật & Nộp lại hồ sơ'}</span>
+                </button>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveStore} className="space-y-5">
+              {/* Cụm 1: Thông tin cơ bản */}
+              <div className="space-y-3">
+                <div className="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px] text-[#ff4783]">info</span>
+                  <span>1. Thông tin chung của cơ sở kinh doanh</span>
                 </div>
 
-                <div>
-                  <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_store_phone">
-                    <span>Số điện thoại Hotline của quán</span>
-                    <span className="text-[11px] font-normal text-slate-400">In trên bill</span>
-                  </label>
-                  <input
-                    id="settings_store_phone"
-                    type="tel"
-                    value={activeStorePhone}
-                    onChange={(e) => setActiveStorePhone(e.target.value)}
-                    placeholder="Ví dụ: 0441235555"
-                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_shop_name">
+                      <span>Tên cơ sở / Chi nhánh *</span>
+                    </label>
+                    <input
+                      id="settings_shop_name"
+                      type="text"
+                      value={activeStoreName}
+                      onChange={(e) => setActiveStoreName(e.target.value)}
+                      required
+                      placeholder="Ví dụ: Thú Y Mrs.Mây"
+                      className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_store_phone">
+                      <span>Số điện thoại Hotline của quán</span>
+                      <span className="text-[11px] font-normal text-slate-400">In trên bill</span>
+                    </label>
+                    <input
+                      id="settings_store_phone"
+                      type="tel"
+                      value={activeStorePhone}
+                      onChange={(e) => setActiveStorePhone(e.target.value)}
+                      placeholder="Ví dụ: 0441235555"
+                      className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_store_type">
+                      <span>Loại hình kinh doanh</span>
+                    </label>
+                    <select
+                      id="settings_store_type"
+                      value={activeStoreType}
+                      onChange={(e) => setActiveStoreType(e.target.value)}
+                      className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] transition-all font-medium cursor-pointer"
+                    >
+                      <option value="Tạp hóa & Bán lẻ tiêu dùng">Tạp hóa & Bán lẻ tiêu dùng</option>
+                      <option value="Hộ kinh doanh bán lẻ">Hộ kinh doanh bán lẻ</option>
+                      <option value="F&B / Quán cà phê / Ăn uống">F&B / Quán cà phê / Ăn uống</option>
+                      <option value="Thời trang / Phụ kiện">Thời trang / Phụ kiện</option>
+                      <option value="Dịch vụ / Spa / Tiệm tóc">Dịch vụ / Spa / Tiệm tóc</option>
+                      <option value="Doanh nghiệp / Công ty">Doanh nghiệp / Công ty</option>
+                      <option value="Cá nhân kinh doanh">Cá nhân kinh doanh</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_store_type">
-                    <span>Loại hình kinh doanh</span>
-                  </label>
-                  <select
-                    id="settings_store_type"
-                    value={activeStoreType}
-                    onChange={(e) => setActiveStoreType(e.target.value)}
-                    className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] transition-all font-medium cursor-pointer"
-                  >
-                    <option value="Tạp hóa & Bán lẻ tiêu dùng">Tạp hóa & Bán lẻ tiêu dùng</option>
-                    <option value="F&B / Quán cà phê / Ăn uống">F&B / Quán cà phê / Ăn uống</option>
-                    <option value="Thời trang / Phụ kiện">Thời trang / Phụ kiện</option>
-                    <option value="Dịch vụ / Spa / Tiệm tóc">Dịch vụ / Spa / Tiệm tóc</option>
-                    <option value="Hộ kinh doanh khác">Hộ kinh doanh khác</option>
-                  </select>
+              {/* Cụm 2: Pháp lý & Định danh chủ hộ (Chống mạo danh & Chống trùng) */}
+              <div className="space-y-3 pt-3 border-t border-slate-100">
+                <div className="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px] text-[#ff4783]">badge</span>
+                  <span>2. Pháp lý &amp; Định danh doanh nghiệp / Hộ kinh doanh (Chống trùng &amp; Chống gian lận)</span>
                 </div>
 
-                <div className="sm:col-span-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_tax_code">
+                      <span>Mã số thuế (MST) *</span>
+                      <span className="text-[10px] font-mono text-slate-400">10 hoặc 13 số</span>
+                    </label>
+                    <input
+                      id="settings_tax_code"
+                      type="text"
+                      maxLength={14}
+                      value={activeTaxCode}
+                      onChange={(e) => setActiveTaxCode(e.target.value.replace(/[^0-9-]/g, ''))}
+                      placeholder="VD: 0312345678"
+                      className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_legal_owner">
+                      <span>Người đại diện pháp luật</span>
+                      <span className="text-[10px] text-slate-400">Theo CCCD</span>
+                    </label>
+                    <input
+                      id="settings_legal_owner"
+                      type="text"
+                      value={activeLegalOwnerName}
+                      onChange={(e) => setActiveLegalOwnerName(e.target.value)}
+                      placeholder="VD: Nguyễn Văn A"
+                      className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700 h-5 mb-1.5" htmlFor="settings_owner_cccd">
+                      <span>Số CCCD chủ hộ</span>
+                      <span className="text-[10px] font-mono text-slate-400">12 chữ số</span>
+                    </label>
+                    <input
+                      id="settings_owner_cccd"
+                      type="text"
+                      maxLength={12}
+                      value={activeOwnerCccd}
+                      onChange={(e) => setActiveOwnerCccd(e.target.value.replace(/\D/g, ''))}
+                      placeholder="VD: 079200012345"
+                      className="w-full h-10 px-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff4783]/20 focus:border-[#ff4783] border border-slate-200 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Cụm 3: Phân tách 3 loại địa chỉ */}
+              <div className="space-y-3 pt-3 border-t border-slate-100">
+                <div className="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px] text-[#ff4783]">pin_drop</span>
+                  <span>3. Tách bạch 3 loại địa chỉ theo quy chuẩn Thuế &amp; Pháp lý</span>
+                </div>
+
+                {/* Địa chỉ 1: Kinh doanh thực tế */}
+                <div>
                   <AddressSelectPicker
                     id="settings_store_address"
-                    label="Địa chỉ cơ sở kinh doanh thực tế"
+                    label="Địa chỉ 1: Cơ sở kinh doanh thực tế (Địa chỉ quầy hàng / điểm bán) *"
                     value={activeStoreAddress}
-                    onChange={(addr) => setActiveStoreAddress(addr)}
+                    onChange={(addr) => {
+                      setActiveStoreAddress(addr);
+                      if (sameAsBusinessRegistered) setActiveRegisteredAddress(addr);
+                      if (sameAsBusinessInvoice) setActiveInvoiceAddress(addr);
+                    }}
                   />
+                </div>
+
+                {/* Địa chỉ 2: Đăng ký kinh doanh / thường trú */}
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800">Địa chỉ 2: Địa chỉ ĐKKD / Thường trú theo CCCD</span>
+                    <label className="flex items-center gap-1.5 text-xs text-slate-600 font-medium cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={sameAsBusinessRegistered}
+                        onChange={(e) => {
+                          setSameAsBusinessRegistered(e.target.checked);
+                          if (e.target.checked) setActiveRegisteredAddress(activeStoreAddress);
+                        }}
+                        className="rounded text-[#ff4783] focus:ring-[#ff4783] cursor-pointer"
+                      />
+                      <span>Giống địa chỉ kinh doanh thực tế</span>
+                    </label>
+                  </div>
+                  {!sameAsBusinessRegistered && (
+                    <AddressSelectPicker
+                      id="settings_registered_address"
+                      label="Nhập địa chỉ ĐKKD theo CCCD"
+                      value={activeRegisteredAddress}
+                      onChange={(addr) => setActiveRegisteredAddress(addr)}
+                    />
+                  )}
+                  {sameAsBusinessRegistered && (
+                    <div className="text-xs text-slate-500 italic">Đang dùng chung: {activeStoreAddress || 'Chưa thiết lập'}</div>
+                  )}
+                </div>
+
+                {/* Địa chỉ 3: Xuất hóa đơn GTGT */}
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800">Địa chỉ 3: Địa chỉ xuất hóa đơn GTGT / Khai thuế</span>
+                    <label className="flex items-center gap-1.5 text-xs text-slate-600 font-medium cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={sameAsBusinessInvoice}
+                        onChange={(e) => {
+                          setSameAsBusinessInvoice(e.target.checked);
+                          if (e.target.checked) setActiveInvoiceAddress(activeStoreAddress);
+                        }}
+                        className="rounded text-[#ff4783] focus:ring-[#ff4783] cursor-pointer"
+                      />
+                      <span>Giống địa chỉ kinh doanh thực tế</span>
+                    </label>
+                  </div>
+                  {!sameAsBusinessInvoice && (
+                    <AddressSelectPicker
+                      id="settings_invoice_address"
+                      label="Nhập địa chỉ xuất hóa đơn GTGT"
+                      value={activeInvoiceAddress}
+                      onChange={(addr) => setActiveInvoiceAddress(addr)}
+                    />
+                  )}
+                  {sameAsBusinessInvoice && (
+                    <div className="text-xs text-slate-500 italic">Đang dùng chung: {activeStoreAddress || 'Chưa thiết lập'}</div>
+                  )}
                 </div>
               </div>
 
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isSavingStore}
-                  className="h-10 px-5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black shadow-xs transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  <span className={`material-symbols-outlined text-[16px] ${isSavingStore ? 'animate-spin' : ''}`}>
-                    {isSavingStore ? 'sync' : 'save'}
-                  </span>
-                  <span>{isSavingStore ? 'Đang lưu...' : 'Lưu Thông Tin Cửa Hàng'}</span>
-                </button>
+              {/* Cụm 4: Ảnh chứng từ xác thực KYC */}
+              <div className="space-y-3 pt-3 border-t border-slate-100">
+                <div className="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px] text-[#ff4783]">verified_user</span>
+                    <span>4. Hình ảnh hồ sơ xác thực KYC (Giấy phép kinh doanh &amp; CCCD 2 mặt)</span>
+                  </div>
+                  <span className="text-[11px] font-normal text-slate-500">Bắt buộc khi duyệt</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
+                  {/* GPKD */}
+                  <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-2.5">
+                    <div>
+                      <div className="font-bold text-slate-800">Giấy phép kinh doanh (GPKD)</div>
+                      <div className="text-[11px] text-slate-500">Ảnh chụp rõ con dấu &amp; MST</div>
+                    </div>
+                    {licenseImageUrls.length > 0 ? (
+                      <div className="space-y-1.5">
+                        <div className="relative aspect-video rounded-lg overflow-hidden border border-slate-200 bg-black/5">
+                          <img src={licenseImageUrls[0]} alt="GPKD" className="w-full h-full object-cover" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setLicenseImageUrls([])}
+                          className="text-xs text-rose-600 hover:underline font-semibold cursor-pointer"
+                        >
+                          Xóa ảnh này
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <label className="h-16 flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-[#ff4783] rounded-xl cursor-pointer text-center bg-white transition-colors">
+                          <span className="material-symbols-outlined text-[20px] text-[#ff4783]">upload_file</span>
+                          <span className="text-[11px] font-bold text-slate-700">Tải ảnh GPKD</span>
+                          <input type="file" accept="image/*" onChange={(e) => handleImageFileUpload(e, 'license')} className="hidden" />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setLicenseImageUrls(['https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=900&auto=format&fit=crop&q=80'])}
+                          className="w-full text-center text-[11px] text-[#ff4783] hover:underline font-bold cursor-pointer"
+                        >
+                          + Dùng ảnh mẫu thử nghiệm
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CCCD Mặt trước */}
+                  <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-2.5">
+                    <div>
+                      <div className="font-bold text-slate-800">CCCD Mặt trước</div>
+                      <div className="text-[11px] text-slate-500">Rõ số định danh &amp; họ tên</div>
+                    </div>
+                    {cccdFrontUrl ? (
+                      <div className="space-y-1.5">
+                        <div className="relative aspect-video rounded-lg overflow-hidden border border-slate-200 bg-black/5">
+                          <img src={cccdFrontUrl} alt="CCCD Trước" className="w-full h-full object-cover" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setCccdFrontUrl('')}
+                          className="text-xs text-rose-600 hover:underline font-semibold cursor-pointer"
+                        >
+                          Xóa ảnh này
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <label className="h-16 flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-[#ff4783] rounded-xl cursor-pointer text-center bg-white transition-colors">
+                          <span className="material-symbols-outlined text-[20px] text-[#ff4783]">upload_file</span>
+                          <span className="text-[11px] font-bold text-slate-700">Tải CCCD Mặt Trước</span>
+                          <input type="file" accept="image/*" onChange={(e) => handleImageFileUpload(e, 'cccdFront')} className="hidden" />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setCccdFrontUrl('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=900&auto=format&fit=crop&q=80')}
+                          className="w-full text-center text-[11px] text-[#ff4783] hover:underline font-bold cursor-pointer"
+                        >
+                          + Dùng ảnh mẫu thử nghiệm
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CCCD Mặt sau */}
+                  <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-2.5">
+                    <div>
+                      <div className="font-bold text-slate-800">CCCD Mặt sau</div>
+                      <div className="text-[11px] text-slate-500">Rõ đặc điểm &amp; ngày cấp</div>
+                    </div>
+                    {cccdBackUrl ? (
+                      <div className="space-y-1.5">
+                        <div className="relative aspect-video rounded-lg overflow-hidden border border-slate-200 bg-black/5">
+                          <img src={cccdBackUrl} alt="CCCD Sau" className="w-full h-full object-cover" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setCccdBackUrl('')}
+                          className="text-xs text-rose-600 hover:underline font-semibold cursor-pointer"
+                        >
+                          Xóa ảnh này
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <label className="h-16 flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-[#ff4783] rounded-xl cursor-pointer text-center bg-white transition-colors">
+                          <span className="material-symbols-outlined text-[20px] text-[#ff4783]">upload_file</span>
+                          <span className="text-[11px] font-bold text-slate-700">Tải CCCD Mặt Sau</span>
+                          <input type="file" accept="image/*" onChange={(e) => handleImageFileUpload(e, 'cccdBack')} className="hidden" />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setCccdBackUrl('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=900&auto=format&fit=crop&q=80')}
+                          className="w-full text-center text-[11px] text-[#ff4783] hover:underline font-bold cursor-pointer"
+                        >
+                          + Dùng ảnh mẫu thử nghiệm
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="pt-2 flex items-center justify-between flex-wrap gap-3">
+                <span className="text-xs text-slate-500">
+                  {activeApprovalStatus === 'PENDING'
+                    ? 'Lưu thay đổi sẽ cập nhật trực tiếp vào hồ sơ đang chờ duyệt.'
+                    : activeApprovalStatus === 'REJECTED'
+                      ? 'Sau khi cập nhật đầy đủ, bạn có thể bấm "Nộp lại hồ sơ" ở banner phía trên.'
+                      : 'Hồ sơ đã duyệt. Mọi cập nhật sẽ lưu vào cơ sở kinh doanh.'}
+                </span>
+
+                <div className="flex items-center gap-2.5">
+                  {activeApprovalStatus === 'REJECTED' && (
+                    <button
+                      type="button"
+                      onClick={handleResubmitStore}
+                      disabled={isResubmitting}
+                      className="h-10 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-xs transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                    >
+                      <span className={`material-symbols-outlined text-[16px] ${isResubmitting ? 'animate-spin' : ''}`}>
+                        {isResubmitting ? 'sync' : 'restart_alt'}
+                      </span>
+                      <span>{isResubmitting ? 'Đang nộp...' : 'Nộp Lại Hồ Sơ'}</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isSavingStore}
+                    className="h-10 px-5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black shadow-xs transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    <span className={`material-symbols-outlined text-[16px] ${isSavingStore ? 'animate-spin' : ''}`}>
+                      {isSavingStore ? 'sync' : 'save'}
+                    </span>
+                    <span>{isSavingStore ? 'Đang lưu...' : 'Lưu Thông Tin Cửa Hàng'}</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>

@@ -31,6 +31,11 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
   // Detail Modal for 2nd+ Shop Branch Request
   const [selectedShopRequest, setSelectedShopRequest] = useState<ShopBranch | null>(null);
 
+  // Reject reason dialog state (Mentor Requirement)
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectReasonInput, setRejectReasonInput] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
   // =============================================================================
   // NGHIỆP VỤ 1: QUẢN LÝ CẤP TÀI KHOẢN QUẢN TRỊ VIÊN (ADMIN) HỆ THỐNG
   // - Admin chỉ có quyền cấp mới tài khoản Quản Trị Viên cho nhân sự ban quản trị.
@@ -334,13 +339,14 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs sm:text-sm min-w-[920px]">
+          <table className="w-full text-left border-collapse text-xs sm:text-sm min-w-[980px]">
             <thead>
               <tr className="bg-slate-50/90 text-slate-700 text-xs font-extrabold uppercase tracking-wider border-b border-slate-200">
-                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap">Chi Nhánh / Cửa Hàng Mới</th>
-                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap">Chủ Hộ Kinh Doanh</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap">Chi Nhánh / Cửa Hàng</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap">Mã Số Thuế (MST)</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap">Chủ Hộ / Người Đại Diện</th>
                 <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap">Địa Chỉ Kinh Doanh</th>
-                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-center">Chứng Từ</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-center">Hồ Sơ KYC</th>
                 <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-center">Trạng Thái</th>
                 <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-right pr-6">Thao Tác</th>
               </tr>
@@ -348,7 +354,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             <tbody className="divide-y divide-slate-100 text-slate-800">
               {shopRequests.filter((s) => s.id !== 'shop-main').length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-slate-400 text-xs">
+                  <td colSpan={7} className="py-10 text-center text-slate-400 text-xs">
                     Chưa có yêu cầu đăng ký cửa hàng / chi nhánh nào chờ duyệt.
                   </td>
                 </tr>
@@ -357,6 +363,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                   .filter((s) => s.id !== 'shop-main')
                   .map((req) => {
                     const docs = req.verificationDocs || req.documentUrls || [];
+                    const hasCccd = req.cccdFrontUrl || req.cccdBackUrl;
+                    const totalImages = docs.length + (hasCccd ? 2 : 0);
                     return (
                       <tr key={req.id} className="hover:bg-slate-50/70 transition-colors">
                         <td className="py-3.5 px-4 sm:px-5">
@@ -365,7 +373,22 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                         </td>
 
                         <td className="py-3.5 px-4 sm:px-5">
-                          <div className="font-semibold text-slate-900">{req.ownerName || 'Chủ hộ kinh doanh'}</div>
+                          {req.taxCode ? (
+                            <div className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded inline-block">
+                              {req.taxCode}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">Chưa khai báo</span>
+                          )}
+                          {req.ownerCccd && (
+                            <div className="text-[11px] font-mono text-slate-500 mt-0.5">CCCD: {req.ownerCccd}</div>
+                          )}
+                        </td>
+
+                        <td className="py-3.5 px-4 sm:px-5">
+                          <div className="font-semibold text-slate-900">
+                            {req.legalOwnerName || req.ownerName || 'Chủ hộ kinh doanh'}
+                          </div>
                           <div className="text-xs text-slate-600 font-mono">
                             {req.ownerEmail ? `${req.ownerEmail} • ` : ''}
                             {req.phone || '—'}
@@ -384,23 +407,23 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                         <td className="py-3.5 px-4 sm:px-5 text-center whitespace-nowrap">
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 border border-slate-200 text-xs font-bold tabular-nums">
                             <span className="material-symbols-outlined text-[14px] text-[#ff4783]">photo_library</span>
-                            <span>{docs.length} ảnh</span>
+                            <span>{totalImages > 0 ? `${totalImages} ảnh KYC` : '0 ảnh'}</span>
                           </span>
                         </td>
 
                         <td className="py-3.5 px-4 sm:px-5 text-center whitespace-nowrap">
                           <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-black border ${
-                              req.status === 'PENDING_APPROVAL'
+                              req.status === 'PENDING_APPROVAL' || req.approvalStatus === 'PENDING'
                                 ? 'bg-amber-50 text-amber-800 border-amber-200'
-                                : req.status === 'ACTIVE'
+                                : req.status === 'ACTIVE' || req.approvalStatus === 'APPROVED'
                                   ? 'bg-[#d0f81b]/35 text-slate-950 border-[#bde412]'
                                   : 'bg-rose-50 text-rose-700 border-rose-200'
                             }`}
                           >
-                            {req.status === 'PENDING_APPROVAL'
+                            {req.status === 'PENDING_APPROVAL' || req.approvalStatus === 'PENDING'
                               ? 'CHỜ PHÊ DUYỆT'
-                              : req.status === 'ACTIVE'
+                              : req.status === 'ACTIVE' || req.approvalStatus === 'APPROVED'
                                 ? 'ĐÃ DUYỆT (ACTIVE)'
                                 : 'ĐÃ TỪ CHỐI'}
                           </span>
@@ -413,7 +436,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                             className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#fff0f5] hover:bg-pink-100 text-[#b01755] border border-[#ffd6e4] text-xs font-bold transition-colors cursor-pointer shadow-2xs"
                           >
                             <span className="material-symbols-outlined text-[15px] text-[#ff4783]">visibility</span>
-                            <span>Xem chi tiết</span>
+                            <span>Xem hồ sơ</span>
                           </button>
                         </td>
                       </tr>
@@ -728,51 +751,103 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
 
             {/* Modal Body */}
             <div className="p-5 sm:p-6 space-y-5 max-h-[75vh] overflow-y-auto">
-              {/* Info Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Tên cửa hàng / Chi nhánh đăng ký
-                  </span>
-                  <div className="text-sm font-extrabold text-slate-900">{selectedShopRequest.shopName}</div>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Ngành nghề kinh doanh
-                  </span>
-                  <div className="text-sm font-bold text-slate-800">{selectedShopRequest.businessType}</div>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Chủ hộ kinh doanh (Owner)
-                  </span>
-                  <div className="text-sm font-bold text-slate-900">
-                    {selectedShopRequest.ownerName || 'Chủ hộ kinh doanh'}
-                  </div>
-                  <div className="text-xs text-slate-500 font-mono">
-                    {selectedShopRequest.ownerEmail || '—'}
+              {/* Cảnh báo nếu hồ sơ đã từng bị từ chối */}
+              {(selectedShopRequest.rejectionReason || selectedShopRequest.status === 'REJECTED' || selectedShopRequest.approvalStatus === 'REJECTED') && (
+                <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 flex items-start gap-3">
+                  <span className="material-symbols-outlined text-rose-600 text-[22px] shrink-0 mt-0.5">error</span>
+                  <div>
+                    <div className="text-xs font-extrabold text-rose-800 uppercase tracking-wide">
+                      Hồ sơ này đang ở trạng thái BỊ TỪ CHỐI
+                    </div>
+                    <div className="text-xs text-rose-700 mt-0.5">
+                      <strong>Lý do từ chối đã gửi cho chủ shop:</strong> {selectedShopRequest.rejectionReason || 'Chứng từ chưa đạt yêu cầu.'}
+                    </div>
                   </div>
                 </div>
+              )}
 
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Số điện thoại &amp; Ngày gửi hồ sơ
-                  </span>
-                  <div className="text-sm font-bold text-slate-900 font-mono">
-                    {selectedShopRequest.phone || '—'}
+              {/* Info Grid - 1. Pháp lý & Định danh */}
+              <div className="space-y-2">
+                <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px] text-[#ff4783]">badge</span>
+                  <span>1. Pháp lý &amp; Định danh chủ hộ / Doanh nghiệp</span>
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                      Tên cửa hàng / Chi nhánh đăng ký
+                    </span>
+                    <div className="text-sm font-extrabold text-slate-900">{selectedShopRequest.shopName}</div>
+                    <div className="text-xs text-slate-500">{selectedShopRequest.businessType}</div>
                   </div>
-                  <div className="text-xs text-slate-500">
-                    Ngày đăng ký: {selectedShopRequest.createdAt || selectedShopRequest.submittedAt || 'Hôm nay'}
+
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                      Mã số thuế (MST) / Mã định danh HKD
+                    </span>
+                    <div className="text-sm font-black text-slate-900 font-mono tracking-wide">
+                      {selectedShopRequest.taxCode ? (
+                        <span className="bg-slate-200/80 px-2 py-0.5 rounded">{selectedShopRequest.taxCode}</span>
+                      ) : (
+                        <span className="text-slate-400 italic">Chưa khai báo</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-slate-500">Khóa duy nhất chống gian lận &amp; trùng lặp</div>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                      Chủ hộ / Người đại diện pháp luật
+                    </span>
+                    <div className="text-sm font-bold text-slate-900">
+                      {selectedShopRequest.legalOwnerName || selectedShopRequest.ownerName || 'Chủ hộ kinh doanh'}
+                    </div>
+                    <div className="text-xs text-slate-500 font-mono">
+                      Số CCCD: <strong>{selectedShopRequest.ownerCccd || 'Chưa cung cấp'}</strong>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                      Thông tin liên hệ &amp; Ngày đăng ký
+                    </span>
+                    <div className="text-sm font-bold text-slate-900 font-mono">
+                      {selectedShopRequest.phone || '—'}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      Email: {selectedShopRequest.ownerEmail || '—'} • Ngày: {selectedShopRequest.createdAt || 'Hôm nay'}
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="sm:col-span-2 p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Địa chỉ kinh doanh thực tế
-                  </span>
-                  <div className="text-sm font-semibold text-slate-900">{selectedShopRequest.address}</div>
+              {/* Info Grid - 2. Tách bạch 3 loại địa chỉ */}
+              <div className="space-y-2">
+                <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px] text-[#ff4783]">pin_drop</span>
+                  <span>2. Đối soát 3 loại địa chỉ (Kinh doanh thực tế vs ĐKKD vs Xuất hóa đơn)</span>
+                </span>
+
+                <div className="grid grid-cols-1 gap-2.5 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <span className="font-bold text-slate-700">1. Địa chỉ cơ sở kinh doanh thực tế:</span>
+                    <div className="text-sm font-semibold text-slate-900 mt-0.5">{selectedShopRequest.address || '—'}</div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <span className="font-bold text-slate-700">2. Địa chỉ ĐKKD / Thường trú theo CCCD:</span>
+                    <div className="text-sm font-semibold text-slate-900 mt-0.5">
+                      {selectedShopRequest.registeredAddress || selectedShopRequest.address || 'Giống địa chỉ kinh doanh'}
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <span className="font-bold text-slate-700">3. Địa chỉ xuất hóa đơn GTGT / Thuế:</span>
+                    <div className="text-sm font-semibold text-slate-900 mt-0.5">
+                      {selectedShopRequest.invoiceAddress || selectedShopRequest.address || 'Giống địa chỉ kinh doanh'}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -781,43 +856,78 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[18px] text-[#ff4783]">verified_user</span>
-                    <span>
-                      Giấy Chứng Từ Xác Minh Đính Kèm (
-                      {(selectedShopRequest.verificationDocs || selectedShopRequest.documentUrls || []).length} ảnh)
-                    </span>
+                    <span>Hồ Sơ Chứng Từ KYC Đính Kèm (GPKD &amp; CCCD 2 Mặt)</span>
                   </span>
-                  <span className="text-xs text-slate-600">Nhấn vào ảnh để mở kích thước gốc</span>
+                  <span className="text-xs text-slate-600">Nhấn vào ảnh để xem kích thước gốc</span>
                 </div>
 
-                {(selectedShopRequest.verificationDocs || selectedShopRequest.documentUrls || []).length === 0 ? (
-                  <div className="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">
-                    Không có hình ảnh chứng từ đính kèm.
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    {(selectedShopRequest.verificationDocs || selectedShopRequest.documentUrls || []).map(
-                      (imgUrl, idx) => (
-                        <a
-                          key={idx}
-                          href={imgUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="group relative rounded-2xl overflow-hidden border border-slate-200 hover:border-[#ff4783] bg-slate-100 aspect-video block shadow-xs"
-                        >
-                          <img
-                            src={imgUrl}
-                            alt={`Chứng từ ${idx + 1}`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                          <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-bold">
-                            <span className="material-symbols-outlined text-[18px]">open_in_new</span>
-                            <span>Xem ảnh gốc #{idx + 1}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  {/* GPKD */}
+                  <div className="space-y-1 text-xs">
+                    <span className="font-bold text-slate-700">Giấy phép kinh doanh (GPKD):</span>
+                    {selectedShopRequest.licenseImageUrls?.length ? (
+                      selectedShopRequest.licenseImageUrls.map((url, idx) => (
+                        <a key={idx} href={url} target="_blank" rel="noreferrer" className="group relative rounded-xl overflow-hidden border border-slate-200 hover:border-[#ff4783] bg-slate-100 aspect-video block shadow-xs">
+                          <img src={url} alt="GPKD" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1">
+                            <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                            <span>Xem GPKD</span>
                           </div>
                         </a>
-                      )
+                      ))
+                    ) : (selectedShopRequest.verificationDocs || selectedShopRequest.documentUrls || []).length ? (
+                      (selectedShopRequest.verificationDocs || selectedShopRequest.documentUrls || []).map((url, idx) => (
+                        <a key={idx} href={url} target="_blank" rel="noreferrer" className="group relative rounded-xl overflow-hidden border border-slate-200 hover:border-[#ff4783] bg-slate-100 aspect-video block shadow-xs">
+                          <img src={url} alt={`Chứng từ ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1">
+                            <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                            <span>Xem ảnh #{idx + 1}</span>
+                          </div>
+                        </a>
+                      ))
+                    ) : (
+                      <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">
+                        Chưa đính kèm GPKD
+                      </div>
                     )}
                   </div>
-                )}
+
+                  {/* CCCD Trước */}
+                  <div className="space-y-1 text-xs">
+                    <span className="font-bold text-slate-700">CCCD Mặt trước:</span>
+                    {selectedShopRequest.cccdFrontUrl ? (
+                      <a href={selectedShopRequest.cccdFrontUrl} target="_blank" rel="noreferrer" className="group relative rounded-xl overflow-hidden border border-slate-200 hover:border-[#ff4783] bg-slate-100 aspect-video block shadow-xs">
+                        <img src={selectedShopRequest.cccdFrontUrl} alt="CCCD Trước" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1">
+                          <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                          <span>Xem CCCD Trước</span>
+                        </div>
+                      </a>
+                    ) : (
+                      <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">
+                        Chưa đính kèm
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CCCD Sau */}
+                  <div className="space-y-1 text-xs">
+                    <span className="font-bold text-slate-700">CCCD Mặt sau:</span>
+                    {selectedShopRequest.cccdBackUrl ? (
+                      <a href={selectedShopRequest.cccdBackUrl} target="_blank" rel="noreferrer" className="group relative rounded-xl overflow-hidden border border-slate-200 hover:border-[#ff4783] bg-slate-100 aspect-video block shadow-xs">
+                        <img src={selectedShopRequest.cccdBackUrl} alt="CCCD Sau" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1">
+                          <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                          <span>Xem CCCD Sau</span>
+                        </div>
+                      </a>
+                    ) : (
+                      <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">
+                        Chưa đính kèm
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -831,37 +941,155 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                 Đóng cửa sổ
               </button>
 
-              {selectedShopRequest.status === 'PENDING_APPROVAL' && (
+              {(selectedShopRequest.status === 'PENDING_APPROVAL' || selectedShopRequest.approvalStatus === 'PENDING') && (
                 <div className="flex items-center gap-2.5">
                   <button
                     type="button"
-                    onClick={async () => {
-                      const res = await reviewAdminShopRequest(selectedShopRequest.id, 'REJECT');
-                      const fresh = await fetchAdminShopRequests();
-                      setShopRequests(fresh);
-                      setSelectedShopRequest(fresh.find((s) => s.id === selectedShopRequest.id) || null);
-                      showToast(res.message, 'error');
+                    onClick={() => {
+                      setRejectReasonInput('');
+                      setRejectModalOpen(true);
                     }}
-                    className="h-10 px-4 rounded-xl bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 text-xs font-bold cursor-pointer transition-colors"
+                    className="h-10 px-4 rounded-xl bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 text-xs font-bold cursor-pointer transition-colors flex items-center gap-1.5"
                   >
-                    Từ chối hồ sơ
+                    <span className="material-symbols-outlined text-[17px]">cancel</span>
+                    <span>Từ chối hồ sơ (Nhập lý do)</span>
                   </button>
                   <button
                     type="button"
+                    disabled={isSubmittingReview}
                     onClick={async () => {
-                      const res = await reviewAdminShopRequest(selectedShopRequest.id, 'APPROVE');
-                      const fresh = await fetchAdminShopRequests();
-                      setShopRequests(fresh);
-                      setSelectedShopRequest(fresh.find((s) => s.id === selectedShopRequest.id) || null);
-                      showToast(res.message, 'success');
+                      setIsSubmittingReview(true);
+                      try {
+                        const res = await reviewAdminShopRequest(selectedShopRequest.id, 'APPROVE');
+                        const fresh = await fetchAdminShopRequests();
+                        setShopRequests(fresh);
+                        setSelectedShopRequest(fresh.find((s) => s.id === selectedShopRequest.id) || null);
+                        showToast(res.message, 'success');
+                      } catch (err: any) {
+                        showToast(err.message || 'Lỗi phê duyệt hồ sơ', 'error');
+                      } finally {
+                        setIsSubmittingReview(false);
+                      }
                     }}
-                    className="h-10 px-5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 border border-[#bde412] text-xs font-black cursor-pointer shadow-xs flex items-center gap-1.5 transition-colors"
+                    className="h-10 px-5 rounded-xl bg-[#d0f81b] hover:bg-[#c2ea14] text-slate-950 border border-[#bde412] text-xs font-black cursor-pointer shadow-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
                   >
                     <span className="material-symbols-outlined text-[17px] text-[#ff4783]">check_circle</span>
                     <span>Duyệt Kích Hoạt Cửa Hàng</span>
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =============================================================================
+          NGHIỆP VỤ: DIALOG TỪ CHỐI HỒ SƠ CỬA HÀNG VÀ BẮT BUỘC NHẬP LÝ DO (CHỈ ĐẠO MENTOR)
+          - Dùng để làm gì: Khi Admin bấm Từ chối, bắt buộc phải nhập lý do cụ thể.
+          - Phục vụ: Giúp Chủ hộ biết chính xác lý do để nộp lại (Re-submit).
+      ============================================================================= */}
+      {rejectModalOpen && selectedShopRequest && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden p-6 space-y-4">
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[22px]">gavel</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">
+                    Từ Chối Hồ Sơ Cửa Hàng
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Hồ sơ: <strong className="text-slate-800">{selectedShopRequest.shopName}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRejectModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-1.5" htmlFor="admin_reject_reason">
+                  Lý do từ chối cụ thể * <span className="text-slate-400 font-normal">(Chủ shop sẽ nhìn thấy lý do này để khắc phục)</span>
+                </label>
+                <textarea
+                  id="admin_reject_reason"
+                  rows={4}
+                  required
+                  value={rejectReasonInput}
+                  onChange={(e) => setRejectReasonInput(e.target.value)}
+                  placeholder="Ví dụ: Ảnh Giấy phép kinh doanh bị mờ, không nhìn rõ dấu đỏ và mã số thuế; số CCCD chưa khớp với họ tên người đại diện..."
+                  className="w-full p-3 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-900 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-400/20 focus:border-rose-500 transition-all"
+                />
+              </div>
+
+              {/* Gợi ý lý do nhanh */}
+              <div>
+                <span className="text-[11px] font-bold text-slate-600 block mb-1">Gợi ý lý do nhanh:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    'Ảnh Giấy phép kinh doanh bị mờ, không nhìn rõ dấu đỏ và mã số thuế.',
+                    'Mã số thuế không trùng khớp với thông tin đăng ký kinh doanh.',
+                    'Thiếu ảnh chụp CCCD mặt sau của người đại diện pháp luật.',
+                    'Địa chỉ kinh doanh thực tế chưa đầy đủ số nhà / tên đường.',
+                  ].map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setRejectReasonInput(preset)}
+                      className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 text-left transition-colors cursor-pointer"
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setRejectModalOpen(false)}
+                className="h-10 px-4 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                disabled={isSubmittingReview || !rejectReasonInput.trim()}
+                onClick={async () => {
+                  if (!rejectReasonInput.trim()) {
+                    showToast('Vui lòng nhập lý do từ chối hồ sơ', 'error');
+                    return;
+                  }
+                  setIsSubmittingReview(true);
+                  try {
+                    const res = await reviewAdminShopRequest(selectedShopRequest.id, 'REJECT', rejectReasonInput.trim());
+                    const fresh = await fetchAdminShopRequests();
+                    setShopRequests(fresh);
+                    setSelectedShopRequest(fresh.find((s) => s.id === selectedShopRequest.id) || null);
+                    setRejectModalOpen(false);
+                    showToast(res.message || 'Đã từ chối hồ sơ và gửi lý do cho chủ shop', 'error');
+                  } catch (err: any) {
+                    showToast(err.message || 'Lỗi khi từ chối hồ sơ', 'error');
+                  } finally {
+                    setIsSubmittingReview(false);
+                  }
+                }}
+                className="h-10 px-5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5 transition-colors"
+              >
+                <span className={`material-symbols-outlined text-[16px] ${isSubmittingReview ? 'animate-spin' : ''}`}>
+                  {isSubmittingReview ? 'sync' : 'gavel'}
+                </span>
+                <span>{isSubmittingReview ? 'Đang gửi...' : 'Xác Nhận Từ Chối Hồ Sơ'}</span>
+              </button>
             </div>
           </div>
         </div>

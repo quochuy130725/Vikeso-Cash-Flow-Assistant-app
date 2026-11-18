@@ -343,6 +343,14 @@ class ApiService {
     required String phone,
     required List<String> verificationDocs,
     required String token,
+    String? taxCode,
+    String? legalOwnerName,
+    String? ownerCccd,
+    String? registeredAddress,
+    String? invoiceAddress,
+    List<String>? licenseImageUrls,
+    String? cccdFrontUrl,
+    String? cccdBackUrl,
   }) async {
     try {
       final uri = Uri.parse('$_baseUrl/shops');
@@ -357,6 +365,14 @@ class ApiService {
           'businessType': businessType,
           'address': address.trim(),
           'phone': phone.trim(),
+          if (taxCode != null) 'taxCode': taxCode.trim(),
+          if (legalOwnerName != null) 'legalOwnerName': legalOwnerName.trim(),
+          if (ownerCccd != null) 'ownerCccd': ownerCccd.trim(),
+          if (registeredAddress != null) 'registeredAddress': registeredAddress.trim(),
+          if (invoiceAddress != null) 'invoiceAddress': invoiceAddress.trim(),
+          'licenseImageUrls': licenseImageUrls ?? verificationDocs,
+          if (cccdFrontUrl != null) 'cccdFrontUrl': cccdFrontUrl.trim(),
+          if (cccdBackUrl != null) 'cccdBackUrl': cccdBackUrl.trim(),
           'verificationDocs': verificationDocs,
           'documentUrls': verificationDocs,
         }),
@@ -378,6 +394,14 @@ class ApiService {
     String? phone,
     String? businessType,
     String? address,
+    String? taxCode,
+    String? legalOwnerName,
+    String? ownerCccd,
+    String? registeredAddress,
+    String? invoiceAddress,
+    List<String>? licenseImageUrls,
+    String? cccdFrontUrl,
+    String? cccdBackUrl,
   }) async {
     try {
       final uri = Uri.parse('$_baseUrl/shops/$shopId');
@@ -386,6 +410,14 @@ class ApiService {
       if (phone != null) payload['phone'] = phone.trim();
       if (businessType != null) payload['businessType'] = businessType.trim();
       if (address != null) payload['address'] = address.trim();
+      if (taxCode != null) payload['taxCode'] = taxCode.trim();
+      if (legalOwnerName != null) payload['legalOwnerName'] = legalOwnerName.trim();
+      if (ownerCccd != null) payload['ownerCccd'] = ownerCccd.trim();
+      if (registeredAddress != null) payload['registeredAddress'] = registeredAddress.trim();
+      if (invoiceAddress != null) payload['invoiceAddress'] = invoiceAddress.trim();
+      if (licenseImageUrls != null) payload['licenseImageUrls'] = licenseImageUrls;
+      if (cccdFrontUrl != null) payload['cccdFrontUrl'] = cccdFrontUrl.trim();
+      if (cccdBackUrl != null) payload['cccdBackUrl'] = cccdBackUrl.trim();
 
       final response = await http.put(
         uri,
@@ -401,6 +433,56 @@ class ApiService {
     } catch (e) {
       debugPrint('Lỗi updateShopDetails: $e');
       return {'success': false, 'message': 'Lỗi kết nối máy chủ khi cập nhật cửa hàng: $e'};
+    }
+  }
+
+  /// Nộp lại hồ sơ cửa hàng sau khi bị Admin từ chối (POST /api/shops/:id/resubmit)
+  Future<Map<String, dynamic>> resubmitShop({
+    required String shopId,
+    required String token,
+    String? shopName,
+    String? phone,
+    String? businessType,
+    String? address,
+    String? taxCode,
+    String? legalOwnerName,
+    String? ownerCccd,
+    String? registeredAddress,
+    String? invoiceAddress,
+    List<String>? licenseImageUrls,
+    String? cccdFrontUrl,
+    String? cccdBackUrl,
+  }) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/shops/$shopId/resubmit');
+      final payload = <String, dynamic>{};
+      if (shopName != null) payload['shopName'] = shopName.trim();
+      if (phone != null) payload['phone'] = phone.trim();
+      if (businessType != null) payload['businessType'] = businessType.trim();
+      if (address != null) payload['address'] = address.trim();
+      if (taxCode != null) payload['taxCode'] = taxCode.trim();
+      if (legalOwnerName != null) payload['legalOwnerName'] = legalOwnerName.trim();
+      if (ownerCccd != null) payload['ownerCccd'] = ownerCccd.trim();
+      if (registeredAddress != null) payload['registeredAddress'] = registeredAddress.trim();
+      if (invoiceAddress != null) payload['invoiceAddress'] = invoiceAddress.trim();
+      if (licenseImageUrls != null) payload['licenseImageUrls'] = licenseImageUrls;
+      if (cccdFrontUrl != null) payload['cccdFrontUrl'] = cccdFrontUrl.trim();
+      if (cccdBackUrl != null) payload['cccdBackUrl'] = cccdBackUrl.trim();
+
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(payload),
+      ).timeout(const Duration(seconds: 20));
+
+      final body = jsonDecode(response.body);
+      return body is Map<String, dynamic> ? body : {'success': false, 'message': 'Phản hồi không hợp lệ'};
+    } catch (e) {
+      debugPrint('Lỗi resubmitShop: $e');
+      return {'success': false, 'message': 'Lỗi kết nối máy chủ khi nộp lại hồ sơ: $e'};
     }
   }
 }
