@@ -161,21 +161,35 @@ class _StoreScreenState extends State<StoreScreen> with WidgetsBindingObserver {
 
           if (serverShops.isNotEmpty) {
             for (final s in serverShops) {
-              final status = s['approvalStatus'] == 'APPROVED' ? 'ACTIVE' : s['approvalStatus'] ?? 'PENDING';
-              final statusLabel = status == 'ACTIVE' ? 'Đang hoạt động' : 'Chờ Admin duyệt';
-              // Bóc tách hotline riêng của từng cơ sở kinh doanh từ Backend
+              final approvalRaw = s['approvalStatus']?.toString().toUpperCase() ?? 'APPROVED';
+              final status = approvalRaw == 'APPROVED'
+                  ? 'ACTIVE'
+                  : approvalRaw == 'REJECTED'
+                      ? 'REJECTED'
+                      : 'PENDING';
+              final statusLabel = status == 'ACTIVE'
+                  ? 'Đang hoạt động'
+                  : status == 'REJECTED'
+                      ? 'Bị từ chối'
+                      : 'Chờ Admin duyệt';
+              // Bóc tách hotline riêng và thông tin pháp lý từ Backend
               final storePhone = (s['phone'] != null && s['phone'].toString().trim().isNotEmpty)
                   ? s['phone'].toString().trim()
                   : '';
+              final taxCode = s['taxCode']?.toString().trim() ?? '';
+              final rejectionReason = s['rejectionReason']?.toString().trim() ?? '';
+
               newBranches.add({
                 'id': s['_id']?.toString() ?? '',
                 'name': s['shopName']?.toString() ?? 'Chi nhánh',
                 'type': s['businessType']?.toString() ?? 'Hộ kinh doanh',
                 'status': status,
                 'phone': storePhone,
+                'taxCode': taxCode,
+                'rejectionReason': rejectionReason,
                 'address': (s['address'] != null && s['address'].toString().trim().isNotEmpty)
                     ? s['address'].toString().trim()
-                    : (status == 'ACTIVE' ? 'Cơ sở đang hoạt động' : 'Đang chờ Admin duyệt'),
+                    : (status == 'ACTIVE' ? 'Cơ sở đang hoạt động' : status == 'REJECTED' ? 'Hồ sơ bị từ chối' : 'Đang chờ Admin duyệt'),
                 'statusLabel': statusLabel,
               });
             }
@@ -1018,22 +1032,27 @@ class _StoreScreenState extends State<StoreScreen> with WidgetsBindingObserver {
               final b = _branches[i];
               final isSelected = i == _selectedBranchIndex;
               final isPending = b['status'] == 'PENDING' || b['statusLabel'] == 'Chờ Admin duyệt';
+              final isRejected = b['status'] == 'REJECTED' || b['statusLabel'] == 'Bị từ chối';
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? const Color(0xFFFFF0F5)
-                      : isPending
-                          ? const Color(0xFFFFFBEB)
-                          : Colors.white,
+                      : isRejected
+                          ? const Color(0xFFFFF1F2)
+                          : isPending
+                              ? const Color(0xFFFFFBEB)
+                              : Colors.white,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: isSelected
                         ? const Color(0xFFFF4783)
-                        : isPending
-                            ? const Color(0xFFFDE68A)
-                            : const Color(0xFFE2E8F0),
+                        : isRejected
+                            ? const Color(0xFFFECDD3)
+                            : isPending
+                                ? const Color(0xFFFDE68A)
+                                : const Color(0xFFE2E8F0),
                     width: isSelected ? 1.5 : 1.2,
                   ),
                   boxShadow: [
@@ -1246,17 +1265,29 @@ class _StoreScreenState extends State<StoreScreen> with WidgetsBindingObserver {
                                           width: 6,
                                           height: 6,
                                           decoration: BoxDecoration(
-                                            color: isPending ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
+                                            color: isRejected
+                                                ? const Color(0xFFEF4444)
+                                                : isPending
+                                                    ? const Color(0xFFF59E0B)
+                                                    : const Color(0xFF10B981),
                                             shape: BoxShape.circle,
                                           ),
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          isPending ? 'Chờ duyệt' : 'Đang hoạt động',
+                                          isRejected
+                                              ? 'Bị từ chối'
+                                              : isPending
+                                                  ? 'Chờ duyệt'
+                                                  : 'Đang hoạt động',
                                           style: TextStyle(
                                             fontSize: 10.5,
                                             fontWeight: FontWeight.w600,
-                                            color: isPending ? const Color(0xFFB45309) : const Color(0xFF059669),
+                                            color: isRejected
+                                                ? const Color(0xFFB91C1C)
+                                                : isPending
+                                                    ? const Color(0xFFB45309)
+                                                    : const Color(0xFF059669),
                                           ),
                                         ),
                                       ],
@@ -1403,22 +1434,27 @@ class _StoreScreenState extends State<StoreScreen> with WidgetsBindingObserver {
               final b = _branches[i];
               final isSelected = i == _selectedBranchIndex;
               final isPending = b['status'] == 'PENDING' || b['statusLabel'] == 'Chờ Admin duyệt';
+              final isRejected = b['status'] == 'REJECTED' || b['statusLabel'] == 'Bị từ chối';
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? const Color(0xFFFFF0F5)
-                      : isPending
-                          ? const Color(0xFFFFFBEB)
-                          : Colors.white,
+                      : isRejected
+                          ? const Color(0xFFFFF1F2)
+                          : isPending
+                              ? const Color(0xFFFFFBEB)
+                              : Colors.white,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: isSelected
                         ? const Color(0xFFFF4783)
-                        : isPending
-                            ? const Color(0xFFFDE68A)
-                            : const Color(0xFFE2E8F0),
+                        : isRejected
+                            ? const Color(0xFFFECDD3)
+                            : isPending
+                                ? const Color(0xFFFDE68A)
+                                : const Color(0xFFE2E8F0),
                     width: isSelected ? 1.5 : 1.2,
                   ),
                   boxShadow: [
@@ -1628,17 +1664,29 @@ class _StoreScreenState extends State<StoreScreen> with WidgetsBindingObserver {
                                           width: 6,
                                           height: 6,
                                           decoration: BoxDecoration(
-                                            color: isPending ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
+                                            color: isRejected
+                                                ? const Color(0xFFEF4444)
+                                                : isPending
+                                                    ? const Color(0xFFF59E0B)
+                                                    : const Color(0xFF10B981),
                                             shape: BoxShape.circle,
                                           ),
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          isPending ? 'Chờ duyệt' : 'Đang hoạt động',
+                                          isRejected
+                                              ? 'Bị từ chối'
+                                              : isPending
+                                                  ? 'Chờ duyệt'
+                                                  : 'Đang hoạt động',
                                           style: TextStyle(
                                             fontSize: 10.5,
                                             fontWeight: FontWeight.w600,
-                                            color: isPending ? const Color(0xFFB45309) : const Color(0xFF059669),
+                                            color: isRejected
+                                                ? const Color(0xFFB91C1C)
+                                                : isPending
+                                                    ? const Color(0xFFB45309)
+                                                    : const Color(0xFF059669),
                                           ),
                                         ),
                                       ],

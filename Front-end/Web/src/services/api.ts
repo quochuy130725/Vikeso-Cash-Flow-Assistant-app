@@ -1100,14 +1100,30 @@ export async function updateShopDetails(
     phone?: string;
     businessType?: string;
     address?: string;
+    taxCode?: string;
+    legalOwnerName?: string;
+    ownerCccd?: string;
+    registeredAddress?: string;
+    invoiceAddress?: string;
+    licenseImageUrls?: string[];
+    cccdFrontUrl?: string;
+    cccdBackUrl?: string;
   }
-): Promise<{ success: boolean; data?: any; message?: string }> {
+): Promise<{ success: boolean; data?: any; message?: string; code?: string }> {
   try {
-    const body: Record<string, string> = {};
+    const body: Record<string, any> = {};
     if (payload.shopName !== undefined) body.shopName = payload.shopName.trim();
     if (payload.phone !== undefined) body.phone = payload.phone.trim();
     if (payload.businessType !== undefined) body.businessType = payload.businessType.trim();
     if (payload.address !== undefined) body.address = payload.address.trim();
+    if (payload.taxCode !== undefined) body.taxCode = payload.taxCode.trim();
+    if (payload.legalOwnerName !== undefined) body.legalOwnerName = payload.legalOwnerName.trim();
+    if (payload.ownerCccd !== undefined) body.ownerCccd = payload.ownerCccd.trim();
+    if (payload.registeredAddress !== undefined) body.registeredAddress = payload.registeredAddress.trim();
+    if (payload.invoiceAddress !== undefined) body.invoiceAddress = payload.invoiceAddress.trim();
+    if (payload.licenseImageUrls !== undefined) body.licenseImageUrls = payload.licenseImageUrls;
+    if (payload.cccdFrontUrl !== undefined) body.cccdFrontUrl = payload.cccdFrontUrl;
+    if (payload.cccdBackUrl !== undefined) body.cccdBackUrl = payload.cccdBackUrl;
 
     const res = await fetch(`${API_BASE_URL}/shops/${shopId}`, {
       method: 'PUT',
@@ -1126,6 +1142,14 @@ export async function updateShopDetails(
               phone: updatedShop.phone ?? s.phone,
               businessType: updatedShop.businessType ?? s.businessType,
               address: updatedShop.address ?? s.address,
+              taxCode: updatedShop.taxCode ?? s.taxCode,
+              legalOwnerName: updatedShop.legalOwnerName ?? s.legalOwnerName,
+              ownerCccd: updatedShop.ownerCccd ?? s.ownerCccd,
+              registeredAddress: updatedShop.registeredAddress ?? s.registeredAddress,
+              invoiceAddress: updatedShop.invoiceAddress ?? s.invoiceAddress,
+              licenseImageUrls: updatedShop.licenseImageUrls ?? s.licenseImageUrls,
+              cccdFrontUrl: updatedShop.cccdFrontUrl ?? s.cccdFrontUrl,
+              cccdBackUrl: updatedShop.cccdBackUrl ?? s.cccdBackUrl,
             }
           : s
       );
@@ -1149,6 +1173,83 @@ export async function updateShopDetails(
   } catch (err: any) {
     console.error('Lỗi khi updateShopDetails:', err);
     return { success: false, message: err.message || 'Lỗi kết nối máy chủ khi cập nhật cửa hàng' };
+  }
+}
+
+/**
+ * Nộp lại hồ sơ cửa hàng sau khi bị từ chối
+ * Endpoint: POST /api/shops/:id/resubmit
+ */
+export async function resubmitShop(
+  shopId: string,
+  payload?: {
+    shopName?: string;
+    phone?: string;
+    businessType?: string;
+    address?: string;
+    taxCode?: string;
+    legalOwnerName?: string;
+    ownerCccd?: string;
+    registeredAddress?: string;
+    invoiceAddress?: string;
+    licenseImageUrls?: string[];
+    cccdFrontUrl?: string;
+    cccdBackUrl?: string;
+  }
+): Promise<{ success: boolean; data?: any; message?: string; code?: string }> {
+  try {
+    const body: Record<string, any> = {};
+    if (payload) {
+      if (payload.shopName !== undefined) body.shopName = payload.shopName.trim();
+      if (payload.phone !== undefined) body.phone = payload.phone.trim();
+      if (payload.businessType !== undefined) body.businessType = payload.businessType.trim();
+      if (payload.address !== undefined) body.address = payload.address.trim();
+      if (payload.taxCode !== undefined) body.taxCode = payload.taxCode.trim();
+      if (payload.legalOwnerName !== undefined) body.legalOwnerName = payload.legalOwnerName.trim();
+      if (payload.ownerCccd !== undefined) body.ownerCccd = payload.ownerCccd.trim();
+      if (payload.registeredAddress !== undefined) body.registeredAddress = payload.registeredAddress.trim();
+      if (payload.invoiceAddress !== undefined) body.invoiceAddress = payload.invoiceAddress.trim();
+      if (payload.licenseImageUrls !== undefined) body.licenseImageUrls = payload.licenseImageUrls;
+      if (payload.cccdFrontUrl !== undefined) body.cccdFrontUrl = payload.cccdFrontUrl;
+      if (payload.cccdBackUrl !== undefined) body.cccdBackUrl = payload.cccdBackUrl;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/shops/${shopId}/resubmit`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(body),
+    });
+    const json = await res.json();
+
+    if (json.success && json.data) {
+      const updatedShop = json.data;
+      const localList = getLocalShops().map((s) =>
+        s.id === shopId
+          ? {
+              ...s,
+              status: 'PENDING_APPROVAL' as const,
+              approvalStatus: 'PENDING' as const,
+              rejectionReason: '',
+              shopName: updatedShop.shopName ?? s.shopName,
+              taxCode: updatedShop.taxCode ?? s.taxCode,
+              legalOwnerName: updatedShop.legalOwnerName ?? s.legalOwnerName,
+              ownerCccd: updatedShop.ownerCccd ?? s.ownerCccd,
+              address: updatedShop.address ?? s.address,
+              registeredAddress: updatedShop.registeredAddress ?? s.registeredAddress,
+              invoiceAddress: updatedShop.invoiceAddress ?? s.invoiceAddress,
+              licenseImageUrls: updatedShop.licenseImageUrls ?? s.licenseImageUrls,
+              cccdFrontUrl: updatedShop.cccdFrontUrl ?? s.cccdFrontUrl,
+              cccdBackUrl: updatedShop.cccdBackUrl ?? s.cccdBackUrl,
+            }
+          : s
+      );
+      localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(localList));
+    }
+
+    return json;
+  } catch (err: any) {
+    console.error('Lỗi khi resubmitShop:', err);
+    return { success: false, message: err.message || 'Lỗi kết nối máy chủ khi nộp lại hồ sơ' };
   }
 }
 
@@ -1338,17 +1439,27 @@ export async function fetchUserShops(currentShopName?: string): Promise<ShopBran
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
-          const mapped = json.data.map((s: any) => ({
+          const mapped: ShopBranch[] = json.data.map((s: any) => ({
             id: s._id || s.id,
+            _id: s._id || s.id,
             shopName: s.shopName,
             businessType: s.businessType || 'Hộ kinh doanh bán lẻ',
             address: s.address || '',
+            registeredAddress: s.registeredAddress || '',
+            invoiceAddress: s.invoiceAddress || '',
+            taxCode: s.taxCode || '',
+            legalOwnerName: s.legalOwnerName || '',
+            ownerCccd: s.ownerCccd || '',
             phone: s.phone || '',
             isPrimary: s.isPrimary,
             status: s.approvalStatus === 'APPROVED' ? 'ACTIVE' : s.approvalStatus === 'REJECTED' ? 'REJECTED' : 'PENDING_APPROVAL',
             approvalStatus: s.approvalStatus,
-            documentUrls: s.verificationDocs || s.documentUrls || [],
+            rejectionReason: s.rejectionReason || '',
+            documentUrls: s.licenseImageUrls?.length ? s.licenseImageUrls : (s.verificationDocs || s.documentUrls || []),
             verificationDocs: s.verificationDocs || s.documentUrls || [],
+            licenseImageUrls: s.licenseImageUrls || [],
+            cccdFrontUrl: s.cccdFrontUrl || '',
+            cccdBackUrl: s.cccdBackUrl || '',
             createdAt: s.createdAt ? new Date(s.createdAt).toLocaleDateString('vi-VN') : '',
           }));
           localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(mapped));
@@ -1369,10 +1480,18 @@ export async function createAdditionalShop(payload: {
   businessType: string;
   address: string;
   phone: string;
+  taxCode?: string;
+  legalOwnerName?: string;
+  ownerCccd?: string;
+  registeredAddress?: string;
+  invoiceAddress?: string;
+  licenseImageUrls?: string[];
+  cccdFrontUrl?: string;
+  cccdBackUrl?: string;
   verificationDocs: string[];
   ownerName?: string;
   ownerEmail?: string;
-}): Promise<{ success: boolean; data: ShopBranch; message: string }> {
+}): Promise<{ success: boolean; data?: ShopBranch; message: string; code?: string }> {
   try {
     const token = localStorage.getItem('vikeso_token');
     if (token) {
@@ -1387,22 +1506,47 @@ export async function createAdditionalShop(payload: {
           businessType: payload.businessType,
           address: payload.address.trim(),
           phone: payload.phone.trim(),
+          taxCode: payload.taxCode?.trim() || '',
+          legalOwnerName: payload.legalOwnerName?.trim() || '',
+          ownerCccd: payload.ownerCccd?.trim() || '',
+          registeredAddress: payload.registeredAddress?.trim() || '',
+          invoiceAddress: payload.invoiceAddress?.trim() || '',
+          licenseImageUrls: payload.licenseImageUrls || payload.verificationDocs || [],
+          cccdFrontUrl: payload.cccdFrontUrl || '',
+          cccdBackUrl: payload.cccdBackUrl || '',
           verificationDocs: payload.verificationDocs,
           documentUrls: payload.verificationDocs,
         }),
       });
 
       const json = await res.json();
+      if (res.status === 403 || res.status === 409) {
+        return {
+          success: false,
+          code: json.code,
+          message: json.message || 'Không thể tạo cửa hàng',
+        };
+      }
+
       if (json.success && json.data) {
         const created: ShopBranch = {
           id: json.data._id || json.data.id,
+          _id: json.data._id || json.data.id,
           shopName: json.data.shopName,
           businessType: json.data.businessType,
           address: json.data.address,
+          registeredAddress: json.data.registeredAddress || '',
+          invoiceAddress: json.data.invoiceAddress || '',
+          taxCode: json.data.taxCode || '',
+          legalOwnerName: json.data.legalOwnerName || '',
+          ownerCccd: json.data.ownerCccd || '',
           phone: json.data.phone,
           status: 'PENDING_APPROVAL',
           approvalStatus: 'PENDING',
           verificationDocs: json.data.documentUrls || payload.verificationDocs,
+          licenseImageUrls: json.data.licenseImageUrls || payload.licenseImageUrls || [],
+          cccdFrontUrl: json.data.cccdFrontUrl || payload.cccdFrontUrl || '',
+          cccdBackUrl: json.data.cccdBackUrl || payload.cccdBackUrl || '',
           createdAt: new Date().toLocaleDateString('vi-VN'),
         };
         // Lưu kèm vào local đệm
@@ -1415,7 +1559,7 @@ export async function createAdditionalShop(payload: {
         };
       }
     }
-  } catch (e) {
+  } catch (e: any) {
     console.warn('Lỗi gọi API createAdditionalShop, lưu tạm local:', e);
   }
 
@@ -1425,9 +1569,18 @@ export async function createAdditionalShop(payload: {
     shopName: payload.shopName,
     businessType: payload.businessType,
     address: payload.address,
+    registeredAddress: payload.registeredAddress || '',
+    invoiceAddress: payload.invoiceAddress || '',
+    taxCode: payload.taxCode || '',
+    legalOwnerName: payload.legalOwnerName || '',
+    ownerCccd: payload.ownerCccd || '',
     phone: payload.phone,
     status: 'PENDING_APPROVAL',
+    approvalStatus: 'PENDING',
     verificationDocs: payload.verificationDocs,
+    licenseImageUrls: payload.licenseImageUrls || payload.verificationDocs,
+    cccdFrontUrl: payload.cccdFrontUrl || '',
+    cccdBackUrl: payload.cccdBackUrl || '',
     ownerName: payload.ownerName || 'Chủ Hộ Kinh Doanh',
     ownerEmail: payload.ownerEmail || 'owner@vikeso.vn',
     createdAt: new Date().toLocaleDateString('vi-VN'),
@@ -1454,16 +1607,25 @@ export async function fetchAdminShopRequests(): Promise<ShopBranch[]> {
         if (json.success && Array.isArray(json.data)) {
           return json.data.map((s: any) => ({
             id: s._id || s.id,
+            _id: s._id || s.id,
             shopName: s.shopName,
             businessType: s.businessType || 'Hộ kinh doanh bán lẻ',
             address: s.address || '',
+            registeredAddress: s.registeredAddress || '',
+            invoiceAddress: s.invoiceAddress || '',
             phone: s.phone || '',
+            taxCode: s.taxCode || '',
+            legalOwnerName: s.legalOwnerName || '',
+            ownerCccd: s.ownerCccd || '',
             ownerName: s.ownerId?.name || 'Chủ hộ kinh doanh',
             ownerEmail: s.ownerId?.email || '',
             status: s.approvalStatus === 'APPROVED' ? 'ACTIVE' : s.approvalStatus === 'REJECTED' ? 'REJECTED' : 'PENDING_APPROVAL',
             approvalStatus: s.approvalStatus,
-            documentUrls: s.verificationDocs || s.documentUrls || [],
+            documentUrls: s.licenseImageUrls?.length ? s.licenseImageUrls : (s.verificationDocs || s.documentUrls || []),
             verificationDocs: s.verificationDocs || s.documentUrls || [],
+            licenseImageUrls: s.licenseImageUrls || [],
+            cccdFrontUrl: s.cccdFrontUrl || '',
+            cccdBackUrl: s.cccdBackUrl || '',
             rejectionReason: s.rejectionReason,
             createdAt: s.createdAt ? new Date(s.createdAt).toLocaleDateString('vi-VN') : '',
           }));

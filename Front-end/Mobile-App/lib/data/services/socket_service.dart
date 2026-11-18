@@ -23,12 +23,16 @@ class SocketService {
   final _subscriptionCtrl = StreamController<Map<String, dynamic>>.broadcast();
   final _connectionCtrl = StreamController<bool>.broadcast();
   final _forceLogoutCtrl = StreamController<Map<String, dynamic>>.broadcast();
+  final _shopStatusCtrl = StreamController<Map<String, dynamic>>.broadcast();
 
   /// Giao dịch thêm/sửa/xoá → Dashboard, Thu Chi, Báo cáo tải lại.
   Stream<Map<String, dynamic>> get onTransactionChanged => _transactionCtrl.stream;
 
   /// Hồ sơ / cài đặt thông báo / Telegram / gói dịch vụ thay đổi.
   Stream<Map<String, dynamic>> get onProfileChanged => _profileCtrl.stream;
+
+  /// Trạng thái phê duyệt / từ chối hồ sơ cửa hàng từ Admin (Socket.IO event: shop_status_updated).
+  Stream<Map<String, dynamic>> get onShopStatusUpdated => _shopStatusCtrl.stream;
 
   // =============================================================================
   // NGHIỆP VỤ: THÔNG BÁO THAY ĐỔI HỒ SƠ / TÊN QUÁN TỨC THÌ TRÊN TOÀN APP
@@ -103,6 +107,11 @@ class SocketService {
 
     socket.on('new_transaction', (data) => _transactionCtrl.add(_asMap(data)));
     socket.on('profile_updated', (data) => _profileCtrl.add(_asMap(data)));
+    socket.on('shop_status_updated', (data) {
+      final map = _asMap(data);
+      _shopStatusCtrl.add(map);
+      _profileCtrl.add({...map, 'reason': 'shop_status_updated'});
+    });
     socket.on('subscription_upgraded', (data) {
       final map = _asMap(data);
       _subscriptionCtrl.add(map);

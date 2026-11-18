@@ -25,6 +25,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _displayName = 'Người dùng';
   String _storeStatus = 'ACTIVE';
   String _pendingShopName = '';
+  String _rejectionReason = '';
   List<Map<String, dynamic>> _transactions = [];
 
   // Thống kê động
@@ -39,6 +40,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<double> _weeklyRevenue = List.filled(7, 0.0);
   StreamSubscription? _txSub;
   StreamSubscription? _profileSub;
+  StreamSubscription? _shopStatusSub;
 
   @override
   void initState() {
@@ -50,12 +52,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _profileSub = SocketService.instance.onProfileChanged.listen((_) {
       _loadData(silent: true);
     });
+    _shopStatusSub = SocketService.instance.onShopStatusUpdated.listen((event) {
+      if (mounted) {
+        setState(() {
+          final status = event['status']?.toString() ?? 'ACTIVE';
+          _storeStatus = status == 'APPROVED' ? 'ACTIVE' : status;
+          _rejectionReason = event['rejectionReason']?.toString() ?? '';
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     _txSub?.cancel();
     _profileSub?.cancel();
+    _shopStatusSub?.cancel();
     super.dispose();
   }
 
@@ -873,22 +885,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (_storeStatus == 'ACTIVE') return const SizedBox.shrink();
 
     final isPending = _storeStatus == 'PENDING';
+    final isRejected = _storeStatus == 'REJECTED';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isPending ? const Color(0xFFFFFBEB) : const Color(0xFFFFF0F5),
+        color: isRejected
+            ? const Color(0xFFFFF1F2)
+            : isPending
+                ? const Color(0xFFFFFBEB)
+                : const Color(0xFFFFF0F5),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isPending ? const Color(0xFFFDE68A) : const Color(0xFFFF4783).withValues(alpha: 0.35),
+          color: isRejected
+              ? const Color(0xFFFECDD3)
+              : isPending
+                  ? const Color(0xFFFDE68A)
+                  : const Color(0xFFFF4783).withValues(alpha: 0.35),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: isPending
-                ? const Color(0xFFF59E0B).withValues(alpha: 0.08)
-                : const Color(0xFFFF4783).withValues(alpha: 0.08),
+            color: isRejected
+                ? const Color(0xFFE11D48).withValues(alpha: 0.08)
+                : isPending
+                    ? const Color(0xFFF59E0B).withValues(alpha: 0.08)
+                    : const Color(0xFFFF4783).withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -904,21 +927,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: isPending ? const Color(0xFFFEF3C7) : const Color(0xFFFF4783),
+                  color: isRejected
+                      ? const Color(0xFFFFE4E6)
+                      : isPending
+                          ? const Color(0xFFFEF3C7)
+                          : const Color(0xFFFF4783),
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: isPending
-                          ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
-                          : const Color(0xFFFF4783).withValues(alpha: 0.28),
+                      color: isRejected
+                          ? const Color(0xFFE11D48).withValues(alpha: 0.2)
+                          : isPending
+                              ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
+                              : const Color(0xFFFF4783).withValues(alpha: 0.28),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
                   ],
                 ),
                 child: Icon(
-                  isPending ? Icons.pending_actions_rounded : Icons.storefront_rounded,
-                  color: isPending ? const Color(0xFFB45309) : Colors.white,
+                  isRejected
+                      ? Icons.error_outline_rounded
+                      : isPending
+                          ? Icons.pending_actions_rounded
+                          : Icons.storefront_rounded,
+                  color: isRejected
+                      ? const Color(0xFFBE123C)
+                      : isPending
+                          ? const Color(0xFFB45309)
+                          : Colors.white,
                   size: 24,
                 ),
               ),
@@ -931,9 +968,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            isPending
-                                ? 'Hồ sơ: ${_pendingShopName.isNotEmpty ? _pendingShopName : _displayName}'
-                                : 'Chào mừng bạn đến với VikeSo!',
+                            isRejected
+                                ? 'Hồ sơ cửa hàng bị từ chối'
+                                : isPending
+                                    ? 'Hồ sơ: ${_pendingShopName.isNotEmpty ? _pendingShopName : _displayName}'
+                                    : 'Chào mừng bạn đến với VikeSo!',
                             style: const TextStyle(
                               fontSize: 14.5,
                               fontWeight: FontWeight.w800,
@@ -945,15 +984,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                           decoration: BoxDecoration(
-                            color: isPending ? const Color(0xFFFDE68A) : const Color(0xFFD0F81B),
+                            color: isRejected
+                                ? const Color(0xFFFFE4E6)
+                                : isPending
+                                    ? const Color(0xFFFDE68A)
+                                    : const Color(0xFFD0F81B),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            isPending ? 'CHỜ ADMIN DUYỆT' : 'BƯỚC THIẾT LẬP',
-                            style: const TextStyle(
+                            isRejected
+                                ? 'BỊ TỪ CHỐI'
+                                : isPending
+                                    ? 'CHỜ ADMIN DUYỆT'
+                                    : 'BƯỚC THIẾT LẬP',
+                            style: TextStyle(
                               fontSize: 9.5,
                               fontWeight: FontWeight.w900,
-                              color: Color(0xFF0F172A),
+                              color: isRejected ? const Color(0xFF9F1239) : const Color(0xFF0F172A),
                             ),
                           ),
                         ),
@@ -961,9 +1008,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      isPending
-                          ? 'Hồ sơ pháp lý đang được Ban Quản Trị thẩm định. Bạn sẽ có thể bóc tách hóa đơn ngay khi cơ sở được phê duyệt!'
-                          : 'Hãy tạo cửa hàng đầu tiên để bắt đầu quét hóa đơn, bóc tách dòng tiền và phân loại chi phí tự động.',
+                      isRejected
+                          ? (_rejectionReason.isNotEmpty
+                              ? 'Lý do từ chối: $_rejectionReason. Vui lòng cập nhật lại hồ sơ.'
+                              : 'Hồ sơ chứng từ chưa đạt yêu cầu. Vui lòng kiểm tra lại thông tin và nộp lại.')
+                          : isPending
+                              ? 'Hồ sơ pháp lý đang được Ban Quản Trị thẩm định. Bạn sẽ có thể bóc tách hóa đơn ngay khi cơ sở được phê duyệt!'
+                              : 'Hãy tạo cửa hàng đầu tiên để bắt đầu quét hóa đơn, bóc tách dòng tiền và phân loại chi phí tự động.',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF475569),
@@ -981,7 +1032,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             height: 40,
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: isPending ? const Color(0xFFD97706) : const Color(0xFFFF4783),
+                backgroundColor: isRejected
+                    ? const Color(0xFFE11D48)
+                    : isPending
+                        ? const Color(0xFFD97706)
+                        : const Color(0xFFFF4783),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -989,12 +1044,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               onPressed: () => MainNavigationShell.switchToTab(context, 3),
               icon: Icon(
-                isPending ? Icons.visibility_rounded : Icons.add_business_rounded,
+                isRejected
+                    ? Icons.restart_alt_rounded
+                    : isPending
+                        ? Icons.visibility_rounded
+                        : Icons.add_business_rounded,
                 size: 18,
                 color: Colors.white,
               ),
               label: Text(
-                isPending ? 'Xem Trạng Thái Thẩm Định' : '+ Thiết Lập Cửa Hàng Ngay',
+                isRejected
+                    ? 'Cập Nhật & Nộp Lại Hồ Sơ'
+                    : isPending
+                        ? 'Xem Trạng Thái Thẩm Định'
+                        : '+ Thiết Lập Cửa Hàng Ngay',
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
