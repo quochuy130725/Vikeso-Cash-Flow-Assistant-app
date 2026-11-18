@@ -1520,7 +1520,7 @@ export async function createAdditionalShop(payload: {
       });
 
       const json = await res.json();
-      if (res.status === 403 || res.status === 409) {
+      if (res.status === 400 || res.status === 403 || res.status === 409) {
         return {
           success: false,
           code: json.code,
@@ -1642,7 +1642,7 @@ export async function reviewAdminShopRequest(
   shopId: string,
   action: 'APPROVE' | 'REJECT',
   rejectReason?: string
-): Promise<{ success: boolean; message: string }> {
+): Promise<{ success: boolean; message: string; code?: string }> {
   try {
     const token = localStorage.getItem('vikeso_token');
     if (token) {
@@ -1657,26 +1657,31 @@ export async function reviewAdminShopRequest(
           rejectionReason: rejectReason || 'Chứng từ chưa đạt yêu cầu',
         }),
       });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) {
-          // Cập nhật cả cache local
-          const list = getLocalShops().map((s) =>
-            s.id === shopId
-              ? {
-                  ...s,
-                  status: (action === 'APPROVE' ? 'ACTIVE' : 'REJECTED') as ShopBranch['status'],
-                  approvalStatus: (action === 'APPROVE' ? 'APPROVED' : 'REJECTED') as ShopBranch['approvalStatus'],
-                  rejectionReason: action === 'REJECT' ? rejectReason || 'Chứng từ chưa rõ nét' : undefined,
-                }
-              : s
-          );
-          localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(list));
-          return {
-            success: true,
-            message: action === 'APPROVE' ? 'Đã phê duyệt chi nhánh thành công!' : 'Đã từ chối chi nhánh.',
-          };
-        }
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return {
+          success: false,
+          code: json.code,
+          message: json.message || 'Không thể xử lý yêu cầu duyệt cửa hàng.',
+        };
+      }
+      if (json.success) {
+        // Cập nhật cả cache local
+        const list = getLocalShops().map((s) =>
+          s.id === shopId
+            ? {
+                ...s,
+                status: (action === 'APPROVE' ? 'ACTIVE' : 'REJECTED') as ShopBranch['status'],
+                approvalStatus: (action === 'APPROVE' ? 'APPROVED' : 'REJECTED') as ShopBranch['approvalStatus'],
+                rejectionReason: action === 'REJECT' ? rejectReason || 'Chứng từ chưa rõ nét' : undefined,
+              }
+            : s
+        );
+        localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(list));
+        return {
+          success: true,
+          message: action === 'APPROVE' ? 'Đã phê duyệt chi nhánh thành công!' : 'Đã từ chối chi nhánh.',
+        };
       }
     }
   } catch (e) {
