@@ -31,3 +31,8 @@ build/
 build*
 *.nosync
 *.nosync/
+
+# Release signing keys (TUYỆT ĐỐI KHÔNG COMMIT)
+android/key.properties
+*.jks
+*.keystore

@@ -402,18 +402,51 @@ const reviewShopRequest = async (id, { action, rejectionReason }, adminId) => {
   const shop = await Shop.findById(id);
   if (!shop) { const e = new Error('Không tìm thấy cửa hàng.'); e.statusCode = 404; throw e; }
 
+  // Nếu APPROVE mà có taxCode trùng với 1 shop APPROVED khác thì chặn 409 TAX_CODE_ALREADY_EXISTS
+  if (action === 'APPROVE' && shop.taxCode && String(shop.taxCode).trim()) {
+    const exactConflict = await Shop.findOne({
+      _id: { $ne: shop._id },
+      taxCode: String(shop.taxCode).trim(),
+      approvalStatus: 'APPROVED',
+    }).lean();
+    if (exactConflict) {
+      const e = new Error('Mã số thuế này đã được đăng ký trên hệ thống.');
+      e.statusCode = 409;
+      e.code = 'TAX_CODE_ALREADY_EXISTS';
+      throw e;
+    }
+  }
+
   shop.approvalStatus = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
   shop.rejectionReason = action === 'REJECT' ? (rejectionReason || 'Chứng từ chưa đạt yêu cầu.') : '';
   shop.reviewedBy = adminId;
   shop.reviewedAt = new Date();
   await shop.save();
 
-  // Bắn socket cho chủ shop
-  require('../socket').emitToUser(shop.ownerId, 'shop_status_updated', {
+  // Nếu APPROVE và chủ shop chưa có activeShopId (hoặc đây là shop đầu tiên được duyệt), tự động gán vào User
+  if (action === 'APPROVE') {
+    const owner = await User.findById(shop.ownerId);
+    if (owner && (!owner.activeShopId || !owner.shopName || owner.shopName === 'Chưa thiết lập cửa hàng')) {
+      owner.activeShopId = shop._id;
+      owner.shopName = shop.shopName;
+      owner.onboardingCompleted = true;
+      await owner.save();
+    }
+  }
+
+  // Bắn socket cho chủ shop theo đúng hợp đồng API 4
+  const socketMod = require('../socket');
+  socketMod.emitToUser(shop.ownerId, 'shop_status_updated', {
     shopId: shop._id,
     shopName: shop.shopName,
     status: shop.approvalStatus,
     rejectionReason: shop.rejectionReason,
+  });
+  socketMod.emitToUser(shop.ownerId, 'profile_updated', {
+    reason: 'shop_status_updated',
+    shopId: shop._id,
+    shopName: shop.shopName,
+    status: shop.approvalStatus,
   });
 
   return shop;
