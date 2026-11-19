@@ -76,7 +76,7 @@ MAIL_PASS=your_16_character_app_password
 
 # Telegram Bot
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
-SERVER_URL=https://vikeso-cash-flow-assistant-app.onrender.com
+SERVER_URL=https://vikeso-cash-flow-assistant-app-oxp5.onrender.com
 ```
 
 ---

@@ -12,9 +12,14 @@ import {
   ShopBranch,
 } from '../types';
 
-const API_BASE_URL =
+const rawApiUrl = (
   import.meta.env.VITE_API_URL ||
-  'https://vikeso-cash-flow-assistant-app.onrender.com/api';
+  'https://vikeso-cash-flow-assistant-app-oxp5.onrender.com/api'
+)
+  .trim()
+  .replace(/\/+$/, '');
+
+const API_BASE_URL = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl}/api`;
 
 export function getAuthToken(): string | null {
   try {

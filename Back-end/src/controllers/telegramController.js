@@ -89,11 +89,11 @@ exports.handleWebhook = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/telegram/set-webhook
 // Gọi 1 lần để đăng ký webhook URL với Telegram
-// VD: GET https://vikeso-cash-flow-assistant-app.onrender.com/api/telegram/set-webhook
+// VD: GET https://vikeso-cash-flow-assistant-app-oxp5.onrender.com/api/telegram/set-webhook
 // ─────────────────────────────────────────────────────────────────────────────
 exports.setWebhook = async (req, res) => {
   try {
-    const webhookUrl = `${process.env.SERVER_URL || 'https://vikeso-cash-flow-assistant-app.onrender.com'}/api/telegram/webhook`;
+    const webhookUrl = `${process.env.SERVER_URL || 'https://vikeso-cash-flow-assistant-app-oxp5.onrender.com'}/api/telegram/webhook`;
     const response   = await axios.get(`${BASE_URL}/setWebhook`, {
       params: { url: webhookUrl },
     });

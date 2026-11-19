@@ -70,7 +70,7 @@ lib/
 Tạo file `.env` tại thư mục gốc `Front-end/Mobile-App/`:
 ```env
 # URL Backend Production trên Render (hoặc http://10.0.2.2:5000 khi chạy máy ảo Android Local)
-API_BASE_URL=https://vikeso-cash-flow-assistant-app.onrender.com/api
+API_BASE_URL=https://vikeso-cash-flow-assistant-app-oxp5.onrender.com/api
 ```
 
 ---

@@ -152,7 +152,7 @@ npm run dev
 # Deploy lên Vercel:
 # 1. Kết nối kho lưu trữ GitHub với Vercel.
 # 2. Cài đặt Root Directory: Front-end/Web
-# 3. Thêm biến môi trường: VITE_API_URL = https://vikeso-cash-flow-assistant-app.onrender.com/api
+# 3. Thêm biến môi trường: VITE_API_URL = https://vikeso-cash-flow-assistant-app-oxp5.onrender.com/api
 ```
 
 ---

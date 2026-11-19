@@ -38,7 +38,7 @@ Giao diện Web chính thức của **Vikeso** (Trợ lý Quản trị Dòng ti�
 Tạo file `.env` tại thư mục gốc `Front-end/Web/`:
 ```env
 # URL API Backend
-VITE_API_URL=https://vikeso-cash-flow-assistant-app.onrender.com/api
+VITE_API_URL=https://vikeso-cash-flow-assistant-app-oxp5.onrender.com/api
 ```
 
 ---
@@ -67,5 +67,5 @@ npm run build   # Đóng gói sản phẩm vào thư mục dist/
    * **Application Preset:** `Vite`
    * **Environment Variables:**
      * Key: `VITE_API_URL`
-     * Value: `https://vikeso-cash-flow-assistant-app.onrender.com/api`
+     * Value: `https://vikeso-cash-flow-assistant-app-oxp5.onrender.com/api`
 4. Bấm **Deploy**. Vercel sẽ tự động đọc file `vercel.json` (định dạng UTF-8 No BOM) để định tuyến SPA chuẩn xác 100%.

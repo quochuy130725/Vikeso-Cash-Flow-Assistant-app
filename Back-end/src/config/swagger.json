@@ -2,12 +2,12 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Vikeso API Documentation",
-    "version": "1.0.0",
-    "description": "Tài liệu API cho dự án Vikeso - Trợ lý Kế toán AI cho Hộ kinh doanh"
+    "version": "3.2.0",
+    "description": "Tài liệu API cho dự án Vikeso - Trợ lý Kế toán AI & Quản trị Dòng tiền Đa chi nhánh cho Hộ kinh doanh"
   },
   "servers": [
     {
-      "url": "https://vikeso-cash-flow-assistant-app.onrender.com",
+      "url": "https://vikeso-cash-flow-assistant-app-oxp5.onrender.com",
       "description": "Production server (Render)"
     },
     {
@@ -734,6 +734,356 @@
           { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
         ],
         "responses": { "200": { "description": "Danh sách payments + sums" } }
+      }
+    },
+    "/api/auth/verify-otp": {
+      "post": {
+        "summary": "Xác thực mã OTP 6 chữ số sau khi đăng ký",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "otpCode"],
+                "properties": {
+                  "email": { "type": "string", "example": "user@example.com" },
+                  "otpCode": { "type": "string", "example": "123456" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Kích hoạt tài khoản và trả về accessToken" }, "400": { "description": "OTP sai hoặc hết hạn" } }
+      }
+    },
+    "/api/auth/resend-otp": {
+      "post": {
+        "summary": "Gửi lại mã OTP xác thực đăng ký",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": { "email": { "type": "string", "example": "user@example.com" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Đã gửi lại mã OTP" } }
+      }
+    },
+    "/api/auth/change-password": {
+      "put": {
+        "summary": "Đổi mật khẩu tài khoản hiện tại",
+        "tags": ["Auth"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["currentPassword", "newPassword"],
+                "properties": {
+                  "currentPassword": { "type": "string" },
+                  "newPassword": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Đổi mật khẩu thành công" } }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "summary": "Yêu cầu mã OTP quên mật khẩu qua Email",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": { "email": { "type": "string", "example": "user@example.com" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Đã gửi mã đặt lại mật khẩu" } }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "summary": "Đặt lại mật khẩu mới bằng mã OTP",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "otpCode", "newPassword"],
+                "properties": {
+                  "email": { "type": "string" },
+                  "otpCode": { "type": "string" },
+                  "newPassword": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Đặt lại mật khẩu thành công" } }
+      }
+    },
+    "/api/shops/onboarding": {
+      "post": {
+        "summary": "Tạo cửa hàng đầu tiên (Onboarding) kèm thông tin pháp lý & KYC",
+        "tags": ["Shops"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["shopName"],
+                "properties": {
+                  "shopName": { "type": "string", "example": "Tạp Hóa Minh Phát" },
+                  "businessType": { "type": "string", "example": "Hộ kinh doanh bán lẻ" },
+                  "taxCode": { "type": "string", "example": "0312345678" },
+                  "legalOwnerName": { "type": "string", "example": "Nguyễn Văn A" },
+                  "ownerCccd": { "type": "string", "example": "079200012345" },
+                  "address": { "type": "string" },
+                  "registeredAddress": { "type": "string" },
+                  "invoiceAddress": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "licenseImageUrls": { "type": "array", "items": { "type": "string" } },
+                  "cccdFrontUrl": { "type": "string" },
+                  "cccdBackUrl": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Khởi tạo cửa hàng thành công" }, "409": { "description": "Trùng MST hoặc CCCD (TAX_CODE_ALREADY_EXISTS / CCCD_ALREADY_EXISTS)" } }
+      }
+    },
+    "/api/shops": {
+      "get": {
+        "summary": "Lấy danh sách tất cả cửa hàng / chi nhánh của Owner",
+        "tags": ["Shops"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Danh sách cửa hàng" } }
+      },
+      "post": {
+        "summary": "Đăng ký thêm chi nhánh thứ 2+ kèm hồ sơ KYC (yêu cầu gói PRO)",
+        "tags": ["Shops"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["shopName"],
+                "properties": {
+                  "shopName": { "type": "string" },
+                  "businessType": { "type": "string" },
+                  "taxCode": { "type": "string" },
+                  "legalOwnerName": { "type": "string" },
+                  "ownerCccd": { "type": "string" },
+                  "address": { "type": "string" },
+                  "registeredAddress": { "type": "string" },
+                  "invoiceAddress": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "licenseImageUrls": { "type": "array", "items": { "type": "string" } },
+                  "cccdFrontUrl": { "type": "string" },
+                  "cccdBackUrl": { "type": "string" },
+                  "verificationDocs": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Gửi hồ sơ chi nhánh mới thành công (PENDING)" }, "400": { "description": "INVALID_DOCUMENT_DATA" }, "403": { "description": "TIER_SHOP_LIMIT_EXCEEDED" }, "409": { "description": "TAX_CODE_ALREADY_EXISTS / CCCD_ALREADY_EXISTS" } }
+      }
+    },
+    "/api/shops/{id}": {
+      "put": {
+        "summary": "Cập nhật thông tin chi tiết & hồ sơ KYC của cửa hàng",
+        "tags": ["Shops"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "shopName": { "type": "string" },
+                  "businessType": { "type": "string" },
+                  "taxCode": { "type": "string" },
+                  "legalOwnerName": { "type": "string" },
+                  "ownerCccd": { "type": "string" },
+                  "address": { "type": "string" },
+                  "registeredAddress": { "type": "string" },
+                  "invoiceAddress": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "licenseImageUrls": { "type": "array", "items": { "type": "string" } },
+                  "cccdFrontUrl": { "type": "string" },
+                  "cccdBackUrl": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Cập nhật cửa hàng thành công" }, "409": { "description": "TAX_CODE_ALREADY_EXISTS / CCCD_ALREADY_EXISTS" } }
+      }
+    },
+    "/api/shops/{id}/switch": {
+      "patch": {
+        "summary": "Chuyển đổi cửa hàng / chi nhánh đang làm việc (activeShopId)",
+        "tags": ["Shops"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Đã chuyển cửa hàng làm việc" } }
+      }
+    },
+    "/api/shops/{id}/resubmit": {
+      "post": {
+        "summary": "Nộp lại hồ sơ KYC sau khi bị Admin từ chối (REJECTED -> PENDING)",
+        "tags": ["Shops"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Đã nộp lại hồ sơ thành công" }, "400": { "description": "INVALID_DOCUMENT_DATA" }, "409": { "description": "TAX_CODE_ALREADY_EXISTS / CCCD_ALREADY_EXISTS" } }
+      }
+    },
+    "/api/admin/shops/requests": {
+      "get": {
+        "summary": "Admin: danh sách hồ sơ cửa hàng / chi nhánh cần duyệt",
+        "tags": ["Admin"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["ALL", "PENDING", "APPROVED", "REJECTED"] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": { "200": { "description": "Danh sách yêu cầu" } }
+      }
+    },
+    "/api/admin/shops/{id}/review": {
+      "patch": {
+        "summary": "Admin: phê duyệt (APPROVE) hoặc từ chối (REJECT) hồ sơ cửa hàng",
+        "tags": ["Admin"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action"],
+                "properties": {
+                  "action": { "type": "string", "enum": ["APPROVE", "REJECT"] },
+                  "rejectionReason": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Đã xử lý duyệt hồ sơ & phát Socket shop_status_updated" }, "409": { "description": "TAX_CODE_ALREADY_EXISTS" } }
+      }
+    },
+    "/api/staff": {
+      "get": {
+        "summary": "Danh sách nhân viên thu ngân của cửa hàng",
+        "tags": ["Staff"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Danh sách nhân viên" } }
+      },
+      "post": {
+        "summary": "Tạo tài khoản nhân viên (STAFF) mới",
+        "tags": ["Staff"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "201": { "description": "Tạo nhân viên thành công" } }
+      }
+    },
+    "/api/staff/{id}/status": {
+      "patch": {
+        "summary": "Khóa hoặc mở khóa tài khoản nhân viên (tăng tokenVersion + bắn force_logout)",
+        "tags": ["Staff"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Đã cập nhật trạng thái nhân viên" } }
+      }
+    },
+    "/api/staff/{id}/reset-password": {
+      "put": {
+        "summary": "Chủ hộ đặt lại mật khẩu cho nhân viên",
+        "tags": ["Staff"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Đã cấp lại mật khẩu" } }
+      }
+    },
+    "/api/staff/{id}": {
+      "delete": {
+        "summary": "Xóa tài khoản nhân viên",
+        "tags": ["Staff"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Đã xóa nhân viên" } }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "summary": "Lấy cây danh mục Thu/Chi Cha - Con",
+        "tags": ["Categories"],
+        "responses": { "200": { "description": "Danh sách danh mục" } }
+      },
+      "post": {
+        "summary": "Tạo danh mục Thu/Chi mới",
+        "tags": ["Categories"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "201": { "description": "Tạo danh mục thành công" } }
+      }
+    },
+    "/api/categories/{id}": {
+      "put": {
+        "summary": "Cập nhật danh mục Thu/Chi",
+        "tags": ["Categories"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Cập nhật thành công" } }
+      },
+      "delete": {
+        "summary": "Xóa danh mục Thu/Chi",
+        "tags": ["Categories"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Đã xóa danh mục" } }
+      }
+    },
+    "/api/transactions/analytics": {
+      "get": {
+        "summary": "Thống kê doanh thu Thu/Chi & so sánh tăng trưởng cùng kỳ",
+        "tags": ["Transactions"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "period", "in": "query", "schema": { "type": "string", "enum": ["day", "week", "month", "year"] } },
+          { "name": "date", "in": "query", "schema": { "type": "string" } },
+          { "name": "compare", "in": "query", "schema": { "type": "boolean" } }
+        ],
+        "responses": { "200": { "description": "Số liệu phân tích tài chính" } }
       }
     }
   },
