@@ -665,45 +665,63 @@ export async function createBillingOrder(payload: {
     const json = await res.json();
     if (json.success && json.data) {
       const orderCode = json.data.orderCode || fallbackOrderCode;
+      const transferContent = json.data.transferContent || orderCode;
       const amount = Number(json.data.amount || pkgAmount);
+      const bankCode = json.data.bankCode || 'MB';
+      const bankAccount = json.data.bankAccount || '0829100286';
+      const accountName = json.data.accountName || 'PHAM HUYNH QUOC HUY';
+      const rawQr = json.data.qrImageUrl || json.data.qrUrl || json.data.qrCodeUrl;
       const qrCodeUrl =
-        json.data.qrCodeUrl && String(json.data.qrCodeUrl).startsWith('http')
-          ? json.data.qrCodeUrl
-          : `https://img.vietqr.io/image/MB-0829100286-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(
-              orderCode
-            )}&accountName=${encodeURIComponent('PHAM HUYNH QUOC HUY')}`;
+        rawQr && String(rawQr).startsWith('http')
+          ? rawQr
+          : `https://img.vietqr.io/image/${bankCode}-${bankAccount}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(
+              transferContent
+            )}&accountName=${encodeURIComponent(accountName)}`;
       return {
         success: true,
         data: {
           ...json.data,
           orderCode,
+          transferContent,
           amount,
+          bankCode,
+          bankAccount,
+          accountName,
           qrCodeUrl,
           packageDuration: payload.packageDuration || '1M',
         },
       };
     }
     return {
-      success: true,
-      data: {
-        orderCode: fallbackOrderCode,
-        amount: pkgAmount,
-        transferContent: fallbackOrderCode,
-        qrCodeUrl: fallbackQrUrl,
-        packageDuration: payload.packageDuration || '1M',
-      },
+      success: false,
+      message: json.message || 'Không thể khởi tạo đơn thanh toán từ máy chủ.',
     };
   } catch (err: any) {
-    console.warn('Fallback VietQR order:', err);
+    console.warn('Lỗi createBillingOrder:', err);
     return {
-      success: true,
-      data: {
-        orderCode: fallbackOrderCode,
-        amount: pkgAmount,
-        transferContent: fallbackOrderCode,
-        qrCodeUrl: fallbackQrUrl,
-        packageDuration: payload.packageDuration || '1M',
-      },
+      success: false,
+      message: err.message || 'Không thể kết nối máy chủ thanh toán. Vui lòng thử lại.',
+    };
+  }
+}
+
+/**
+ * Kiểm tra trạng thái đơn nâng cấp PRO SePay
+ * GET /api/billing/status/:orderCode
+ */
+export async function fetchBillingOrderStatus(
+  orderCode: string
+): Promise<{ success: boolean; data?: any; message?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/billing/status/${encodeURIComponent(orderCode)}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return await res.json();
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err.message || 'Không thể kiểm tra trạng thái thanh toán.',
     };
   }
 }

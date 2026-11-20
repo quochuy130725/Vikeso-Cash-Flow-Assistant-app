@@ -5,6 +5,7 @@ import {
   resubmitShop,
   changeUserPassword,
   createBillingOrder,
+  fetchBillingOrderStatus,
   fetchUserShops,
   createAdditionalShop,
   switchActiveShop,
@@ -63,7 +64,9 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
   // Billing upgrade modal state (Step 1: Package comparison popup -> Step 2: VietQR modal)
   const [packagePopupOpen, setPackagePopupOpen] = useState(false);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [isCheckingBilling, setIsCheckingBilling] = useState(false);
   const [billingOrder, setBillingOrder] = useState<any>(null);
+  const [upgradedProLocal, setUpgradedProLocal] = useState(false);
 
   // Multi-shop management state (FE-WEB-13)
   const [shops, setShops] = useState<ShopBranch[]>([]);
@@ -77,6 +80,47 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
 
   // Toast
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  const checkBillingOrderNow = async (orderCode: string, silent = false) => {
+    if (!orderCode) return;
+    if (!silent) setIsCheckingBilling(true);
+    try {
+      const res = await fetchBillingOrderStatus(orderCode);
+      const status = res.data?.status;
+      if (res.success && status === 'SUCCESS') {
+        setUpgradedProLocal(true);
+        try {
+          const rawUser = localStorage.getItem('vikeso_user');
+          if (rawUser) {
+            const u = JSON.parse(rawUser);
+            u.subscriptionPlan = 'PRO';
+            localStorage.setItem('vikeso_user', JSON.stringify(u));
+          }
+        } catch {}
+        window.dispatchEvent(new CustomEvent('vikeso_plan_updated', { detail: { plan: 'PRO' } }));
+        setBillingOrder(null);
+        showToast('Thanh toán thành công! Tài khoản của bạn đã được nâng cấp lên VikeSo PRO.');
+      } else if (res.success && status === 'EXPIRED') {
+        if (!silent) showToast('Đơn hàng đã hết hạn. Vui lòng tạo mã VietQR mới.', 'error');
+      } else if (res.success && status === 'FAILED') {
+        if (!silent) showToast('Số tiền chuyển khoản chưa đủ 99.000đ. Vui lòng kiểm tra lại.', 'error');
+      } else if (!silent) {
+        showToast('Hệ thống chưa nhận được tiền chuyển khoản. Vui lòng chờ 5–10 giây rồi bấm kiểm tra lại.');
+      }
+    } catch {
+      if (!silent) showToast('Không thể kiểm tra trạng thái đơn hàng.', 'error');
+    } finally {
+      if (!silent) setIsCheckingBilling(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!billingOrder?.orderCode) return;
+    const timer = setInterval(() => {
+      checkBillingOrderNow(billingOrder.orderCode, true);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [billingOrder?.orderCode]);
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setToastMessage({ text, type });
@@ -566,7 +610,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
     showToast('Đã nạp 2 ảnh chứng từ mẫu (GPKD & Biển hiệu) để bạn thử nghiệm!');
   };
 
-  const isPro = currentUser?.subscriptionPlan === 'PRO';
+  const isPro = upgradedProLocal || currentUser?.subscriptionPlan === 'PRO';
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -1716,6 +1760,14 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
 
             <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-left space-y-1 font-mono">
               <div className="flex justify-between">
+                <span className="text-slate-500 font-sans">Ngân hàng:</span>
+                <span className="font-bold text-slate-900">{billingOrder.bankCode || 'MB'} ({billingOrder.bankAccount || '0829100286'})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-sans">Chủ TK:</span>
+                <span className="font-bold text-slate-900">{billingOrder.accountName || 'PHAM HUYNH QUOC HUY'}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-slate-500 font-sans">Mã đơn hàng:</span>
                 <span className="font-bold text-slate-900">{billingOrder.orderCode}</span>
               </div>
@@ -1729,12 +1781,23 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
               </div>
             </div>
 
-            <button
-              onClick={() => setBillingOrder(null)}
-              className="w-full py-2.5 rounded-xl bg-[#ff4783] text-white text-xs font-bold hover:bg-[#e0326e] transition-colors cursor-pointer"
-            >
-              Đóng Cửa Sổ
-            </button>
+            <div className="space-y-2">
+              <button
+                type="button"
+                disabled={isCheckingBilling}
+                onClick={() => checkBillingOrderNow(billingOrder.orderCode, false)}
+                className="w-full py-2.5 rounded-xl bg-[#ff4783] text-white text-xs font-bold hover:bg-[#e0326e] transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {isCheckingBilling ? 'Đang kiểm tra thanh toán...' : 'Tôi đã chuyển khoản — Kiểm tra ngay'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingOrder(null)}
+                className="w-full py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                Đóng Cửa Sổ
+              </button>
+            </div>
           </div>
         </div>
       )}

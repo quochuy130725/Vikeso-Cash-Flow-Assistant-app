@@ -28,7 +28,8 @@ class AuthRepository {
 
   static final _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
-    clientId: dotenv.env['GOOGLE_CLIENT_ID'],
+    clientId: kIsWeb ? dotenv.env['GOOGLE_CLIENT_ID'] : null,
+    serverClientId: kIsWeb ? null : dotenv.env['GOOGLE_CLIENT_ID'],
   );
 
   static const _kAccessToken = 'access_token';
