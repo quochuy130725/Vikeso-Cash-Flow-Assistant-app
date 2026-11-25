@@ -29,6 +29,10 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
   const [roleFilter, setRoleFilter] = useState<'all' | 'OWNER' | 'ADMIN'>('all');
   const [planFilter, setPlanFilter] = useState<'all' | 'pro' | 'free'>('all');
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   // Detail Modal for 2nd+ Shop Branch Request
   const [selectedShopRequest, setSelectedShopRequest] = useState<ShopBranch | null>(null);
 
@@ -109,6 +113,40 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
       return true;
     });
   }, [users, roleFilter, planFilter, searchTerm]);
+
+  // Reset pagination to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter, planFilter, rowsPerPage]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / rowsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedUsers = useMemo(() => {
+    const startIdx = (safeCurrentPage - 1) * rowsPerPage;
+    return filteredUsers.slice(startIdx, startIdx + rowsPerPage);
+  }, [filteredUsers, safeCurrentPage, rowsPerPage]);
+
+  const getPageNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages: (number | string)[] = [];
+    pages.push(1);
+    if (safeCurrentPage > 3) {
+      pages.push('...');
+    }
+    const start = Math.max(2, safeCurrentPage - 1);
+    const end = Math.min(totalPages - 1, safeCurrentPage + 1);
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    if (safeCurrentPage < totalPages - 2) {
+      pages.push('...');
+    }
+    pages.push(totalPages);
+    return pages;
+  };
 
   // Handle Delete User
   const handleDeleteUser = async (user: BusinessHousehold) => {
@@ -642,7 +680,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((u) => (
+                paginatedUsers.map((u) => (
                   <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3.5 px-4 sm:px-5">
                       <div className="flex flex-col">
@@ -744,12 +782,102 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
               )}
             </tbody>
             <tfoot>
-              <tr className="border-t border-slate-100 text-xs text-slate-500">
-                <td colSpan={3} className="py-3.5 px-4 sm:px-5">
-                  Hiển thị <strong>{filteredUsers.length}</strong> người dùng
-                </td>
-                <td colSpan={3} className="py-3.5 px-4 sm:px-5 text-right font-medium text-slate-600 pr-6">
-                  Dữ liệu từ MongoDB Backend
+              <tr className="border-t border-slate-200/90 bg-slate-50/70 text-xs text-slate-600">
+                <td colSpan={6} className="py-3.5 px-4 sm:px-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                    {/* Left: Summary & Rows Per Page */}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="text-slate-600">
+                        Hiển thị{' '}
+                        <strong className="text-slate-900 font-bold">
+                          {filteredUsers.length === 0 ? 0 : (safeCurrentPage - 1) * rowsPerPage + 1}
+                        </strong>
+                        {' - '}
+                        <strong className="text-slate-900 font-bold">
+                          {Math.min(safeCurrentPage * rowsPerPage, filteredUsers.length)}
+                        </strong>{' '}
+                        trong tổng số{' '}
+                        <strong className="text-slate-900 font-bold">{filteredUsers.length}</strong>{' '}
+                        tài khoản
+                      </span>
+
+                      <div className="flex items-center gap-1.5 pl-3 border-l border-slate-200">
+                        <span className="text-slate-500 text-xs">Mỗi trang:</span>
+                        <select
+                          value={rowsPerPage}
+                          onChange={(e) => {
+                            setRowsPerPage(Number(e.target.value));
+                            setCurrentPage(1);
+                          }}
+                          className="h-7 px-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#d6155f] cursor-pointer shadow-2xs"
+                        >
+                          <option value={10}>10 dòng</option>
+                          <option value={20}>20 dòng</option>
+                          <option value={50}>50 dòng</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Right: Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center gap-1 self-center sm:self-auto">
+                        {/* Prev Button */}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                          disabled={safeCurrentPage === 1}
+                          className="h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                          title="Trang trước"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                          <span className="hidden md:inline">Trước</span>
+                        </button>
+
+                        {/* Page Numbers */}
+                        <div className="flex items-center gap-1">
+                          {getPageNumbers().map((page, idx) => {
+                            if (typeof page === 'string') {
+                              return (
+                                <span
+                                  key={`ellipsis-${idx}`}
+                                  className="w-7 text-center text-slate-400 select-none text-xs font-bold"
+                                >
+                                  ...
+                                </span>
+                              );
+                            }
+                            const isActive = page === safeCurrentPage;
+                            return (
+                              <button
+                                key={page}
+                                type="button"
+                                onClick={() => setCurrentPage(page)}
+                                className={`min-w-8 h-8 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
+                                  isActive
+                                    ? 'bg-[#d6155f] text-white border border-[#d6155f] shadow-xs'
+                                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-2xs'
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Next Button */}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                          disabled={safeCurrentPage === totalPages}
+                          className="h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                          title="Trang sau"
+                        >
+                          <span className="hidden md:inline">Sau</span>
+                          <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </td>
               </tr>
             </tfoot>
