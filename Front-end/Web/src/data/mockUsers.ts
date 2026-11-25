@@ -2,6 +2,7 @@
  * Mock User Data for VikeSo Web Admin Display
  * Generates realistic Vietnamese Business Households (~103 users)
  * For high quality UI presentation and demonstration.
+ * All mock business households are on the FREE plan.
  */
 
 import { BusinessHousehold } from '../types';
@@ -38,10 +39,8 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Cửa hàng tạp hóa",
     "businessType": "Hộ kinh doanh bán lẻ",
     "joinDate": "25/11/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "waiting",
-    "proExpiresAt": "25/12/2026",
-    "proExpiresAtRaw": "2026-12-25T00:00:00.000Z",
     "role": "OWNER"
   },
   {
@@ -51,10 +50,8 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Quán Cà Phê Gốc Phố",
     "businessType": "Dịch vụ ăn uống (F&B)",
     "joinDate": "24/11/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "proExpiresAt": "24/12/2026",
-    "proExpiresAtRaw": "2026-12-24T00:00:00.000Z",
     "role": "OWNER"
   },
   {
@@ -75,11 +72,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Cơm Tấm Sài Gòn 39",
     "businessType": "Dịch vụ ăn uống (F&B)",
     "joinDate": "24/11/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "24/12/2026",
-    "proExpiresAtRaw": "2026-12-24T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-005",
@@ -99,11 +94,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Shop Thời Trang May May",
     "businessType": "Hộ kinh doanh thời trang",
     "joinDate": "23/11/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "23/12/2026",
-    "proExpiresAtRaw": "2026-12-23T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-007",
@@ -112,11 +105,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Quán Cà Phê Muối Chú Long",
     "businessType": "Dịch vụ ăn uống (F&B)",
     "joinDate": "23/11/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "23/12/2026",
-    "proExpiresAtRaw": "2026-12-23T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-008",
@@ -125,11 +116,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Nhà Thuốc Tây An Khang",
     "businessType": "Dược phẩm & y tế tư nhân",
     "joinDate": "22/11/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "22/12/2026",
-    "proExpiresAtRaw": "2026-12-22T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-009",
@@ -138,11 +127,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Tiệm Nail & Eyelash Quỳnh Anh",
     "businessType": "Chăm sóc sắc đẹp & Spa",
     "joinDate": "21/11/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "waiting",
-    "role": "OWNER",
-    "proExpiresAt": "21/12/2026",
-    "proExpiresAtRaw": "2026-12-21T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-010",
@@ -239,11 +226,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Tiệm Bánh Mì Chảo Cô Ba",
     "businessType": "Dịch vụ ăn uống (F&B)",
     "joinDate": "15/11/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "15/12/2026",
-    "proExpiresAtRaw": "2026-12-15T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-019",
@@ -329,11 +314,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Rau Củ Quả Sạch Đà Lạt Mart",
     "businessType": "Thực phẩm sạch & hữu cơ",
     "joinDate": "08/11/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "08/12/2026",
-    "proExpiresAtRaw": "2026-12-08T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-027",
@@ -419,11 +402,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Shop Giày Dép Sneaker House",
     "businessType": "Hộ kinh doanh giày dép thời trang",
     "joinDate": "31/10/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "20/12/2026",
-    "proExpiresAtRaw": "2026-12-20T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-035",
@@ -476,11 +457,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Bánh Canh Ghẹ Cầu Quan",
     "businessType": "Dịch vụ ăn uống (F&B)",
     "joinDate": "26/10/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "17/12/2026",
-    "proExpiresAtRaw": "2026-12-17T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-040",
@@ -500,11 +479,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Cửa Hàng Rèm Cửa & Nệm Gia Phát",
     "businessType": "Nội thất & rèm nệm dân dụng",
     "joinDate": "24/10/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "18/12/2026",
-    "proExpiresAtRaw": "2026-12-18T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-042",
@@ -513,11 +490,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Tiệm Trà Trái Cây & Sinh Tố Bốn Mùa",
     "businessType": "Dịch vụ ăn uống (F&B)",
     "joinDate": "22/10/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "15/12/2026",
-    "proExpiresAtRaw": "2026-12-15T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-043",
@@ -526,11 +501,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Xưởng Mộc Nội Thất Gỗ Việt",
     "businessType": "Sản xuất & gia công đồ gỗ",
     "joinDate": "21/10/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "waiting",
-    "role": "OWNER",
-    "proExpiresAt": "21/12/2026",
-    "proExpiresAtRaw": "2026-12-21T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-044",
@@ -638,11 +611,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Đại Lý Sơn & Chống Thấm Việt Mỹ",
     "businessType": "Vật liệu xây dựng hoàn thiện",
     "joinDate": "10/10/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "23/12/2026",
-    "proExpiresAtRaw": "2026-12-23T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-054",
@@ -717,11 +688,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Cơ Sở Làm Kem Tươi & Sữa Chua Ý",
     "businessType": "Sản xuất thực phẩm tráng miệng",
     "joinDate": "02/10/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "14/12/2026",
-    "proExpiresAtRaw": "2026-12-14T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-061",
@@ -763,11 +732,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Trung Tâm Dịch Vụ Xe Máy Honda Khang",
     "businessType": "Dịch vụ sửa chữa bảo dưỡng",
     "joinDate": "27/09/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "waiting",
-    "role": "OWNER",
-    "proExpiresAt": "28/12/2026",
-    "proExpiresAtRaw": "2026-12-28T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-065",
@@ -820,11 +787,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Cửa Hàng Đồ Gốm Bát Tràng Mỹ Nghệ",
     "businessType": "Thủ công mỹ nghệ gốm sứ",
     "joinDate": "21/09/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "17/12/2026",
-    "proExpiresAtRaw": "2026-12-17T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-070",
@@ -877,11 +842,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Cửa Hàng Thiết Bị Vệ Sinh & Sen Vòi",
     "businessType": "Vật tư xây dựng & nhà tắm",
     "joinDate": "14/09/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "21/12/2026",
-    "proExpiresAtRaw": "2026-12-21T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-075",
@@ -956,11 +919,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Tiệm Sửa Khóa & Làm Chìa Vi Tính 24h",
     "businessType": "Dịch vụ đời sống tiện ích",
     "joinDate": "05/09/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "25/12/2026",
-    "proExpiresAtRaw": "2026-12-25T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-082",
@@ -969,11 +930,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Quán Cháo Dinh Dưỡng Cây Xanh",
     "businessType": "Dịch vụ ăn uống (F&B)",
     "joinDate": "04/09/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "18/12/2026",
-    "proExpiresAtRaw": "2026-12-18T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-083",
@@ -993,11 +952,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Cửa Hàng Hải Sản Tươi Sống Vũng Tàu",
     "businessType": "Bán buôn bán lẻ thủy hải sản",
     "joinDate": "01/09/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "15/12/2026",
-    "proExpiresAtRaw": "2026-12-15T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-085",
@@ -1039,11 +996,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Tiệm Gà Rán & Pizza Khoai Tây Chiên",
     "businessType": "Dịch vụ đồ ăn nhanh (Fast Food)",
     "joinDate": "27/08/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "20/12/2026",
-    "proExpiresAtRaw": "2026-12-20T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-089",
@@ -1162,11 +1117,9 @@ export const MOCK_BUSINESS_HOUSEHOLDS: BusinessHousehold[] = [
     "storeName": "Quán Nước Mía Sầu Riêng & Nước Dừa Xiêm",
     "businessType": "Dịch vụ giải khát đồ uống",
     "joinDate": "12/08/2026",
-    "plan": "pro",
+    "plan": "free",
     "telegramStatus": "active",
-    "role": "OWNER",
-    "proExpiresAt": "18/12/2026",
-    "proExpiresAtRaw": "2026-12-18T00:00:00.000Z"
+    "role": "OWNER"
   },
   {
     "id": "mock-user-100",
