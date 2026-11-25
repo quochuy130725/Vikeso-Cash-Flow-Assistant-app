@@ -36,11 +36,17 @@ export const PortalView: React.FC<PortalViewProps> = ({
   // Strict Role Binding: ADMIN is strictly locked to 'admin', OWNER is strictly locked to 'owner'
   const portal: PortalType = userRole === 'ADMIN' ? 'admin' : 'owner';
 
-  const [ownerTab, setOwnerTab] = useState<OwnerTab>('so-thu-chi-dong-tien');
+  const [ownerTab, setOwnerTab] = useState<OwnerTab>(() => {
+    const h = typeof window !== 'undefined' ? window.location.hash : '';
+    if (h === '#cai-dat-cua-hang') return 'cai-dat-cua-hang';
+    if (h === '#bao-cao-xuat-du-lieu') return 'bao-cao-xuat-du-lieu';
+    return 'so-thu-chi-dong-tien';
+  });
   const [adminTab, setAdminTab] = useState<AdminTab>('tong-quan-van-hanh');
 
-  // Modals & Toast
+  // Modals, Mobile Drawer & Toast
   const [mobileModalOpen, setMobileModalOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [globalToast, setGlobalToast] = useState<{ message: string; type?: 'success' | 'info' | 'error' } | null>(null);
 
@@ -266,10 +272,10 @@ export const PortalView: React.FC<PortalViewProps> = ({
   }
 
   return (
-    <div className={`min-h-screen bg-slate-50 text-slate-900 antialiased font-sans ${
+    <div className={`min-h-screen overflow-x-hidden bg-slate-50 text-slate-900 antialiased font-sans ${
       portal === 'owner' ? 'selection:bg-[#ff4783]/20 selection:text-[#ff4783]' : 'selection:bg-[#fff0f5] selection:text-[#b01755]'
     }`}>
-      {/* Animated Fixed Sidebar */}
+      {/* Animated Fixed Sidebar / Mobile Drawer */}
       <PortalSidebar
         portal={portal}
         setPortal={handleSetPortal}
@@ -285,10 +291,12 @@ export const PortalView: React.FC<PortalViewProps> = ({
         onBackToLanding={onBackToLanding}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={handleToggleSidebar}
+        mobileOpen={mobileSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
       />
 
-      {/* Main Content Area - Smooth Transition pl-72 <-> pl-20 */}
-      <div className={`transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'pl-20' : 'pl-72'}`}>
+      {/* Main Content Area - pl-0 on mobile, md:pl-72 <-> md:pl-20 on desktop */}
+      <div className={`min-w-0 transition-all duration-300 ease-in-out pl-0 ${sidebarCollapsed ? 'md:pl-20' : 'md:pl-72'}`}>
         {/* Animated Fixed Header */}
         <PortalHeader
           portal={portal}
@@ -303,6 +311,7 @@ export const PortalView: React.FC<PortalViewProps> = ({
           onLogout={onLogout}
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={handleToggleSidebar}
+          onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
         />
 
         {/* Dynamic Page Router */}

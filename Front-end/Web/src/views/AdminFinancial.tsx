@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   fetchAdminPayments,
+  updateAdminPaymentStatus,
+  updateAdminUserPlan,
   deleteAdminPayment,
 } from '../services/api';
 import { SubscriptionPayment } from '../types';
@@ -18,6 +20,8 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
   // Filters & Search
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedChartDate, setSelectedChartDate] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'pending'>('all');
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   // Helper date extractor
   const extractDate = (timestamp: string): string => {
@@ -59,11 +63,10 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
     loadData();
   }, []);
 
-  // Filtered payments (strictly completed, paid orders for actual revenue)
+  // Filtered payments (supports viewing both paid and pending/expired orders)
   const filteredPayments = useMemo(() => {
     return payments.filter((p) => {
-      // Exclude all pending orders completely
-      if (p.status !== 'success') return false;
+      if (statusFilter !== 'all' && p.status !== statusFilter) return false;
 
       if (selectedChartDate) {
         const pDate = extractDate(p.timestamp);
@@ -74,11 +77,17 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
         const matchesInvoice = p.invoiceId?.toLowerCase().includes(query);
         const matchesStore = p.storeName?.toLowerCase().includes(query);
         const matchesPlan = p.planDescription?.toLowerCase().includes(query);
-        return matchesInvoice || matchesStore || matchesPlan;
+        const matchesEmail = p.userEmail?.toLowerCase().includes(query);
+        return matchesInvoice || matchesStore || matchesPlan || Boolean(matchesEmail);
       }
       return true;
     });
-  }, [payments, selectedChartDate, searchTerm]);
+  }, [payments, statusFilter, selectedChartDate, searchTerm]);
+
+  const countPendingOrders = useMemo(
+    () => payments.filter((p) => p.status !== 'success').length,
+    [payments]
+  );
 
   // Real aggregate numbers: Revenue & Profit (Only Completed Orders)
   const {
@@ -151,12 +160,51 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
     };
   }, [payments]);
 
+  // Handle Manual Approve Order + Sync User to PRO
+  const handleApprovePayment = async (p: SubscriptionPayment) => {
+    if (!p.id) {
+      showToast('Không tìm thấy ID đơn thanh toán hợp lệ.', 'error');
+      return;
+    }
+    if (!window.confirm(`Xác nhận đã nhận tiền cho đơn "${p.invoiceId}" (${p.storeName}) và kích hoạt gói PRO?`)) {
+      return;
+    }
+
+    setApprovingId(p.id);
+    try {
+      const payRes = await updateAdminPaymentStatus(p.id, 'SUCCESS');
+      if (!payRes.success) {
+        showToast(payRes.message || 'Không thể duyệt đơn thanh toán', 'error');
+        return;
+      }
+
+      if (p.userId) {
+        const userRes = await updateAdminUserPlan(p.userId, 'PRO');
+        if (!userRes.success) {
+          showToast(
+            `Đã duyệt đơn "${p.invoiceId}", nhưng nâng gói user gặp lỗi: ${userRes.message || ''}`,
+            'error'
+          );
+          await loadData(true);
+          return;
+        }
+      }
+
+      showToast(`Đã duyệt đơn "${p.invoiceId}" và đồng bộ gói PRO cho "${p.storeName}"!`);
+      await loadData(true);
+    } catch (err: any) {
+      showToast(err.message || 'Lỗi kết nối máy chủ', 'error');
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
   // Handle Delete Payment
   const handleDeletePayment = async (p: SubscriptionPayment) => {
     if (!window.confirm(`Bạn có chắc chắn muốn xóa đơn thanh toán "${p.invoiceId}" của "${p.storeName}"?`)) {
       return;
     }
-    const cleanId = p.invoiceId.replace(/^#INV-/, '').replace(/^TX-/, '');
+    const cleanId = p.id || p.invoiceId.replace(/^#INV-/, '').replace(/^TX-/, '');
     try {
       const res = await deleteAdminPayment(cleanId);
       if (res.success) {
@@ -465,10 +513,10 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
                 Kiểm soát trạng thái thanh toán gói PRO và doanh thu thực nhận tự động qua cổng SePay VietQR.
               </p>
             </div>
-            <div className="flex items-center gap-2 self-start sm:self-auto">
+            <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#fff0f5] text-[#b01755] text-xs font-bold border border-[#ffd6e4]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
-                {filteredPayments.length} giao dịch đã thanh toán
+                {filteredPayments.length} đơn hàng hiển thị
               </span>
             </div>
           </div>
@@ -495,10 +543,40 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
               )}
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold text-slate-700">
-                Đã thanh toán: <strong className="text-slate-900 font-mono">{filteredPayments.length}</strong>
-              </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setStatusFilter('all')}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  statusFilter === 'all'
+                    ? 'bg-[#d6155f] text-white shadow-xs'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                Tất cả ({payments.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('success')}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  statusFilter === 'success'
+                    ? 'bg-[#d0f81b] text-slate-950 border border-[#bde412] shadow-xs'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                Đã thanh toán ({countSuccess})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('pending')}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  statusFilter === 'pending'
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                Chờ / Hết hạn ({countPendingOrders})
+              </button>
             </div>
           </div>
         </div>
@@ -589,14 +667,39 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
                       </td>
 
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#d0f81b]/35 text-slate-950 text-xs font-black border border-[#bde412] whitespace-nowrap">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
-                          <span>Đã Thanh Toán</span>
-                        </span>
+                        {p.status === 'success' ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#d0f81b]/35 text-slate-950 text-xs font-black border border-[#bde412] whitespace-nowrap">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#ff4783]"></span>
+                            <span>Đã Thanh Toán</span>
+                          </span>
+                        ) : p.rawStatus === 'EXPIRED' ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200 whitespace-nowrap">
+                            Hết Hạn QR
+                          </span>
+                        ) : p.rawStatus === 'FAILED' ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-700 text-xs font-bold border border-rose-200 whitespace-nowrap">
+                            Thiếu Tiền / Lỗi
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 text-xs font-bold border border-amber-200 whitespace-nowrap">
+                            Chờ Thanh Toán
+                          </span>
+                        )}
                       </td>
 
                       <td className="py-2.5 px-3 text-right whitespace-nowrap pr-4">
                         <div className="inline-flex items-center justify-end gap-1.5 whitespace-nowrap">
+                          {p.status !== 'success' && p.id && (
+                            <button
+                              onClick={() => handleApprovePayment(p)}
+                              disabled={approvingId === p.id}
+                              className="px-2 py-1 rounded-md bg-[#d0f81b]/45 hover:bg-[#d0f81b] text-slate-950 border border-[#bde412] text-[11px] font-bold transition-colors cursor-pointer disabled:opacity-50"
+                              type="button"
+                              title="Xác nhận thanh toán và kích hoạt gói PRO"
+                            >
+                              {approvingId === p.id ? 'Đang duyệt...' : 'Duyệt PRO'}
+                            </button>
+                          )}
                           {/* Delete Order button */}
                           <button
                             onClick={() => handleDeletePayment(p)}
@@ -616,7 +719,7 @@ export const AdminFinancial: React.FC<AdminFinancialProps> = ({ currentUser }) =
             <tfoot>
               <tr className="border-t border-slate-100 text-xs text-slate-500">
                 <td colSpan={4} className="py-3 px-3">
-                  Hiển thị <strong>{filteredPayments.length}</strong> đơn hàng đã thanh toán thành công
+                  Hiển thị <strong>{filteredPayments.length}</strong> đơn hàng nâng cấp gói PRO
                 </td>
                 <td colSpan={4} className="py-3 px-3 text-right font-medium text-slate-600 pr-4">
                   Đồng bộ tự động qua SePay VietQR Webhook

@@ -148,10 +148,13 @@ export interface BusinessHousehold {
   telegramStatus: 'active' | 'waiting' | 'error';
   proExpiresAt?: string;
   proExpiresAtRaw?: string;
-  role?: 'ADMIN' | 'OWNER';
+  role?: 'ADMIN' | 'OWNER' | 'STAFF';
 }
 
 export interface SubscriptionPayment {
+  id?: string;
+  userId?: string;
+  userEmail?: string;
   invoiceId: string;
   storeName: string;
   storeLocation: string;
@@ -162,4 +165,5 @@ export interface SubscriptionPayment {
   paymentMethod: string;
   timestamp: string;
   status: 'success' | 'pending';
+  rawStatus?: 'PENDING' | 'SUCCESS' | 'FAILED' | 'EXPIRED';
 }

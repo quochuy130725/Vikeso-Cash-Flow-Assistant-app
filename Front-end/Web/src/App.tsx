@@ -17,6 +17,7 @@ import { TelegramModal } from './components/TelegramModal';
 import { AuthModal, UserAccount } from './components/AuthModal';
 import { PortalView } from './components/PortalView';
 import { prewarmServer } from './services/authApi';
+import { fetchCurrentUserInfo, getAuthToken } from './services/api';
 import { PortalType } from './types';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -132,6 +133,54 @@ export default function App() {
     window.addEventListener('hashchange', checkHashRoute);
     return () => window.removeEventListener('hashchange', checkHashRoute);
   }, [currentUser]);
+
+  // Đồng bộ subscriptionPlan & thông tin mới nhất từ MongoDB (/api/auth/me) khi vào Portal hoặc nâng cấp gói
+  useEffect(() => {
+    const syncPlanFromServer = async () => {
+      if (!getAuthToken()) return;
+      const res = await fetchCurrentUserInfo();
+      if (!res.success || !res.userInfo) return;
+
+      const u = res.userInfo;
+      setCurrentUser((prev) => {
+        if (!prev) return prev;
+        const isUserAdmin = (u.role || prev.role) === 'ADMIN';
+        const nextPlan = isUserAdmin ? undefined : (u.subscriptionPlan || prev.subscriptionPlan || 'FREE');
+        const nextShop = u.shopName || prev.shopName || prev.storeName;
+        if (
+          prev.subscriptionPlan === nextPlan &&
+          prev.name === (u.name || prev.name) &&
+          prev.phone === (u.phone ?? prev.phone) &&
+          prev.shopName === nextShop
+        ) {
+          return prev;
+        }
+        return {
+          ...prev,
+          name: u.name || prev.name,
+          phone: u.phone ?? prev.phone,
+          shopName: nextShop,
+          storeName: nextShop,
+          subscriptionPlan: nextPlan,
+        };
+      });
+    };
+
+    if (viewMode === 'portal' && currentUser?.id) {
+      syncPlanFromServer();
+    }
+
+    const handlePlanUpdated = (e: Event) => {
+      const plan = (e as CustomEvent)?.detail?.plan || 'PRO';
+      setCurrentUser((prev) => {
+        if (!prev || prev.role === 'ADMIN' || prev.subscriptionPlan === plan) return prev;
+        return { ...prev, subscriptionPlan: plan };
+      });
+    };
+
+    window.addEventListener('vikeso_plan_updated', handlePlanUpdated);
+    return () => window.removeEventListener('vikeso_plan_updated', handlePlanUpdated);
+  }, [viewMode, currentUser?.id]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

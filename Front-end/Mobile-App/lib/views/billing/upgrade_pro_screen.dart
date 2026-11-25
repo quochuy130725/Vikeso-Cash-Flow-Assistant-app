@@ -66,37 +66,31 @@ class _UpgradeProScreenState extends State<UpgradeProScreen> {
 
     final order = await _billingService.createOrder(userId: userId);
     if (!mounted) return;
-    final fallbackCode = 'VKS${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
-    final effectiveOrder = order ??
-        BillingOrder(
-          orderCode: fallbackCode,
-          plan: 'PRO',
-          amount: _proPlan['price'] as int,
-          transferContent: 'VIKESO $fallbackCode',
-          bankCode: 'MB',
-          bankAccount: '0829100286',
-          accountName: 'PHAM HUYNH QUOC HUY',
-          qrUrl:
-              'https://img.vietqr.io/image/MB-0829100286-compact2.png?amount=${_proPlan['price']}&addInfo=${Uri.encodeComponent('VIKESO $fallbackCode')}&accountName=PHAM%20HUYNH%20QUOC%20HUY',
-          status: 'PENDING',
-          expiresAt: DateTime.now().add(const Duration(minutes: 15)),
-        );
+    if (order == null) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Không thể khởi tạo đơn thanh toán từ máy chủ. Vui lòng kiểm tra mạng và thử lại!'),
+        ),
+      );
+      return;
+    }
 
     setState(() {
       _isLoading = false;
-      _currentOrder = effectiveOrder;
-      if (effectiveOrder.expiresAt != null) {
-        final diff = effectiveOrder.expiresAt!.difference(DateTime.now()).inSeconds;
+      _currentOrder = order;
+      if (order.expiresAt != null) {
+        final diff = order.expiresAt!.difference(DateTime.now()).inSeconds;
         _remainingSeconds = diff > 0 ? diff : 15 * 60;
       } else {
         _remainingSeconds = 15 * 60;
       }
     });
 
-    if (effectiveOrder.status == 'PAID') {
+    if (order.status == 'PAID') {
       _onPaymentSuccess();
     } else {
-      _startTimers(effectiveOrder.orderCode);
+      _startTimers(order.orderCode);
     }
   }
 
