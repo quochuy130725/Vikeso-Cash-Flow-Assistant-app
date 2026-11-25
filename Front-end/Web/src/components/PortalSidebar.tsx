@@ -16,6 +16,7 @@ import {
   CheckCircle,
   Users,
   FolderTree,
+  X,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -33,6 +34,8 @@ interface SidebarProps {
   onBackToLanding?: () => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
 export const PortalSidebar: React.FC<SidebarProps> = ({
@@ -50,21 +53,44 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
   onBackToLanding,
   isCollapsed = false,
   onToggleCollapse,
+  mobileOpen = false,
+  onCloseMobile,
 }) => {
+  // Khi mở drawer trên điện thoại luôn hiển thị đầy đủ nhãn menu dù desktop đang thu gọn
+  const compact = isCollapsed && !mobileOpen;
+
+  const selectOwnerTab = (tab: OwnerTab) => {
+    setOwnerTab(tab);
+    onCloseMobile?.();
+  };
+
+  const selectAdminTab = (tab: AdminTab) => {
+    setAdminTab(tab);
+    onCloseMobile?.();
+  };
+
   return (
-    <aside
-      className={`fixed left-0 top-0 h-full bg-white z-50 flex flex-col justify-between shadow-[0_1px_4px_rgba(0,0,0,0.04)] border-r border-slate-200/80 transition-all duration-300 ease-in-out ${
-        isCollapsed ? 'w-20' : 'w-72'
-      }`}
-    >
-      <div className="flex flex-col">
+    <>
+      {mobileOpen && (
+        <div
+          onClick={onCloseMobile}
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[1px] md:hidden"
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        className={`fixed inset-y-0 left-0 h-full bg-white z-50 flex flex-col justify-between shadow-[0_1px_4px_rgba(0,0,0,0.04)] border-r border-slate-200/80 transition-all duration-300 ease-in-out w-72 ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0 ${compact ? 'md:w-20' : 'md:w-72'}`}
+      >
+      <div className="flex flex-col overflow-y-auto">
         {/* Unified Brand Header & Collapse Toggle */}
         <div
-          className={`h-16 flex items-center border-b border-slate-100 transition-all duration-300 ${
-            isCollapsed ? 'px-3 justify-center' : 'px-5 justify-between'
+          className={`h-16 flex items-center border-b border-slate-100 transition-all duration-300 shrink-0 ${
+            compact ? 'px-3 justify-center' : 'px-5 justify-between'
           }`}
         >
-          {!isCollapsed ? (
+          {!compact ? (
             <>
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-9 h-9 rounded-xl p-1 bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200/80 shadow-xs">
@@ -81,12 +107,22 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
-                {/* Sidebar Collapse Toggle */}
+                {onCloseMobile && (
+                  <button
+                    onClick={onCloseMobile}
+                    title="Đóng menu"
+                    className="md:hidden w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+                    type="button"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+                {/* Sidebar Collapse Toggle (Desktop) */}
                 {onToggleCollapse && (
                   <button
                     onClick={onToggleCollapse}
                     title="Thu gọn thanh menu"
-                    className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
+                    className="hidden md:flex w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-500 hover:text-slate-800 items-center justify-center transition-colors cursor-pointer"
                     type="button"
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -109,8 +145,8 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Space indicator / Current Workspace Label */}
-        <div className={`pt-3 pb-2 transition-all ${isCollapsed ? 'px-2 flex justify-center' : 'px-4'}`}>
-          {!isCollapsed ? (
+        <div className={`pt-3 pb-2 transition-all ${compact ? 'px-2 flex justify-center' : 'px-4'}`}>
+          {!compact ? (
             <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/80">
               <div className="flex items-center gap-2">
                 <span
@@ -141,13 +177,13 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
 
         {/* Navigation list */}
         {portal === 'owner' || portal === 'staff' ? (
-          <nav className={`flex-1 py-2 space-y-1.5 transition-all ${isCollapsed ? 'px-2' : 'px-4'}`}>
+          <nav className={`flex-1 py-2 space-y-1.5 transition-all ${compact ? 'px-2' : 'px-4'}`}>
             {/* Tab 1: Sổ thu chi & Dòng tiền (Available for both OWNER & STAFF) */}
             <button
-              onClick={() => setOwnerTab('so-thu-chi-dong-tien')}
-              title={isCollapsed ? 'Sổ thu chi & Dòng tiền' : undefined}
+              onClick={() => selectOwnerTab('so-thu-chi-dong-tien')}
+              title={compact ? 'Sổ thu chi & Dòng tiền' : undefined}
               className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
-                isCollapsed
+                compact
                   ? 'justify-center p-3'
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
@@ -157,13 +193,13 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <TrendingUp className="w-5 h-5 shrink-0" />
-              {!isCollapsed && (
+              {!compact && (
                 <span className="truncate">
                   {userRole === 'STAFF' ? 'Sổ thu chi ca làm việc' : 'Sổ thu chi & Dòng tiền'}
                 </span>
               )}
 
-              {isCollapsed && (
+              {compact && (
                 <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                   Sổ thu chi &amp; Dòng tiền
                 </span>
@@ -174,10 +210,10 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               <>
                 {/* Tab 2: Báo cáo & Xuất dữ liệu */}
                 <button
-                  onClick={() => setOwnerTab('bao-cao-xuat-du-lieu')}
-                  title={isCollapsed ? 'Báo cáo & Xuất dữ liệu' : undefined}
+                  onClick={() => selectOwnerTab('bao-cao-xuat-du-lieu')}
+                  title={compact ? 'Báo cáo & Xuất dữ liệu' : undefined}
                   className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
-                    isCollapsed
+                    compact
                       ? 'justify-center p-3'
                       : 'gap-3 px-3.5 py-2.5 text-left'
                   } ${
@@ -187,9 +223,9 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   }`}
                 >
                   <FileSpreadsheet className="w-5 h-5 shrink-0" />
-                  {!isCollapsed && <span className="truncate">Báo cáo &amp; Xuất dữ liệu</span>}
+                  {!compact && <span className="truncate">Báo cáo &amp; Xuất dữ liệu</span>}
 
-                  {isCollapsed && (
+                  {compact && (
                     <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                       Báo cáo &amp; Xuất dữ liệu
                     </span>
@@ -198,10 +234,10 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
 
                 {/* Tab 3: Danh mục Thu - Chi (Cha - Con) */}
                 <button
-                  onClick={() => setOwnerTab('quan-ly-danh-muc')}
-                  title={isCollapsed ? 'Danh mục Thu - Chi (Cha - Con)' : undefined}
+                  onClick={() => selectOwnerTab('quan-ly-danh-muc')}
+                  title={compact ? 'Danh mục Thu - Chi (Cha - Con)' : undefined}
                   className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
-                    isCollapsed
+                    compact
                       ? 'justify-center p-3'
                       : 'gap-3 px-3.5 py-2.5 text-left'
                   } ${
@@ -211,9 +247,9 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   }`}
                 >
                   <FolderTree className="w-5 h-5 shrink-0" />
-                  {!isCollapsed && <span className="truncate">Danh mục Thu - Chi</span>}
+                  {!compact && <span className="truncate">Danh mục Thu - Chi</span>}
 
-                  {isCollapsed && (
+                  {compact && (
                     <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                       Danh mục Thu - Chi
                     </span>
@@ -222,10 +258,10 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
 
                 {/* Tab 4: Quản lý nhân viên (STAFF) */}
                 <button
-                  onClick={() => setOwnerTab('quan-ly-nhan-vien')}
-                  title={isCollapsed ? 'Quản lý nhân viên (STAFF)' : undefined}
+                  onClick={() => selectOwnerTab('quan-ly-nhan-vien')}
+                  title={compact ? 'Quản lý nhân viên (STAFF)' : undefined}
                   className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
-                    isCollapsed
+                    compact
                       ? 'justify-center p-3'
                       : 'gap-3 px-3.5 py-2.5 text-left'
                   } ${
@@ -235,9 +271,9 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   }`}
                 >
                   <Users className="w-5 h-5 shrink-0" />
-                  {!isCollapsed && <span className="truncate">Quản lý nhân viên</span>}
+                  {!compact && <span className="truncate">Quản lý nhân viên</span>}
 
-                  {isCollapsed && (
+                  {compact && (
                     <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                       Quản lý nhân viên
                     </span>
@@ -246,10 +282,10 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
 
                 {/* Tab 5: Báo cáo tự động Telegram */}
                 <button
-                  onClick={() => setOwnerTab('bao-cao-tu-dong-telegram')}
-                  title={isCollapsed ? 'Báo cáo tự động Telegram' : undefined}
+                  onClick={() => selectOwnerTab('bao-cao-tu-dong-telegram')}
+                  title={compact ? 'Báo cáo tự động Telegram' : undefined}
                   className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
-                    isCollapsed
+                    compact
                       ? 'justify-center p-3'
                       : 'gap-3 px-3.5 py-2.5 text-left'
                   } ${
@@ -259,9 +295,9 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   }`}
                 >
                   <Send className="w-5 h-5 shrink-0" />
-                  {!isCollapsed && <span className="truncate">Báo cáo tự động Telegram</span>}
+                  {!compact && <span className="truncate">Báo cáo tự động Telegram</span>}
 
-                  {isCollapsed && (
+                  {compact && (
                     <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                       Báo cáo tự động Telegram
                     </span>
@@ -270,10 +306,10 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
 
                 {/* Tab 6: Cài đặt cửa hàng & Tài khoản */}
                 <button
-                  onClick={() => setOwnerTab('cai-dat-cua-hang')}
-                  title={isCollapsed ? 'Cài đặt cửa hàng & Tài khoản' : undefined}
+                  onClick={() => selectOwnerTab('cai-dat-cua-hang')}
+                  title={compact ? 'Cài đặt cửa hàng & Tài khoản' : undefined}
                   className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
-                    isCollapsed
+                    compact
                       ? 'justify-center p-3'
                       : 'gap-3 px-3.5 py-2.5 text-left'
                   } ${
@@ -283,9 +319,9 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
                   }`}
                 >
                   <Store className="w-5 h-5 shrink-0" />
-                  {!isCollapsed && <span className="truncate">Cài đặt cửa hàng &amp; Tài khoản</span>}
+                  {!compact && <span className="truncate">Cài đặt cửa hàng &amp; Tài khoản</span>}
 
-                  {isCollapsed && (
+                  {compact && (
                     <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                       Cài đặt cửa hàng &amp; Tài khoản
                     </span>
@@ -295,13 +331,13 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             )}
           </nav>
         ) : (
-          <nav className={`flex-1 py-2 space-y-1.5 transition-all ${isCollapsed ? 'px-2' : 'px-4'}`}>
+          <nav className={`flex-1 py-2 space-y-1.5 transition-all ${compact ? 'px-2' : 'px-4'}`}>
             {/* Admin Tab 1 */}
             <button
-              onClick={() => setAdminTab('tong-quan-van-hanh')}
-              title={isCollapsed ? 'Tổng quan người dùng & Vận hành' : undefined}
+              onClick={() => selectAdminTab('tong-quan-van-hanh')}
+              title={compact ? 'Tổng quan người dùng & Vận hành' : undefined}
               className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
-                isCollapsed
+                compact
                   ? 'justify-center p-3'
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
@@ -311,9 +347,9 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <LayoutDashboard className={`w-5 h-5 shrink-0 ${adminTab === 'tong-quan-van-hanh' ? 'text-[#ff4783]' : ''}`} />
-              {!isCollapsed && <span className="truncate">Người dùng &amp; Duyệt cửa hàng</span>}
+              {!compact && <span className="truncate">Người dùng &amp; Duyệt cửa hàng</span>}
 
-              {isCollapsed && (
+              {compact && (
                 <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                   Người dùng &amp; Duyệt cửa hàng
                 </span>
@@ -322,10 +358,10 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
 
             {/* Admin Tab 2 */}
             <button
-              onClick={() => setAdminTab('bao-cao-tai-chinh-doanh-thu')}
-              title={isCollapsed ? 'Quản lý thanh toán & Doanh thu' : undefined}
+              onClick={() => selectAdminTab('bao-cao-tai-chinh-doanh-thu')}
+              title={compact ? 'Quản lý thanh toán & Doanh thu' : undefined}
               className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
-                isCollapsed
+                compact
                   ? 'justify-center p-3'
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
@@ -335,9 +371,9 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <CircleDollarSign className={`w-5 h-5 shrink-0 ${adminTab === 'bao-cao-tai-chinh-doanh-thu' ? 'text-[#ff4783]' : ''}`} />
-              {!isCollapsed && <span className="truncate">Thanh toán &amp; Doanh thu</span>}
+              {!compact && <span className="truncate">Thanh toán &amp; Doanh thu</span>}
 
-              {isCollapsed && (
+              {compact && (
                 <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                   Thanh toán &amp; Doanh thu
                 </span>
@@ -346,10 +382,10 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
 
             {/* Admin Tab 3 (Telegram tab removed per FE-WEB-04 as Admin does not own a shop) */}
             <button
-              onClick={() => setAdminTab('cai-dat-he-thong')}
-              title={isCollapsed ? 'Hạ tầng máy chủ & Cài đặt' : undefined}
+              onClick={() => selectAdminTab('cai-dat-he-thong')}
+              title={compact ? 'Hạ tầng máy chủ & Cài đặt' : undefined}
               className={`w-full flex items-center rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer relative group ${
-                isCollapsed
+                compact
                   ? 'justify-center p-3'
                   : 'gap-3 px-3.5 py-2.5 text-left'
               } ${
@@ -359,9 +395,9 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <Settings2 className={`w-5 h-5 shrink-0 ${adminTab === 'cai-dat-he-thong' ? 'text-[#ff4783]' : ''}`} />
-              {!isCollapsed && <span className="truncate">Hạ tầng &amp; Cài đặt hệ thống</span>}
+              {!compact && <span className="truncate">Hạ tầng &amp; Cài đặt hệ thống</span>}
 
-              {isCollapsed && (
+              {compact && (
                 <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-white text-slate-900 border border-slate-200 text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                   Hạ tầng &amp; Cài đặt hệ thống
                 </span>
@@ -372,8 +408,8 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Bottom sidebar info & Actions */}
-      <div className={`border-t border-slate-100 transition-all ${isCollapsed ? 'p-2 space-y-2' : 'p-4 space-y-3'}`}>
-        {!isCollapsed ? (
+      <div className={`border-t border-slate-100 transition-all shrink-0 ${compact ? 'p-2 space-y-2' : 'p-4 space-y-3'}`}>
+        {!compact ? (
           <>
             {portal === 'owner' ? (
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
@@ -412,7 +448,10 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
             <div className="flex items-center gap-2">
               {onBackToLanding && (
                 <button
-                  onClick={onBackToLanding}
+                  onClick={() => {
+                    onCloseMobile?.();
+                    onBackToLanding();
+                  }}
                   className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-slate-200/60"
                   title="Về Trang Chủ Giới Thiệu"
                 >
@@ -422,7 +461,10 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
               )}
               {onLogout && (
                 <button
-                  onClick={onLogout}
+                  onClick={() => {
+                    onCloseMobile?.();
+                    onLogout();
+                  }}
                   className="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-rose-100"
                   title="Đăng xuất khỏi phiên làm việc"
                 >
@@ -493,6 +535,7 @@ export const PortalSidebar: React.FC<SidebarProps> = ({
           </div>
         )}
       </div>
-    </aside>
+      </aside>
+    </>
   );
 };

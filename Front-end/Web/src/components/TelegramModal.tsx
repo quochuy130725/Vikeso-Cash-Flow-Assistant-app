@@ -14,12 +14,12 @@ export const TelegramModal: React.FC<TelegramModalProps> = ({ isOpen, onClose })
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/45 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/45 backdrop-blur-xs">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden text-slate-900 flex flex-col"
+        className="w-full max-w-md max-h-[92vh] overflow-y-auto bg-white border border-slate-200 rounded-3xl shadow-2xl text-slate-900 flex flex-col"
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-[#fff0f5]/60">
           <div className="flex items-center gap-2.5">

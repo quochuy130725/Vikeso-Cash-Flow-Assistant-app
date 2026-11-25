@@ -1375,8 +1375,8 @@ export const OwnerCashflowLedger: React.FC<OwnerCashflowLedgerProps> = ({
 
       {/* 4. Quick Manual Entry Modal (POST /api/manual-entry) */}
       {manualModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md max-h-[92vh] overflow-y-auto bg-white rounded-3xl shadow-2xl border border-slate-200">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-5 border-b border-slate-100">
               <div className="flex items-center gap-2.5">

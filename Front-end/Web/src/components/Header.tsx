@@ -100,9 +100,9 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="fixed top-0 left-0 w-full z-40 bg-white/70 backdrop-blur-xl border-b border-white/50 shadow-[0_1px_15px_rgba(0,0,0,0.03)] transition-all">
-      <div className="max-w-7xl h-20 mx-auto px-4 md:px-8 flex items-center justify-between gap-6">
+      <div className="max-w-7xl h-20 mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-6">
         {/* Brand */}
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-4 lg:gap-8 min-w-0">
           <a
             href="#landing"
             onClick={(e) => {
@@ -110,9 +110,9 @@ export const Header: React.FC<HeaderProps> = ({
               window.scrollTo({ top: 0, behavior: 'smooth' });
               setActiveNav('hero');
             }}
-            className="flex items-center gap-3 group cursor-pointer"
+            className="flex items-center gap-2 sm:gap-3 group cursor-pointer shrink-0"
           >
-            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-[#f8fee0] to-[#ecfcc2] p-1 flex items-center justify-center border border-[#d0f81b]/80 shadow-md shadow-[#d0f81b]/15 group-hover:scale-105 group-hover:shadow-[#d0f81b]/35 transition-all duration-300">
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-[#f8fee0] to-[#ecfcc2] p-1 flex items-center justify-center border border-[#d0f81b]/80 shadow-md shadow-[#d0f81b]/15 group-hover:scale-105 group-hover:shadow-[#d0f81b]/35 transition-all duration-300 shrink-0">
               <img
                 src="/logo.png"
                 alt="VikeSo Logo"
@@ -121,10 +121,10 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-2xl tracking-tight text-slate-950">
+                <span className="font-extrabold text-xl sm:text-2xl tracking-tight text-slate-950 whitespace-nowrap">
                   Vike<span className="text-[#ff4783]">So</span>
                 </span>
-                <span className="text-[11px] font-black tracking-wide px-2 py-0.5 rounded-full bg-[#d0f81b]/25 text-[#243505] border border-[#d0f81b] inline-flex items-center gap-1 shadow-2xs">
+                <span className="hidden sm:inline-flex text-[11px] font-black tracking-wide px-2 py-0.5 rounded-full bg-[#d0f81b]/25 text-[#243505] border border-[#d0f81b] items-center gap-1 shadow-2xs whitespace-nowrap">
                   <Sparkles className="w-2.5 h-2.5 text-[#557800]" />
                   <span>Sổ Quỹ Thông Minh</span>
                 </span>
@@ -152,14 +152,14 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Primary Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {currentUser ? (
             /* Logged in user profile chip */
-            <div className="relative flex items-center gap-2">
+            <div className="relative flex items-center gap-1.5 sm:gap-2">
               {onOpenPortal && (
                 <button
                   onClick={onOpenPortal}
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-xs font-bold active:scale-95 transition-all shadow-sm cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-white text-xs font-bold active:scale-95 transition-all shadow-sm cursor-pointer whitespace-nowrap shrink-0 ${
                     currentUser.role === 'ADMIN'
                       ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'
                       : 'bg-[#ff4783] hover:bg-[#e0326e] shadow-[#ff4783]/25'
@@ -167,11 +167,11 @@ export const Header: React.FC<HeaderProps> = ({
                   title={currentUser.role === 'ADMIN' ? 'Mở Bảng Quản Trị Hệ Thống' : 'Mở Sổ Thu Chi & Dòng Tiền'}
                 >
                   {currentUser.role === 'ADMIN' ? (
-                    <ShieldCheck className="w-4 h-4 text-indigo-100" />
+                    <ShieldCheck className="w-4 h-4 text-indigo-100 shrink-0" />
                   ) : (
-                    <Wallet className="w-4 h-4 text-white" />
+                    <Wallet className="w-4 h-4 text-white shrink-0" />
                   )}
-                  <span>{currentUser.role === 'ADMIN' ? 'Bảng Quản Trị' : 'Sổ Thu Chi'}</span>
+                  <span>{currentUser.role === 'ADMIN' ? 'Quản Trị' : 'Sổ Thu Chi'}</span>
                 </button>
               )}
 
@@ -280,7 +280,7 @@ export const Header: React.FC<HeaderProps> = ({
             <>
               <button
                 onClick={() => onOpenAuth('login')}
-                className="inline-flex items-center px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-[#d0f81b]/15 transition-all cursor-pointer"
+                className="hidden sm:inline-flex items-center px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-[#d0f81b]/15 transition-all cursor-pointer whitespace-nowrap"
               >
                 Đăng nhập
               </button>
@@ -288,10 +288,10 @@ export const Header: React.FC<HeaderProps> = ({
               <Magnet padding={20} magnetStrength={0.25}>
                 <button
                   onClick={() => onOpenAuth('register')}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-xs font-black text-white border border-[#ff4783] active:scale-95 transition-all shadow-md shadow-[#ff4783]/35 hover:shadow-lg hover:shadow-[#ff4783]/50 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-xs font-black text-white border border-[#ff4783] active:scale-95 transition-all shadow-md shadow-[#ff4783]/35 hover:shadow-lg hover:shadow-[#ff4783]/50 cursor-pointer whitespace-nowrap shrink-0"
                 >
                   <span>Dùng thử miễn phí</span>
-                  <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <ArrowRight className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
                 </button>
               </Magnet>
             </>

@@ -148,6 +148,13 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
         if (res.userInfo.phone !== undefined && res.userInfo.phone !== null) {
           setPersonalPhone(res.userInfo.phone);
         }
+        if (
+          res.userInfo.subscriptionPlan === 'PRO' &&
+          currentUser?.subscriptionPlan !== 'PRO'
+        ) {
+          setUpgradedProLocal(true);
+          window.dispatchEvent(new CustomEvent('vikeso_plan_updated', { detail: { plan: 'PRO' } }));
+        }
       }
     });
 
@@ -647,14 +654,14 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
       {/* 2. Main 2-Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column (7 cols): Owner Profile Editor & Store Profile Editor */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 min-w-0 space-y-6">
           {/* =============================================================================
               NGHIỆP VỤ BƯỚC 1A: THẺ THÔNG TIN CÁ NHÂN CHỦ HỘ (OWNER PROFILE)
               - Tách biệt hoàn toàn với thông tin cơ sở kinh doanh
               - Hiển thị: Họ tên chủ hộ, Email cố định, Số điện thoại cá nhân (nhận OTP), Role
           ============================================================================= */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200/80 space-y-5">
+            <div className="flex items-center justify-between gap-2.5 flex-wrap pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
                   <span className="material-symbols-outlined text-[20px]">person</span>
@@ -1260,9 +1267,9 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
         </div>
 
         {/* Right Column (5 cols): Plan & Subscription Status */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="lg:col-span-5 min-w-0 space-y-6">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200/80 space-y-5">
+            <div className="flex items-center justify-between gap-2.5 flex-wrap pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-[#d0f81b]/30 text-slate-950 flex items-center justify-center border border-[#bde412]">
                   <span className="material-symbols-outlined text-[20px]">workspace_premium</span>
@@ -1339,8 +1346,8 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
           </div>
 
           {/* Multi-Shop Management Card (FE-WEB-13) */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/80 space-y-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-[#fff0f5] text-[#b01755] border border-[#ffd6e4] flex items-center justify-center">
                   <span className="material-symbols-outlined text-[20px]">domain_add</span>
@@ -1463,8 +1470,8 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
 
       {/* 2.8. Step 1: PRO Package Comparison PopUp (FE-WEB-06: Chỉ có Gói FREE 0đ vs Gói PRO 99.000đ / 1 tháng) */}
       {packagePopupOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden p-6 space-y-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-white rounded-3xl shadow-2xl border border-slate-200 p-4 sm:p-6 space-y-4 sm:space-y-5">
             <div className="flex items-start justify-between gap-4 pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-2xl bg-[#d0f81b] text-slate-950 flex items-center justify-center border border-[#bde412]">
@@ -1553,11 +1560,11 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3 pt-2 border-t border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
               <div className="text-xs text-slate-500">
                 Tổng thanh toán: <strong className="text-slate-900 font-mono tabular-nums">99.000 đ</strong> (Kích hoạt tự động 30 ngày qua SePay)
               </div>
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center justify-end gap-2.5 flex-wrap">
                 <button
                   type="button"
                   onClick={() => setPackagePopupOpen(false)}
@@ -1569,7 +1576,7 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
                   type="button"
                   disabled={isCreatingOrder}
                   onClick={() => handleCreateProOrder()}
-                  className="h-10 px-5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black shadow-xs cursor-pointer flex items-center gap-2"
+                  className="flex-1 sm:flex-none h-10 px-4 sm:px-5 rounded-xl bg-[#ff4783] hover:bg-[#e0326e] text-white text-xs font-black shadow-xs cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap"
                 >
                   <span className="material-symbols-outlined text-[18px]">qr_code_2</span>
                   <span>
@@ -1591,8 +1598,8 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
             3. Đẩy hồ sơ với trạng thái PENDING_APPROVAL vào hệ thống để Admin kiểm duyệt.
       ============================================================================= */}
       {newShopModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white rounded-3xl shadow-2xl border border-slate-200 p-4 sm:p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">
@@ -1735,8 +1742,8 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
 
       {/* 3. SePay VietQR Modal if user triggered upgrade */}
       {billingOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-center p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-sm max-h-[92vh] overflow-y-auto bg-white rounded-3xl shadow-2xl border border-slate-200 text-center p-4 sm:p-6 space-y-4">
             <div className="w-12 h-12 mx-auto rounded-2xl bg-[#d0f81b] text-slate-950 flex items-center justify-center border border-[#bde412]">
               <span className="material-symbols-outlined text-[28px]">qr_code_scanner</span>
             </div>
@@ -1749,35 +1756,35 @@ export const OwnerSettings: React.FC<OwnerSettingsProps> = ({ currentUser, onLog
             </div>
 
             {billingOrder.qrCodeUrl && (
-              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 inline-block mx-auto">
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 inline-block mx-auto max-w-full">
                 <img
                   src={billingOrder.qrCodeUrl}
                   alt="VietQR SePay"
-                  className="w-52 h-52 object-contain mx-auto rounded-xl"
+                  className="w-48 h-48 sm:w-52 sm:h-52 object-contain mx-auto rounded-xl"
                 />
               </div>
             )}
 
             <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-left space-y-1 font-mono">
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-sans">Ngân hàng:</span>
-                <span className="font-bold text-slate-900">{billingOrder.bankCode || 'MB'} ({billingOrder.bankAccount || '0829100286'})</span>
+              <div className="flex justify-between gap-2">
+                <span className="text-slate-500 font-sans shrink-0">Ngân hàng:</span>
+                <span className="font-bold text-slate-900 text-right truncate">{billingOrder.bankCode || 'MB'} ({billingOrder.bankAccount || '0829100286'})</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-sans">Chủ TK:</span>
-                <span className="font-bold text-slate-900">{billingOrder.accountName || 'PHAM HUYNH QUOC HUY'}</span>
+              <div className="flex justify-between gap-2">
+                <span className="text-slate-500 font-sans shrink-0">Chủ TK:</span>
+                <span className="font-bold text-slate-900 text-right truncate">{billingOrder.accountName || 'PHAM HUYNH QUOC HUY'}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-sans">Mã đơn hàng:</span>
-                <span className="font-bold text-slate-900">{billingOrder.orderCode}</span>
+              <div className="flex justify-between gap-2">
+                <span className="text-slate-500 font-sans shrink-0">Mã đơn hàng:</span>
+                <span className="font-bold text-slate-900 text-right">{billingOrder.orderCode}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-sans">Số tiền:</span>
-                <span className="font-black text-[#ff4783]">{Number(billingOrder.amount || 99000).toLocaleString('vi-VN')} đ</span>
+              <div className="flex justify-between gap-2">
+                <span className="text-slate-500 font-sans shrink-0">Số tiền:</span>
+                <span className="font-black text-[#ff4783] text-right">{Number(billingOrder.amount || 99000).toLocaleString('vi-VN')} đ</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-sans">Nội dung CK:</span>
-                <span className="font-bold text-slate-900">{billingOrder.transferContent || billingOrder.orderCode}</span>
+              <div className="flex justify-between gap-2">
+                <span className="text-slate-500 font-sans shrink-0">Nội dung CK:</span>
+                <span className="font-bold text-slate-900 text-right break-all">{billingOrder.transferContent || billingOrder.orderCode}</span>
               </div>
             </div>
 

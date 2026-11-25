@@ -3,6 +3,7 @@ import {
   fetchAdminOverview,
   fetchAdminUsers,
   createAdminUser,
+  updateAdminUserPlan,
   updateAdminUserRole,
   deleteAdminUser,
   getLocalShops,
@@ -35,6 +36,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReasonInput, setRejectReasonInput] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [togglingPlanUserId, setTogglingPlanUserId] = useState<string | null>(null);
 
   // =============================================================================
   // NGHIỆP VỤ 1: QUẢN LÝ CẤP TÀI KHOẢN QUẢN TRỊ VIÊN (ADMIN) HỆ THỐNG
@@ -127,6 +129,37 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
     }
   };
 
+  // Handle Quick Plan Toggle (FREE <-> PRO)
+  const handleToggleUserPlan = async (user: BusinessHousehold) => {
+    const targetPlan: 'FREE' | 'PRO' = user.plan === 'pro' ? 'FREE' : 'PRO';
+    const confirmMsg =
+      targetPlan === 'PRO'
+        ? `Kích hoạt gói PRO (30 ngày) cho "${user.ownerName}" (${user.phone})?`
+        : `Chuyển tài khoản "${user.ownerName}" về gói MIỄN PHÍ (FREE)?`;
+    if (!window.confirm(confirmMsg)) {
+      return;
+    }
+
+    setTogglingPlanUserId(user.id);
+    try {
+      const res = await updateAdminUserPlan(user.id, targetPlan);
+      if (res.success) {
+        showToast(
+          targetPlan === 'PRO'
+            ? `Đã nâng cấp "${user.ownerName}" lên gói PRO!`
+            : `Đã chuyển "${user.ownerName}" về gói MIỄN PHÍ.`
+        );
+        await loadData(true);
+      } else {
+        showToast(res.message || 'Không thể cập nhật gói dịch vụ', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Lỗi kết nối máy chủ', 'error');
+    } finally {
+      setTogglingPlanUserId(null);
+    }
+  };
+
   // =============================================================================
   // NGHIỆP VỤ 2: XỬ LÝ CẤP MỚI TÀI KHOẢN QUẢN TRỊ VIÊN (ADMIN) (DÒNG 125 ĐẾN 168)
   // - Dùng để: Gửi yêu cầu khởi tạo tài khoản Admin lên API POST /api/admin/users
@@ -178,12 +211,14 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
     }
   };
 
-  const totalUsers = overview?.totalUsers ?? users.length;
   const totalAdmins = users.filter((u) => u.role === 'ADMIN').length;
   const totalOwners = users.filter((u) => u.role !== 'ADMIN').length;
-  const totalPRO = overview?.totalPRO ?? users.filter((u) => u.plan === 'pro' && u.role !== 'ADMIN').length;
-  const totalFREE = overview?.totalFREE ?? users.filter((u) => u.plan === 'free' && u.role !== 'ADMIN').length;
-  const mrr = overview?.mrr ?? totalPRO * 99000;
+  const listPRO = users.filter((u) => u.plan === 'pro' && u.role !== 'ADMIN').length;
+  const listFREE = users.filter((u) => u.plan === 'free' && u.role !== 'ADMIN').length;
+  const totalUsers = users.length > 0 ? users.length : (overview?.totalUsers ?? 0);
+  const totalPRO = users.length > 0 ? listPRO : (overview?.totalPRO ?? 0);
+  const totalFREE = users.length > 0 ? listFREE : (overview?.totalFREE ?? 0);
+  const mrr = totalPRO * 99000;
   const todayReceipts = overview?.todayReceipts ?? 0;
   const todayOrders = overview?.todayOrders ?? 0;
 
@@ -587,7 +622,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                 <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap min-w-[140px]">Ngày Tham Gia</th>
                 <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap min-w-[130px]">Gói Dịch Vụ</th>
                 <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-center min-w-[140px]">Trạng Thái Bot</th>
-                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-right min-w-[100px] pr-6">Thao Tác</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap text-right min-w-[160px] pr-6">Thao Tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-800">
@@ -673,7 +708,26 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
                     </td>
 
                     <td className="py-3.5 px-4 sm:px-5 text-right whitespace-nowrap pr-6">
-                      <div className="inline-flex items-center justify-end">
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        {u.role !== 'ADMIN' && (
+                          <button
+                            onClick={() => handleToggleUserPlan(u)}
+                            disabled={togglingPlanUserId === u.id}
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer disabled:opacity-50 ${
+                              u.plan === 'pro'
+                                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                                : 'bg-[#d0f81b]/45 hover:bg-[#d0f81b] text-slate-950 border border-[#bde412]'
+                            }`}
+                            type="button"
+                            title={u.plan === 'pro' ? 'Chuyển về gói FREE' : 'Nâng cấp lên gói PRO'}
+                          >
+                            {togglingPlanUserId === u.id
+                              ? 'Đang lưu...'
+                              : u.plan === 'pro'
+                                ? 'Hạ FREE'
+                                : 'Nâng PRO'}
+                          </button>
+                        )}
                         {/* Delete User */}
                         <button
                           onClick={() => handleDeleteUser(u)}
@@ -705,8 +759,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
 
       {/* 3.5. Detail Popup Modal for 2nd+ Shop Branch Request */}
       {selectedShopRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-white rounded-3xl shadow-2xl border border-slate-200">
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-4 p-5 sm:p-6 border-b border-slate-100">
               <div className="flex items-center gap-3">
@@ -989,8 +1043,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
           - Phục vụ: Giúp Chủ hộ biết chính xác lý do để nộp lại (Re-submit).
       ============================================================================= */}
       {rejectModalOpen && selectedShopRequest && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden p-6 space-y-4">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white rounded-3xl shadow-2xl border border-slate-200 p-4 sm:p-6 space-y-4">
             <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center shrink-0">
@@ -1104,8 +1158,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ currentUser }) => 
             3. Khóa cứng phân quyền ADMIN, loại bỏ các trường không cần thiết (Tên shop, Gói dịch vụ).
       ============================================================================= */}
       {createModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md max-h-[92vh] overflow-y-auto bg-white rounded-3xl shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between p-5 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-[#fff0f5] text-[#b01755] flex items-center justify-center border border-[#ffd6e4]">

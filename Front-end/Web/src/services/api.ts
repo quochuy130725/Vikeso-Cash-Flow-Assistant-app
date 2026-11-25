@@ -271,6 +271,33 @@ export async function fetchAdminOverview(): Promise<any> {
   }
 }
 
+function mapAdminUser(u: any): BusinessHousehold {
+  const joinDate = u.createdAt
+    ? new Date(u.createdAt).toLocaleDateString('vi-VN')
+    : '14/10/2024';
+  const rawRole = String(u.role || 'OWNER').toUpperCase();
+  const role = (rawRole === 'ADMIN' || rawRole === 'STAFF' ? rawRole : 'OWNER') as
+    | 'ADMIN'
+    | 'OWNER'
+    | 'STAFF';
+  const plan = (u.subscriptionPlan || 'FREE').toLowerCase() === 'pro' ? 'pro' : 'free';
+  const telegramStatus = u.telegramChatId ? 'active' : 'waiting';
+
+  return {
+    id: String(u._id || u.id),
+    ownerName: u.name || (u.email ? u.email.split('@')[0] : 'Chủ hộ kinh doanh'),
+    phone: u.phone || '0912.845.221',
+    storeName: u.shopName || u.storeName || (role === 'ADMIN' ? 'Hệ Thống Quản Trị' : 'Cửa hàng tạp hóa'),
+    businessType: u.businessType || (role === 'ADMIN' ? 'Quản trị viên hệ thống' : 'Hộ kinh doanh bán lẻ'),
+    joinDate,
+    plan,
+    telegramStatus,
+    proExpiresAt: u.proExpiresAt ? new Date(u.proExpiresAt).toLocaleDateString('vi-VN') : undefined,
+    proExpiresAtRaw: u.proExpiresAt,
+    role,
+  };
+}
+
 /**
  * Fetch list of business households (Users) for Admin
  * GET /api/admin/users
@@ -282,47 +309,69 @@ export async function fetchAdminUsers(params?: {
   limit?: number;
 }): Promise<BusinessHousehold[]> {
   try {
-    const query = new URLSearchParams();
-    if (params?.search) query.append('search', params.search);
-    if (params?.plan && params.plan !== 'all') query.append('plan', params.plan.toUpperCase());
-    if (params?.page) query.append('page', String(params.page));
-    if (params?.limit) query.append('limit', String(params.limit));
+    const fetchPage = async (page: number, limit: number) => {
+      const query = new URLSearchParams();
+      if (params?.search) query.append('search', params.search);
+      if (params?.plan && params.plan !== 'all') query.append('plan', params.plan.toUpperCase());
+      query.append('page', String(page));
+      query.append('limit', String(limit));
 
-    const res = await fetch(`${API_BASE_URL}/admin/users?${query.toString()}`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
-
-    const data = await res.json();
-    if (data.success && Array.isArray(data.data)) {
-      return data.data.map((u: any) => {
-        const joinDate = u.createdAt
-          ? new Date(u.createdAt).toLocaleDateString('vi-VN')
-          : '14/10/2024';
-        const role = (u.role || 'OWNER').toUpperCase() as 'ADMIN' | 'OWNER';
-        const plan = (u.subscriptionPlan || 'FREE').toLowerCase() === 'pro' ? 'pro' : 'free';
-        const telegramStatus = u.telegramChatId ? 'active' : 'waiting';
-
-        return {
-          id: String(u._id || u.id),
-          ownerName: u.name || (u.email ? u.email.split('@')[0] : 'Chủ hộ kinh doanh'),
-          phone: u.phone || '0912.845.221',
-          storeName: u.shopName || u.storeName || (role === 'ADMIN' ? 'Hệ Thống Quản Trị' : 'Cửa hàng tạp hóa'),
-          businessType: u.businessType || (role === 'ADMIN' ? 'Quản trị viên hệ thống' : 'Hộ kinh doanh bán lẻ'),
-          joinDate,
-          plan,
-          telegramStatus,
-          proExpiresAt: u.proExpiresAt ? new Date(u.proExpiresAt).toLocaleDateString('vi-VN') : undefined,
-          proExpiresAtRaw: u.proExpiresAt,
-          role,
-        } as BusinessHousehold;
+      const res = await fetch(`${API_BASE_URL}/admin/users?${query.toString()}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
       });
+      return res.json();
+    };
+
+    if (params?.page) {
+      const data = await fetchPage(params.page, params.limit || 20);
+      return data.success && Array.isArray(data.data) ? data.data.map(mapAdminUser) : [];
     }
-    return [];
+
+    const pageLimit = params?.limit || 100;
+    const allUsers: BusinessHousehold[] = [];
+    let currentPage = 1;
+    let totalPages = 1;
+
+    do {
+      const data = await fetchPage(currentPage, pageLimit);
+      if (!data.success || !Array.isArray(data.data)) break;
+      allUsers.push(...data.data.map(mapAdminUser));
+      totalPages = Math.min(50, Number(data.pagination?.totalPages || 1));
+      if (data.data.length === 0) break;
+      currentPage += 1;
+    } while (currentPage <= totalPages);
+
+    return allUsers;
   } catch (err) {
     console.error('Lỗi khi fetchAdminUsers:', err);
     return [];
   }
+}
+
+function mapAdminPayment(p: any): SubscriptionPayment {
+  const storeName = p.userId?.shopName || p.userId?.name || p.userId?.email || 'Hộ kinh doanh VikeSo';
+  const initials = (storeName.trim().slice(0, 2) || 'VS').toUpperCase();
+  const dateStr = p.createdAt ? new Date(p.createdAt).toLocaleString('vi-VN') : 'Vừa xong';
+  const rawStatus = String(p.status || 'PENDING').toUpperCase() as SubscriptionPayment['rawStatus'];
+  const status = rawStatus === 'SUCCESS' ? 'success' : 'pending';
+
+  return {
+    id: String(p._id || p.id || ''),
+    userId: p.userId?._id ? String(p.userId._id) : p.userId ? String(p.userId) : undefined,
+    userEmail: p.userId?.email || undefined,
+    invoiceId: p.orderCode || ('#INV-' + String(p._id || '').slice(-6).toUpperCase()),
+    storeName,
+    storeLocation: p.userId?.email || 'Việt Nam',
+    avatarInitials: initials,
+    avatarColor: status === 'success' ? 'text-secondary bg-surface-container-high' : 'text-primary bg-surface-container-high',
+    planDescription: `Gia hạn Gói Chuyên Nghiệp (${p.plan || 'PRO'})`,
+    amount: p.amount || 99000,
+    paymentMethod: p.gateway ? `Cổng ${p.gateway}` : 'Quét mã VietQR SePay',
+    timestamp: dateStr,
+    status,
+    rawStatus,
+  };
 }
 
 /**
@@ -331,34 +380,24 @@ export async function fetchAdminUsers(params?: {
  */
 export async function fetchAdminPayments(): Promise<SubscriptionPayment[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/admin/payments`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
+    const allPayments: SubscriptionPayment[] = [];
+    let currentPage = 1;
+    let totalPages = 1;
 
-    const data = await res.json();
-    if (data.success && Array.isArray(data.data)) {
-      return data.data.map((p: any) => {
-        const storeName = p.userId?.shopName || p.userId?.name || 'Hộ kinh doanh VikeSo';
-        const initials = (storeName.trim().slice(0, 2) || 'VS').toUpperCase();
-        const dateStr = p.createdAt ? new Date(p.createdAt).toLocaleString('vi-VN') : 'Vừa xong';
-        const status = p.status === 'SUCCESS' ? 'success' : 'pending';
-
-        return {
-          invoiceId: p.orderCode || ('#INV-' + String(p._id || '').slice(-6).toUpperCase()),
-          storeName,
-          storeLocation: 'Việt Nam',
-          avatarInitials: initials,
-          avatarColor: status === 'success' ? 'text-secondary bg-surface-container-high' : 'text-primary bg-surface-container-high',
-          planDescription: `Gia hạn Gói Chuyên Nghiệp (${p.plan || 'PRO'})`,
-          amount: p.amount || 99000,
-          paymentMethod: p.gateway ? `Cổng ${p.gateway}` : 'Quét mã VietQR SePay',
-          timestamp: dateStr,
-          status,
-        } as SubscriptionPayment;
+    do {
+      const res = await fetch(`${API_BASE_URL}/admin/payments?page=${currentPage}&limit=100`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
       });
-    }
-    return [];
+      const data = await res.json();
+      if (!data.success || !Array.isArray(data.data)) break;
+      allPayments.push(...data.data.map(mapAdminPayment));
+      totalPages = Math.min(50, Number(data.pagination?.totalPages || 1));
+      if (data.data.length === 0) break;
+      currentPage += 1;
+    } while (currentPage <= totalPages);
+
+    return allPayments;
   } catch (err) {
     console.error('Lỗi khi fetchAdminPayments:', err);
     return [];
@@ -589,10 +628,17 @@ export async function fetchCurrentUserInfo(): Promise<{
     const data = await res.json();
     if (data.success && data.userInfo) {
       const saved = getSavedUser() || {};
+      const nextShopName = data.userInfo.shopName || saved.shopName || '';
       const updated = {
         ...saved,
         ...data.userInfo,
+        shopName: nextShopName,
+        storeName: nextShopName || saved.storeName || '',
         phone: data.userInfo.phone || saved.phone || '',
+        subscriptionPlan:
+          (data.userInfo.role || saved.role) === 'ADMIN'
+            ? undefined
+            : (data.userInfo.subscriptionPlan || saved.subscriptionPlan || 'FREE'),
       };
       localStorage.setItem('vikeso_user', JSON.stringify(updated));
     }

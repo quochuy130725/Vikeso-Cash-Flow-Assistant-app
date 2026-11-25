@@ -13,8 +13,8 @@ export const MobileAppModal: React.FC<MobileModalProps> = ({ isOpen, onClose }) 
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentOrigin)}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-      <div className="bg-surface-container-lowest rounded-2xl max-w-md w-full p-space-lg shadow-2xl border border-surface-container space-y-space-md animate-scaleIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
+      <div className="bg-surface-container-lowest rounded-2xl max-w-md w-full max-h-[92vh] overflow-y-auto p-4 sm:p-space-lg shadow-2xl border border-surface-container space-y-space-md animate-scaleIn">
         <div className="flex items-center justify-between pb-space-xs border-b border-surface-container">
           <div className="flex items-center gap-space-sm">
             <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
