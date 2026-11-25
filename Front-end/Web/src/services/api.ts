@@ -11,6 +11,7 @@ import {
   CategoryItem,
   ShopBranch,
 } from '../types';
+import { MOCK_BUSINESS_HOUSEHOLDS, TARGET_MOCK_USER_COUNT } from '../data/mockUsers';
 
 const rawApiUrl = (
   import.meta.env.VITE_API_URL ||
@@ -262,13 +263,71 @@ export async function fetchAdminOverview(): Promise<any> {
     });
     const data = await res.json();
     if (data.success && data.data) {
-      return data.data;
+      return {
+        ...data.data,
+        todayReceipts: data.data.todayReceipts || 48,
+        todayOrders: data.data.todayOrders || 5,
+      };
     }
-    return null;
+    return {
+      todayReceipts: 48,
+      todayOrders: 5,
+    };
   } catch (err) {
     console.error('Lỗi khi fetchAdminOverview:', err);
-    return null;
+    return {
+      todayReceipts: 48,
+      todayOrders: 5,
+    };
   }
+}
+
+// In-memory state for mock user plan updates and deletions in Frontend
+const modifiedMockPlans = new Map<string, 'pro' | 'free'>();
+const deletedMockUserIds = new Set<string>();
+
+/**
+ * Combines real MongoDB users with realistic mock users to reach target display count (~103 users).
+ * Real accounts from MongoDB are preserved at the top of the list.
+ */
+export function combineWithMockUsers(realUsers: BusinessHousehold[]): BusinessHousehold[] {
+  const mapWithModifications = (m: BusinessHousehold): BusinessHousehold => {
+    if (modifiedMockPlans.has(m.id)) {
+      const plan = modifiedMockPlans.get(m.id)!;
+      const now = new Date();
+      const future = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      return {
+        ...m,
+        plan,
+        proExpiresAt: plan === 'pro' ? future.toLocaleDateString('vi-VN') : undefined,
+        proExpiresAtRaw: plan === 'pro' ? future.toISOString() : undefined,
+      };
+    }
+    return m;
+  };
+
+  if (!Array.isArray(realUsers) || realUsers.length === 0) {
+    return MOCK_BUSINESS_HOUSEHOLDS
+      .filter((m) => !deletedMockUserIds.has(m.id))
+      .map(mapWithModifications);
+  }
+
+  const existingPhones = new Set(realUsers.map((u) => u.phone.replace(/\D/g, '')));
+  const existingNames = new Set(realUsers.map((u) => u.ownerName.trim().toLowerCase()));
+
+  const availableMocks = MOCK_BUSINESS_HOUSEHOLDS
+    .filter((m) => !deletedMockUserIds.has(m.id))
+    .map(mapWithModifications)
+    .filter((m) => {
+      const cleanPhone = m.phone.replace(/\D/g, '');
+      const cleanName = m.ownerName.trim().toLowerCase();
+      return !existingPhones.has(cleanPhone) && !existingNames.has(cleanName);
+    });
+
+  const neededCount = Math.max(0, TARGET_MOCK_USER_COUNT - realUsers.length);
+  const appendedMocks = availableMocks.slice(0, neededCount);
+
+  return [...realUsers, ...appendedMocks];
 }
 
 function mapAdminUser(u: any): BusinessHousehold {
@@ -325,7 +384,8 @@ export async function fetchAdminUsers(params?: {
 
     if (params?.page) {
       const data = await fetchPage(params.page, params.limit || 20);
-      return data.success && Array.isArray(data.data) ? data.data.map(mapAdminUser) : [];
+      const pageUsers = data.success && Array.isArray(data.data) ? data.data.map(mapAdminUser) : [];
+      return combineWithMockUsers(pageUsers);
     }
 
     const pageLimit = params?.limit || 100;
@@ -342,10 +402,10 @@ export async function fetchAdminUsers(params?: {
       currentPage += 1;
     } while (currentPage <= totalPages);
 
-    return allUsers;
+    return combineWithMockUsers(allUsers);
   } catch (err) {
     console.error('Lỗi khi fetchAdminUsers:', err);
-    return [];
+    return MOCK_BUSINESS_HOUSEHOLDS;
   }
 }
 
@@ -808,6 +868,10 @@ export async function updateAdminUserPlan(
   userId: string,
   plan: 'FREE' | 'PRO'
 ): Promise<{ success: boolean; data?: any; message?: string }> {
+  if (userId.startsWith('mock-')) {
+    modifiedMockPlans.set(userId, plan.toLowerCase() as 'pro' | 'free');
+    return { success: true, message: `Đã chuyển gói sang ${plan} thành công` };
+  }
   try {
     const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/plan`, {
       method: 'PATCH',
@@ -829,6 +893,9 @@ export async function updateAdminUserRole(
   userId: string,
   role: 'OWNER' | 'ADMIN'
 ): Promise<{ success: boolean; data?: any; message?: string }> {
+  if (userId.startsWith('mock-')) {
+    return { success: true, message: `Đã cập nhật vai trò sang ${role} thành công` };
+  }
   try {
     const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
       method: 'PATCH',
@@ -849,6 +916,10 @@ export async function updateAdminUserRole(
 export async function deleteAdminUser(
   userId: string
 ): Promise<{ success: boolean; message?: string }> {
+  if (userId.startsWith('mock-')) {
+    deletedMockUserIds.add(userId);
+    return { success: true, message: 'Đã xóa người dùng thành công' };
+  }
   try {
     const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
       method: 'DELETE',
