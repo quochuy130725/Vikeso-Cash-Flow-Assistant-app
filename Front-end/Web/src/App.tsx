@@ -8,6 +8,7 @@ import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { BentoFeaturesSection } from './components/BentoFeaturesSection';
 import { PricingSection } from './components/PricingSection';
+import { FeedbackSection } from './components/FeedbackSection';
 import { FaqSection } from './components/FaqSection';
 import { CtaSection } from './components/CtaSection';
 import { Footer } from './components/Footer';
@@ -71,6 +72,8 @@ export default function App() {
       h === '#boc-tach-ai' ||
       h === '#vu-khi-bi-mat' ||
       h === '#bang-gia' ||
+      h === '#danh-gia' ||
+      h === '#feedback' ||
       h === '#faq' ||
       h === '#hero'
     );
@@ -298,7 +301,13 @@ export default function App() {
           }}
         />
 
-        {/* Section 7: FAQ */}
+        {/* Section 7: User Feedback & Reviews */}
+        <FeedbackSection
+          currentUser={currentUser}
+          onShowToast={showToast}
+        />
+
+        {/* Section 8: FAQ */}
         <FaqSection />
 
         {/* Section 9: Final Call to Action */}

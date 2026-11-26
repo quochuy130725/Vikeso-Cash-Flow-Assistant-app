@@ -98,6 +98,12 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTelegram, onOpenScan, onOp
             </h3>
             <nav className="flex flex-col gap-2">
               <a
+                href="#danh-gia"
+                className="text-xs text-slate-600 hover:text-slate-950 transition-colors"
+              >
+                Đánh giá từ khách hàng
+              </a>
+              <a
                 href="#faq"
                 className="text-xs text-slate-600 hover:text-slate-950 transition-colors"
               >

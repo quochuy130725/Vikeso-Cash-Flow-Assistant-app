@@ -167,3 +167,17 @@ export interface SubscriptionPayment {
   status: 'success' | 'pending';
   rawStatus?: 'PENDING' | 'SUCCESS' | 'FAILED' | 'EXPIRED';
 }
+
+export interface UserFeedback {
+  id: string;
+  authorName: string;
+  storeName: string;
+  businessType: string;
+  plan: 'pro' | 'free';
+  rating: number; // 1 to 5
+  tag: string;
+  highlight: string;
+  content: string;
+  date: string;
+  isVerified?: boolean;
+}
