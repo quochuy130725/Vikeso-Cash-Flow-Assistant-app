@@ -26,11 +26,12 @@ export const Header: React.FC<HeaderProps> = ({
   const isScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Streamlined 4 core sections: Non-overlapping, crystal-clear navigation
+  // Streamlined core sections: Non-overlapping, crystal-clear navigation
   const navItems = [
     { label: 'Tính năng', href: '#tinh-nang', id: 'tinh-nang' },
     { label: 'Cách hoạt động', href: '#cach-hoat-dong', id: 'cach-hoat-dong' },
     { label: 'Bảng giá', href: '#bang-gia', id: 'bang-gia' },
+    { label: 'Đánh giá', href: '#danh-gia', id: 'danh-gia' },
     { label: 'Hỏi đáp (FAQ)', href: '#faq', id: 'faq' },
   ];
 
@@ -40,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({
       if (isScrollingRef.current) return;
 
       const scrollPos = window.scrollY + 180;
-      const sectionIds = ['faq', 'bang-gia', 'cach-hoat-dong', 'tinh-nang'];
+      const sectionIds = ['faq', 'danh-gia', 'bang-gia', 'cach-hoat-dong', 'tinh-nang'];
       for (const id of sectionIds) {
         const el = document.getElementById(id);
         if (el) {
